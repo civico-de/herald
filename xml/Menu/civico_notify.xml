@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="iso-8859-1" ?>
+<menu>
+  <item>
+    <path>civicrm/civicoNotify/form/civirulesaction/sendnotification</path>
+    <page_callback>CRM_CivicoNotify_Form_CivirulesAction_SendNotification</page_callback>
+    <title>civico_notify: Send Notification</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+  </item>
+  <item>
+    <path>civicrm/civicoNotify/form/civirulesaction/sendcontributiondigest</path>
+    <page_callback>CRM_CivicoNotify_Form_CivirulesAction_SendContributionDigest</page_callback>
+    <title>civico_notify: Send Contribution Digest</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+  </item>
+  <item>
+    <path>civicrm/civicoNotify/form/civirulesaction/sendcontributionalert</path>
+    <page_callback>CRM_CivicoNotify_Form_CivirulesAction_SendContributionAlert</page_callback>
+    <title>civico_notify: Send Contribution Alert</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+  </item>
+  <item>
+    <path>civicrm/civicoNotify/form/civirulescondition/previouscontributionstatus</path>
+    <page_callback>CRM_CivicoNotify_Form_CivirulesCondition_PreviousContributionStatus</page_callback>
+    <title>civico_notify: Previous Contribution Status</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+  </item>
+</menu>

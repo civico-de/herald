@@ -1,0 +1,71 @@
+# civikitchen-based dev stack for civico_notify.
+#
+#   cd tests/docker && docker compose up -d
+#   docker compose exec app cv ext:enable civico_notify
+#   docker compose exec app bash -c "cd /var/www/html/ext/civico_notify && phpunit"
+#
+# Ports are offset by +10 from civikitchen defaults so this can run alongside
+# any other stack that already uses 8080/8081/1080.
+#   CiviCRM:    http://localhost:8090   (admin / admin)
+#   phpMyAdmin: http://localhost:8091
+#   Maildev:    http://localhost:1090
+
+name: civico-notify-test
+
+services:
+  app:
+    image: ghcr.io/jfilter/civicrm-dev:standalone
+    pull_policy: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8090:80"
+    environment:
+      CIVICRM_AUTO_INSTALL: "1"
+      CIVICRM_DB_HOST: db
+      CIVICRM_DB_NAME: civicrm
+      CIVICRM_DB_USER: civicrm
+      CIVICRM_DB_PASSWORD: civicrm
+      SITE_URL: "http://localhost:8090"
+      CIVICRM_DEMO_USER: admin
+      CIVICRM_SMTP_HOST: maildev
+      CIVICRM_SMTP_PORT: "1025"
+      # CiviRules is a hard dependency of civico_notify — pull it on first install.
+      CIVICRM_EXTRA_EXTENSIONS: "org.civicoop.civirules"
+    volumes:
+      # The extension repo is two levels above this compose file.
+      - ../..:/var/www/html/ext/civico_notify
+
+  db:
+    image: mariadb:10.11
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: civicrm
+      MYSQL_USER: civicrm
+      MYSQL_PASSWORD: civicrm
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    depends_on:
+      - db
+    ports:
+      - "8091:80"
+    environment:
+      PMA_HOST: db
+
+  maildev:
+    image: maildev/maildev:latest
+    ports:
+      - "1090:1080"
+      - "1025"
+
+volumes:
+  db-data:

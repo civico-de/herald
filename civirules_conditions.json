@@ -1,0 +1,7 @@
+[
+  {
+    "name": "civico_notify_previous_contribution_status",
+    "label": "CiviCo Notify: Previous Contribution status",
+    "class_name": "CRM_CivicoNotify_CivirulesConditions_PreviousContributionStatus"
+  }
+]
