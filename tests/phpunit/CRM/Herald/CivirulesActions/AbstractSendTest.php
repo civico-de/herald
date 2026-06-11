@@ -81,6 +81,29 @@ class CRM_Herald_CivirulesActions_AbstractSendTest extends TestCase {
     ], $filtered);
   }
 
+  public function testTemplateSubjectBecomesEmailSubjectDefault(): void {
+    $params = CRM_Herald_CivirulesActions_AbstractSend::applyDefaultEmailSubject(
+      ['channel' => 'email'],
+      '✅ 42,50 € — Stripe'
+    );
+    $this->assertSame('✅ 42,50 € — Stripe', $params['email_subject']);
+  }
+
+  public function testExplicitEmailSubjectWinsOverTemplateSubject(): void {
+    $params = CRM_Herald_CivirulesActions_AbstractSend::applyDefaultEmailSubject(
+      ['email_subject' => 'Manual subject'],
+      'Template subject'
+    );
+    $this->assertSame('Manual subject', $params['email_subject']);
+  }
+
+  public function testNoTemplateSubjectLeavesParamsUntouched(): void {
+    foreach ([NULL, ''] as $subject) {
+      $params = CRM_Herald_CivirulesActions_AbstractSend::applyDefaultEmailSubject(['channel' => 'email'], $subject);
+      $this->assertArrayNotHasKey('email_subject', $params);
+    }
+  }
+
   public function testInvalidChannelConfigJsonIsIgnored(): void {
     $config = CRM_Herald_CivirulesActions_AbstractSend::buildChannelConfig([
       'channel' => 'telegram',

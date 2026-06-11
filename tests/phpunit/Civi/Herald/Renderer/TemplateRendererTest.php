@@ -75,6 +75,16 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
     $this->assertStringContainsString('Pending → Completed', $body);
   }
 
+  public function testRenderPartsReturnsRenderedSubject(): void {
+    $parts = $this->renderer->renderParts('herald_contribution_alert_completed', [
+      'contribution' => ['total_amount' => 42.5, 'source' => 'Stripe'],
+      'campaign' => ['title' => '', 'goal' => 0, 'percent' => 0],
+    ]);
+    $this->assertStringContainsString('Stripe', $parts['subject']);
+    $this->assertStringNotContainsString('{$', $parts['subject']);
+    $this->assertStringContainsString('Spende eingegangen', $parts['body']);
+  }
+
   public function testThrowsOnMissingTemplate(): void {
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/not found/');

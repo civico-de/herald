@@ -301,7 +301,7 @@ Delivers through CiviCRM's configured outbound mailer — SMTP settings, mail lo
 |---|---|---|
 | `email_to` | string | Recipient address (falls back to `herald_email_default_to`) |
 | `email_to_name` | string | Recipient display name |
-| `email_subject` | string | Subject line — static text, **not** Smarty-rendered (default "Notification") |
+| `email_subject` | string | Explicit subject. When unset, the template's `msg_subject` (Smarty-rendered with the same vars as the body) is used; final fallback "Notification" |
 | `email_format` | string | `html` (default) or `text` — which MIME part the rendered body becomes |
 | `email_cc` | string | Comma-separated CC addresses |
 | `email_bcc` | string | Comma-separated BCC addresses |

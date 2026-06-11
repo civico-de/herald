@@ -10,7 +10,9 @@ namespace Civi\Herald\Channel;
  * Per-call config (from action params / channel_config JSON):
  *   email_to       string  Recipient address (required; falls back to setting)
  *   email_to_name  string  Recipient display name
- *   email_subject  string  Subject line — static text, NOT Smarty-rendered
+ *   email_subject  string  Explicit subject. When unset, AbstractSend defaults
+ *                          it to the template's rendered msg_subject; final
+ *                          fallback is DEFAULT_SUBJECT
  *   email_format   string  'html' (default) or 'text' — which MIME part the
  *                          rendered body becomes; no auto-conversion between the two
  *   email_cc       string  Comma-separated CC addresses

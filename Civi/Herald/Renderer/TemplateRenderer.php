@@ -18,8 +18,21 @@ class TemplateRenderer {
    * @throws \CRM_Core_Exception when the template is missing.
    */
   public function render(string $workflowName, array $vars): string {
+    return $this->renderParts($workflowName, $vars)['body'];
+  }
+
+  /**
+   * Render body AND subject of a workflow template. The subject (msg_subject,
+   * also Smarty) is used as the default email subject; channels without a
+   * subject concept ignore it.
+   *
+   * @return array{subject: ?string, body: string} subject is NULL when the
+   *   template has no msg_subject.
+   * @throws \CRM_Core_Exception when the template is missing.
+   */
+  public function renderParts(string $workflowName, array $vars): array {
     $template = \Civi\Api4\MessageTemplate::get(FALSE)
-      ->addSelect('msg_html', 'msg_text')
+      ->addSelect('msg_html', 'msg_text', 'msg_subject')
       ->addWhere('workflow_name', '=', $workflowName)
       ->addWhere('is_default', '=', TRUE)
       ->setLimit(1)
@@ -41,7 +54,11 @@ class TemplateRenderer {
       ));
     }
 
-    return $this->renderInline($body, $vars);
+    $subject = trim((string) ($template['msg_subject'] ?? ''));
+    return [
+      'subject' => $subject !== '' ? $this->renderInline($subject, $vars) : NULL,
+      'body' => $this->renderInline($body, $vars),
+    ];
   }
 
   /**

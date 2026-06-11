@@ -47,7 +47,9 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
     }
 
     $renderer = new TemplateRenderer();
-    $body = $renderer->render($workflowName, $vars);
+    $parts = $renderer->renderParts($workflowName, $vars);
+    $body = $parts['body'];
+    $params = self::applyDefaultEmailSubject($params, $parts['subject']);
 
     if (($params['delivery_mode'] ?? 'direct') === 'subscribers') {
       $this->dispatchToSubscribers($body, $params);
@@ -151,6 +153,20 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
    */
   public static function filterSubscriberSafe(array $config): array {
     return array_intersect_key($config, array_flip(self::SUBSCRIBER_SAFE_KEYS));
+  }
+
+  /**
+   * Default the email_subject param to the template's rendered msg_subject.
+   * An explicit email_subject on the action wins, as does one set in the
+   * channel_config JSON (buildChannelConfig merges that on top later).
+   *
+   * Test-seam: pure, no Civi dependencies.
+   */
+  public static function applyDefaultEmailSubject(array $params, ?string $subject): array {
+    if ($subject !== NULL && $subject !== '' && empty($params['email_subject'])) {
+      $params['email_subject'] = $subject;
+    }
+    return $params;
   }
 
 }
