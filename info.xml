@@ -2,7 +2,7 @@
 <extension key="civico_notify" type="module">
   <file>civico_notify</file>
   <name>CiviCo Notify</name>
-  <description>Generic notification + digest layer for CiviCRM. Channel-pluggable (Telegram first), template-driven, CiviRules-integrated.</description>
+  <description>Generic notification + digest layer for CiviCRM. Channel-pluggable (Telegram, generic Webhook, ntfy.sh, Pushover; Email pluggable), template-driven, CiviRules-integrated.</description>
   <license>AGPL-3.0</license>
   <authors>
     <author>

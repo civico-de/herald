@@ -16,15 +16,25 @@ class CRM_CivicoNotify_CivirulesActions_SendNotification extends CRM_CivicoNotif
   }
 
   public function processAction(CRM_Civirules_TriggerData_TriggerData $triggerData) {
-    $params = $this->getActionParameters();
-    $vars = [];
-    if (!empty($params['vars'])) {
-      $decoded = is_array($params['vars']) ? $params['vars'] : json_decode((string) $params['vars'], TRUE);
-      if (is_array($decoded)) {
-        $vars = $decoded;
-      }
+    $this->dispatch(self::decodeVars($this->getActionParameters()));
+  }
+
+  /**
+   * Pure decode of the `vars` action param. Test-seam.
+   *
+   * Accepts an array passthrough (CiviRules form classes can store arrays) or
+   * a JSON-encoded string. Anything else collapses to [].
+   */
+  public static function decodeVars(array $params): array {
+    $raw = $params['vars'] ?? '';
+    if (is_array($raw)) {
+      return $raw;
     }
-    $this->dispatch($vars);
+    if (trim((string) $raw) === '') {
+      return [];
+    }
+    $decoded = json_decode((string) $raw, TRUE);
+    return is_array($decoded) ? $decoded : [];
   }
 
 }

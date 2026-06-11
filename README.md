@@ -2,11 +2,20 @@
 
 Generic notification + digest layer for CiviCRM.
 
-- **Channel-pluggable** — Telegram in v0.1; Slack/Discord/Email designed to drop in via `Civi\CivicoNotify\Channel\ChannelInterface`.
+- **Channel-pluggable** — Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover ship in v0.1; Email and others drop in via `Civi\CivicoNotify\Channel\ChannelInterface`.
 - **Template-driven** — admin-editable `MessageTemplate` workflows, rendered with `CRM_Core_TokenSmarty`.
 - **CiviRules-integrated** — exposes Actions ("Send Notification", "Send Contribution Digest", "Send Contribution Alert") that any CiviRules trigger can fire. No bespoke cron.
 
-Status: **alpha (v0.1)** — Phase 1 scaffolding only. CiviRules actions and digest engine arrive in subsequent phases (see `wir-haben-diesem-telegram-sunny-coral.md` plan).
+Status: **alpha (v0.1)** — feature-complete for the migration. Ships:
+
+- Channels: Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover
+- Three CiviRules actions: `Send Notification`, `Send Contribution Digest`, `Send Contribution Alert` (each with its own parameter form)
+- Contribution digest engine (period filters, source/financial-type filters, adaptive histogram, campaign progress, pending pool)
+- Custom CiviRules condition `Previous Contribution status` (uses a `hook_civicrm_pre` snapshot, independent of CiviRules core change-tracking)
+- Per-contact notification preferences + subscriber-mode delivery (one rule fans out to all opted-in contacts via *their own* preferred channel)
+- Workflow `MessageTemplate` fixtures shipped via mgd-php (admin-editable, user edits preserved on re-enable)
+
+Email is designed-for via `ChannelInterface` but not yet implemented.
 
 ## Install
 
@@ -15,11 +24,25 @@ cv ext:download civico_notify  # once published; for now: clone into /ext/
 cv ext:enable civico_notify
 ```
 
-Configure via:
+Configure via settings — only the channels you actually use:
 
 ```bash
+# Telegram
 cv setting:set civico_notify_telegram_bot_token=<bot-token>
 cv setting:set civico_notify_telegram_default_chat_id=<chat-id>
+
+# Webhook (Slack/Discord/Mattermost/custom — URL also configurable per-action)
+cv setting:set civico_notify_webhook_default_url=<https://hooks.slack.com/...>
+cv setting:set civico_notify_webhook_default_auth_token=<bearer-token>   # optional
+
+# ntfy.sh (or self-hosted)
+cv setting:set civico_notify_ntfy_server=https://ntfy.sh                  # default
+cv setting:set civico_notify_ntfy_default_topic=<topic>
+cv setting:set civico_notify_ntfy_token=<bearer-token>                    # optional, for protected topics
+
+# Pushover
+cv setting:set civico_notify_pushover_app_token=<app-token>
+cv setting:set civico_notify_pushover_default_user_key=<user-or-group-key>
 ```
 
 ## Smoke test
@@ -50,19 +73,32 @@ cv scr /var/www/html/ext/civico_notify/bin/test-telegram.php
 
 ## Configuration
 
-See [CONFIGURATION.md](CONFIGURATION.md) for end-to-end CiviRules recipes (migration, generic NGO, major-donor campaign).
+See [CONFIGURATION.md](CONFIGURATION.md) for end-to-end CiviRules recipes (migration, generic NGO, major-donor campaign, subscriber-mode self-service).
+
+## Self-service: per-contact notification preferences
+
+Each contact can pick *their* preferred channel (Telegram / Webhook / ntfy / Pushover) and the kinds of notifications they want, via a CiviCRM custom group `civico_notify_preferences` shipped with the extension. Admins fill these in from the contact view; for self-service, point staff at a CiviCRM profile that exposes the same fields.
+
+```bash
+# One-off after enabling the extension: create the user-facing profile
+cv scr /var/www/html/ext/civico_notify/bin/install-profile.php
+# → prints a URL like /civicrm/profile/edit?gid=42&reset=1
+```
+
+Send users that URL — Civi auto-resolves to the logged-in contact and only allows editing their own record (`access CiviCRM` + standard own-contact ACL). When a CiviRules action's `delivery_mode` is set to `subscribers` and a `subscription_type` is picked, the action queries all contacts subscribed to that type and dispatches via each contact's preferred channel + recipient.
 
 ## Development
 
-This repository follows the civix layout used by sibling extensions in this project. The standalone dev setup uses [civikitchen](https://github.com/jfilter/civikitchen):
+The repo ships its own [civikitchen](https://github.com/jfilter/civikitchen)-based stack at `tests/docker/` — no separate clone needed:
 
 ```bash
-cd ~/code/civikitchen/examples/standalone
-docker compose up -d
+cd tests/docker && docker compose up -d           # CiviCRM on :8090, phpMyAdmin :8091, Maildev :1090
 docker compose exec app cv ext:enable civico_notify
-docker compose exec -e CIVICRM_UF=UnitTests app \
-    bash -c "cd /var/www/html/ext/civico_notify && phpunit"
+docker compose exec -T -e CIVICRM_UF=UnitTests app \
+    bash -c "cd /var/www/html/ext/civico_notify && vendor/bin/phpunit"
 ```
+
+The compose file pulls `ghcr.io/jfilter/civicrm-dev:standalone` and pre-enables CiviRules via `CIVICRM_EXTRA_EXTENSIONS`, so the first `up` is a one-shot setup. The image runs `composer install` on bind-mounted extensions automatically (`CIVICRM_AUTO_COMPOSER=1` by default), so `vendor/bin/phpunit` is available without a manual composer step. The `cv ext:enable` step is needed once after a fresh DB; subsequent `docker compose up` runs find the extension already enabled.
 
 ## License
 

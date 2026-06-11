@@ -32,6 +32,9 @@ class ChannelRegistry {
     if ($instance === NULL) {
       $instance = new self();
       $instance->register(new TelegramChannel());
+      $instance->register(new WebhookChannel());
+      $instance->register(new NtfyChannel());
+      $instance->register(new PushoverChannel());
     }
     return $instance;
   }

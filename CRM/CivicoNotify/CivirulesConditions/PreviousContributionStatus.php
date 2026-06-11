@@ -35,10 +35,20 @@ class CRM_CivicoNotify_CivirulesConditions_PreviousContributionStatus extends CR
     $expected = isset($this->conditionParams['previous_status_id'])
       ? (int) $this->conditionParams['previous_status_id']
       : NULL;
+    $previous = StatusTransitionDispatcher::getPreEditStatus((int) $contribution['id']);
+    return self::matches($expected, $previous);
+  }
+
+  /**
+   * Pure match check. Test-seam.
+   *
+   * Returns TRUE iff the expected previous status is configured AND matches
+   * the snapshot. NULL on either side means "no match".
+   */
+  public static function matches(?int $expected, ?int $previous): bool {
     if ($expected === NULL) {
       return FALSE;
     }
-    $previous = StatusTransitionDispatcher::getPreEditStatus((int) $contribution['id']);
     return $previous === $expected;
   }
 

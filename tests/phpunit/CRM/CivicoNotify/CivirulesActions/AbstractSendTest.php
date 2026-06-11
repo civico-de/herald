@@ -1,0 +1,65 @@
+<?php
+
+use PHPUnit\Framework\TestCase;
+
+/**
+ * Pure-logic tests for AbstractSend::buildChannelConfig.
+ * @group unit
+ */
+class CRM_CivicoNotify_CivirulesActions_AbstractSendTest extends TestCase {
+
+  public function testStripsRoutingKeys(): void {
+    $config = CRM_CivicoNotify_CivirulesActions_AbstractSend::buildChannelConfig([
+      'channel' => 'telegram',
+      'template' => 'foo',
+      'chat_id' => '-100',
+    ]);
+    $this->assertArrayNotHasKey('channel', $config);
+    $this->assertArrayNotHasKey('template', $config);
+    $this->assertSame('-100', $config['chat_id']);
+  }
+
+  public function testChannelConfigJsonMergedAndStripped(): void {
+    $config = CRM_CivicoNotify_CivirulesActions_AbstractSend::buildChannelConfig([
+      'channel' => 'webhook',
+      'template' => 'foo',
+      'channel_config' => '{"webhook_url": "https://example.com/x", "webhook_body_format": "slack"}',
+    ]);
+    $this->assertArrayNotHasKey('channel_config', $config);
+    $this->assertSame('https://example.com/x', $config['webhook_url']);
+    $this->assertSame('slack', $config['webhook_body_format']);
+  }
+
+  public function testChannelConfigArrayPassthrough(): void {
+    $config = CRM_CivicoNotify_CivirulesActions_AbstractSend::buildChannelConfig([
+      'channel' => 'ntfy',
+      'template' => 'foo',
+      'channel_config' => ['ntfy_topic' => 'donations', 'ntfy_priority' => 4],
+    ]);
+    $this->assertSame('donations', $config['ntfy_topic']);
+    $this->assertSame(4, $config['ntfy_priority']);
+  }
+
+  public function testChannelConfigOverridesTopLevel(): void {
+    // channel_config takes precedence — explicit per-channel overrides win.
+    $config = CRM_CivicoNotify_CivirulesActions_AbstractSend::buildChannelConfig([
+      'channel' => 'telegram',
+      'template' => 'foo',
+      'chat_id' => '-100',
+      'channel_config' => ['chat_id' => '-200'],
+    ]);
+    $this->assertSame('-200', $config['chat_id']);
+  }
+
+  public function testInvalidChannelConfigJsonIsIgnored(): void {
+    $config = CRM_CivicoNotify_CivirulesActions_AbstractSend::buildChannelConfig([
+      'channel' => 'telegram',
+      'template' => 'foo',
+      'chat_id' => '-100',
+      'channel_config' => 'not-json',
+    ]);
+    $this->assertSame('-100', $config['chat_id']);
+    $this->assertArrayNotHasKey('channel_config', $config);
+  }
+
+}
