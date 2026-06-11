@@ -1,5 +1,5 @@
 {
-    "name": "jfilter/herald",
+    "name": "civico-de/herald",
     "description": "Generic notification + digest layer for CiviCRM. Channel-pluggable (Telegram first), template-driven, CiviRules-integrated.",
     "type": "civicrm-ext",
     "license": "AGPL-3.0",
