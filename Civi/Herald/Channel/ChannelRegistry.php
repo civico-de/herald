@@ -35,6 +35,7 @@ class ChannelRegistry {
       $instance->register(new WebhookChannel());
       $instance->register(new NtfyChannel());
       $instance->register(new PushoverChannel());
+      $instance->register(new EmailChannel());
     }
     return $instance;
   }

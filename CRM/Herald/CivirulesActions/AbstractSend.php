@@ -80,6 +80,7 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
     'pushover_title', 'pushover_priority', 'pushover_sound',
     'pushover_url', 'pushover_url_title', 'pushover_html',
     'pushover_retry', 'pushover_expire',
+    'email_subject', 'email_format',
   ];
 
   /**

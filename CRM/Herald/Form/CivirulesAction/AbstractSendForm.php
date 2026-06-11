@@ -18,6 +18,7 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
     'webhook' => 'Generic webhook (Slack/Discord/Mattermost/custom)',
     'ntfy' => 'ntfy.sh',
     'pushover' => 'Pushover',
+    'email' => 'Email',
   ];
 
   /**

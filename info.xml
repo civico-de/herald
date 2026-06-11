@@ -2,7 +2,7 @@
 <extension key="herald" type="module">
   <file>herald</file>
   <name>Herald</name>
-  <description>Generic notification + digest layer for CiviCRM. Channel-pluggable (Telegram, generic Webhook, ntfy.sh, Pushover; Email pluggable), template-driven, CiviRules-integrated.</description>
+  <description>Generic notification + digest layer for CiviCRM. Channel-pluggable (Telegram, generic Webhook, ntfy.sh, Pushover, Email), template-driven, CiviRules-integrated.</description>
   <license>AGPL-3.0</license>
   <authors>
     <author>

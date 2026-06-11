@@ -65,6 +65,12 @@ class ChannelRegistryTest extends TestCase {
     $this->assertInstanceOf(TelegramChannel::class, $default->get('telegram'));
   }
 
+  public function testDefaultRegistersAllShippedChannels(): void {
+    $keys = ChannelRegistry::default()->listKeys();
+    sort($keys);
+    $this->assertSame(['email', 'ntfy', 'pushover', 'telegram', 'webhook'], $keys);
+  }
+
   public function testDefaultIsMemoized(): void {
     $this->assertSame(ChannelRegistry::default(), ChannelRegistry::default());
   }

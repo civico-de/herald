@@ -163,8 +163,8 @@ cv scr /var/www/html/ext/herald/bin/install-profile.php
 
 Send users that URL. The profile asks them to pick:
 
-- **Preferred channel** — Telegram, Webhook, ntfy, or Pushover
-- **Recipient ID for that channel** — chat ID, webhook URL, ntfy topic, Pushover user key
+- **Preferred channel** — Telegram, Webhook, ntfy, Pushover, or Email
+- **Recipient ID for that channel** — chat ID, webhook URL, ntfy topic, Pushover user key. Email needs no identifier: it goes to the contact's primary address (contacts with *Do not email* set are skipped)
 - **Subscriptions** — checkboxes for "completed alert", "pending alert", "status changed alert", "daily digest", "weekly digest"
 
 CiviCRM auto-resolves the profile to the logged-in contact (`access CiviCRM` permission + own-record only), so each user only sees and edits their own preferences.
@@ -181,7 +181,7 @@ In the action form:
 
 - **Delivery mode** → `Subscribers — fan out to all contacts opted into a subscription type`
 - **Subscription type** → `Every completed contribution`
-- (Channel/chat_id/etc. are ignored in subscriber mode — each subscriber's own preferred channel + recipient ID is used. Only presentation options like `parse_mode`, `ntfy_title` or `pushover_sound` are forwarded from the rule; recipient and credential keys — `chat_id`, `webhook_url`, `webhook_auth_token`, `webhook_headers`, `ntfy_topic`, `pushover_user_key` — never are.)
+- (Channel/chat_id/etc. are ignored in subscriber mode — each subscriber's own preferred channel + recipient ID is used. Only presentation options like `parse_mode`, `ntfy_title`, `pushover_sound` or `email_subject` are forwarded from the rule; recipient and credential keys — `chat_id`, `webhook_url`, `webhook_auth_token`, `webhook_headers`, `ntfy_topic`, `pushover_user_key`, `email_to`, `email_cc`, `email_bcc` — never are.)
 
 When the rule fires, the action queries all contacts whose `subscriptions` field contains `completed_alert` and dispatches the rendered template through each one's preferred channel. A bad chat ID for one contact does not block the others — failures are logged via `Civi::log()->warning()` and the loop continues.
 
@@ -281,6 +281,32 @@ Paid mobile-push service. Requires an app token (one-off per install) and a user
 | `pushover_html` | bool | Body is Pushover-flavoured HTML |
 
 App token comes from `herald_pushover_app_token` (required). User key falls back to `herald_pushover_default_user_key`.
+
+### Email (`channel: "email"`)
+
+Delivers through CiviCRM's configured outbound mailer — SMTP settings, mail logging and dev redirection all apply. No extra credentials needed.
+
+```json
+{
+  "channel": "email",
+  "template": "herald_contribution_alert_completed",
+  "channel_config": {
+    "email_to": "alerts@example.org",
+    "email_subject": "New donation"
+  }
+}
+```
+
+| Key | Type | Meaning |
+|---|---|---|
+| `email_to` | string | Recipient address (falls back to `herald_email_default_to`) |
+| `email_to_name` | string | Recipient display name |
+| `email_subject` | string | Subject line — static text, **not** Smarty-rendered (default "Notification") |
+| `email_format` | string | `html` (default) or `text` — which MIME part the rendered body becomes |
+| `email_cc` | string | Comma-separated CC addresses |
+| `email_bcc` | string | Comma-separated BCC addresses |
+
+The From header comes from `herald_email_from` (`"Name" <email>`); when empty, the site default from address is used.
 
 ---
 

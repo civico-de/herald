@@ -30,7 +30,9 @@ class SubscriberLookup {
         'herald_preferences.pushover_user_key',
         'herald_preferences.ntfy_topic',
         'herald_preferences.webhook_url',
-        'herald_preferences.subscriptions'
+        'herald_preferences.subscriptions',
+        'email_primary.email',
+        'do_not_email'
       )
       ->addWhere('is_deleted', '=', FALSE)
       ->addWhere('is_deceased', '=', FALSE)
@@ -83,6 +85,11 @@ class SubscriberLookup {
       'pushover' => self::nonEmpty($row, 'herald_preferences.pushover_user_key', ['pushover_user_key' => $row['herald_preferences.pushover_user_key'] ?? '']),
       'ntfy' => self::nonEmpty($row, 'herald_preferences.ntfy_topic', ['ntfy_topic' => $row['herald_preferences.ntfy_topic'] ?? '']),
       'webhook' => self::nonEmpty($row, 'herald_preferences.webhook_url', ['webhook_url' => $row['herald_preferences.webhook_url'] ?? '']),
+      // Email needs no preference field — the contact's primary address is the
+      // recipient. do_not_email is a hard privacy flag and trumps the opt-in.
+      'email' => (!empty($row['email_primary.email']) && empty($row['do_not_email']))
+        ? ['email_to' => $row['email_primary.email']]
+        : NULL,
       default => NULL,
     };
   }

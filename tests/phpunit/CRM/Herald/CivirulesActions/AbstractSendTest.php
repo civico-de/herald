@@ -59,6 +59,9 @@ class CRM_Herald_CivirulesActions_AbstractSendTest extends TestCase {
       'webhook_headers' => ['Authorization' => 'Basic abc=='],
       'ntfy_topic' => 'rule-topic',
       'pushover_user_key' => 'rule-key',
+      'email_to' => 'rule-inbox@example.org',
+      'email_cc' => 'cc@example.org',
+      'email_bcc' => 'bcc@example.org',
       'delivery_mode' => 'subscribers',
       'subscription_type' => 'completed_alert',
       'parse_mode' => 'HTML',
@@ -66,6 +69,7 @@ class CRM_Herald_CivirulesActions_AbstractSendTest extends TestCase {
       'ntfy_title' => 'Donation',
       'pushover_sound' => 'cashregister',
       'webhook_body_format' => 'slack',
+      'email_subject' => 'Donation received',
     ]);
     $this->assertSame([
       'parse_mode' => 'HTML',
@@ -73,6 +77,7 @@ class CRM_Herald_CivirulesActions_AbstractSendTest extends TestCase {
       'ntfy_title' => 'Donation',
       'pushover_sound' => 'cashregister',
       'webhook_body_format' => 'slack',
+      'email_subject' => 'Donation received',
     ], $filtered);
   }
 

@@ -19,6 +19,8 @@ class SubscriberLookupTest extends TestCase {
       'herald_preferences.ntfy_topic' => '',
       'herald_preferences.webhook_url' => '',
       'herald_preferences.subscriptions' => [],
+      'email_primary.email' => '',
+      'do_not_email' => FALSE,
     ];
   }
 
@@ -61,6 +63,35 @@ class SubscriberLookupTest extends TestCase {
       'herald_preferences.webhook_url' => 'https://example.com/x',
     ])];
     $this->assertSame(['webhook_url' => 'https://example.com/x'], SubscriberLookup::mapRows($rows)[0]['config']);
+  }
+
+  public function testEmailSubscriberMappedToPrimaryAddress(): void {
+    $rows = [$this->row([
+      'id' => 13,
+      'herald_preferences.preferred_channel' => 'email',
+      'email_primary.email' => 'ada@example.org',
+    ])];
+    $this->assertSame([
+      ['contact_id' => 13, 'channel' => 'email', 'config' => ['email_to' => 'ada@example.org']],
+    ], SubscriberLookup::mapRows($rows));
+  }
+
+  public function testEmailSubscriberWithDoNotEmailSkipped(): void {
+    $rows = [$this->row([
+      'id' => 13,
+      'herald_preferences.preferred_channel' => 'email',
+      'email_primary.email' => 'ada@example.org',
+      'do_not_email' => TRUE,
+    ])];
+    $this->assertSame([], SubscriberLookup::mapRows($rows));
+  }
+
+  public function testEmailSubscriberWithoutAddressSkipped(): void {
+    $rows = [$this->row([
+      'id' => 13,
+      'herald_preferences.preferred_channel' => 'email',
+    ])];
+    $this->assertSame([], SubscriberLookup::mapRows($rows));
   }
 
   public function testContactWithoutChannelSkipped(): void {

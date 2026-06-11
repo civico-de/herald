@@ -2,20 +2,18 @@
 
 Generic notification + digest layer for CiviCRM.
 
-- **Channel-pluggable** — Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover ship in v0.1; Email and others drop in via `Civi\Herald\Channel\ChannelInterface`.
+- **Channel-pluggable** — Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover and Email ship in v0.1; others drop in via `Civi\Herald\Channel\ChannelInterface`.
 - **Template-driven** — admin-editable `MessageTemplate` workflows, rendered with `CRM_Core_TokenSmarty`.
 - **CiviRules-integrated** — exposes Actions ("Send Notification", "Send Contribution Digest", "Send Contribution Alert") that any CiviRules trigger can fire. No bespoke cron.
 
 Status: **alpha (v0.1)** — feature-complete for the migration. Ships:
 
-- Channels: Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover
+- Channels: Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover, Email (via CiviCRM’s outbound mailer)
 - Three CiviRules actions: `Send Notification`, `Send Contribution Digest`, `Send Contribution Alert` (each with its own parameter form)
 - Contribution digest engine (period filters, source/financial-type filters, adaptive histogram, campaign progress, pending pool)
 - Custom CiviRules condition `Previous Contribution status` (uses a `hook_civicrm_pre` snapshot, independent of CiviRules core change-tracking)
 - Per-contact notification preferences + subscriber-mode delivery (one rule fans out to all opted-in contacts via *their own* preferred channel)
 - Workflow `MessageTemplate` fixtures shipped via mgd-php (admin-editable, user edits preserved on re-enable)
-
-Email is designed-for via `ChannelInterface` but not yet implemented.
 
 ## Install
 
@@ -43,6 +41,10 @@ cv setting:set herald_ntfy_token=<bearer-token>                    # optional, f
 # Pushover
 cv setting:set herald_pushover_app_token=<app-token>
 cv setting:set herald_pushover_default_user_key=<user-or-group-key>
+
+# Email (no credentials — uses CiviCRM's outbound mailer; both settings optional)
+cv setting:set herald_email_from='"Herald" <noreply@example.org>'   # empty → site default
+cv setting:set herald_email_default_to=<fallback-recipient>
 ```
 
 ## Smoke test
@@ -77,7 +79,7 @@ See [CONFIGURATION.md](CONFIGURATION.md) for end-to-end CiviRules recipes (migra
 
 ## Self-service: per-contact notification preferences
 
-Each contact can pick *their* preferred channel (Telegram / Webhook / ntfy / Pushover) and the kinds of notifications they want, via a CiviCRM custom group `herald_preferences` shipped with the extension. Admins fill these in from the contact view; for self-service, point staff at a CiviCRM profile that exposes the same fields.
+Each contact can pick *their* preferred channel (Telegram / Webhook / ntfy / Pushover / Email) and the kinds of notifications they want, via a CiviCRM custom group `herald_preferences` shipped with the extension. Admins fill these in from the contact view; for self-service, point staff at a CiviCRM profile that exposes the same fields.
 
 ```bash
 # One-off after enabling the extension: create the user-facing profile
