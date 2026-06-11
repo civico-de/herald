@@ -103,6 +103,25 @@ class HistogramFormatterTest extends TestCase {
     $this->assertSame([1, 1, 2, 1], array_column($buckets, 'count'));
   }
 
+  public function testOverrideEdgesCatchOutOfRangeAmountsInExtraBuckets(): void {
+    // 0.5 below the first edge, 9000 above the last — with admin-supplied
+    // edges these must land in "<low" / "≥high" buckets, not vanish.
+    $buckets = HistogramFormatter::compute([0.5, 5, 15, 70, 9000], 8, [1.0, 10.0, 100.0]);
+
+    $this->assertSame(5, array_sum(array_column($buckets, 'count')));
+    $this->assertSame('<1', $buckets[0]['label']);
+    $this->assertSame(1, $buckets[0]['count']);
+    $last = end($buckets);
+    $this->assertSame('≥100', $last['label']);
+    $this->assertSame(1, $last['count']);
+    $this->assertSame(9000.0, $last['sum']);
+  }
+
+  public function testSubIntegerEdgesKeepDecimalsInLabel(): void {
+    $buckets = HistogramFormatter::compute([0.6, 0.8], 8, [0.5, 1.0]);
+    $this->assertSame('0.5–1', $buckets[0]['label']);
+  }
+
   public function testRenderProducesProportionalBars(): void {
     $buckets = [
       ['low' => 0, 'high' => 10, 'count' => 12, 'sum' => 38, 'label' => '0–10'],

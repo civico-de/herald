@@ -37,7 +37,10 @@ class NtfyChannel implements ChannelInterface {
   }
 
   public function send(string $renderedBody, array $config): void {
-    $topic = $config['ntfy_topic'] ?? \Civi::settings()->get('civico_notify_ntfy_default_topic');
+    // !empty, not ??: an empty ntfy_topic must still fall back to the setting.
+    $topic = !empty($config['ntfy_topic'])
+      ? $config['ntfy_topic']
+      : \Civi::settings()->get('civico_notify_ntfy_default_topic');
     if (!$topic) {
       throw new \CRM_Core_Exception('civico_notify: ntfy channel requires ntfy_topic (action param or civico_notify_ntfy_default_topic setting).');
     }

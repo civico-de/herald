@@ -88,11 +88,28 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     $this->assertSame('Bearer abc123', $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
   }
 
-  public function testBearerTokenFromSetting(): void {
+  public function testDefaultTokenPairsWithDefaultUrl(): void {
+    \Civi::settings()->set('civico_notify_webhook_default_url', 'https://example.com/default');
     \Civi::settings()->set('civico_notify_webhook_default_auth_token', 'from-setting');
     $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
-    $channel->send('x', ['webhook_url' => 'https://example.com/x']);
+    $channel->send('x', []);
     $this->assertSame('Bearer from-setting', $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
+  }
+
+  public function testDefaultTokenNotSentToConfigSuppliedUrl(): void {
+    // The default token belongs to the default endpoint. A caller-supplied
+    // URL (e.g. a subscriber's personal webhook) must not receive it.
+    \Civi::settings()->set('civico_notify_webhook_default_auth_token', 'from-setting');
+    $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel->send('x', ['webhook_url' => 'https://attacker.example/collect']);
+    $this->assertSame('', $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
+  }
+
+  public function testEmptyConfigUrlFallsBackToDefault(): void {
+    \Civi::settings()->set('civico_notify_webhook_default_url', 'https://example.com/default');
+    $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel->send('x', ['webhook_url' => '']);
+    $this->assertSame('https://example.com/default', (string) $this->capturedRequests[0]['request']->getUri());
   }
 
   public function testExplicitAuthorizationHeaderNotOverwritten(): void {

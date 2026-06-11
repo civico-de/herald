@@ -28,8 +28,8 @@ class CRM_CivicoNotify_Form_CivirulesAction_SendContributionAlert extends CRM_Ci
 
   protected function getExtraValues(array $submitted): array {
     return [
-      'campaign_id' => $submitted['campaign_id'] !== '' ? (int) $submitted['campaign_id'] : NULL,
-      'goal' => $submitted['goal'] !== '' ? (float) $submitted['goal'] : NULL,
+      'campaign_id' => ($submitted['campaign_id'] ?? '') !== '' ? (int) $submitted['campaign_id'] : NULL,
+      'goal' => ($submitted['goal'] ?? '') !== '' ? (float) $submitted['goal'] : NULL,
       'campaign_title' => $submitted['campaign_title'] ?? '',
       'include_status_transition' => !empty($submitted['include_status_transition']),
     ];

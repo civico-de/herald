@@ -67,6 +67,29 @@ class TelegramChannelTest extends TestCase implements HeadlessInterface, HookInt
     $this->assertSame('-200', $body['chat_id']);
   }
 
+  public function testEmptyChatIdStillFallsBackToDefault(): void {
+    // The action form always stores chat_id, possibly '' — the documented
+    // fallback to the default setting must still kick in.
+    \Civi::settings()->set('civico_notify_telegram_default_chat_id', '-200');
+    $client = $this->makeMockedClient(new Response(200, [], '{"ok":true}'));
+    $channel = new TelegramChannel($client);
+
+    $channel->send('hi', ['chat_id' => '']);
+
+    $body = json_decode((string) $this->capturedRequests[0]['request']->getBody(), TRUE);
+    $this->assertSame('-200', $body['chat_id']);
+  }
+
+  public function testPlainTextOmitsParseMode(): void {
+    $client = $this->makeMockedClient(new Response(200, [], '{"ok":true}'));
+    $channel = new TelegramChannel($client);
+
+    $channel->send('hi', ['chat_id' => '-1', 'parse_mode' => '']);
+
+    $body = json_decode((string) $this->capturedRequests[0]['request']->getBody(), TRUE);
+    $this->assertArrayNotHasKey('parse_mode', $body);
+  }
+
   public function testThrowsWhenTokenMissing(): void {
     \Civi::settings()->set('civico_notify_telegram_bot_token', '');
     $channel = new TelegramChannel($this->makeMockedClient(new Response(200, [], '{"ok":true}')));

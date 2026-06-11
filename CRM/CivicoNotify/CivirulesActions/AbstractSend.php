@@ -66,6 +66,23 @@ abstract class CRM_CivicoNotify_CivirulesActions_AbstractSend extends CRM_Civiru
   }
 
   /**
+   * Config keys safe to forward from the rule into subscriber-fanout sends:
+   * presentation-only options. Recipient and credential keys (chat_id,
+   * webhook_url, webhook_auth_token, webhook_headers, ntfy_topic,
+   * pushover_user_key, …) are deliberately absent — in subscriber mode the
+   * recipient comes from the contact's own preferences, and rule-level
+   * credentials must never be sent to a contact-supplied endpoint.
+   */
+  private const SUBSCRIBER_SAFE_KEYS = [
+    'parse_mode', 'disable_notification', 'disable_web_page_preview',
+    'webhook_body_format', 'webhook_body_key',
+    'ntfy_title', 'ntfy_priority', 'ntfy_tags', 'ntfy_click', 'ntfy_markdown',
+    'pushover_title', 'pushover_priority', 'pushover_sound',
+    'pushover_url', 'pushover_url_title', 'pushover_html',
+    'pushover_retry', 'pushover_expire',
+  ];
+
+  /**
    * Subscriber-fanout delivery: look up all contacts opted into the given
    * subscription_type, send the same rendered body through *each contact's*
    * preferred channel and recipient ID. Per-recipient errors are caught so
@@ -78,7 +95,7 @@ abstract class CRM_CivicoNotify_CivirulesActions_AbstractSend extends CRM_Civiru
     }
 
     $registry = ChannelRegistry::default();
-    $extras = self::buildChannelConfig($params);
+    $extras = self::filterSubscriberSafe(self::buildChannelConfig($params));
 
     foreach ($this->makeSubscriberLookup()->findBySubscriptionType($subscriptionType) as $sub) {
       try {
@@ -126,13 +143,13 @@ abstract class CRM_CivicoNotify_CivirulesActions_AbstractSend extends CRM_Civiru
     return $config;
   }
 
-  protected function buildFilters(array $params): array {
-    return array_filter([
-      'campaign_id' => isset($params['campaign_id']) ? (int) $params['campaign_id'] : NULL,
-      'financial_type_id' => isset($params['financial_type_id']) ? (int) $params['financial_type_id'] : NULL,
-      'source_pattern' => $params['source_pattern'] ?? NULL,
-      'status' => $params['status'] ?? NULL,
-    ], static fn($v) => $v !== NULL && $v !== '');
+  /**
+   * Reduce a channel config to the keys allowed in subscriber-fanout sends.
+   *
+   * Test-seam: pure, no Civi dependencies.
+   */
+  public static function filterSubscriberSafe(array $config): array {
+    return array_intersect_key($config, array_flip(self::SUBSCRIBER_SAFE_KEYS));
   }
 
 }

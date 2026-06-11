@@ -39,14 +39,14 @@ class CRM_CivicoNotify_Form_CivirulesAction_SendContributionDigest extends CRM_C
   protected function getExtraValues(array $submitted): array {
     return [
       'period' => $submitted['period'] ?? 'yesterday',
-      'campaign_id' => $submitted['campaign_id'] !== '' ? (int) $submitted['campaign_id'] : NULL,
-      'financial_type_id' => $submitted['financial_type_id'] !== '' ? (int) $submitted['financial_type_id'] : NULL,
+      'campaign_id' => ($submitted['campaign_id'] ?? '') !== '' ? (int) $submitted['campaign_id'] : NULL,
+      'financial_type_id' => ($submitted['financial_type_id'] ?? '') !== '' ? (int) $submitted['financial_type_id'] : NULL,
       'source_pattern' => $submitted['source_pattern'] ?? '',
       'show_pending' => !empty($submitted['show_pending']),
       'show_histogram' => !empty($submitted['show_histogram']),
-      'bucket_count' => $submitted['bucket_count'] !== '' ? (int) $submitted['bucket_count'] : 8,
+      'bucket_count' => ($submitted['bucket_count'] ?? '') !== '' ? (int) $submitted['bucket_count'] : 8,
       'bucket_edges' => $submitted['bucket_edges'] ?? '',
-      'goal' => $submitted['goal'] !== '' ? (float) $submitted['goal'] : NULL,
+      'goal' => ($submitted['goal'] ?? '') !== '' ? (float) $submitted['goal'] : NULL,
       'campaign_title' => $submitted['campaign_title'] ?? '',
     ];
   }

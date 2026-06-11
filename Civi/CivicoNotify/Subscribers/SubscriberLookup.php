@@ -33,6 +33,7 @@ class SubscriberLookup {
         'civico_notify_preferences.subscriptions'
       )
       ->addWhere('is_deleted', '=', FALSE)
+      ->addWhere('is_deceased', '=', FALSE)
       ->addWhere('civico_notify_preferences.subscriptions', 'CONTAINS', $subscriptionType)
       ->execute()
       ->getArrayCopy();

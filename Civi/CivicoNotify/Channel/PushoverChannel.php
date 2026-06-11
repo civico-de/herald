@@ -19,6 +19,8 @@ use GuzzleHttp\ClientInterface;
  *   pushover_url        string Supplementary URL shown under the body
  *   pushover_url_title  string Label for `pushover_url`
  *   pushover_html       bool   1 = body is HTML (Pushover's limited subset)
+ *   pushover_retry      int    Emergency only: seconds between re-alerts (min 30, default 60)
+ *   pushover_expire     int    Emergency only: seconds until re-alerting stops (max 10800, default 3600)
  *
  * Settings:
  *   civico_notify_pushover_app_token        — Pushover application token (required)
@@ -43,7 +45,10 @@ class PushoverChannel implements ChannelInterface {
     if ($appToken === '') {
       throw new \CRM_Core_Exception('civico_notify: Pushover app token not configured (civico_notify_pushover_app_token).');
     }
-    $userKey = $config['pushover_user_key'] ?? \Civi::settings()->get('civico_notify_pushover_default_user_key');
+    // !empty, not ??: an empty pushover_user_key must still fall back to the setting.
+    $userKey = !empty($config['pushover_user_key'])
+      ? $config['pushover_user_key']
+      : \Civi::settings()->get('civico_notify_pushover_default_user_key');
     if (!$userKey) {
       throw new \CRM_Core_Exception('civico_notify: Pushover user/group key required (pushover_user_key action param or civico_notify_pushover_default_user_key setting).');
     }
@@ -93,6 +98,11 @@ class PushoverChannel implements ChannelInterface {
     }
     if (isset($config['pushover_priority']) && $config['pushover_priority'] !== '') {
       $form['priority'] = (int) $config['pushover_priority'];
+      if ($form['priority'] === 2) {
+        // Emergency priority requires retry/expire or the API rejects the call.
+        $form['retry'] = max(30, (int) ($config['pushover_retry'] ?? 60));
+        $form['expire'] = min(10800, max(1, (int) ($config['pushover_expire'] ?? 3600)));
+      }
     }
     if (!empty($config['pushover_sound'])) {
       $form['sound'] = (string) $config['pushover_sound'];
@@ -114,6 +124,8 @@ class PushoverChannel implements ChannelInterface {
       'pushover_user_key' => ['label' => 'User/group key (override default)', 'required' => FALSE, 'type' => 'string'],
       'pushover_title' => ['label' => 'Title', 'required' => FALSE, 'type' => 'string'],
       'pushover_priority' => ['label' => 'Priority (-2…2)', 'required' => FALSE, 'type' => 'int'],
+      'pushover_retry' => ['label' => 'Emergency retry interval in seconds (priority 2 only)', 'required' => FALSE, 'type' => 'int'],
+      'pushover_expire' => ['label' => 'Emergency expiry in seconds (priority 2 only)', 'required' => FALSE, 'type' => 'int'],
       'pushover_sound' => ['label' => 'Sound', 'required' => FALSE, 'type' => 'string'],
       'pushover_url' => ['label' => 'Supplementary URL', 'required' => FALSE, 'type' => 'string'],
       'pushover_url_title' => ['label' => 'URL label', 'required' => FALSE, 'type' => 'string'],

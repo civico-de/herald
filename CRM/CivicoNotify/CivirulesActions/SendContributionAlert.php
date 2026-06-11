@@ -31,7 +31,7 @@ class CRM_CivicoNotify_CivirulesActions_SendContributionAlert extends CRM_Civico
 
     $previousStatusId = NULL;
     if (!empty($contribution['id']) && (bool) ($params['include_status_transition'] ?? TRUE)) {
-      $previousStatusId = StatusTransitionDispatcher::getPreEditStatus((int) $contribution['id']);
+      $previousStatusId = StatusTransitionDispatcher::resolvePreEditStatus((int) $contribution['id'], $triggerData);
     }
 
     $vars = self::buildVars($params, $contribution, $previousStatusId, $this->makeStatsService(), [$this, 'resolveStatusName']);

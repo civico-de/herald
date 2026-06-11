@@ -167,6 +167,10 @@ class HistogramFormatter {
 
   /**
    * Place each amount in its bucket and accumulate count/sum.
+   *
+   * Amounts outside the edge range (possible with caller-supplied edges;
+   * adaptive edges always cover the data) land in extra "<low" / "≥high"
+   * buckets instead of silently vanishing from the histogram.
    */
   private static function distribute(array $amounts, array $edges): array {
     $bucketCount = count($edges) - 1;
@@ -179,7 +183,19 @@ class HistogramFormatter {
         'sum' => 0.0,
       ];
     }
+    $underflow = ['count' => 0, 'sum' => 0.0];
+    $overflow = ['count' => 0, 'sum' => 0.0];
     foreach ($amounts as $amount) {
+      if ($amount < $edges[0]) {
+        $underflow['count']++;
+        $underflow['sum'] += $amount;
+        continue;
+      }
+      if ($amount > $edges[$bucketCount]) {
+        $overflow['count']++;
+        $overflow['sum'] += $amount;
+        continue;
+      }
       for ($i = 0; $i < $bucketCount; $i++) {
         $isLast = ($i === $bucketCount - 1);
         $inBucket = $amount >= $edges[$i] && ($isLast ? $amount <= $edges[$i + 1] : $amount < $edges[$i + 1]);
@@ -193,7 +209,26 @@ class HistogramFormatter {
     foreach ($buckets as &$bucket) {
       $bucket['label'] = self::formatRange($bucket['low'], $bucket['high']);
     }
-    return $buckets;
+    unset($bucket);
+    if ($underflow['count'] > 0) {
+      array_unshift($buckets, [
+        'low' => 0.0,
+        'high' => $edges[0],
+        'count' => $underflow['count'],
+        'sum' => $underflow['sum'],
+        'label' => '<' . self::formatNumber($edges[0]),
+      ]);
+    }
+    if ($overflow['count'] > 0) {
+      $buckets[] = [
+        'low' => $edges[$bucketCount],
+        'high' => INF,
+        'count' => $overflow['count'],
+        'sum' => $overflow['sum'],
+        'label' => '≥' . self::formatNumber($edges[$bucketCount]),
+      ];
+    }
+    return array_values($buckets);
   }
 
   private static function formatRange(float $low, float $high): string {
@@ -204,6 +239,10 @@ class HistogramFormatter {
     if ($n >= 1000) {
       $k = $n / 1000;
       return (fmod($k, 1) < 1e-9 ? (string) (int) $k : rtrim(rtrim(number_format($k, 1, '.', ''), '0'), '.')) . 'k';
+    }
+    // Keep sub-integer edges readable (0.5 → "0.5", not "1").
+    if (abs($n - round($n)) > 1e-9) {
+      return rtrim(rtrim(number_format($n, 2, '.', ''), '0'), '.');
     }
     return (string) (int) round($n);
   }

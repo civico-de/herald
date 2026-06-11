@@ -68,7 +68,7 @@ class CRM_CivicoNotify_CivirulesActions_SendContributionDigest extends CRM_Civic
 
     if (!empty($params['goal'])) {
       $goal = (float) $params['goal'];
-      $campaignTotal = isset($filters['campaign_id'])
+      $campaignTotal = !empty($filters['campaign_id'])
         ? $stats->getCampaignTotal((int) $filters['campaign_id'])
         : ['total' => $summary['total'], 'count' => $summary['count']];
       $vars['campaign'] = [
@@ -88,12 +88,14 @@ class CRM_CivicoNotify_CivirulesActions_SendContributionDigest extends CRM_Civic
   }
 
   private static function buildFiltersFromParams(array $params): array {
+    // The 0-check also drops legacy params where an empty form field was
+    // stored as '' and would otherwise survive as (int) 0.
     return array_filter([
       'campaign_id' => isset($params['campaign_id']) ? (int) $params['campaign_id'] : NULL,
       'financial_type_id' => isset($params['financial_type_id']) ? (int) $params['financial_type_id'] : NULL,
       'source_pattern' => $params['source_pattern'] ?? NULL,
       'status' => $params['status'] ?? NULL,
-    ], static fn($v) => $v !== NULL && $v !== '');
+    ], static fn($v) => $v !== NULL && $v !== '' && $v !== 0);
   }
 
   /**

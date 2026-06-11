@@ -22,7 +22,11 @@ class TelegramChannel implements ChannelInterface {
       throw new \CRM_Core_Exception('civico_notify: Telegram bot token is not configured. Set "civico_notify_telegram_bot_token" in CRM settings.');
     }
 
-    $chatId = $config['chat_id'] ?? \Civi::settings()->get('civico_notify_telegram_default_chat_id');
+    // !empty, not ??: the action form always stores chat_id (possibly ''),
+    // and an empty value must still fall back to the default setting.
+    $chatId = !empty($config['chat_id'])
+      ? $config['chat_id']
+      : \Civi::settings()->get('civico_notify_telegram_default_chat_id');
     if (!$chatId) {
       throw new \CRM_Core_Exception('civico_notify: No chat_id supplied and no default chat ID is configured.');
     }
@@ -30,8 +34,13 @@ class TelegramChannel implements ChannelInterface {
     $payload = [
       'chat_id' => (string) $chatId,
       'text' => $renderedBody,
-      'parse_mode' => $config['parse_mode'] ?? 'HTML',
     ];
+    // '' means "Plain text" — omit the key entirely rather than sending an
+    // empty parse_mode to the Bot API.
+    $parseMode = (string) ($config['parse_mode'] ?? 'HTML');
+    if ($parseMode !== '') {
+      $payload['parse_mode'] = $parseMode;
+    }
     if (isset($config['disable_notification'])) {
       $payload['disable_notification'] = (bool) $config['disable_notification'];
     }

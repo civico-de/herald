@@ -84,6 +84,8 @@ Params:
 | Conditions | `CiviCo Notify: Previous Contribution status` (set `previous_status_id` to the Pending value, usually `2`) AND `Contribution status = Completed` AND `Contribution source LIKE %Bank TX%` |
 | Action | `CiviCo Notify: Send contribution alert` |
 
+> **Note on delayed rule execution:** the previous-status value is captured in-request via `hook_civicrm_pre`. When a rule runs delayed (CiviRules queue/cron), the condition falls back to the original entity data CiviRules serialises into the queue — both paths cover Pending → Completed detection.
+
 Params:
 ```json
 {
@@ -179,7 +181,7 @@ In the action form:
 
 - **Delivery mode** → `Subscribers — fan out to all contacts opted into a subscription type`
 - **Subscription type** → `Every completed contribution`
-- (Channel/chat_id/etc. are ignored in subscriber mode — each subscriber's own preferred channel + recipient ID is used)
+- (Channel/chat_id/etc. are ignored in subscriber mode — each subscriber's own preferred channel + recipient ID is used. Only presentation options like `parse_mode`, `ntfy_title` or `pushover_sound` are forwarded from the rule; recipient and credential keys — `chat_id`, `webhook_url`, `webhook_auth_token`, `webhook_headers`, `ntfy_topic`, `pushover_user_key` — never are.)
 
 When the rule fires, the action queries all contacts whose `subscriptions` field contains `completed_alert` and dispatches the rendered template through each one's preferred channel. A bad chat ID for one contact does not block the others — failures are logged via `Civi::log()->warning()` and the loop continues.
 
@@ -219,7 +221,7 @@ Generic POST. Covers Slack/Discord/Mattermost incoming webhooks plus any custom 
 | `webhook_body_format` | enum | `text` (raw body, default) / `json` / `slack` (`{"text":…}`) / `discord` (`{"content":…}`) |
 | `webhook_body_key` | string | Custom JSON key when `body_format=json` (default `text`) |
 | `webhook_headers` | object | Extra request headers |
-| `webhook_auth_token` | string | Sent as `Authorization: Bearer …` if no Authorization header is in `webhook_headers`. Falls back to `civico_notify_webhook_default_auth_token` setting. |
+| `webhook_auth_token` | string | Sent as `Authorization: Bearer …` if no Authorization header is in `webhook_headers`. The `civico_notify_webhook_default_auth_token` setting is only used when the URL also comes from `civico_notify_webhook_default_url` — the default token is paired with the default endpoint and is never attached to a caller-supplied URL (e.g. a subscriber's personal webhook). |
 
 ### ntfy.sh (`channel: "ntfy"`)
 
@@ -270,7 +272,9 @@ Paid mobile-push service. Requires an app token (one-off per install) and a user
 |---|---|---|
 | `pushover_user_key` | string | Override the default user/group key |
 | `pushover_title` | string | Notification title |
-| `pushover_priority` | int | -2 (silent) … 2 (emergency, requires retry/expire) |
+| `pushover_priority` | int | -2 (silent) … 2 (emergency; `retry`/`expire` are added automatically, see below) |
+| `pushover_retry` | int | Emergency only: seconds between re-alerts (min 30, default 60) |
+| `pushover_expire` | int | Emergency only: seconds until re-alerting stops (max 10800, default 3600) |
 | `pushover_sound` | string | Sound name (see [Pushover sounds](https://pushover.net/api#sounds)) |
 | `pushover_url` | string | Supplementary URL shown under the body |
 | `pushover_url_title` | string | Label for `pushover_url` |

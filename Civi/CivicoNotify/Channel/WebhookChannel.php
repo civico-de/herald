@@ -28,7 +28,10 @@ use GuzzleHttp\ClientInterface;
  *
  * Settings:
  *   civico_notify_webhook_default_url        — fallback URL when not in action
- *   civico_notify_webhook_default_auth_token — fallback bearer token
+ *   civico_notify_webhook_default_auth_token — fallback bearer token; only
+ *     applied when the URL also came from the default setting. The default
+ *     token belongs to the default endpoint — it must never be attached to a
+ *     caller-supplied URL (e.g. a subscriber's personal webhook).
  */
 class WebhookChannel implements ChannelInterface {
 
@@ -43,7 +46,10 @@ class WebhookChannel implements ChannelInterface {
   }
 
   public function send(string $renderedBody, array $config): void {
-    $url = $config['webhook_url'] ?? \Civi::settings()->get('civico_notify_webhook_default_url');
+    // !empty, not ??: an empty webhook_url in the config must still fall
+    // back to the default setting.
+    $urlFromConfig = !empty($config['webhook_url']);
+    $url = $urlFromConfig ? $config['webhook_url'] : \Civi::settings()->get('civico_notify_webhook_default_url');
     if (!$url) {
       throw new \CRM_Core_Exception('civico_notify: webhook channel requires webhook_url (action param or civico_notify_webhook_default_url setting).');
     }
@@ -53,7 +59,12 @@ class WebhookChannel implements ChannelInterface {
     $payload = self::buildPayload($renderedBody, $format, (string) ($config['webhook_body_key'] ?? 'text'));
 
     $headers = self::normaliseHeaders($config['webhook_headers'] ?? []);
-    $authToken = $config['webhook_auth_token'] ?? \Civi::settings()->get('civico_notify_webhook_default_auth_token');
+    // The default token is paired with the default URL: it must not leak to
+    // caller-supplied endpoints (subscriber-mode contacts control their URL).
+    $authToken = $config['webhook_auth_token'] ?? NULL;
+    if (!$authToken && !$urlFromConfig) {
+      $authToken = \Civi::settings()->get('civico_notify_webhook_default_auth_token');
+    }
     if ($authToken) {
       // Don't overwrite an explicitly-set Authorization header — admins can
       // still pass `Authorization: Basic ...` via webhook_headers and skip the

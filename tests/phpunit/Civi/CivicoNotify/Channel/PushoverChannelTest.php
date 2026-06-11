@@ -124,4 +124,28 @@ class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInt
     $this->assertArrayNotHasKey('title', $form);
   }
 
+  public function testEmergencyPriorityAddsRetryAndExpire(): void {
+    // Priority 2 without retry/expire is rejected by the Pushover API.
+    $form = PushoverChannel::buildForm('app', 'u', 'msg', ['pushover_priority' => 2]);
+    $this->assertSame(2, $form['priority']);
+    $this->assertSame(60, $form['retry']);
+    $this->assertSame(3600, $form['expire']);
+  }
+
+  public function testEmergencyRetryAndExpireClampedToApiLimits(): void {
+    $form = PushoverChannel::buildForm('app', 'u', 'msg', [
+      'pushover_priority' => 2,
+      'pushover_retry' => 5,
+      'pushover_expire' => 99999,
+    ]);
+    $this->assertSame(30, $form['retry']);
+    $this->assertSame(10800, $form['expire']);
+  }
+
+  public function testNonEmergencyPriorityHasNoRetryExpire(): void {
+    $form = PushoverChannel::buildForm('app', 'u', 'msg', ['pushover_priority' => 1]);
+    $this->assertArrayNotHasKey('retry', $form);
+    $this->assertArrayNotHasKey('expire', $form);
+  }
+
 }

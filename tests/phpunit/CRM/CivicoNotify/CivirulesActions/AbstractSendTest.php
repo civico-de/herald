@@ -51,6 +51,31 @@ class CRM_CivicoNotify_CivirulesActions_AbstractSendTest extends TestCase {
     $this->assertSame('-200', $config['chat_id']);
   }
 
+  public function testFilterSubscriberSafeStripsRecipientAndCredentialKeys(): void {
+    $filtered = CRM_CivicoNotify_CivirulesActions_AbstractSend::filterSubscriberSafe([
+      'chat_id' => '-100',
+      'webhook_url' => 'https://example.com/rule-endpoint',
+      'webhook_auth_token' => 'secret',
+      'webhook_headers' => ['Authorization' => 'Basic abc=='],
+      'ntfy_topic' => 'rule-topic',
+      'pushover_user_key' => 'rule-key',
+      'delivery_mode' => 'subscribers',
+      'subscription_type' => 'completed_alert',
+      'parse_mode' => 'HTML',
+      'disable_notification' => TRUE,
+      'ntfy_title' => 'Donation',
+      'pushover_sound' => 'cashregister',
+      'webhook_body_format' => 'slack',
+    ]);
+    $this->assertSame([
+      'parse_mode' => 'HTML',
+      'disable_notification' => TRUE,
+      'ntfy_title' => 'Donation',
+      'pushover_sound' => 'cashregister',
+      'webhook_body_format' => 'slack',
+    ], $filtered);
+  }
+
   public function testInvalidChannelConfigJsonIsIgnored(): void {
     $config = CRM_CivicoNotify_CivirulesActions_AbstractSend::buildChannelConfig([
       'channel' => 'telegram',

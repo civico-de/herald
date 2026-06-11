@@ -82,12 +82,19 @@ class ContributionStatsService {
    * without depending on a specific source pattern (the caller can add one via
    * `$filters['source_pattern']`).
    *
+   * By default rows whose receive_date also falls inside the window are
+   * excluded — those were just created, not transitioned (same heuristic as
+   * getStatusTransitionsInPeriod()).
+   *
    * @return array<int, array{amount: float, source: string, date: string}>
    */
-  public function getRecentStatusTransitions(array $filters, int $minutes, string $toStatus): array {
+  public function getRecentStatusTransitions(array $filters, int $minutes, string $toStatus, bool $excludeAlsoReceivedInPeriod = TRUE): array {
     $where = $this->buildWhere($filters, $toStatus);
     $period = DateRange::lastMinutes($minutes);
     $where[] = ['modified_date', '>=', $period->startSql()];
+    if ($excludeAlsoReceivedInPeriod) {
+      $where[] = ['receive_date', '<', $period->startSql()];
+    }
 
     $rows = \Civi\Api4\Contribution::get(FALSE)
       ->addSelect('total_amount', 'source', 'receive_date', 'modified_date')

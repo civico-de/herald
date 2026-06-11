@@ -133,4 +133,22 @@ class CRM_CivicoNotify_CivirulesActions_SendContributionDigestTest extends TestC
     $this->assertSame(1234.5, $vars['campaign']['total']);
   }
 
+  public function testLegacyEmptyCampaignIdFallsBackToPeriodTotals(): void {
+    // Legacy JSON-era params could store campaign_id as '' — that must behave
+    // like "no campaign", not become getCampaignTotal(0).
+    $stats = new class extends ContributionStatsService {
+      public function getPeriodSummary(array $filters, DateRange $period): array {
+        return ['total' => 1234.5, 'count' => 7, 'bySource' => []];
+      }
+      public function getAllPending(array $filters): array { return ['total' => 0.0, 'count' => 0]; }
+      public function getAmountDistribution(array $filters): array { return [10.0]; }
+      public function getCampaignTotal(int $campaignId): array {
+        throw new \LogicException('getCampaignTotal must not be called for an empty campaign_id');
+      }
+    };
+    $params = array_merge($this->baseParams(), ['campaign_id' => '']);
+    $vars = CRM_CivicoNotify_CivirulesActions_SendContributionDigest::buildVars($params, $stats);
+    $this->assertSame(1234.5, $vars['campaign']['total']);
+  }
+
 }

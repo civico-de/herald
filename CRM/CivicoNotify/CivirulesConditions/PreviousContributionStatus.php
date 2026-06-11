@@ -35,7 +35,7 @@ class CRM_CivicoNotify_CivirulesConditions_PreviousContributionStatus extends CR
     $expected = isset($this->conditionParams['previous_status_id'])
       ? (int) $this->conditionParams['previous_status_id']
       : NULL;
-    $previous = StatusTransitionDispatcher::getPreEditStatus((int) $contribution['id']);
+    $previous = StatusTransitionDispatcher::resolvePreEditStatus((int) $contribution['id'], $triggerData);
     return self::matches($expected, $previous);
   }
 

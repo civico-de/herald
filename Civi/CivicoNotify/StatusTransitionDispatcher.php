@@ -41,4 +41,30 @@ class StatusTransitionDispatcher {
     return self::$preEditStatus[$contributionId] ?? NULL;
   }
 
+  /**
+   * Resolve the pre-edit status: in-request snapshot first, then CiviRules'
+   * own original data as fallback.
+   *
+   * The static snapshot only lives for the current PHP request. When a rule
+   * runs delayed (CiviRules queue/cron), the snapshot is gone — but CiviRules
+   * serialises the trigger data including original entity values into the
+   * queue, so getOriginalData() still works there.
+   *
+   * @param object|null $triggerData CRM_Civirules_TriggerData_TriggerData
+   */
+  public static function resolvePreEditStatus(int $contributionId, $triggerData = NULL): ?int {
+    $snapshot = self::getPreEditStatus($contributionId);
+    if ($snapshot !== NULL) {
+      return $snapshot;
+    }
+    if ($triggerData instanceof \CRM_Civirules_TriggerData_Interface_OriginalData
+      && strtolower((string) $triggerData->getOriginalEntity()) === 'contribution') {
+      $original = $triggerData->getOriginalData();
+      if (!empty($original['contribution_status_id'])) {
+        return (int) $original['contribution_status_id'];
+      }
+    }
+    return NULL;
+  }
+
 }
