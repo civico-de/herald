@@ -3,7 +3,7 @@
 Generic notification + digest layer for CiviCRM.
 
 - **Channel-pluggable** — Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover and Email ship in v0.1; others drop in via `Civi\Herald\Channel\ChannelInterface`.
-- **Template-driven** — admin-editable `MessageTemplate` workflows, rendered with `CRM_Core_TokenSmarty`.
+- **Template-driven** — admin-editable `MessageTemplate` workflows, rendered as Smarty strings via `CRM_Core_Smarty`.
 - **CiviRules-integrated** — exposes Actions ("Send Notification", "Send Contribution Digest", "Send Contribution Alert") that any CiviRules trigger can fire. No bespoke cron.
 
 Status: **alpha (v0.1)** — feature-complete for the migration. Ships:

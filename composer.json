@@ -1,6 +1,6 @@
 {
     "name": "civico-de/herald",
-    "description": "Generic notification + digest layer for CiviCRM. Channel-pluggable (Telegram first), template-driven, CiviRules-integrated.",
+    "description": "Generic notification + digest layer for CiviCRM. Channel-pluggable (Telegram, generic Webhook, ntfy.sh, Pushover, Email), template-driven, CiviRules-integrated.",
     "type": "civicrm-ext",
     "license": "AGPL-3.0",
     "authors": [
