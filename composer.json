@@ -1,5 +1,5 @@
 {
-    "name": "jfilter/civico_notify",
+    "name": "jfilter/herald",
     "description": "Generic notification + digest layer for CiviCRM. Channel-pluggable (Telegram first), template-driven, CiviRules-integrated.",
     "type": "civicrm-ext",
     "license": "AGPL-3.0",
@@ -18,7 +18,7 @@
     },
     "autoload": {
         "psr-4": {
-            "Civi\\CivicoNotify\\": "Civi/CivicoNotify/"
+            "Civi\\Herald\\": "Civi/Herald/"
         },
         "psr-0": {
             "CRM_": "."
@@ -26,7 +26,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Civi\\CivicoNotify\\": "tests/phpunit/Civi/CivicoNotify/"
+            "Civi\\Herald\\": "tests/phpunit/Civi/Herald/"
         }
     },
     "config": {

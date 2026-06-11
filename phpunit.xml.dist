@@ -6,7 +6,7 @@
   convertNoticesToExceptions="true"
   convertWarningsToExceptions="true">
   <testsuites>
-    <testsuite name="civico_notify">
+    <testsuite name="herald">
       <directory>tests/phpunit</directory>
     </testsuite>
   </testsuites>

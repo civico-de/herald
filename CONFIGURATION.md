@@ -1,8 +1,8 @@
-# civico_notify — configuration recipes
+# herald — configuration recipes
 
 Three end-to-end recipes for typical setups. Each one is admin-configurable in CiviCRM (`Administer → CiviRules`) — no extension code changes needed.
 
-Each action ships with a parameter form (see `CRM/CivicoNotify/Form/CivirulesAction/`), so admins fill in fields in the CiviRules UI rather than editing JSON. The JSON snippets below show the equivalent stored-parameter shape — handy as a reference, for `cv` scripting, or for diffing rule definitions across environments.
+Each action ships with a parameter form (see `CRM/Herald/Form/CivirulesAction/`), so admins fill in fields in the CiviRules UI rather than editing JSON. The JSON snippets below show the equivalent stored-parameter shape — handy as a reference, for `cv` scripting, or for diffing rule definitions across environments.
 
 ---
 
@@ -13,8 +13,8 @@ This is the configuration that takes over from the two cron jobs on production (
 ### Settings (one-off)
 
 ```bash
-cv setting:set civico_notify_telegram_bot_token=<bot-token>
-cv setting:set civico_notify_telegram_default_chat_id=-5137408650
+cv setting:set herald_telegram_bot_token=<bot-token>
+cv setting:set herald_telegram_default_chat_id=-5137408650
 ```
 
 ### Rule 1 — Daily digest at 08:00
@@ -23,13 +23,13 @@ cv setting:set civico_notify_telegram_default_chat_id=-5137408650
 |---|---|
 | Trigger | `Cron daily 08:00` (built-in CiviRules scheduled trigger) |
 | Conditions | none |
-| Action | `CiviCo Notify: Send contribution digest` |
+| Action | `Herald: Send contribution digest` |
 
 Action params:
 ```json
 {
   "channel": "telegram",
-  "template": "civico_notify_contribution_digest_daily",
+  "template": "herald_contribution_digest_daily",
   "period": "yesterday",
   "campaign_id": 2,
   "financial_type_id": 1,
@@ -46,13 +46,13 @@ Action params:
 |---|---|
 | Trigger | `New entity is created — Contribution` |
 | Conditions | `Contribution status = Completed` AND `Contribution source NOT LIKE %Bank TX%` |
-| Action | `CiviCo Notify: Send contribution alert` |
+| Action | `Herald: Send contribution alert` |
 
 Params:
 ```json
 {
   "channel": "telegram",
-  "template": "civico_notify_contribution_alert_completed",
+  "template": "herald_contribution_alert_completed",
   "campaign_id": 2,
   "goal": 30000,
   "campaign_title": "Campaign 2026"
@@ -65,13 +65,13 @@ Params:
 |---|---|
 | Trigger | `New entity is created — Contribution` |
 | Conditions | `Contribution status = Pending` |
-| Action | `CiviCo Notify: Send contribution alert` |
+| Action | `Herald: Send contribution alert` |
 
 Params:
 ```json
 {
   "channel": "telegram",
-  "template": "civico_notify_contribution_alert_pending",
+  "template": "herald_contribution_alert_pending",
   "campaign_id": 2
 }
 ```
@@ -81,8 +81,8 @@ Params:
 | Field | Value |
 |---|---|
 | Trigger | `Entity is changed — Contribution` |
-| Conditions | `CiviCo Notify: Previous Contribution status` (set `previous_status_id` to the Pending value, usually `2`) AND `Contribution status = Completed` AND `Contribution source LIKE %Bank TX%` |
-| Action | `CiviCo Notify: Send contribution alert` |
+| Conditions | `Herald: Previous Contribution status` (set `previous_status_id` to the Pending value, usually `2`) AND `Contribution status = Completed` AND `Contribution source LIKE %Bank TX%` |
+| Action | `Herald: Send contribution alert` |
 
 > **Note on delayed rule execution:** the previous-status value is captured in-request via `hook_civicrm_pre`. When a rule runs delayed (CiviRules queue/cron), the condition falls back to the original entity data CiviRules serialises into the queue — both paths cover Pending → Completed detection.
 
@@ -90,7 +90,7 @@ Params:
 ```json
 {
   "channel": "telegram",
-  "template": "civico_notify_contribution_status_changed",
+  "template": "herald_contribution_status_changed",
   "campaign_id": 2,
   "goal": 30000
 }
@@ -98,7 +98,7 @@ Params:
 
 > **Dedup** — the "Bank TX" match always fires Rule 4. Rule 2's `NOT LIKE %Bank TX%` condition is what keeps these out of the regular completed alert. Together they replicate the dedup logic from `opscli/lib/telegram/donation-monitor.ts`.
 
-> **Previous-status condition** — `CiviCo Notify: Previous Contribution status` is registered by this extension (see `civirules_conditions.json`). It reads the pre-edit snapshot captured in `hook_civicrm_pre`, so it is reliable independent of CiviRules core's optional change-tracking. Look up the numeric ID for "Pending" via `cv api4 OptionValue.get +w 'option_group_id:name=contribution_status' +s 'value,name'` (often `2`).
+> **Previous-status condition** — `Herald: Previous Contribution status` is registered by this extension (see `civirules_conditions.json`). It reads the pre-edit snapshot captured in `hook_civicrm_pre`, so it is reliable independent of CiviRules core's optional change-tracking. Look up the numeric ID for "Pending" via `cv api4 OptionValue.get +w 'option_group_id:name=contribution_status' +s 'value,name'` (often `2`).
 
 ---
 
@@ -111,7 +111,7 @@ Smaller setup with just stripe + occasional offline donations. No source-pattern
 ```json
 {
   "channel": "telegram",
-  "template": "civico_notify_contribution_digest_daily",
+  "template": "herald_contribution_digest_daily",
   "period": "yesterday",
   "show_pending": false,
   "show_histogram": true
@@ -125,7 +125,7 @@ Trigger: `New entity is created — Contribution`. Condition: `Contribution stat
 ```json
 {
   "channel": "telegram",
-  "template": "civico_notify_contribution_alert_completed"
+  "template": "herald_contribution_alert_completed"
 }
 ```
 
@@ -138,7 +138,7 @@ When automatic bucketing doesn't match the campaign's narrative (e.g. you want t
 ```json
 {
   "channel": "telegram",
-  "template": "civico_notify_contribution_digest_daily",
+  "template": "herald_contribution_digest_daily",
   "period": "last_7_days",
   "campaign_id": 5,
   "bucket_edges": [0, 100, 1000, 10000, 100000, 1000000],
@@ -151,13 +151,13 @@ When automatic bucketing doesn't match the campaign's narrative (e.g. you want t
 
 ## Subscriber-mode (per-contact preferences)
 
-For setups where multiple users want different notifications routed to *their own* channels, civico_notify ships a per-contact preferences custom group (`civico_notify_preferences`) plus a subscriber-fanout delivery mode on every action.
+For setups where multiple users want different notifications routed to *their own* channels, herald ships a per-contact preferences custom group (`herald_preferences`) plus a subscriber-fanout delivery mode on every action.
 
 ### One-off setup
 
 ```bash
-cv ext:enable civico_notify   # creates the option group + custom group + 6 fields
-cv scr /var/www/html/ext/civico_notify/bin/install-profile.php
+cv ext:enable herald   # creates the option group + custom group + 6 fields
+cv scr /var/www/html/ext/herald/bin/install-profile.php
 # → prints the self-service URL: /civicrm/profile/edit?gid=<N>&reset=1
 ```
 
@@ -175,7 +175,7 @@ CiviCRM auto-resolves the profile to the logged-in contact (`access CiviCRM` per
 |---|---|
 | Trigger | `New entity is created — Contribution` |
 | Conditions | `Contribution status = Completed` |
-| Action | `CiviCo Notify: Send contribution alert` |
+| Action | `Herald: Send contribution alert` |
 
 In the action form:
 
@@ -187,7 +187,7 @@ When the rule fires, the action queries all contacts whose `subscriptions` field
 
 ### Adding a custom subscription type
 
-The vocabulary lives in option group `civico_notify_subscription_type`. Add new entries via the CiviCRM UI (*Administer → Customize Data and Screens → Option Groups*) or via `cv api4 OptionValue.create`. Reference the new value's `name` in the action's Subscription-type dropdown.
+The vocabulary lives in option group `herald_subscription_type`. Add new entries via the CiviCRM UI (*Administer → Customize Data and Screens → Option Groups*) or via `cv api4 OptionValue.create`. Reference the new value's `name` in the action's Subscription-type dropdown.
 
 ---
 
@@ -197,7 +197,7 @@ The vocabulary lives in option group `civico_notify_subscription_type`. Add new 
 
 ### Telegram (`channel: "telegram"`)
 
-Top-level fields (already in the form): `chat_id`, `parse_mode` (`HTML`/`MarkdownV2`/empty), `disable_notification`, `disable_web_page_preview`. Falls back to `civico_notify_telegram_default_chat_id` setting if `chat_id` is empty.
+Top-level fields (already in the form): `chat_id`, `parse_mode` (`HTML`/`MarkdownV2`/empty), `disable_notification`, `disable_web_page_preview`. Falls back to `herald_telegram_default_chat_id` setting if `chat_id` is empty.
 
 ### Webhook (`channel: "webhook"`)
 
@@ -206,7 +206,7 @@ Generic POST. Covers Slack/Discord/Mattermost incoming webhooks plus any custom 
 ```json
 {
   "channel": "webhook",
-  "template": "civico_notify_contribution_alert_completed",
+  "template": "herald_contribution_alert_completed",
   "channel_config": {
     "webhook_url": "https://hooks.slack.com/services/T0/B0/secret",
     "webhook_body_format": "slack"
@@ -216,12 +216,12 @@ Generic POST. Covers Slack/Discord/Mattermost incoming webhooks plus any custom 
 
 | Key | Type | Meaning |
 |---|---|---|
-| `webhook_url` | string | Endpoint (required; falls back to `civico_notify_webhook_default_url`) |
+| `webhook_url` | string | Endpoint (required; falls back to `herald_webhook_default_url`) |
 | `webhook_method` | enum | `POST` (default) or `PUT` |
 | `webhook_body_format` | enum | `text` (raw body, default) / `json` / `slack` (`{"text":…}`) / `discord` (`{"content":…}`) |
 | `webhook_body_key` | string | Custom JSON key when `body_format=json` (default `text`) |
 | `webhook_headers` | object | Extra request headers |
-| `webhook_auth_token` | string | Sent as `Authorization: Bearer …` if no Authorization header is in `webhook_headers`. The `civico_notify_webhook_default_auth_token` setting is only used when the URL also comes from `civico_notify_webhook_default_url` — the default token is paired with the default endpoint and is never attached to a caller-supplied URL (e.g. a subscriber's personal webhook). |
+| `webhook_auth_token` | string | Sent as `Authorization: Bearer …` if no Authorization header is in `webhook_headers`. The `herald_webhook_default_auth_token` setting is only used when the URL also comes from `herald_webhook_default_url` — the default token is paired with the default endpoint and is never attached to a caller-supplied URL (e.g. a subscriber's personal webhook). |
 
 ### ntfy.sh (`channel: "ntfy"`)
 
@@ -230,7 +230,7 @@ Free, simple, self-hostable. Topic == push channel; metadata goes in `X-*` heade
 ```json
 {
   "channel": "ntfy",
-  "template": "civico_notify_contribution_alert_completed",
+  "template": "herald_contribution_alert_completed",
   "channel_config": {
     "ntfy_topic": "donations",
     "ntfy_title": "New donation",
@@ -243,14 +243,14 @@ Free, simple, self-hostable. Topic == push channel; metadata goes in `X-*` heade
 
 | Key | Type | Meaning |
 |---|---|---|
-| `ntfy_topic` | string | Topic to publish to (required; falls back to `civico_notify_ntfy_default_topic`) |
+| `ntfy_topic` | string | Topic to publish to (required; falls back to `herald_ntfy_default_topic`) |
 | `ntfy_title` | string | `X-Title` header |
 | `ntfy_priority` | int | `X-Priority` (1=min … 5=max) |
 | `ntfy_tags` | string | `X-Tags` (comma-separated; emoji tags supported) |
 | `ntfy_click` | string | URL opened when the notification is tapped |
 | `ntfy_markdown` | bool | Render the body as Markdown (`X-Markdown: yes`) |
 
-Server URL comes from `civico_notify_ntfy_server` (default `https://ntfy.sh`). Bearer auth via `civico_notify_ntfy_token`.
+Server URL comes from `herald_ntfy_server` (default `https://ntfy.sh`). Bearer auth via `herald_ntfy_token`.
 
 ### Pushover (`channel: "pushover"`)
 
@@ -259,7 +259,7 @@ Paid mobile-push service. Requires an app token (one-off per install) and a user
 ```json
 {
   "channel": "pushover",
-  "template": "civico_notify_contribution_alert_completed",
+  "template": "herald_contribution_alert_completed",
   "channel_config": {
     "pushover_title": "New donation",
     "pushover_priority": 1,
@@ -280,7 +280,7 @@ Paid mobile-push service. Requires an app token (one-off per install) and a user
 | `pushover_url_title` | string | Label for `pushover_url` |
 | `pushover_html` | bool | Body is Pushover-flavoured HTML |
 
-App token comes from `civico_notify_pushover_app_token` (required). User key falls back to `civico_notify_pushover_default_user_key`.
+App token comes from `herald_pushover_app_token` (required). User key falls back to `herald_pushover_default_user_key`.
 
 ---
 

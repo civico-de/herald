@@ -1,12 +1,12 @@
 <?php
 
 /**
- * One-off: create the `civico_notify_my_preferences` UFGroup (profile) so
+ * One-off: create the `herald_my_preferences` UFGroup (profile) so
  * users can self-manage their notification prefs at
  * /civicrm/profile/edit?gid=<id>&reset=1.
  *
  * Run via:
- *   cv scr /var/www/html/ext/civico_notify/bin/install-profile.php
+ *   cv scr /var/www/html/ext/herald/bin/install-profile.php
  *
  * Idempotent — re-running is safe; existing UFGroup/UFField rows are kept.
  *
@@ -21,7 +21,7 @@ use Civi\Api4\CustomField;
 use Civi\Api4\UFField;
 use Civi\Api4\UFGroup;
 
-$profileName = 'civico_notify_my_preferences';
+$profileName = 'herald_my_preferences';
 $profileTitle = 'My notification preferences';
 
 $existing = UFGroup::get(FALSE)
@@ -32,7 +32,7 @@ $existing = UFGroup::get(FALSE)
 
 if ($existing) {
   $gid = (int) $existing['id'];
-  echo "[civico_notify] UFGroup '{$profileName}' already exists (id={$gid}).\n";
+  echo "[herald] UFGroup '{$profileName}' already exists (id={$gid}).\n";
 }
 else {
   $gid = (int) UFGroup::create(FALSE)
@@ -44,7 +44,7 @@ else {
     ->addValue('help_pre', 'Pick your preferred channel and what kinds of notifications you want to receive.')
     ->execute()
     ->first()['id'];
-  echo "[civico_notify] Created UFGroup '{$profileName}' (id={$gid}).\n";
+  echo "[herald] Created UFGroup '{$profileName}' (id={$gid}).\n";
 }
 
 $fieldOrder = [
@@ -59,12 +59,12 @@ $fieldOrder = [
 foreach ($fieldOrder as $f) {
   $cf = CustomField::get(FALSE)
     ->addSelect('id', 'name')
-    ->addWhere('custom_group_id:name', '=', 'civico_notify_preferences')
+    ->addWhere('custom_group_id:name', '=', 'herald_preferences')
     ->addWhere('name', '=', $f['name'])
     ->execute()
     ->first();
   if (!$cf) {
-    echo "[civico_notify] WARN: custom field 'civico_notify_preferences.{$f['name']}' missing — did you run `cv ext:enable civico_notify` first?\n";
+    echo "[herald] WARN: custom field 'herald_preferences.{$f['name']}' missing — did you run `cv ext:enable herald` first?\n";
     continue;
   }
   $fieldName = 'custom_' . $cf['id'];
@@ -77,7 +77,7 @@ foreach ($fieldOrder as $f) {
     ->first();
 
   if ($existingField) {
-    echo "[civico_notify]   - UFField for {$f['name']} already present (id={$existingField['id']}).\n";
+    echo "[herald]   - UFField for {$f['name']} already present (id={$existingField['id']}).\n";
     continue;
   }
 
@@ -91,7 +91,7 @@ foreach ($fieldOrder as $f) {
     ->addValue('visibility', 'User and User Admin Only')
     ->execute()
     ->first()['id'];
-  echo "[civico_notify]   + Added UFField {$f['name']} (id={$newId}).\n";
+  echo "[herald]   + Added UFField {$f['name']} (id={$newId}).\n";
 }
 
-echo "\n[civico_notify] Done. Self-service URL: /civicrm/profile/edit?gid={$gid}&reset=1\n";
+echo "\n[herald] Done. Self-service URL: /civicrm/profile/edit?gid={$gid}&reset=1\n";

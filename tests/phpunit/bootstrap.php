@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PHPUnit bootstrap for civico_notify.
+ * PHPUnit bootstrap for herald.
  *
  * Standard pattern produced by `civix generate:test --template headless`.
  * Designed to run inside the civikitchen :standalone container.

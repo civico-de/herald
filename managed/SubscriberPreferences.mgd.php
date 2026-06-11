@@ -1,15 +1,15 @@
 <?php
 
-use CRM_CivicoNotify_ExtensionUtil as E;
+use CRM_Herald_ExtensionUtil as E;
 
 /**
  * Per-contact notification preferences shipped via mgd-php@1.
  *
  * Defines:
- *   - Option group `civico_notify_subscription_type` listing the supported
+ *   - Option group `herald_subscription_type` listing the supported
  *     subscription kinds (completed alerts, daily digests, …) so they're
  *     queryable, translatable, and admin-extensible.
- *   - Custom group `civico_notify_preferences` on Contact with the per-user
+ *   - Custom group `herald_preferences` on Contact with the per-user
  *     channel pick + channel-specific recipient identifiers + the multi-value
  *     `subscriptions` field.
  *
@@ -51,7 +51,7 @@ $preferenceFields = [
     'label' => E::ts('Subscriptions'),
     'data_type' => 'String',
     'html_type' => 'CheckBox',
-    'option_group_name' => 'civico_notify_subscription_type',
+    'option_group_name' => 'herald_subscription_type',
     'serialize' => 1,
     'weight' => 60,
     'help_pre' => E::ts('Tick the kinds of notifications you want to receive on your preferred channel.'),
@@ -61,16 +61,16 @@ $preferenceFields = [
 $managed = [];
 
 $managed[] = [
-  'name' => 'OptionGroup_civico_notify_subscription_type',
+  'name' => 'OptionGroup_herald_subscription_type',
   'entity' => 'OptionGroup',
   'cleanup' => 'unused',
   'update' => 'unmodified',
   'params' => [
     'version' => 4,
     'values' => [
-      'name' => 'civico_notify_subscription_type',
-      'title' => E::ts('CiviCo Notify: Subscription type'),
-      'description' => E::ts('Kinds of notification a contact can opt into. Used by civico_notify subscriber-mode actions.'),
+      'name' => 'herald_subscription_type',
+      'title' => E::ts('Herald: Subscription type'),
+      'description' => E::ts('Kinds of notification a contact can opt into. Used by herald subscriber-mode actions.'),
       'is_active' => TRUE,
       'is_reserved' => FALSE,
     ],
@@ -79,14 +79,14 @@ $managed[] = [
 
 foreach ($subscriptionTypes as $st) {
   $managed[] = [
-    'name' => 'OptionValue_civico_notify_subscription_type_' . $st['name'],
+    'name' => 'OptionValue_herald_subscription_type_' . $st['name'],
     'entity' => 'OptionValue',
     'cleanup' => 'unused',
     'update' => 'unmodified',
     'params' => [
       'version' => 4,
       'values' => [
-        'option_group_id.name' => 'civico_notify_subscription_type',
+        'option_group_id.name' => 'herald_subscription_type',
         'name' => $st['name'],
         'value' => $st['name'],
         'label' => $st['label'],
@@ -98,27 +98,27 @@ foreach ($subscriptionTypes as $st) {
 }
 
 $managed[] = [
-  'name' => 'CustomGroup_civico_notify_preferences',
+  'name' => 'CustomGroup_herald_preferences',
   'entity' => 'CustomGroup',
   'cleanup' => 'unused',
   'update' => 'unmodified',
   'params' => [
     'version' => 4,
     'values' => [
-      'name' => 'civico_notify_preferences',
+      'name' => 'herald_preferences',
       'title' => E::ts('Notification preferences'),
       'extends' => 'Contact',
       'style' => 'Inline',
       'collapse_display' => FALSE,
       'is_active' => TRUE,
-      'help_pre' => E::ts('How and when this contact wants to receive civico_notify alerts and digests.'),
+      'help_pre' => E::ts('How and when this contact wants to receive herald alerts and digests.'),
     ],
   ],
 ];
 
 foreach ($preferenceFields as $f) {
   $values = [
-    'custom_group_id.name' => 'civico_notify_preferences',
+    'custom_group_id.name' => 'herald_preferences',
     'name' => $f['name'],
     'label' => $f['label'],
     'data_type' => $f['data_type'],
@@ -141,7 +141,7 @@ foreach ($preferenceFields as $f) {
     $values['serialize'] = (int) $f['serialize'];
   }
   $managed[] = [
-    'name' => 'CustomField_civico_notify_preferences_' . $f['name'],
+    'name' => 'CustomField_herald_preferences_' . $f['name'],
     'entity' => 'CustomField',
     'cleanup' => 'unused',
     'update' => 'unmodified',

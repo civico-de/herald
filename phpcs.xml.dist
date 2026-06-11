@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<ruleset name="civico_notify">
+<ruleset name="herald">
   <description>civicrm/coder ruleset, scoped to non-generated source.</description>
 
   <arg name="extensions" value="php"/>
@@ -8,9 +8,9 @@
 
   <file>Civi</file>
   <file>CRM</file>
-  <file>civico_notify.php</file>
+  <file>herald.php</file>
 
-  <exclude-pattern>civico_notify.civix.php</exclude-pattern>
+  <exclude-pattern>herald.civix.php</exclude-pattern>
   <exclude-pattern>vendor/*</exclude-pattern>
   <exclude-pattern>tests/phpunit/bootstrap.php</exclude-pattern>
 

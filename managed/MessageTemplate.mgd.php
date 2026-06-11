@@ -1,12 +1,12 @@
 <?php
 
-use CRM_CivicoNotify_ExtensionUtil as E;
+use CRM_Herald_ExtensionUtil as E;
 
 /**
- * Workflow MessageTemplates shipped with civico_notify.
+ * Workflow MessageTemplates shipped with herald.
  *
  * Loaded by the mgd-php@1 mixin. Each entry creates a MessageTemplate row on
- * `cv ext:enable civico_notify` and is admin-editable via *Mailings →
+ * `cv ext:enable herald` and is admin-editable via *Mailings →
  * Message Templates*. The `update => unmodified` flag means re-installs only
  * overwrite templates the admin hasn't customised — user edits are preserved.
  *
@@ -16,8 +16,8 @@ use CRM_CivicoNotify_ExtensionUtil as E;
 
 $templates = [
   [
-    'workflow_name' => 'civico_notify_contribution_digest_daily',
-    'msg_title' => E::ts('CiviCo Notify: Daily contribution digest'),
+    'workflow_name' => 'herald_contribution_digest_daily',
+    'msg_title' => E::ts('Herald: Daily contribution digest'),
     'msg_subject' => '{$period.label} — {$totals.count} Spende(n), {$totals.amount|crmMoney}',
     'msg_html' => <<<'TPL'
 📊 <b>Tagesreport {$period.label}</b>
@@ -46,8 +46,8 @@ Eingegangen: {$totals.amount|crmMoney} ({$totals.count})
 TPL,
   ],
   [
-    'workflow_name' => 'civico_notify_contribution_digest_weekly',
-    'msg_title' => E::ts('CiviCo Notify: Weekly contribution digest'),
+    'workflow_name' => 'herald_contribution_digest_weekly',
+    'msg_title' => E::ts('Herald: Weekly contribution digest'),
     'msg_subject' => '📈 {$period.label}: {$totals.count} Spende(n), {$totals.amount|crmMoney}',
     'msg_html' => <<<'TPL'
 📈 <b>Wochenreport {$period.label}</b>
@@ -75,8 +75,8 @@ Eingegangen: {$totals.amount|crmMoney} ({$totals.count})
 TPL,
   ],
   [
-    'workflow_name' => 'civico_notify_contribution_alert_completed',
-    'msg_title' => E::ts('CiviCo Notify: New completed contribution'),
+    'workflow_name' => 'herald_contribution_alert_completed',
+    'msg_title' => E::ts('Herald: New completed contribution'),
     'msg_subject' => '✅ {$contribution.total_amount|crmMoney} — {$contribution.source}',
     'msg_html' => <<<'TPL'
 ✅ <b>Spende eingegangen</b>: {$contribution.total_amount|crmMoney}
@@ -90,8 +90,8 @@ Quelle: {$contribution.source}
 TPL,
   ],
   [
-    'workflow_name' => 'civico_notify_contribution_alert_pending',
-    'msg_title' => E::ts('CiviCo Notify: New pending contribution'),
+    'workflow_name' => 'herald_contribution_alert_pending',
+    'msg_title' => E::ts('Herald: New pending contribution'),
     'msg_subject' => '🏦 {$contribution.total_amount|crmMoney} angekündigt',
     'msg_html' => <<<'TPL'
 🏦 <b>Spende angekündigt</b>: {$contribution.total_amount|crmMoney}
@@ -103,8 +103,8 @@ Quelle: {$contribution.source}
 TPL,
   ],
   [
-    'workflow_name' => 'civico_notify_contribution_status_changed',
-    'msg_title' => E::ts('CiviCo Notify: Contribution status changed'),
+    'workflow_name' => 'herald_contribution_status_changed',
+    'msg_title' => E::ts('Herald: Contribution status changed'),
     'msg_subject' => '🔄 {$contribution.total_amount|crmMoney}: {$from_status} → {$to_status}',
     'msg_html' => <<<'TPL'
 🔄 <b>Status geändert</b>: {$from_status} → {$to_status}
@@ -118,8 +118,8 @@ Quelle: {$contribution.source}
 TPL,
   ],
   [
-    'workflow_name' => 'civico_notify_membership_signup_alert',
-    'msg_title' => E::ts('CiviCo Notify: New membership signup'),
+    'workflow_name' => 'herald_membership_signup_alert',
+    'msg_title' => E::ts('Herald: New membership signup'),
     'msg_subject' => '🎉 Neue Mitgliedschaft: {$contact.display_name}',
     'msg_html' => <<<'TPL'
 🎉 <b>Neue Mitgliedschaft</b>
@@ -133,8 +133,8 @@ Status: {$membership.status}
 TPL,
   ],
   [
-    'workflow_name' => 'civico_notify_event_registration_alert',
-    'msg_title' => E::ts('CiviCo Notify: New event registration'),
+    'workflow_name' => 'herald_event_registration_alert',
+    'msg_title' => E::ts('Herald: New event registration'),
     'msg_subject' => '🎟️ {$event.title}: {$participant.display_name}',
     'msg_html' => <<<'TPL'
 🎟️ <b>Neue Event-Registrierung</b>

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<extension key="civico_notify" type="module">
-  <file>civico_notify</file>
-  <name>CiviCo Notify</name>
+<extension key="herald" type="module">
+  <file>herald</file>
+  <name>Herald</name>
   <description>Generic notification + digest layer for CiviCRM. Channel-pluggable (Telegram, generic Webhook, ntfy.sh, Pushover; Email pluggable), template-driven, CiviRules-integrated.</description>
   <license>AGPL-3.0</license>
   <authors>
@@ -12,9 +12,9 @@
     </author>
   </authors>
   <urls>
-    <url desc="Main Extension Page">https://github.com/jfilter/civico_notify</url>
-    <url desc="Documentation">https://github.com/jfilter/civico_notify</url>
-    <url desc="Support">https://github.com/jfilter/civico_notify/issues</url>
+    <url desc="Main Extension Page">https://github.com/jfilter/herald</url>
+    <url desc="Documentation">https://github.com/jfilter/herald</url>
+    <url desc="Support">https://github.com/jfilter/herald/issues</url>
     <url desc="Licensing">https://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
   <releaseDate>2026-05-07</releaseDate>
@@ -29,7 +29,7 @@
     <psr4 prefix="Civi\" path="Civi"/>
   </classloader>
   <civix>
-    <namespace>CRM/CivicoNotify</namespace>
+    <namespace>CRM/Herald</namespace>
     <format>25.01.1</format>
   </civix>
   <mixins>
@@ -37,5 +37,5 @@
     <mixin>setting-php@1.0.0</mixin>
     <mixin>smarty@1.0.3</mixin>
   </mixins>
-  <upgrader>CRM_CivicoNotify_Upgrader</upgrader>
+  <upgrader>CRM_Herald_Upgrader</upgrader>
 </extension>

@@ -1,8 +1,8 @@
-# civico_notify
+# herald
 
 Generic notification + digest layer for CiviCRM.
 
-- **Channel-pluggable** — Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover ship in v0.1; Email and others drop in via `Civi\CivicoNotify\Channel\ChannelInterface`.
+- **Channel-pluggable** — Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover ship in v0.1; Email and others drop in via `Civi\Herald\Channel\ChannelInterface`.
 - **Template-driven** — admin-editable `MessageTemplate` workflows, rendered with `CRM_Core_TokenSmarty`.
 - **CiviRules-integrated** — exposes Actions ("Send Notification", "Send Contribution Digest", "Send Contribution Alert") that any CiviRules trigger can fire. No bespoke cron.
 
@@ -20,29 +20,29 @@ Email is designed-for via `ChannelInterface` but not yet implemented.
 ## Install
 
 ```bash
-cv ext:download civico_notify  # once published; for now: clone into /ext/
-cv ext:enable civico_notify
+cv ext:download herald  # once published; for now: clone into /ext/
+cv ext:enable herald
 ```
 
 Configure via settings — only the channels you actually use:
 
 ```bash
 # Telegram
-cv setting:set civico_notify_telegram_bot_token=<bot-token>
-cv setting:set civico_notify_telegram_default_chat_id=<chat-id>
+cv setting:set herald_telegram_bot_token=<bot-token>
+cv setting:set herald_telegram_default_chat_id=<chat-id>
 
 # Webhook (Slack/Discord/Mattermost/custom — URL also configurable per-action)
-cv setting:set civico_notify_webhook_default_url=<https://hooks.slack.com/...>
-cv setting:set civico_notify_webhook_default_auth_token=<bearer-token>   # optional
+cv setting:set herald_webhook_default_url=<https://hooks.slack.com/...>
+cv setting:set herald_webhook_default_auth_token=<bearer-token>   # optional
 
 # ntfy.sh (or self-hosted)
-cv setting:set civico_notify_ntfy_server=https://ntfy.sh                  # default
-cv setting:set civico_notify_ntfy_default_topic=<topic>
-cv setting:set civico_notify_ntfy_token=<bearer-token>                    # optional, for protected topics
+cv setting:set herald_ntfy_server=https://ntfy.sh                  # default
+cv setting:set herald_ntfy_default_topic=<topic>
+cv setting:set herald_ntfy_token=<bearer-token>                    # optional, for protected topics
 
 # Pushover
-cv setting:set civico_notify_pushover_app_token=<app-token>
-cv setting:set civico_notify_pushover_default_user_key=<user-or-group-key>
+cv setting:set herald_pushover_app_token=<app-token>
+cv setting:set herald_pushover_default_user_key=<user-or-group-key>
 ```
 
 ## Smoke test
@@ -51,17 +51,17 @@ Cleanest path uses the bundled APIv4 actions:
 
 ```bash
 # Send a real test message through the configured channel
-cv api4 CivicoNotify.testTelegram message='<b>civico_notify smoke test</b>'
+cv api4 Herald.testTelegram message='<b>herald smoke test</b>'
 
 # Render a workflow template without sending — useful for previewing
-cv api4 CivicoNotify.renderTemplate workflow=civico_notify_contribution_alert_completed \
+cv api4 Herald.renderTemplate workflow=herald_contribution_alert_completed \
     vars='{"contribution":{"total_amount":42.5,"source":"Stripe"}}'
 ```
 
 Or as a PHP script (no API entity, equivalent functionality):
 
 ```bash
-cv scr /var/www/html/ext/civico_notify/bin/test-telegram.php
+cv scr /var/www/html/ext/herald/bin/test-telegram.php
 ```
 
 ## Deploy to production
@@ -77,11 +77,11 @@ See [CONFIGURATION.md](CONFIGURATION.md) for end-to-end CiviRules recipes (migra
 
 ## Self-service: per-contact notification preferences
 
-Each contact can pick *their* preferred channel (Telegram / Webhook / ntfy / Pushover) and the kinds of notifications they want, via a CiviCRM custom group `civico_notify_preferences` shipped with the extension. Admins fill these in from the contact view; for self-service, point staff at a CiviCRM profile that exposes the same fields.
+Each contact can pick *their* preferred channel (Telegram / Webhook / ntfy / Pushover) and the kinds of notifications they want, via a CiviCRM custom group `herald_preferences` shipped with the extension. Admins fill these in from the contact view; for self-service, point staff at a CiviCRM profile that exposes the same fields.
 
 ```bash
 # One-off after enabling the extension: create the user-facing profile
-cv scr /var/www/html/ext/civico_notify/bin/install-profile.php
+cv scr /var/www/html/ext/herald/bin/install-profile.php
 # → prints a URL like /civicrm/profile/edit?gid=42&reset=1
 ```
 
@@ -93,9 +93,9 @@ The repo ships its own [civikitchen](https://github.com/jfilter/civikitchen)-bas
 
 ```bash
 cd tests/docker && docker compose up -d           # CiviCRM on :8090, phpMyAdmin :8091, Maildev :1090
-docker compose exec app cv ext:enable civico_notify
+docker compose exec app cv ext:enable herald
 docker compose exec -T -e CIVICRM_UF=UnitTests app \
-    bash -c "cd /var/www/html/ext/civico_notify && vendor/bin/phpunit"
+    bash -c "cd /var/www/html/ext/herald && vendor/bin/phpunit"
 ```
 
 The compose file pulls `ghcr.io/jfilter/civicrm-dev:standalone` and pre-enables CiviRules via `CIVICRM_EXTRA_EXTENSIONS`, so the first `up` is a one-shot setup. The image runs `composer install` on bind-mounted extensions automatically (`CIVICRM_AUTO_COMPOSER=1` by default), so `vendor/bin/phpunit` is available without a manual composer step. The `cv ext:enable` step is needed once after a fresh DB; subsequent `docker compose up` runs find the extension already enabled.
