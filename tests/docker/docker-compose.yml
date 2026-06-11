@@ -14,7 +14,7 @@ name: herald-test
 
 services:
   app:
-    image: ghcr.io/jfilter/civicrm-dev:standalone
+    image: ghcr.io/jfilter/civikitchen:standalone
     pull_policy: always
     depends_on:
       db:
@@ -46,6 +46,11 @@ services:
       MYSQL_PASSWORD: civicrm
     volumes:
       - db-data:/var/lib/mysql
+      # Pre-creates civicrm_test + grant — without it the headless suite
+      # falls back to the live DB and leaks test settings (init scripts run
+      # only on FIRST volume init; for an existing db-data volume apply the
+      # SQL manually or `docker compose down -v` first).
+      - ./initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s

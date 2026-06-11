@@ -3,8 +3,12 @@
 /**
  * PHPUnit bootstrap for herald.
  *
- * Standard pattern produced by `civix generate:test --template headless`.
- * Designed to run inside the civikitchen :standalone container.
+ * Boots only the CiviCRM CLASSLOADER — not a full Civi boot. Under
+ * CIVICRM_UF=UnitTests the Civi\Test framework then bootstraps headless
+ * against TEST_DB_DSN (the isolated civicrm_test scratch DB that civikitchen
+ * configures in ~/.cv.json). A `php:boot --level=full` here would bootstrap
+ * against the LIVE database first, and the headless run would write its test
+ * fixtures and settings into the dev site.
  */
 
 ini_set('memory_limit', '2G');
@@ -40,4 +44,40 @@ if (!function_exists('cv')) {
   }
 }
 
-eval(cv('php:boot --level=full', 'phpcode'));
+// On Standalone, SettingsManager::bootSettings() composes CIVICRM_DSN from
+// the CIVICRM_DB_* environment variables BEFORE the settings file can apply
+// TEST_DB_DSN — env wins and the suite would silently run against the LIVE
+// database. Strip them so the UnitTests branch in civicrm.settings.php picks
+// the isolated test DSN.
+foreach (['CIVICRM_DB_HOST', 'CIVICRM_DB_PORT', 'CIVICRM_DB_NAME', 'CIVICRM_DB_USER', 'CIVICRM_DB_PASSWORD'] as $var) {
+  putenv($var);
+  unset($_ENV[$var], $_SERVER[$var]);
+}
+
+// --test boots with CIVICRM_UF=UnitTests and CIVICRM_DSN=TEST_DB_DSN (the
+// isolated civicrm_test scratch DB from ~/.cv.json). Level "settings" defines
+// the constants WITHOUT a full Civi boot — Civi\Test\CiviTestListener then
+// installs/boots headless on demand.
+eval(cv('php:boot --level=settings --test', 'phpcode'));
+
+// The settings boot registers core classes only. The extension's own
+// CRM_/Civi\Herald\ classes come from composer's autoload (psr-0/psr-4 in
+// composer.json); the dev-deps (Guzzle MockHandler etc.) ride along.
+require_once __DIR__ . '/../../vendor/autoload.php';
+
+// CiviRules' base classes (parents of our actions/conditions) must be
+// loadable BEFORE the first headless test boots Civi — the pure (@group unit)
+// CRM_ tests run first and no extension classloader is active yet. In the
+// tests/docker stack CiviRules sits next to herald in the ext dir; elsewhere
+// point CIVIRULES_PATH at a checkout.
+$civirulesDir = getenv('CIVIRULES_PATH') ?: dirname(__DIR__, 3) . '/org.civicoop.civirules';
+if (is_dir($civirulesDir)) {
+  $civirulesLoader = new \Composer\Autoload\ClassLoader();
+  $civirulesLoader->add('CRM_Civirules', [$civirulesDir]);
+  $civirulesLoader->add('CRM_CivirulesActions', [$civirulesDir]);
+  $civirulesLoader->add('CRM_CivirulesConditions', [$civirulesDir]);
+  // Civi\Api4\CiviRules* etc. — needed while the headless installer enables
+  // CiviRules, before the extension classloader is registered.
+  $civirulesLoader->addPsr4('Civi\\', [$civirulesDir . '/Civi']);
+  $civirulesLoader->register();
+}

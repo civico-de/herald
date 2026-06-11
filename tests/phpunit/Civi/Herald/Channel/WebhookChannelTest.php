@@ -21,7 +21,7 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
   private array $capturedRequests = [];
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
   }
 
   public function setUp(): void {

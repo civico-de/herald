@@ -95,12 +95,16 @@ The repo ships its own [civikitchen](https://github.com/jfilter/civikitchen)-bas
 
 ```bash
 cd tests/docker && docker compose up -d           # CiviCRM on :8090, phpMyAdmin :8091, Maildev :1090
-docker compose exec app cv ext:enable herald
-docker compose exec -T -e CIVICRM_UF=UnitTests app \
+docker compose exec app cv ext:enable herald      # once per fresh DB (for manual poking around)
+docker compose exec -T app \
     bash -c "cd /var/www/html/ext/herald && vendor/bin/phpunit"
 ```
 
-The compose file pulls `ghcr.io/jfilter/civicrm-dev:standalone` and pre-enables CiviRules via `CIVICRM_EXTRA_EXTENSIONS`, so the first `up` is a one-shot setup. The image runs `composer install` on bind-mounted extensions automatically (`CIVICRM_AUTO_COMPOSER=1` by default), so `vendor/bin/phpunit` is available without a manual composer step. The `cv ext:enable` step is needed once after a fresh DB; subsequent `docker compose up` runs find the extension already enabled.
+The compose file pulls `ghcr.io/jfilter/civikitchen:standalone` and pre-enables CiviRules via `CIVICRM_EXTRA_EXTENSIONS`, so the first `up` is a one-shot setup. The image runs `composer install` on bind-mounted extensions automatically (`CIVICRM_AUTO_COMPOSER=1` by default), so `vendor/bin/phpunit` is available without a manual composer step.
+
+The phpunit run needs no env vars or prior `ext:enable`: the test bootstrap boots `cv php:boot --test`, and the headless suite installs itself into the **isolated `civicrm_test` scratch DB** (created by `tests/docker/initdb/`) — the dev site's data and settings stay untouched. If your `db-data` volume predates the initdb script, recreate it once with `docker compose down -v && docker compose up -d`.
+
+Pure unit tests without any CiviCRM checkout: run the `@group unit` files with `--no-configuration` and a bootstrap that stubs the CiviRules base classes (the repo config registers `Civi\Test\CiviTestListener`, which only exists inside a Civi install).
 
 ## License
 

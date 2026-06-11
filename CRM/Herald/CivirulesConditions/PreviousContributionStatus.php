@@ -14,18 +14,8 @@ use Civi\Herald\StatusTransitionDispatcher;
  */
 class CRM_Herald_CivirulesConditions_PreviousContributionStatus extends CRM_Civirules_Condition {
 
-  private $conditionParams = [];
-
-  public function setRuleConditionData($ruleCondition) {
-    parent::setRuleConditionData($ruleCondition);
-    $this->conditionParams = [];
-    if (!empty($this->ruleCondition['condition_params'])) {
-      $decoded = unserialize($this->ruleCondition['condition_params']);
-      if (is_array($decoded)) {
-        $this->conditionParams = $decoded;
-      }
-    }
-  }
+  // $conditionParams comes from the base class — it decodes condition_params
+  // (serialized or array) in setRuleConditionData. No override needed.
 
   public function isConditionValid(CRM_Civirules_TriggerData_TriggerData $triggerData) {
     $contribution = $triggerData->getEntityData('Contribution');

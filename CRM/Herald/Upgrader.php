@@ -8,6 +8,14 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
     if (!method_exists('CRM_Civirules_Utils_Upgrader', 'insertActionsFromJson')) {
       throw new Exception('CiviRules extension is required by herald but not enabled.');
     }
+    // When herald and CiviRules are installed in the SAME process (fresh
+    // install, headless tests), the entity registry was built before
+    // CiviRules came online and Api4 "CiviRulesAction" is unknown. Flush so
+    // it rebuilds with CiviRules' entities included.
+    if (class_exists('\Civi\Schema\EntityRepository')
+      && !\Civi\Schema\EntityRepository::entityExists('CiviRulesAction')) {
+      \Civi\Schema\EntityRepository::flush();
+    }
     CRM_Civirules_Utils_Upgrader::insertActionsFromJson(
       $this->extensionDir . DIRECTORY_SEPARATOR . 'civirules_actions.json'
     );

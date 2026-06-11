@@ -18,7 +18,15 @@ class ContributionStatsServiceTest extends TestCase implements HeadlessInterface
   private ContributionStatsService $service;
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Test::headless()
+      ->install('org.civicoop.civirules')
+      ->installMe(__DIR__)
+      // Campaign tests need the CiviCampaign component (off in a minimal
+      // headless install).
+      ->callback(function() {
+        \CRM_Core_BAO_ConfigSetting::enableComponent('CiviCampaign');
+      }, 'enableCiviCampaign')
+      ->apply();
   }
 
   public function setUp(): void {
@@ -204,12 +212,28 @@ class ContributionStatsServiceTest extends TestCase implements HeadlessInterface
   public function testGetRecentStatusTransitions(): void {
     $now = date('Y-m-d H:i:s');
     $this->seedContributions([
-      ['amount' => 100.0, 'status' => 'Completed', 'modified_date' => $now],
-      ['amount' => 200.0, 'status' => 'Completed', 'modified_date' => date('Y-m-d H:i:s', strtotime('-2 hours'))],
+      // Genuine transition: received long ago, modified just now.
+      ['amount' => 100.0, 'status' => 'Completed', 'receive_date' => date('Y-m-d H:i:s', strtotime('-1 day')), 'modified_date' => $now],
+      // Outside the window: modified 2 hours ago.
+      ['amount' => 200.0, 'status' => 'Completed', 'receive_date' => date('Y-m-d H:i:s', strtotime('-1 day')), 'modified_date' => date('Y-m-d H:i:s', strtotime('-2 hours'))],
     ]);
     $recent = $this->service->getRecentStatusTransitions([], 10, 'Completed');
     $this->assertCount(1, $recent);
     $this->assertSame(100.0, $recent[0]['amount']);
+  }
+
+  public function testGetRecentStatusTransitionsExcludesFreshlyReceivedByDefault(): void {
+    $now = date('Y-m-d H:i:s');
+    $this->seedContributions([
+      // Received AND modified inside the window — that's a new contribution,
+      // not a transition; getPeriodSummary already counts it.
+      ['amount' => 300.0, 'status' => 'Completed', 'receive_date' => $now, 'modified_date' => $now],
+    ]);
+    $this->assertCount(0, $this->service->getRecentStatusTransitions([], 10, 'Completed'));
+    // Opt-out returns it.
+    $all = $this->service->getRecentStatusTransitions([], 10, 'Completed', FALSE);
+    $this->assertCount(1, $all);
+    $this->assertSame(300.0, $all[0]['amount']);
   }
 
 }
