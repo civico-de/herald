@@ -1,29 +1,19 @@
 <?xml version="1.0"?>
 <ruleset name="herald">
-  <description>civicrm/coder ruleset, scoped to non-generated source.</description>
+  <description>Project layer over the bundled CiviKitchen standard.</description>
 
+  <rule ref="CiviKitchen"/>
+
+  <file>.</file>
   <arg name="extensions" value="php"/>
-  <arg name="colors"/>
-  <arg value="p"/>
 
-  <file>Civi</file>
-  <file>CRM</file>
-  <file>herald.php</file>
+  <!-- Generated / vendored code is not ours to style. -->
+  <exclude-pattern>*/vendor/*</exclude-pattern>
+  <exclude-pattern>*/node_modules/*</exclude-pattern>
+  <exclude-pattern>*/dist/*</exclude-pattern>
+  <exclude-pattern>*.civix.php</exclude-pattern>
+  <exclude-pattern>*/CRM/*/DAO/*</exclude-pattern>
 
-  <exclude-pattern>herald.civix.php</exclude-pattern>
-  <exclude-pattern>vendor/*</exclude-pattern>
-  <exclude-pattern>tests/phpunit/bootstrap.php</exclude-pattern>
-
-  <rule ref="Drupal"/>
-  <rule ref="DrupalPractice"/>
-
-  <rule ref="Drupal.Commenting.DocComment.MissingShort">
-    <severity>0</severity>
-  </rule>
-  <rule ref="Drupal.Commenting.FunctionComment.Missing">
-    <severity>0</severity>
-  </rule>
-  <rule ref="Drupal.Commenting.ClassComment.Missing">
-    <severity>0</severity>
-  </rule>
+  <!-- Prose documentation — the 80-column code rule does not apply. -->
+  <exclude-pattern>*.md</exclude-pattern>
 </ruleset>

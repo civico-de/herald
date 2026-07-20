@@ -20,6 +20,7 @@ if (PHP_SAPI !== 'cli') {
 }
 
 if (!function_exists('cv')) {
+
   /**
    * Call the "cv" command. Mirrors the helper bundled by civicrm-buildkit /
    * civikitchen — kept inline so the extension is portable.
@@ -42,6 +43,7 @@ if (!function_exists('cv')) {
     }
     return json_decode($result, TRUE);
   }
+
 }
 
 // On Standalone, SettingsManager::bootSettings() composes CIVICRM_DSN from
@@ -58,6 +60,7 @@ foreach (['CIVICRM_DB_HOST', 'CIVICRM_DB_PORT', 'CIVICRM_DB_NAME', 'CIVICRM_DB_U
 // isolated civicrm_test scratch DB from ~/.cv.json). Level "settings" defines
 // the constants WITHOUT a full Civi boot — Civi\Test\CiviTestListener then
 // installs/boots headless on demand.
+// phpcs:ignore Drupal.Functions.DiscouragedFunctions.Discouraged -- cv emits PHP code by design; this is the standard civix/buildkit boot pattern.
 eval(cv('php:boot --level=settings --test', 'phpcode'));
 
 // The settings boot registers core classes only. The extension's own

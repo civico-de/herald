@@ -12,7 +12,8 @@ use PHPUnit\Framework\TestCase;
  */
 class EmailChannelTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 
-  /** @var array[] Mail params captured by the injected mailer. */
+  /**
+   * @var array[] Mail params captured by the injected mailer. */
   private array $sentMails = [];
 
   public function setUpHeadless() {

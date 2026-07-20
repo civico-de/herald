@@ -94,7 +94,8 @@ class SubscriberLookup {
     };
   }
 
-  /** Returns $config if $row[$key] is non-empty, else NULL. */
+  /**
+   * Returns $config if $row[$key] is non-empty, else NULL. */
   private static function nonEmpty(array $row, string $key, array $config): ?array {
     return !empty($row[$key]) ? $config : NULL;
   }

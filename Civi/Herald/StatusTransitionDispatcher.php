@@ -14,7 +14,8 @@ namespace Civi\Herald;
  */
 class StatusTransitionDispatcher {
 
-  /** @var array<int, int> Pre-edit status snapshot keyed by contribution ID */
+  /**
+   * @var array<int, int> Pre-edit status snapshot keyed by contribution ID */
   private static array $preEditStatus = [];
 
   /**

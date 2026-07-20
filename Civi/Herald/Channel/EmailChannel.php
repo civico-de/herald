@@ -26,7 +26,8 @@ class EmailChannel implements ChannelInterface {
 
   public const DEFAULT_SUBJECT = 'Notification';
 
-  /** @var (callable(array): bool)|null */
+  /**
+   * @var (callable(array): bool)|null */
   private $mailer;
 
   /**

@@ -4,7 +4,8 @@ namespace Civi\Herald\Channel;
 
 class ChannelRegistry {
 
-  /** @var array<string, ChannelInterface> */
+  /**
+   * @var array<string, ChannelInterface> */
   private array $channels = [];
 
   public function register(ChannelInterface $channel): void {
@@ -22,7 +23,8 @@ class ChannelRegistry {
     return isset($this->channels[$key]);
   }
 
-  /** @return string[] */
+  /**
+   * @return string[] */
   public function listKeys(): array {
     return array_keys($this->channels);
   }

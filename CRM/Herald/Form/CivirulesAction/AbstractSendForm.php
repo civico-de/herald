@@ -12,7 +12,8 @@ use CRM_Herald_ExtensionUtil as E;
  */
 abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_CivirulesActions_Form_Form {
 
-  /** @var array<string, string> Friendly labels for registered channels. */
+  /**
+   * @var array<string, string> Friendly labels for registered channels. */
   private const CHANNEL_LABELS = [
     'telegram' => 'Telegram',
     'webhook' => 'Generic webhook (Slack/Discord/Mattermost/custom)',

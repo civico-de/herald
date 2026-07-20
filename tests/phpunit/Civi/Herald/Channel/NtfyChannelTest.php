@@ -8,7 +8,6 @@ use Civi\Test\TransactionalInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
@@ -17,7 +16,8 @@ use PHPUnit\Framework\TestCase;
  */
 class NtfyChannelTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 
-  /** @var Request[] */
+  /**
+   * @var \GuzzleHttp\Psr7\Request[] */
   private array $capturedRequests = [];
 
   public function setUpHeadless() {

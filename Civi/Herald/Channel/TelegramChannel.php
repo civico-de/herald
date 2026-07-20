@@ -2,6 +2,7 @@
 
 namespace Civi\Herald\Channel;
 
+use CRM_Herald_ExtensionUtil as E;
 use GuzzleHttp\ClientInterface;
 
 class TelegramChannel implements ChannelInterface {
@@ -81,25 +82,25 @@ class TelegramChannel implements ChannelInterface {
   public function getConfigSchema(): array {
     return [
       'chat_id' => [
-        'label' => ts('Chat ID'),
+        'label' => E::ts('Chat ID'),
         'required' => FALSE,
         'type' => 'string',
-        'help' => ts('Telegram chat or group ID. Negative numbers are group chats. If empty, the default from settings is used.'),
+        'help' => E::ts('Telegram chat or group ID. Negative numbers are group chats. If empty, the default from settings is used.'),
       ],
       'parse_mode' => [
-        'label' => ts('Parse Mode'),
+        'label' => E::ts('Parse Mode'),
         'required' => FALSE,
         'type' => 'enum',
-        'options' => ['HTML' => 'HTML', 'MarkdownV2' => 'MarkdownV2', '' => ts('Plain text')],
+        'options' => ['HTML' => 'HTML', 'MarkdownV2' => 'MarkdownV2', '' => E::ts('Plain text')],
         'default' => 'HTML',
       ],
       'disable_notification' => [
-        'label' => ts('Silent message'),
+        'label' => E::ts('Silent message'),
         'required' => FALSE,
         'type' => 'bool',
       ],
       'disable_web_page_preview' => [
-        'label' => ts('Disable link previews'),
+        'label' => E::ts('Disable link previews'),
         'required' => FALSE,
         'type' => 'bool',
       ],

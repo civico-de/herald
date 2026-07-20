@@ -15,14 +15,23 @@ class CRM_Herald_CivirulesActions_SendContributionDigestTest extends TestCase {
 
   private function makeFakeStats(): ContributionStatsService {
     return new class extends ContributionStatsService {
+
       public function getPeriodSummary(array $filters, DateRange $period): array {
         return ['total' => 1234.5, 'count' => 7, 'bySource' => [['source' => 'Stripe', 'total' => 1234.5, 'count' => 7]]];
       }
-      public function getAllPending(array $filters): array { return ['total' => 88.0, 'count' => 2]; }
+
+      public function getAllPending(array $filters): array {
+        return ['total' => 88.0, 'count' => 2];
+      }
+
       public function getAmountDistribution(array $filters): array {
         return [10.0, 20, 25, 50, 100, 100, 250, 500, 1000, 2000, 25, 30, 45, 80, 60, 90, 5, 15, 200, 300];
       }
-      public function getCampaignTotal(int $campaignId): array { return ['total' => 25000.0, 'count' => 50]; }
+
+      public function getCampaignTotal(int $campaignId): array {
+        return ['total' => 25000.0, 'count' => 50];
+      }
+
     };
   }
 
@@ -137,14 +146,23 @@ class CRM_Herald_CivirulesActions_SendContributionDigestTest extends TestCase {
     // Legacy JSON-era params could store campaign_id as '' — that must behave
     // like "no campaign", not become getCampaignTotal(0).
     $stats = new class extends ContributionStatsService {
+
       public function getPeriodSummary(array $filters, DateRange $period): array {
         return ['total' => 1234.5, 'count' => 7, 'bySource' => []];
       }
-      public function getAllPending(array $filters): array { return ['total' => 0.0, 'count' => 0]; }
-      public function getAmountDistribution(array $filters): array { return [10.0]; }
+
+      public function getAllPending(array $filters): array {
+        return ['total' => 0.0, 'count' => 0];
+      }
+
+      public function getAmountDistribution(array $filters): array {
+        return [10.0];
+      }
+
       public function getCampaignTotal(int $campaignId): array {
         throw new \LogicException('getCampaignTotal must not be called for an empty campaign_id');
       }
+
     };
     $params = array_merge($this->baseParams(), ['campaign_id' => '']);
     $vars = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars($params, $stats);

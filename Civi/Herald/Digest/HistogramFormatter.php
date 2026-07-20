@@ -11,10 +11,12 @@ namespace Civi\Herald\Digest;
  */
 class HistogramFormatter {
 
-  /** @var int[] Mantissas used to round edges to "nice" numbers (1-2-5 series). */
+  /**
+   * @var int[] Mantissas used to round edges to "nice" numbers (1-2-5 series). */
   private const NICE_MANTISSAS = [1, 2, 5];
 
-  /** Switch from linear to log-space buckets when max/min exceeds 100×. */
+  /**
+   * Switch from linear to log-space buckets when max/min exceeds 100×. */
   private const LOG_SPAN_THRESHOLD = 2.0;
 
   /**

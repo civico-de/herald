@@ -20,8 +20,10 @@ class HistogramFormatterTest extends TestCase {
   }
 
   public function testNiceCeiling(): void {
-    $this->assertSame(0.5, HistogramFormatter::niceCeiling(0.5)); // already a 1-2-5 nice (5×10⁻¹)
-    $this->assertSame(1.0, HistogramFormatter::niceCeiling(0.6)); // next up after 0.5
+    // already a 1-2-5 nice (5×10⁻¹)
+    $this->assertSame(0.5, HistogramFormatter::niceCeiling(0.5));
+    // next up after 0.5
+    $this->assertSame(1.0, HistogramFormatter::niceCeiling(0.6));
     $this->assertSame(1.0, HistogramFormatter::niceCeiling(1.0));
     $this->assertSame(2.0, HistogramFormatter::niceCeiling(1.5));
     $this->assertSame(5.0, HistogramFormatter::niceCeiling(3.5));
@@ -145,7 +147,8 @@ class HistogramFormatterTest extends TestCase {
     $this->assertSame('(no data)', HistogramFormatter::render($buckets));
   }
 
-  /** @return float[] */
+  /**
+   * @return float[] */
   private function logUniform(int $n, float $min, float $max, int $seed): array {
     mt_srand($seed);
     $logMin = log10(max($min, 0.01));

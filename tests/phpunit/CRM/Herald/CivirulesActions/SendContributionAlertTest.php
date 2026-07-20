@@ -11,13 +11,16 @@ class CRM_Herald_CivirulesActions_SendContributionAlertTest extends TestCase {
 
   private function makeFakeStats(): ContributionStatsService {
     return new class extends ContributionStatsService {
+
       public function getCampaignTotal(int $campaignId): array {
         return ['total' => 18000.0, 'count' => 42];
       }
+
     };
   }
 
-  /** Resolver mapping: 1=Completed, 2=Pending, 3=Cancelled. */
+  /**
+   * Resolver mapping: 1=Completed, 2=Pending, 3=Cancelled. */
   private function statusResolver(): callable {
     $map = [1 => 'Completed', 2 => 'Pending', 3 => 'Cancelled'];
     return static fn($id) => $map[(int) $id] ?? '';
@@ -43,7 +46,8 @@ class CRM_Herald_CivirulesActions_SendContributionAlertTest extends TestCase {
     $vars = CRM_Herald_CivirulesActions_SendContributionAlert::buildVars(
       [],
       ['id' => 1, 'contribution_status_id' => 1],
-      2, // previous = Pending
+    // previous = Pending
+      2,
       $this->makeFakeStats(),
       $this->statusResolver()
     );

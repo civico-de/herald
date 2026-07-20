@@ -8,7 +8,6 @@ use Civi\Test\TransactionalInterface;
 use GuzzleHttp\Client;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
@@ -17,7 +16,8 @@ use PHPUnit\Framework\TestCase;
  */
 class TelegramChannelTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 
-  /** @var Request[] */
+  /**
+   * @var \GuzzleHttp\Psr7\Request[] */
   private array $capturedRequests = [];
 
   public function setUpHeadless() {
@@ -45,7 +45,7 @@ class TelegramChannelTest extends TestCase implements HeadlessInterface, HookInt
     $channel->send('<b>hello</b>', ['chat_id' => '-100']);
 
     $this->assertCount(1, $this->capturedRequests);
-    /** @var Request $request */
+    /** @var \GuzzleHttp\Psr7\Request $request */
     $request = $this->capturedRequests[0]['request'];
     $this->assertSame('POST', $request->getMethod());
     $this->assertStringContainsString('/botTEST-TOKEN/sendMessage', (string) $request->getUri());

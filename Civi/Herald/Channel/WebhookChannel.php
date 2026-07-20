@@ -122,7 +122,8 @@ class WebhookChannel implements ChannelInterface {
     };
   }
 
-  /** @return array<string, string> */
+  /**
+   * @return array<string, string> */
   private static function normaliseHeaders($raw): array {
     if (is_string($raw)) {
       $decoded = json_decode($raw, TRUE);
