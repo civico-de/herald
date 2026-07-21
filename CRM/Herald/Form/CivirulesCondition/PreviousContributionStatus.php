@@ -52,7 +52,7 @@ class CRM_Herald_Form_CivirulesCondition_PreviousContributionStatus extends CRM_
     if (!$raw) {
       return [];
     }
-    $params = unserialize($raw);
+    $params = unserialize($raw, ['allowed_classes' => FALSE]);
     return is_array($params) ? $params : [];
   }
 
