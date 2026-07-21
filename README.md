@@ -64,6 +64,7 @@ Or as a PHP script (no API entity, equivalent functionality):
 
 ```bash
 cv scr /var/www/html/ext/herald/bin/test-telegram.php
+# optional overrides via env: HERALD_TEST_MESSAGE, HERALD_TEST_CHAT_ID
 ```
 
 ## Deploy to production
