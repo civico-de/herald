@@ -24,6 +24,10 @@
     <ver>5.81</ver>
   </compatibility>
   <comments>Requires CiviRules.</comments>
+  <requires>
+    <!-- CivirulesActions/Conditions extend CiviRules base classes; herald_civicrm_enable also guards this at runtime. -->
+    <ext>org.civicoop.civirules</ext>
+  </requires>
   <classloader>
     <psr0 prefix="CRM_" path="."/>
     <psr4 prefix="Civi\" path="Civi"/>

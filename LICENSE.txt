@@ -1,5 +1,5 @@
 Package: herald
-Copyright (C) 2025, FIXME <FIXME>
+Copyright (C) 2025, Johannes Filter <hi@jfilter.de>
 Licensed under the GNU Affero Public License 3.0 (below).
 
 -------------------------------------------------------------------------------
