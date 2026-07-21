@@ -46,6 +46,44 @@ if (!function_exists('cv')) {
 
 }
 
+// CRITICAL GUARD: the headless suite must run against a SEPARATE scratch
+// database. Without this, a missing TEST_DB_DSN lets civicrm.settings.php fall
+// back to the MAIN dev DB and Civi\Test wipes all dev data.
+// Parsed, not grepped: the old form looked for the substrings '"TEST_DB_DSN"'
+// and 'civicrm_test' anywhere in the raw file. Two unrelated matches satisfied
+// it — 'civicrm_test' out of a directory *path*, or a TEST_DB_DSN belonging to
+// a different site in a multi-site config — while the site actually booted had
+// none. Decode the JSON and check the database NAME the DSN points at.
+$ckTestDsns = [];
+$ckHome = getenv('HOME') ?: '';
+$ckRaw = $ckHome !== '' ? (string) @file_get_contents($ckHome . '/.cv.json') : '';
+$ckConfig = $ckRaw !== '' ? json_decode($ckRaw, TRUE) : NULL;
+foreach ((array) ($ckConfig['sites'] ?? []) as $ckSite) {
+  $ckDsn = is_array($ckSite) ? ($ckSite['TEST_DB_DSN'] ?? NULL) : NULL;
+  if (is_string($ckDsn) && $ckDsn !== '') {
+    $ckTestDsns[] = $ckDsn;
+  }
+}
+// Every DSN present must name a scratch database, and there must be one. A
+// site whose TEST_DB_DSN points at the main DB is the exact accident this
+// guard exists to prevent.
+$ckBadDsn = NULL;
+foreach ($ckTestDsns as $ckDsn) {
+  $ckDb = explode('?', ltrim((string) (parse_url($ckDsn, PHP_URL_PATH) ?: ''), '/'))[0];
+  if (!str_ends_with($ckDb, '_test')) {
+    $ckBadDsn = $ckDsn;
+    break;
+  }
+}
+if ($ckTestDsns === [] || $ckBadDsn !== NULL) {
+  fwrite(STDERR, $ckBadDsn !== NULL
+    ? "ABORT: TEST_DB_DSN does not name a *_test database ({$ckBadDsn}) — headless tests would rebuild it.\n"
+    : "ABORT: no TEST_DB_DSN in \$HOME/.cv.json — headless tests would rebuild the MAIN dev DB.\n"
+      . "Re-provision the stack (`docker compose down -v && up -d`) — the civikitchen\n"
+      . "entrypoint writes TEST_DB_DSN and seeds the civicrm_test scratch DB on first boot.\n");
+  exit(1);
+}
+
 // On Standalone, SettingsManager::bootSettings() composes CIVICRM_DSN from
 // the CIVICRM_DB_* environment variables BEFORE the settings file can apply
 // TEST_DB_DSN — env wins and the suite would silently run against the LIVE

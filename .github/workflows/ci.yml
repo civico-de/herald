@@ -30,7 +30,7 @@ jobs:
       - name: PHPUnit (with coverage) + PHPStan
         run: |
           docker compose -f tests/docker/docker-compose.yml exec -T -u www-data app bash -c \
-            'cd /var/www/html/ext/herald && CIVICRM_UF=UnitTests phpunit --coverage-text tests/phpunit && phpstan analyse'
+            'cd /var/www/html/ext/herald && ckcoverage tests/phpunit && phpstan analyse'
 
       - name: App logs on failure
         if: failure()
