@@ -157,4 +157,14 @@ class PushoverChannel implements ChannelInterface {
     ];
   }
 
+  /**
+   * No 'format': pushover_html is a boolean flag, not a 'text'|'html' enum, so
+   * the semantic value cannot be passed through unchanged.
+   *
+   * @return array<string, string>
+   */
+  public function getSemanticFields(): array {
+    return ['subject' => 'pushover_title'];
+  }
+
 }

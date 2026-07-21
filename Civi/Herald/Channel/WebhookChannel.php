@@ -168,4 +168,15 @@ class WebhookChannel implements ChannelInterface {
     ];
   }
 
+  /**
+   * A webhook payload carries no subject, and webhook_body_format selects the
+   * envelope (text/json/slack/discord), not how the body text is to be
+   * interpreted — so neither semantic maps.
+   *
+   * @return array<string, string>
+   */
+  public function getSemanticFields(): array {
+    return [];
+  }
+
 }

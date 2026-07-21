@@ -25,6 +25,10 @@ class ChannelRegistryTest extends TestCase {
         return [];
       }
 
+      public function getSemanticFields(): array {
+        return [];
+      }
+
     };
   }
 

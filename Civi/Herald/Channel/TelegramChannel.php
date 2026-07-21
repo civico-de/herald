@@ -123,4 +123,15 @@ class TelegramChannel implements ChannelInterface {
     ];
   }
 
+  /**
+   * Telegram messages have no subject line, and parse_mode is a Telegram
+   * vocabulary ('HTML'|'MarkdownV2'|'') rather than the semantic 'text'|'html'
+   * — neither semantic maps cleanly, so neither is offered.
+   *
+   * @return array<string, string>
+   */
+  public function getSemanticFields(): array {
+    return [];
+  }
+
 }

@@ -5,14 +5,35 @@ namespace Civi\Api4;
 /**
  * APIv4 entity for herald.
  *
- * Service-style entity (no underlying DAO) that exposes diagnostic actions:
+ * Service-style entity (no underlying DAO).
+ *
+ * The supported cross-extension entry point:
+ *   cv api4 Herald.send        — deliver a rendered message via a channel
+ *   cv api4 Herald.getChannels — the channels and the config keys they accept
+ *
+ * Diagnostics:
  *   cv api4 Herald.testTelegram   — send a test message via the channel
  *   cv api4 Herald.renderTemplate — render a workflow template with sample vars
+ *
+ * Herald.send exists so other extensions can use herald's channels WITHOUT
+ * referencing a herald class: an APIv4 action is addressed by string, which
+ * keeps the dependency optional on both sides while leaving static analysis
+ * intact — no class_exists() guards, no variable method names.
  *
  * @searchable none
  * @package Civi\Api4
  */
 class Herald extends \Civi\Api4\Generic\AbstractEntity {
+
+  public static function send(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\Send {
+    return (new \Civi\Herald\Api4\Action\Send(__CLASS__, 'send'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function getChannels(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\GetChannels {
+    return (new \Civi\Herald\Api4\Action\GetChannels(__CLASS__, 'getChannels'))
+      ->setCheckPermissions($checkPermissions);
+  }
 
   public static function testTelegram(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\TestTelegram {
     return (new \Civi\Herald\Api4\Action\TestTelegram(__CLASS__, 'testTelegram'))

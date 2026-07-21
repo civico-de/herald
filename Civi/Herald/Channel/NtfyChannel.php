@@ -130,4 +130,14 @@ class NtfyChannel implements ChannelInterface {
     ];
   }
 
+  /**
+   * No 'format': the ntfy body is always plain text (markdown is opt-in via
+   * ntfy_markdown, which is not the same 'text'|'html' axis).
+   *
+   * @return array<string, string>
+   */
+  public function getSemanticFields(): array {
+    return ['subject' => 'ntfy_title'];
+  }
+
 }

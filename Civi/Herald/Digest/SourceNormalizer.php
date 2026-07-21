@@ -7,10 +7,12 @@ namespace Civi\Herald\Digest;
  */
 final class SourceNormalizer {
 
-  /** @var list<array{match: string, type: string, label: string}>|null */
+  /**
+   * @var list<array{match: string, type: string, label: string}>|null */
   private static ?array $cachedRules = NULL;
 
-  /** @var list<array{match: string, type: string, label: string}> */
+  /**
+   * @var list<array{match: string, type: string, label: string}> */
   private array $rules;
 
   /**
@@ -45,11 +47,42 @@ final class SourceNormalizer {
    * @return array<mixed>
    */
   private static function settingRules(): array {
-    if (self::$cachedRules === NULL) {
-      $configured = \Civi::settings()->get('herald_source_normalization');
-      self::$cachedRules = is_array($configured) ? self::validatedRules($configured) : [];
+    if (self::$cachedRules !== NULL) {
+      return self::$cachedRules;
     }
+    // Only a real answer is worth remembering. Caching the no-container
+    // fallback would make the result depend on who asked first: one unit test
+    // touching a SourceNormalizer before the container is up would pin an
+    // empty rule set for every headless test after it in the same process.
+    if (!\Civi\Core\Container::isContainerBooted()) {
+      return [];
+    }
+    self::$cachedRules = self::validatedRules(self::readSetting());
     return self::$cachedRules;
+  }
+
+  /**
+   * Read the setting, tolerating a Civi that cannot answer.
+   *
+   * Normalization is an optional presentation nicety, so "no Civi to ask" is
+   * the same answer as "nothing configured": no rules. The caller checks the
+   * container first — without that, merely CONSTRUCTING a
+   * ContributionStatsService (whose default collaborator is a
+   * SourceNormalizer) reaches for the database, which took the pure @group
+   * unit tests down with a DB_DataObject error. class_exists('\Civi') is not
+   * enough: the classloader is up long before the container is, and the
+   * settings read then dies inside PEAR rather than throwing.
+   *
+   * @return array<mixed>
+   */
+  private static function readSetting(): array {
+    try {
+      $configured = \Civi::settings()->get('herald_source_normalization');
+    }
+    catch (\Throwable $e) {
+      return [];
+    }
+    return is_array($configured) ? $configured : [];
   }
 
   /**
