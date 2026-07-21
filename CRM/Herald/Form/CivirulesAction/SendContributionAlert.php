@@ -4,6 +4,9 @@ use CRM_Herald_ExtensionUtil as E;
 
 class CRM_Herald_Form_CivirulesAction_SendContributionAlert extends CRM_Herald_Form_CivirulesAction_AbstractSendForm {
 
+  /**
+   * @return array<string, string>
+   */
   protected function getTemplateOptions(): array {
     $rows = \Civi\Api4\MessageTemplate::get(FALSE)
       ->addSelect('workflow_name', 'msg_title')
@@ -14,7 +17,13 @@ class CRM_Herald_Form_CivirulesAction_SendContributionAlert extends CRM_Herald_F
       ->getArrayCopy();
     $opts = [];
     foreach ($rows as $row) {
-      $opts[$row['workflow_name']] = $row['msg_title'] ?: $row['workflow_name'];
+      if (!is_array($row) || !is_string($row['workflow_name'] ?? NULL)) {
+        continue;
+      }
+      $workflowName = $row['workflow_name'];
+      $msgTitle = $row['msg_title'] ?? NULL;
+      $msgTitle = is_string($msgTitle) ? $msgTitle : '';
+      $opts[$workflowName] = $msgTitle !== '' ? $msgTitle : $workflowName;
     }
     return $opts;
   }
@@ -26,15 +35,24 @@ class CRM_Herald_Form_CivirulesAction_SendContributionAlert extends CRM_Herald_F
     $this->heraldCheckbox('include_status_transition', E::ts('Include from_status / to_status (uses pre-edit snapshot)'));
   }
 
+  /**
+   * @param array<string, mixed> $submitted
+   * @return array<string, mixed>
+   */
   protected function getExtraValues(array $submitted): array {
+    $campaignId = self::toStringValue($submitted['campaign_id'] ?? '');
+    $goal = self::toStringValue($submitted['goal'] ?? '');
     return [
-      'campaign_id' => ($submitted['campaign_id'] ?? '') !== '' ? (int) $submitted['campaign_id'] : NULL,
-      'goal' => ($submitted['goal'] ?? '') !== '' ? (float) $submitted['goal'] : NULL,
+      'campaign_id' => $campaignId !== '' ? (int) $campaignId : NULL,
+      'goal' => $goal !== '' ? (float) $goal : NULL,
       'campaign_title' => $submitted['campaign_title'] ?? '',
       'include_status_transition' => !empty($submitted['include_status_transition']),
     ];
   }
 
+  /**
+   * @return array<string, mixed>
+   */
   protected function extraDefaults(): array {
     $params = $this->getActionParameters();
     return [

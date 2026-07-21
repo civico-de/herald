@@ -25,7 +25,7 @@ class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_Civi
     return 'civicrm/herald/form/civirulesaction/sendcontributiondigest';
   }
 
-  public function processAction(CRM_Civirules_TriggerData_TriggerData $triggerData) {
+  public function processAction(CRM_Civirules_TriggerData_TriggerData $triggerData): void {
     $params = $this->getActionParameters();
     $vars = self::buildVars($params, $this->makeStatsService());
     $this->dispatch($vars);
@@ -35,13 +35,13 @@ class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_Civi
    * Pure assembly of the template variable bag from action params + stats.
    * Extracted so unit tests can verify the wiring without DB access.
    *
-   * @param array $params CiviRules action parameters
+   * @param array<string, mixed> $params CiviRules action parameters
    * @param ContributionStatsService $stats Stats source (mockable in tests)
-   * @return array variable bag for the template
+   * @return array<string, mixed> variable bag for the template
    */
   public static function buildVars(array $params, ContributionStatsService $stats): array {
     $filters = self::buildFiltersFromParams($params);
-    $period = self::resolvePeriod((string) ($params['period'] ?? 'yesterday'));
+    $period = self::resolvePeriod(self::asString($params['period'] ?? 'yesterday'));
     $summary = $stats->getPeriodSummary($filters, $period);
 
     $vars = [
@@ -60,16 +60,16 @@ class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_Civi
 
     if ((bool) ($params['show_histogram'] ?? TRUE)) {
       $amounts = $stats->getAmountDistribution($filters);
-      $bucketCount = (int) ($params['bucket_count'] ?? 8);
+      $bucketCount = self::asInt($params['bucket_count'] ?? 8, 8);
       $edges = self::decodeEdges($params['bucket_edges'] ?? NULL);
       $buckets = HistogramFormatter::compute($amounts, $bucketCount, $edges);
       $vars['histogram'] = HistogramFormatter::render($buckets);
     }
 
     if (!empty($params['goal'])) {
-      $goal = (float) $params['goal'];
+      $goal = self::asFloat($params['goal']);
       $campaignTotal = !empty($filters['campaign_id'])
-        ? $stats->getCampaignTotal((int) $filters['campaign_id'])
+        ? $stats->getCampaignTotal(self::asInt($filters['campaign_id']))
         : ['total' => $summary['total'], 'count' => $summary['count']];
       $vars['campaign'] = [
         'title' => $params['campaign_title'] ?? '',
@@ -87,29 +87,34 @@ class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_Civi
     return new ContributionStatsService();
   }
 
+  /**
+   * @param array<string, mixed> $params
+   * @return array<string, mixed>
+   */
   private static function buildFiltersFromParams(array $params): array {
     // The 0-check also drops legacy params where an empty form field was
     // stored as '' and would otherwise survive as (int) 0.
     return array_filter([
-      'campaign_id' => isset($params['campaign_id']) ? (int) $params['campaign_id'] : NULL,
-      'financial_type_id' => isset($params['financial_type_id']) ? (int) $params['financial_type_id'] : NULL,
+      'campaign_id' => isset($params['campaign_id']) ? self::asInt($params['campaign_id']) : NULL,
+      'financial_type_id' => isset($params['financial_type_id']) ? self::asInt($params['financial_type_id']) : NULL,
       'source_pattern' => $params['source_pattern'] ?? NULL,
       'status' => $params['status'] ?? NULL,
     ], static fn($v) => $v !== NULL && $v !== '' && $v !== 0);
   }
 
   /**
-   * @return float[]|null
+   * @param mixed $raw Either an array of edges or a JSON-encoded array.
+   * @return list<float>|null
    */
-  private static function decodeEdges($raw): ?array {
+  private static function decodeEdges(mixed $raw): ?array {
     if (empty($raw)) {
       return NULL;
     }
-    $decoded = is_array($raw) ? $raw : json_decode((string) $raw, TRUE);
+    $decoded = is_array($raw) ? $raw : json_decode(self::asString($raw), TRUE);
     if (!is_array($decoded)) {
       return NULL;
     }
-    return array_values(array_map('floatval', $decoded));
+    return array_values(array_map(static fn(mixed $edge): float => self::asFloat($edge), $decoded));
   }
 
   public static function resolvePeriod(string $key): DateRange {

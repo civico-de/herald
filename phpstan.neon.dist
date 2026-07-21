@@ -21,6 +21,11 @@ parameters:
 		# CiviRules base classes (parents of the herald actions/conditions/forms)
 		# live off the classloader path in the dev container.
 		- /var/www/html/ext/org.civicoop.civirules
+		# Core ships APIv4 entities from its bundled extensions, not only from
+		# Civi/Api4 proper — Civi\Api4\Contribution lives in civi_contribute.
+		# Without this every call on such an entity is class.notFound, and the
+		# whole fluent chain after it degrades to mixed.
+		- /var/www/html/core/ext
 	bootstrapFiles:
 		- phpstanBootstrap.php
 	# ignoreErrors: only ever narrowly scoped (identifier + path + count) and

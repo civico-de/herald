@@ -27,7 +27,7 @@ class EmailChannel implements ChannelInterface {
   public const DEFAULT_SUBJECT = 'Notification';
 
   /**
-   * @var (callable(array): bool)|null */
+   * @var (callable(array<string, mixed>): bool)|null */
   private $mailer;
 
   /**
@@ -42,6 +42,9 @@ class EmailChannel implements ChannelInterface {
     return 'email';
   }
 
+  /**
+   * @param array<string, mixed> $config
+   */
   public function send(string $renderedBody, array $config): void {
     // !empty, not ??: an empty email_to must still fall back to the setting.
     $to = !empty($config['email_to'])
@@ -51,7 +54,7 @@ class EmailChannel implements ChannelInterface {
       throw new \CRM_Core_Exception('herald: email channel requires email_to (action param or herald_email_default_to setting).');
     }
 
-    $from = (string) \Civi::settings()->get('herald_email_from');
+    $from = self::str(\Civi::settings()->get('herald_email_from'));
     if ($from === '') {
       $from = \CRM_Core_BAO_Domain::getFromEmail();
     }
@@ -67,14 +70,15 @@ class EmailChannel implements ChannelInterface {
   /**
    * Build the CRM_Utils_Mail::send params from channel config. Pure — test-seam.
    *
+   * @param array<string, mixed> $config
    * @return array<string, mixed>
    */
   public static function buildMailParams(string $body, array $config, string $from): array {
     $params = [
       'from' => $from,
-      'toEmail' => (string) $config['email_to'],
-      'toName' => (string) ($config['email_to_name'] ?? ''),
-      'subject' => !empty($config['email_subject']) ? (string) $config['email_subject'] : self::DEFAULT_SUBJECT,
+      'toEmail' => self::str($config['email_to']),
+      'toName' => self::str($config['email_to_name'] ?? ''),
+      'subject' => !empty($config['email_subject']) ? self::str($config['email_subject']) : self::DEFAULT_SUBJECT,
     ];
     if (($config['email_format'] ?? 'html') === 'text') {
       $params['text'] = $body;
@@ -83,14 +87,27 @@ class EmailChannel implements ChannelInterface {
       $params['html'] = $body;
     }
     if (!empty($config['email_cc'])) {
-      $params['cc'] = (string) $config['email_cc'];
+      $params['cc'] = self::str($config['email_cc']);
     }
     if (!empty($config['email_bcc'])) {
-      $params['bcc'] = (string) $config['email_bcc'];
+      $params['bcc'] = self::str($config['email_bcc']);
     }
     return $params;
   }
 
+  /**
+   * Narrow a mixed config/setting value to string. Per-call config values
+   * and settings are documented/declared as scalar; this guards the cast
+   * against the theoretical mixed type without changing behaviour for
+   * well-formed input (see phpstan.neon.dist header re: defensive checks).
+   */
+  private static function str(mixed $value): string {
+    return is_scalar($value) ? (string) $value : '';
+  }
+
+  /**
+   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string}>
+   */
   public function getConfigSchema(): array {
     return [
       'email_to' => ['label' => 'Recipient address', 'required' => TRUE, 'type' => 'string'],

@@ -45,6 +45,9 @@ class WebhookChannel implements ChannelInterface {
     return 'webhook';
   }
 
+  /**
+   * @param array<string, mixed> $config
+   */
   public function send(string $renderedBody, array $config): void {
     // !empty, not ??: an empty webhook_url in the config must still fall
     // back to the default setting.
@@ -54,9 +57,9 @@ class WebhookChannel implements ChannelInterface {
       throw new \CRM_Core_Exception('herald: webhook channel requires webhook_url (action param or herald_webhook_default_url setting).');
     }
 
-    $method = strtoupper((string) ($config['webhook_method'] ?? 'POST'));
-    $format = (string) ($config['webhook_body_format'] ?? 'text');
-    $payload = self::buildPayload($renderedBody, $format, (string) ($config['webhook_body_key'] ?? 'text'));
+    $method = strtoupper(self::str($config['webhook_method'] ?? 'POST'));
+    $format = self::str($config['webhook_body_format'] ?? 'text');
+    $payload = self::buildPayload($renderedBody, $format, self::str($config['webhook_body_key'] ?? 'text'));
 
     $headers = self::normaliseHeaders($config['webhook_headers'] ?? []);
     // The default token is paired with the default URL: it must not leak to
@@ -77,7 +80,7 @@ class WebhookChannel implements ChannelInterface {
         }
       }
       if (!$hasAuth) {
-        $headers['Authorization'] = 'Bearer ' . $authToken;
+        $headers['Authorization'] = 'Bearer ' . self::str($authToken);
       }
     }
 
@@ -92,7 +95,7 @@ class WebhookChannel implements ChannelInterface {
 
     $client = $this->httpClient ?? new \GuzzleHttp\Client();
     try {
-      $response = $client->request($method, (string) $url, $requestOptions);
+      $response = $client->request($method, self::str($url), $requestOptions);
     }
     catch (\Throwable $e) {
       throw new \CRM_Core_Exception('herald: webhook request failed: ' . $e->getMessage(), 0, [], $e);
@@ -124,7 +127,7 @@ class WebhookChannel implements ChannelInterface {
 
   /**
    * @return array<string, string> */
-  private static function normaliseHeaders($raw): array {
+  private static function normaliseHeaders(mixed $raw): array {
     if (is_string($raw)) {
       $decoded = json_decode($raw, TRUE);
       $raw = is_array($decoded) ? $decoded : [];
@@ -135,12 +138,25 @@ class WebhookChannel implements ChannelInterface {
     $out = [];
     foreach ($raw as $name => $value) {
       if (is_string($name) && $name !== '') {
-        $out[$name] = (string) $value;
+        $out[$name] = self::str($value);
       }
     }
     return $out;
   }
 
+  /**
+   * Narrow a mixed config/setting value to string. Per-call config values
+   * and settings are documented/declared as scalar; this guards the cast
+   * against the theoretical mixed type without changing behaviour for
+   * well-formed input.
+   */
+  private static function str(mixed $value): string {
+    return is_scalar($value) ? (string) $value : '';
+  }
+
+  /**
+   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string}>
+   */
   public function getConfigSchema(): array {
     return [
       'webhook_url' => ['label' => 'URL', 'required' => TRUE, 'type' => 'string'],

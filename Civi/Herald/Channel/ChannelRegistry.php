@@ -30,6 +30,7 @@ class ChannelRegistry {
   }
 
   public static function default(): self {
+    /** @var self|null $instance */
     static $instance = NULL;
     if ($instance === NULL) {
       $instance = new self();

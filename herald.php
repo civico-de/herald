@@ -6,6 +6,8 @@ use CRM_Herald_ExtensionUtil as E;
 
 /**
  * Implements hook_civicrm_config().
+ *
+ * @param \CRM_Core_Config|array<string, mixed> $config
  */
 function herald_civicrm_config(&$config): void {
   _herald_civix_civicrm_config($config);
@@ -31,16 +33,28 @@ function herald_civicrm_enable(): void {
  * Captures the pre-edit Contribution status so post-hook callers can detect
  * transitions (e.g. Pending → Completed). hook_civicrm_post fires AFTER the
  * row was written so the old value is otherwise unreachable.
+ *
+ * Signature is dictated by CiviCRM: $id is NULL on create and an int-ish
+ * string or int on edit/delete; $params is the (mutable) field bag.
+ *
+ * @param string $op
+ * @param string $objectName
+ * @param int|string|null $id
+ * @param array<string, mixed> $params
  */
 function herald_civicrm_pre($op, $objectName, $id, &$params): void {
   if ($objectName !== 'Contribution' || $op !== 'edit' || !$id) {
     return;
   }
+  $contributionId = (int) $id;
   $previousStatusId = \CRM_Core_DAO::singleValueQuery(
     'SELECT contribution_status_id FROM civicrm_contribution WHERE id = %1',
-    [1 => [(int) $id, 'Integer']]
+    [1 => [$contributionId, 'Integer']]
   );
-  \Civi\Herald\StatusTransitionDispatcher::rememberPreEditStatus((int) $id, $previousStatusId !== NULL ? (int) $previousStatusId : NULL);
+  \Civi\Herald\StatusTransitionDispatcher::rememberPreEditStatus(
+    $contributionId,
+    is_scalar($previousStatusId) ? (int) $previousStatusId : NULL
+  );
 }
 
 /**
@@ -48,6 +62,15 @@ function herald_civicrm_pre($op, $objectName, $id, &$params): void {
  *
  * Detects Contribution status transitions and dispatches an internal event so
  * CiviRules-style triggers / channels can react.
+ *
+ * Signature is dictated by CiviCRM: $objectRef is the DAO (or, for some
+ * entities, an array) that was just written, passed by reference and free to be
+ * replaced by any listener — hence `mixed` rather than a narrower union.
+ *
+ * @param string $op
+ * @param string $objectName
+ * @param int|string|null $objectId
+ * @param mixed $objectRef
  */
 function herald_civicrm_post($op, $objectName, $objectId, &$objectRef): void {
   if ($objectName !== 'Contribution' || $op !== 'edit') {

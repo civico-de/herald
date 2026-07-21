@@ -17,8 +17,11 @@ class TelegramChannel implements ChannelInterface {
     return 'telegram';
   }
 
+  /**
+   * @param array<string, mixed> $config
+   */
   public function send(string $renderedBody, array $config): void {
-    $token = (string) \Civi::settings()->get('herald_telegram_bot_token');
+    $token = self::str(\Civi::settings()->get('herald_telegram_bot_token'));
     if ($token === '') {
       throw new \CRM_Core_Exception('herald: Telegram bot token is not configured. Set "herald_telegram_bot_token" in CRM settings.');
     }
@@ -33,12 +36,12 @@ class TelegramChannel implements ChannelInterface {
     }
 
     $payload = [
-      'chat_id' => (string) $chatId,
+      'chat_id' => self::str($chatId),
       'text' => $renderedBody,
     ];
     // '' means "Plain text" — omit the key entirely rather than sending an
     // empty parse_mode to the Bot API.
-    $parseMode = (string) ($config['parse_mode'] ?? 'HTML');
+    $parseMode = self::str($config['parse_mode'] ?? 'HTML');
     if ($parseMode !== '') {
       $payload['parse_mode'] = $parseMode;
     }
@@ -79,6 +82,19 @@ class TelegramChannel implements ChannelInterface {
     }
   }
 
+  /**
+   * Narrow a mixed config/setting value to string. Per-call config values
+   * and settings are documented/declared as scalar; this guards the cast
+   * against the theoretical mixed type without changing behaviour for
+   * well-formed input.
+   */
+  private static function str(mixed $value): string {
+    return is_scalar($value) ? (string) $value : '';
+  }
+
+  /**
+   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string}>
+   */
   public function getConfigSchema(): array {
     return [
       'chat_id' => [

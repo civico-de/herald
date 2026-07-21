@@ -37,10 +37,13 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
   /**
    * Pull subclass-specific values out of the submitted form data, returned
    * as a flat assoc array merged into the saved action params.
+   *
+   * @param array<string, mixed> $submitted
+   * @return array<string, mixed>
    */
   abstract protected function getExtraValues(array $submitted): array;
 
-  public function buildQuickForm() {
+  public function buildQuickForm(): void {
     $this->add('select', 'delivery_mode', E::ts('Delivery mode'), [
       'direct' => E::ts('Direct — send to one recipient configured below'),
       'subscribers' => E::ts('Subscribers — fan out to all contacts opted into a subscription type'),
@@ -70,7 +73,11 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
     ]);
   }
 
+  /**
+   * @return array<string, mixed>
+   */
   public function setDefaultValues() {
+    /** @var array<string, mixed> $defaults */
     $defaults = parent::setDefaultValues();
     $params = $this->getActionParameters();
     foreach (['channel', 'template', 'chat_id', 'parse_mode', 'disable_notification', 'disable_web_page_preview', 'delivery_mode', 'subscription_type'] as $field) {
@@ -85,7 +92,7 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
       $cc = $params['channel_config'];
       $defaults['channel_config'] = is_array($cc)
         ? json_encode($cc, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-        : (string) $cc;
+        : self::toStringValue($cc);
     }
     foreach ($this->extraDefaults() as $key => $value) {
       if (!array_key_exists($key, $defaults) || $defaults[$key] === NULL) {
@@ -95,7 +102,8 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
     return $defaults;
   }
 
-  public function postProcess() {
+  public function postProcess(): void {
+    /** @var array<string, mixed> $values */
     $values = $this->exportValues();
     $params = [
       'delivery_mode' => $values['delivery_mode'] ?? 'direct',
@@ -106,7 +114,7 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
       'parse_mode' => $values['parse_mode'] ?? 'HTML',
       'disable_notification' => !empty($values['disable_notification']),
       'disable_web_page_preview' => !empty($values['disable_web_page_preview']),
-      'channel_config' => self::parseChannelConfig($values['channel_config'] ?? ''),
+      'channel_config' => self::parseChannelConfig(self::toStringValue($values['channel_config'] ?? '')),
     ];
     $params = array_merge($params, $this->getExtraValues($values));
     $this->ruleAction->action_params = serialize($params);
@@ -153,7 +161,15 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
     }
     $opts = ['' => E::ts('— none —')];
     foreach ($rows as $row) {
-      $opts[$row['value']] = $row['label'];
+      if (!is_array($row)) {
+        continue;
+      }
+      $value = $row['value'] ?? NULL;
+      if (!is_string($value) && !is_int($value)) {
+        continue;
+      }
+      $label = $row['label'] ?? NULL;
+      $opts[(string) $value] = is_string($label) ? $label : (string) $value;
     }
     return $opts;
   }
@@ -162,6 +178,8 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
    * Decode the channel_config textarea into an assoc array (or empty array
    * for blank input). Throws on malformed JSON so the admin gets a clear
    * error instead of silently saving an empty config.
+   *
+   * @return array<array-key, mixed>
    */
   public static function parseChannelConfig(string $raw): array {
     if (trim($raw) === '') {
@@ -176,6 +194,8 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
 
   /**
    * Subclass extension point: defaults for fields added in addExtraFields().
+   *
+   * @return array<string, mixed>
    */
   protected function extraDefaults(): array {
     return [];
@@ -187,6 +207,8 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
 
   /**
    * Read action params from the rule_action row (returns an assoc array).
+   *
+   * @return array<array-key, mixed>
    */
   protected function getActionParameters(): array {
     $raw = $this->ruleAction->action_params ?? '';
@@ -195,6 +217,17 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
     }
     $params = unserialize($raw, ['allowed_classes' => FALSE]);
     return is_array($params) ? $params : [];
+  }
+
+  /**
+   * Normalise a mixed form/action-param value to a string. QuickForm
+   * text/select fields and previously-saved action params are always
+   * scalar in practice; this documents that assumption with a real check
+   * instead of casting mixed directly (falls back to '' for anything
+   * non-scalar, matching how (string) already treats NULL).
+   */
+  protected static function toStringValue(mixed $value): string {
+    return is_scalar($value) ? (string) $value : '';
   }
 
 }

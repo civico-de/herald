@@ -13,11 +13,16 @@ namespace Civi\Herald\Digest;
  *
  * Aggregate columns use SQL-style aliases (`SUM(total_amount) AS total`) since
  * APIv4's `SUM:field` shorthand returns empty values.
+ *
+ * @phpstan-type HeraldFilters array<string, mixed>
+ * @phpstan-type HeraldWhere array<int, mixed>
  */
 class ContributionStatsService {
 
   /**
    * Period summary: total amount + count, grouped by source.
+   *
+   * @param HeraldFilters $filters
    *
    * @return array{total: float, count: int, bySource: array<int, array{source: string, total: float, count: int}>}
    */
@@ -26,7 +31,8 @@ class ContributionStatsService {
     $where[] = ['receive_date', '>=', $period->startSql()];
     $where[] = ['receive_date', '<', $period->endSql()];
 
-    $rows = \Civi\Api4\Contribution::get(FALSE)
+    /** @var array<int, array{total: float|int|numeric-string|null, cnt: int|numeric-string|null, source: string|null}> $rows */
+    $rows = $this->contributionGet()
       ->addSelect('SUM(total_amount) AS total', 'COUNT(*) AS cnt', 'source')
       ->setWhere($where)
       ->addGroupBy('source')
@@ -53,6 +59,8 @@ class ContributionStatsService {
   /**
    * Completed contributions whose receive_date is within the last N minutes.
    *
+   * @param HeraldFilters $filters
+   *
    * @return array<int, array{amount: float, source: string, date: string}>
    */
   public function getRecentCompleted(array $filters, int $minutes): array {
@@ -65,6 +73,8 @@ class ContributionStatsService {
 
   /**
    * Pending contributions whose receive_date is within the last N minutes.
+   *
+   * @param HeraldFilters $filters
    *
    * @return array<int, array{amount: float, source: string, date: string}>
    */
@@ -86,6 +96,8 @@ class ContributionStatsService {
    * excluded — those were just created, not transitioned (same heuristic as
    * getStatusTransitionsInPeriod()).
    *
+   * @param HeraldFilters $filters
+   *
    * @return array<int, array{amount: float, source: string, date: string}>
    */
   public function getRecentStatusTransitions(array $filters, int $minutes, string $toStatus, bool $excludeAlsoReceivedInPeriod = TRUE): array {
@@ -96,7 +108,8 @@ class ContributionStatsService {
       $where[] = ['receive_date', '<', $period->startSql()];
     }
 
-    $rows = \Civi\Api4\Contribution::get(FALSE)
+    /** @var array<int, array{total_amount: float|int|numeric-string|null, source: string|null, receive_date: string|null, modified_date: string|null}> $rows */
+    $rows = $this->contributionGet()
       ->addSelect('total_amount', 'source', 'receive_date', 'modified_date')
       ->setWhere($where)
       ->addOrderBy('modified_date', 'DESC')
@@ -114,6 +127,8 @@ class ContributionStatsService {
    * Status transitions whose modified_date falls inside `$period`. Optionally
    * excludes rows whose receive_date is also inside the period — these are
    * already counted by getPeriodSummary() and would double-count.
+   *
+   * @param HeraldFilters $filters
    *
    * @return array{total: float, count: int}
    */
@@ -149,6 +164,8 @@ class ContributionStatsService {
   /**
    * Pending snapshot constrained to a date range (e.g. transfers announced yesterday).
    *
+   * @param HeraldFilters $filters
+   *
    * @return array{total: float, count: int}
    */
   public function getPendingSnapshot(array $filters, DateRange $period): array {
@@ -161,6 +178,8 @@ class ContributionStatsService {
   /**
    * All pending contributions regardless of age — the outstanding pool.
    *
+   * @param HeraldFilters $filters
+   *
    * @return array{total: float, count: int}
    */
   public function getAllPending(array $filters): array {
@@ -171,12 +190,15 @@ class ContributionStatsService {
   /**
    * Raw amounts of all contributions matching the filters, for histogram input.
    *
+   * @param HeraldFilters $filters
+   *
    * @return float[]
    */
   public function getAmountDistribution(array $filters): array {
     $where = $this->buildWhere($filters, $this->statusOf($filters, 'Completed'));
 
-    $rows = \Civi\Api4\Contribution::get(FALSE)
+    /** @var array<int, array{total_amount: float|int|numeric-string|null}> $rows */
+    $rows = $this->contributionGet()
       ->addSelect('total_amount')
       ->setWhere($where)
       ->setLimit(0)
@@ -189,14 +211,18 @@ class ContributionStatsService {
   /**
    * Translate a $filters array to APIv4 where-clauses, with the requested status
    * applied as `contribution_status_id:name`.
+   *
+   * @param HeraldFilters $filters
+   *
+   * @return HeraldWhere
    */
   private function buildWhere(array $filters, string $status): array {
     $where = [['contribution_status_id:name', '=', $status]];
     if (!empty($filters['campaign_id'])) {
-      $where[] = ['campaign_id', '=', (int) $filters['campaign_id']];
+      $where[] = ['campaign_id', '=', (int) self::asScalar($filters['campaign_id'])];
     }
     if (!empty($filters['financial_type_id'])) {
-      $where[] = ['financial_type_id', '=', (int) $filters['financial_type_id']];
+      $where[] = ['financial_type_id', '=', (int) self::asScalar($filters['financial_type_id'])];
     }
     if (!empty($filters['source_pattern'])) {
       $where[] = ['source', 'LIKE', $filters['source_pattern']];
@@ -204,15 +230,36 @@ class ContributionStatsService {
     return $where;
   }
 
+  /**
+   * @param HeraldFilters $filters
+   */
   private function statusOf(array $filters, string $default): string {
-    return (string) ($filters['status'] ?? $default);
+    return (string) self::asScalar($filters['status'] ?? $default);
+  }
+
+  /**
+   * Filter values arrive untyped (CiviRules stores action parameters as raw
+   * form input), so phpstan sees `mixed` where the code casts to int/string.
+   * Narrowing to `scalar` keeps PHP's own cast semantics for every value that
+   * can actually occur here (int, float, numeric string, bool) and only
+   * differs for arrays/objects, which are never valid filter values.
+   *
+   * @param mixed $value
+   */
+  private static function asScalar($value): string|int|float|bool {
+    return is_scalar($value) ? $value : '';
   }
 
   /**
    * Run a SUM/COUNT query for the given where-clauses and unwrap the single row.
+   *
+   * @param HeraldWhere $where
+   *
+   * @return array{total: float, count: int}
    */
   private function fetchTotalAndCount(array $where): array {
-    $rows = \Civi\Api4\Contribution::get(FALSE)
+    /** @var array<int, array{total: float|int|numeric-string|null, cnt: int|numeric-string|null}> $rows */
+    $rows = $this->contributionGet()
       ->addSelect('SUM(total_amount) AS total', 'COUNT(*) AS cnt')
       ->setWhere($where)
       ->execute()
@@ -227,11 +274,16 @@ class ContributionStatsService {
 
   /**
    * Common query for "recent contributions" — returns flat rows with the typed shape.
+   *
+   * @param HeraldWhere $where
+   *
+   * @return array<int, array{amount: float, source: string, date: string}>
    */
   private function fetchRecentByReceiveDate(array $where, DateRange $period): array {
     $where[] = ['receive_date', '>=', $period->startSql()];
 
-    $rows = \Civi\Api4\Contribution::get(FALSE)
+    /** @var array<int, array{total_amount: float|int|numeric-string|null, source: string|null, receive_date: string|null}> $rows */
+    $rows = $this->contributionGet()
       ->addSelect('total_amount', 'source', 'receive_date')
       ->setWhere($where)
       ->addOrderBy('receive_date', 'DESC')
@@ -243,6 +295,17 @@ class ContributionStatsService {
       'source' => $r['source'] ?: 'Unknown',
       'date' => $r['receive_date'] ?? '',
     ], $rows);
+  }
+
+  /**
+   * APIv4 `Contribution.get` with permission checks disabled.
+   *
+   * `Civi\Api4\Contribution` is shipped by core's bundled `civi_contribute`
+   * extension rather than by Civi/Api4 proper; phpstan.neon.dist scans
+   * core/ext so it resolves like any other entity.
+   */
+  private function contributionGet(): \Civi\Api4\Generic\DAOGetAction {
+    return \Civi\Api4\Contribution::get(FALSE);
   }
 
 }

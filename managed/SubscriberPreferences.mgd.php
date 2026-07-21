@@ -27,6 +27,9 @@ $subscriptionTypes = [
   ['name' => 'weekly_digest', 'label' => E::ts('Weekly digest'), 'weight' => 50],
 ];
 
+/**
+ * @var array<int, array{name: string, label: string, data_type: string, html_type: string, weight: int, help_pre?: string, options?: array<string, string>, option_group_name?: string, serialize?: int}> $preferenceFields
+ */
 $preferenceFields = [
   [
     'name' => 'preferred_channel',

@@ -15,7 +15,7 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
     return 'civicrm/herald/form/civirulesaction/sendnotification';
   }
 
-  public function processAction(CRM_Civirules_TriggerData_TriggerData $triggerData) {
+  public function processAction(CRM_Civirules_TriggerData_TriggerData $triggerData): void {
     $this->dispatch(self::decodeVars($this->getActionParameters()));
   }
 
@@ -24,17 +24,20 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
    *
    * Accepts an array passthrough (CiviRules form classes can store arrays) or
    * a JSON-encoded string. Anything else collapses to [].
+   *
+   * @param array<string, mixed> $params
+   * @return array<string, mixed> Template variable names to values.
    */
   public static function decodeVars(array $params): array {
     $raw = $params['vars'] ?? '';
     if (is_array($raw)) {
-      return $raw;
+      return self::namedOnly($raw);
     }
-    if (trim((string) $raw) === '') {
+    if (trim(self::asString($raw)) === '') {
       return [];
     }
-    $decoded = json_decode((string) $raw, TRUE);
-    return is_array($decoded) ? $decoded : [];
+    $decoded = json_decode(self::asString($raw), TRUE);
+    return is_array($decoded) ? self::namedOnly($decoded) : [];
   }
 
 }

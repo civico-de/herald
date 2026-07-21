@@ -35,7 +35,12 @@ class HistogramFormatter {
       return [];
     }
 
-    if ($overrideEdges !== NULL) {
+    // Fewer than two edges defines no bucket at all: distribute() would compute
+    // count($edges) - 1 = -1 buckets and then read $edges[0] and $edges[-1],
+    // which are undefined. Reachable from the form, because the bucket_edges
+    // parameter decodes '[]' to an empty array rather than to NULL. Fall back to
+    // adaptive edges — the same thing an absent override does.
+    if ($overrideEdges !== NULL && count($overrideEdges) >= 2) {
       $edges = $overrideEdges;
     }
     else {
@@ -48,7 +53,8 @@ class HistogramFormatter {
   /**
    * Render a histogram as ASCII bars (Unicode block characters).
    *
-   * @param array $buckets Output of compute().
+   * @param array<int, array{low: float, high: float, count: int, sum: float, label: string}> $buckets
+   *   Output of compute().
    * @param int $maxBlocks Max bar width in characters.
    */
   public static function render(array $buckets, int $maxBlocks = 12): string {
@@ -74,6 +80,9 @@ class HistogramFormatter {
 
   /**
    * Decide bucket edges from the data.
+   *
+   * @param non-empty-array<int, float> $amounts
+   *
    * @return float[] sorted edges
    */
   private static function deriveEdges(array $amounts, int $bucketCount): array {
@@ -96,6 +105,9 @@ class HistogramFormatter {
     return self::linearEdges($min, $max, $bucketCount);
   }
 
+  /**
+   * @return float[]
+   */
   private static function linearEdges(float $min, float $max, int $count): array {
     $low = self::niceFloor($min);
     $high = self::niceCeiling($max);
@@ -113,6 +125,9 @@ class HistogramFormatter {
     return $edges;
   }
 
+  /**
+   * @return float[]
+   */
   private static function logEdges(float $min, float $max, int $count): array {
     $logMin = log10(max($min, 1));
     $logMax = log10($max);
@@ -173,9 +188,15 @@ class HistogramFormatter {
    * Amounts outside the edge range (possible with caller-supplied edges;
    * adaptive edges always cover the data) land in extra "<low" / "≥high"
    * buckets instead of silently vanishing from the histogram.
+   *
+   * @param array<int, float> $amounts
+   * @param float[] $edges
+   *
+   * @return array<int, array{low: float, high: float, count: int, sum: float, label: string}>
    */
   private static function distribute(array $amounts, array $edges): array {
     $bucketCount = count($edges) - 1;
+    /** @var array<int, array{low: float, high: float, count: int, sum: float, label: string}> $buckets */
     $buckets = [];
     for ($i = 0; $i < $bucketCount; $i++) {
       $buckets[$i] = [
@@ -183,6 +204,7 @@ class HistogramFormatter {
         'high' => $edges[$i + 1],
         'count' => 0,
         'sum' => 0.0,
+        'label' => self::formatRange($edges[$i], $edges[$i + 1]),
       ];
     }
     $underflow = ['count' => 0, 'sum' => 0.0];
@@ -202,16 +224,17 @@ class HistogramFormatter {
         $isLast = ($i === $bucketCount - 1);
         $inBucket = $amount >= $edges[$i] && ($isLast ? $amount <= $edges[$i + 1] : $amount < $edges[$i + 1]);
         if ($inBucket) {
-          $buckets[$i]['count']++;
-          $buckets[$i]['sum'] += $amount;
+          // Read-modify-write rather than `$buckets[$i]['count']++`: phpstan
+          // cannot prove the dynamic offset exists and would widen the bucket
+          // shape on a nested write.
+          $bucket = $buckets[$i];
+          $bucket['count']++;
+          $bucket['sum'] += $amount;
+          $buckets[$i] = $bucket;
           break;
         }
       }
     }
-    foreach ($buckets as &$bucket) {
-      $bucket['label'] = self::formatRange($bucket['low'], $bucket['high']);
-    }
-    unset($bucket);
     if ($underflow['count'] > 0) {
       array_unshift($buckets, [
         'low' => 0.0,

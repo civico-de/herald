@@ -40,6 +40,7 @@ class SubscriberLookup {
       ->execute()
       ->getArrayCopy();
 
+    /** @var array<int, array<string, mixed>> $rows */
     return self::mapRows($rows);
   }
 
@@ -56,7 +57,7 @@ class SubscriberLookup {
   public static function mapRows(array $rows): array {
     $out = [];
     foreach ($rows as $row) {
-      $channel = (string) ($row['herald_preferences.preferred_channel'] ?? '');
+      $channel = self::str($row['herald_preferences.preferred_channel'] ?? '');
       if ($channel === '') {
         continue;
       }
@@ -65,7 +66,7 @@ class SubscriberLookup {
         continue;
       }
       $out[] = [
-        'contact_id' => (int) ($row['id'] ?? 0),
+        'contact_id' => self::int($row['id'] ?? 0),
         'channel' => $channel,
         'config' => $config,
       ];
@@ -77,6 +78,7 @@ class SubscriberLookup {
    * Build the channel config dict for one contact row, or NULL if the
    * recipient ID required by their preferred channel is missing.
    *
+   * @param array<string, mixed> $row
    * @return array<string, mixed>|null
    */
   public static function buildConfigForChannel(string $channel, array $row): ?array {
@@ -95,9 +97,29 @@ class SubscriberLookup {
   }
 
   /**
-   * Returns $config if $row[$key] is non-empty, else NULL. */
+   * Returns $config if $row[$key] is non-empty, else NULL.
+   *
+   * @param array<string, mixed> $row
+   * @param array<string, mixed> $config
+   * @return array<string, mixed>|null
+   */
   private static function nonEmpty(array $row, string $key, array $config): ?array {
     return !empty($row[$key]) ? $config : NULL;
+  }
+
+  /**
+   * Narrow a mixed APIv4-row value to string. Guards the cast against the
+   * theoretical mixed type without changing behaviour for well-formed data.
+   */
+  private static function str(mixed $value): string {
+    return is_scalar($value) ? (string) $value : '';
+  }
+
+  /**
+   * Narrow a mixed APIv4-row value to int. Same rationale as self::str().
+   */
+  private static function int(mixed $value): int {
+    return is_scalar($value) ? (int) $value : 0;
   }
 
 }

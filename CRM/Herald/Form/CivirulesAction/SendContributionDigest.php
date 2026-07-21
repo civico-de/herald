@@ -4,6 +4,9 @@ use CRM_Herald_ExtensionUtil as E;
 
 class CRM_Herald_Form_CivirulesAction_SendContributionDigest extends CRM_Herald_Form_CivirulesAction_AbstractSendForm {
 
+  /**
+   * @return array<string, string>
+   */
   protected function getTemplateOptions(): array {
     $rows = \Civi\Api4\MessageTemplate::get(FALSE)
       ->addSelect('workflow_name', 'msg_title')
@@ -13,7 +16,13 @@ class CRM_Herald_Form_CivirulesAction_SendContributionDigest extends CRM_Herald_
       ->getArrayCopy();
     $opts = [];
     foreach ($rows as $row) {
-      $opts[$row['workflow_name']] = $row['msg_title'] ?: $row['workflow_name'];
+      if (!is_array($row) || !is_string($row['workflow_name'] ?? NULL)) {
+        continue;
+      }
+      $workflowName = $row['workflow_name'];
+      $msgTitle = $row['msg_title'] ?? NULL;
+      $msgTitle = is_string($msgTitle) ? $msgTitle : '';
+      $opts[$workflowName] = $msgTitle !== '' ? $msgTitle : $workflowName;
     }
     return $opts;
   }
@@ -36,21 +45,32 @@ class CRM_Herald_Form_CivirulesAction_SendContributionDigest extends CRM_Herald_
     $this->add('text', 'campaign_title', E::ts('Campaign title (free text, shown in template)'), ['size' => 40]);
   }
 
+  /**
+   * @param array<string, mixed> $submitted
+   * @return array<string, mixed>
+   */
   protected function getExtraValues(array $submitted): array {
+    $campaignId = self::toStringValue($submitted['campaign_id'] ?? '');
+    $financialTypeId = self::toStringValue($submitted['financial_type_id'] ?? '');
+    $bucketCount = self::toStringValue($submitted['bucket_count'] ?? '');
+    $goal = self::toStringValue($submitted['goal'] ?? '');
     return [
       'period' => $submitted['period'] ?? 'yesterday',
-      'campaign_id' => ($submitted['campaign_id'] ?? '') !== '' ? (int) $submitted['campaign_id'] : NULL,
-      'financial_type_id' => ($submitted['financial_type_id'] ?? '') !== '' ? (int) $submitted['financial_type_id'] : NULL,
+      'campaign_id' => $campaignId !== '' ? (int) $campaignId : NULL,
+      'financial_type_id' => $financialTypeId !== '' ? (int) $financialTypeId : NULL,
       'source_pattern' => $submitted['source_pattern'] ?? '',
       'show_pending' => !empty($submitted['show_pending']),
       'show_histogram' => !empty($submitted['show_histogram']),
-      'bucket_count' => ($submitted['bucket_count'] ?? '') !== '' ? (int) $submitted['bucket_count'] : 8,
+      'bucket_count' => $bucketCount !== '' ? (int) $bucketCount : 8,
       'bucket_edges' => $submitted['bucket_edges'] ?? '',
-      'goal' => ($submitted['goal'] ?? '') !== '' ? (float) $submitted['goal'] : NULL,
+      'goal' => $goal !== '' ? (float) $goal : NULL,
       'campaign_title' => $submitted['campaign_title'] ?? '',
     ];
   }
 
+  /**
+   * @return array<string, mixed>
+   */
   protected function extraDefaults(): array {
     $params = $this->getActionParameters();
     return [

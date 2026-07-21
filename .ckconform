@@ -3,3 +3,7 @@
 license=Proprietary
 npm_license=UNLICENSED
 copyright=civico GmbH
+
+# Measured 2026-07-21 after the level-10 pass: 54.55% (623/1142 lines).
+# Raise it as coverage grows — never lower it to make a build green.
+min_coverage=54

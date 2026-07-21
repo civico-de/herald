@@ -24,6 +24,9 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
       ->setCheckPermissions($checkPermissions);
   }
 
+  /**
+   * @return array<string, array<int, string>>
+   */
   public static function permissions(): array {
     return [
       'meta' => ['access CiviCRM'],
@@ -31,6 +34,9 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
     ];
   }
 
+  /**
+   * @return array<string, mixed>
+   */
   public static function getInfo(): array {
     return parent::getInfo() + [
       'description' => 'Herald — diagnostic actions',

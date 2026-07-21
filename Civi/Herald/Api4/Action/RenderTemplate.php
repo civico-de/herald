@@ -25,10 +25,11 @@ class RenderTemplate extends AbstractAction {
   /**
    * Variables passed to Smarty as `{$key}`.
    * @var array
+   * @phpstan-var array<string, mixed>
    */
   protected array $vars = [];
 
-  public function _run(Result $result) {
+  public function _run(Result $result): void {
     if ($this->workflow === '') {
       throw new \CRM_Core_Exception('Herald.renderTemplate: "workflow" parameter is required.');
     }

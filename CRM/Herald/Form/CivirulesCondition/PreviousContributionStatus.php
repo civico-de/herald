@@ -4,7 +4,7 @@ use CRM_Herald_ExtensionUtil as E;
 
 class CRM_Herald_Form_CivirulesCondition_PreviousContributionStatus extends CRM_CivirulesConditions_Form_Form {
 
-  public function buildQuickForm() {
+  public function buildQuickForm(): void {
     $this->add('select', 'previous_status_id', E::ts('Previous Contribution Status'), $this->getStatusOptions(), TRUE);
     $this->addButtons([
       ['type' => 'next', 'name' => E::ts('Save'), 'isDefault' => TRUE],
@@ -12,7 +12,11 @@ class CRM_Herald_Form_CivirulesCondition_PreviousContributionStatus extends CRM_
     ]);
   }
 
+  /**
+   * @return array<string, mixed>
+   */
   public function setDefaultValues() {
+    /** @var array<string, mixed> $defaults */
     $defaults = parent::setDefaultValues();
     $params = $this->getConditionParameters();
     if (isset($params['previous_status_id'])) {
@@ -21,9 +25,10 @@ class CRM_Herald_Form_CivirulesCondition_PreviousContributionStatus extends CRM_
     return $defaults;
   }
 
-  public function postProcess() {
+  public function postProcess(): void {
     $values = $this->exportValues();
-    $params = ['previous_status_id' => (int) ($values['previous_status_id'] ?? 0)];
+    $previousStatusId = $values['previous_status_id'] ?? 0;
+    $params = ['previous_status_id' => is_numeric($previousStatusId) ? (int) $previousStatusId : 0];
     $this->ruleCondition->condition_params = serialize($params);
     $this->ruleCondition->save();
     \CRM_Core_Session::setStatus(E::ts('herald condition saved.'), '', 'success');
@@ -42,11 +47,22 @@ class CRM_Herald_Form_CivirulesCondition_PreviousContributionStatus extends CRM_
       ->getArrayCopy();
     $opts = [];
     foreach ($rows as $row) {
-      $opts[(int) $row['value']] = $row['label'];
+      if (!is_array($row)) {
+        continue;
+      }
+      $value = $row['value'] ?? NULL;
+      if (!is_numeric($value)) {
+        continue;
+      }
+      $label = $row['label'] ?? NULL;
+      $opts[(int) $value] = is_string($label) ? $label : (string) $value;
     }
     return $opts;
   }
 
+  /**
+   * @return array<array-key, mixed>
+   */
   protected function getConditionParameters(): array {
     $raw = $this->ruleCondition->condition_params ?? '';
     if (!$raw) {

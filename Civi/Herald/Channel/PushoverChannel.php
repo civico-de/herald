@@ -40,8 +40,11 @@ class PushoverChannel implements ChannelInterface {
     return 'pushover';
   }
 
+  /**
+   * @param array<string, mixed> $config
+   */
   public function send(string $renderedBody, array $config): void {
-    $appToken = (string) \Civi::settings()->get('herald_pushover_app_token');
+    $appToken = self::str(\Civi::settings()->get('herald_pushover_app_token'));
     if ($appToken === '') {
       throw new \CRM_Core_Exception('herald: Pushover app token not configured (herald_pushover_app_token).');
     }
@@ -53,7 +56,7 @@ class PushoverChannel implements ChannelInterface {
       throw new \CRM_Core_Exception('herald: Pushover user/group key required (pushover_user_key action param or herald_pushover_default_user_key setting).');
     }
 
-    $form = self::buildForm($appToken, (string) $userKey, $renderedBody, $config);
+    $form = self::buildForm($appToken, self::str($userKey), $renderedBody, $config);
 
     $client = $this->httpClient ?? new \GuzzleHttp\Client();
     try {
@@ -77,7 +80,7 @@ class PushoverChannel implements ChannelInterface {
       ));
     }
     $decoded = json_decode($body, TRUE);
-    if (!is_array($decoded) || (int) ($decoded['status'] ?? 0) !== 1) {
+    if (!is_array($decoded) || self::int($decoded['status'] ?? 0) !== 1) {
       throw new \CRM_Core_Exception('herald: Pushover responded with status != 1. Body: ' . substr($body, 0, 500));
     }
   }
@@ -85,6 +88,7 @@ class PushoverChannel implements ChannelInterface {
   /**
    * Pure form-payload builder. Test-seam.
    *
+   * @param array<string, mixed> $config
    * @return array<string, scalar>
    */
   public static function buildForm(string $appToken, string $userKey, string $body, array $config): array {
@@ -94,24 +98,24 @@ class PushoverChannel implements ChannelInterface {
       'message' => $body,
     ];
     if (!empty($config['pushover_title'])) {
-      $form['title'] = (string) $config['pushover_title'];
+      $form['title'] = self::str($config['pushover_title']);
     }
     if (isset($config['pushover_priority']) && $config['pushover_priority'] !== '') {
-      $form['priority'] = (int) $config['pushover_priority'];
+      $form['priority'] = self::int($config['pushover_priority']);
       if ($form['priority'] === 2) {
         // Emergency priority requires retry/expire or the API rejects the call.
-        $form['retry'] = max(30, (int) ($config['pushover_retry'] ?? 60));
-        $form['expire'] = min(10800, max(1, (int) ($config['pushover_expire'] ?? 3600)));
+        $form['retry'] = max(30, self::int($config['pushover_retry'] ?? 60));
+        $form['expire'] = min(10800, max(1, self::int($config['pushover_expire'] ?? 3600)));
       }
     }
     if (!empty($config['pushover_sound'])) {
-      $form['sound'] = (string) $config['pushover_sound'];
+      $form['sound'] = self::str($config['pushover_sound']);
     }
     if (!empty($config['pushover_url'])) {
-      $form['url'] = (string) $config['pushover_url'];
+      $form['url'] = self::str($config['pushover_url']);
     }
     if (!empty($config['pushover_url_title'])) {
-      $form['url_title'] = (string) $config['pushover_url_title'];
+      $form['url_title'] = self::str($config['pushover_url_title']);
     }
     if (!empty($config['pushover_html'])) {
       $form['html'] = 1;
@@ -119,6 +123,26 @@ class PushoverChannel implements ChannelInterface {
     return $form;
   }
 
+  /**
+   * Narrow a mixed config/setting value to string. Per-call config values
+   * and settings are documented/declared as scalar; this guards the cast
+   * against the theoretical mixed type without changing behaviour for
+   * well-formed input.
+   */
+  private static function str(mixed $value): string {
+    return is_scalar($value) ? (string) $value : '';
+  }
+
+  /**
+   * Narrow a mixed config value to int. Same rationale as self::str().
+   */
+  private static function int(mixed $value): int {
+    return is_scalar($value) ? (int) $value : 0;
+  }
+
+  /**
+   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string}>
+   */
   public function getConfigSchema(): array {
     return [
       'pushover_user_key' => ['label' => 'User/group key (override default)', 'required' => FALSE, 'type' => 'string'],

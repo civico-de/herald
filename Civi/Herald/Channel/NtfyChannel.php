@@ -36,6 +36,9 @@ class NtfyChannel implements ChannelInterface {
     return 'ntfy';
   }
 
+  /**
+   * @param array<string, mixed> $config
+   */
   public function send(string $renderedBody, array $config): void {
     // !empty, not ??: an empty ntfy_topic must still fall back to the setting.
     $topic = !empty($config['ntfy_topic'])
@@ -45,11 +48,11 @@ class NtfyChannel implements ChannelInterface {
       throw new \CRM_Core_Exception('herald: ntfy channel requires ntfy_topic (action param or herald_ntfy_default_topic setting).');
     }
 
-    $server = (string) (\Civi::settings()->get('herald_ntfy_server') ?: 'https://ntfy.sh');
-    $url = rtrim($server, '/') . '/' . ltrim((string) $topic, '/');
+    $server = self::str(\Civi::settings()->get('herald_ntfy_server') ?: 'https://ntfy.sh');
+    $url = rtrim($server, '/') . '/' . ltrim(self::str($topic), '/');
 
     $headers = self::buildHeaders($config);
-    $token = (string) \Civi::settings()->get('herald_ntfy_token');
+    $token = self::str(\Civi::settings()->get('herald_ntfy_token'));
     if ($token !== '' && !isset($headers['Authorization'])) {
       $headers['Authorization'] = 'Bearer ' . $token;
     }
@@ -80,21 +83,22 @@ class NtfyChannel implements ChannelInterface {
   /**
    * Build the X-* metadata headers from action config. Pure — test-seam.
    *
+   * @param array<string, mixed> $config
    * @return array<string, string>
    */
   public static function buildHeaders(array $config): array {
     $h = ['Content-Type' => 'text/plain; charset=utf-8'];
     if (!empty($config['ntfy_title'])) {
-      $h['X-Title'] = (string) $config['ntfy_title'];
+      $h['X-Title'] = self::str($config['ntfy_title']);
     }
     if (isset($config['ntfy_priority']) && $config['ntfy_priority'] !== '') {
-      $h['X-Priority'] = (string) $config['ntfy_priority'];
+      $h['X-Priority'] = self::str($config['ntfy_priority']);
     }
     if (!empty($config['ntfy_tags'])) {
-      $h['X-Tags'] = (string) $config['ntfy_tags'];
+      $h['X-Tags'] = self::str($config['ntfy_tags']);
     }
     if (!empty($config['ntfy_click'])) {
-      $h['X-Click'] = (string) $config['ntfy_click'];
+      $h['X-Click'] = self::str($config['ntfy_click']);
     }
     if (!empty($config['ntfy_markdown'])) {
       $h['X-Markdown'] = 'yes';
@@ -102,6 +106,19 @@ class NtfyChannel implements ChannelInterface {
     return $h;
   }
 
+  /**
+   * Narrow a mixed config/setting value to string. Per-call config values
+   * and settings are documented/declared as scalar; this guards the cast
+   * against the theoretical mixed type without changing behaviour for
+   * well-formed input.
+   */
+  private static function str(mixed $value): string {
+    return is_scalar($value) ? (string) $value : '';
+  }
+
+  /**
+   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string}>
+   */
   public function getConfigSchema(): array {
     return [
       'ntfy_topic' => ['label' => 'Topic', 'required' => TRUE, 'type' => 'string'],

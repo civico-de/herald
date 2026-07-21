@@ -23,9 +23,9 @@ class CRM_Herald_CivirulesConditions_PreviousContributionStatus extends CRM_Civi
       return FALSE;
     }
     $expected = isset($this->conditionParams['previous_status_id'])
-      ? (int) $this->conditionParams['previous_status_id']
+      ? self::toInt($this->conditionParams['previous_status_id'])
       : NULL;
-    $previous = StatusTransitionDispatcher::resolvePreEditStatus((int) $contribution['id'], $triggerData);
+    $previous = StatusTransitionDispatcher::resolvePreEditStatus(self::toInt($contribution['id']), $triggerData);
     return self::matches($expected, $previous);
   }
 
@@ -54,11 +54,24 @@ class CRM_Herald_CivirulesConditions_PreviousContributionStatus extends CRM_Civi
     if ($expected === NULL) {
       return '(no previous status configured)';
     }
-    return sprintf('previous status = #%d', (int) $expected);
+    return sprintf('previous status = #%d', self::toInt($expected));
   }
 
-  public function requiredEntities() {
+  /**
+   * @return string[]
+   */
+  public function requiredEntities(): array {
     return ['Contribution'];
+  }
+
+  /**
+   * Narrow a mixed condition-param value to int. Condition params are
+   * decoded from serialized storage and this field is always numeric per
+   * the form that writes it; this guards the cast against the theoretical
+   * mixed type without changing behaviour for well-formed data.
+   */
+  private static function toInt(mixed $value): int {
+    return is_scalar($value) ? (int) $value : 0;
   }
 
 }

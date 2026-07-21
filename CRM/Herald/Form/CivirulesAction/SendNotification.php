@@ -16,22 +16,29 @@ class CRM_Herald_Form_CivirulesAction_SendNotification extends CRM_Herald_Form_C
     ]);
   }
 
+  /**
+   * @param array<string, mixed> $submitted
+   * @return array<string, mixed>
+   */
   protected function getExtraValues(array $submitted): array {
-    $raw = $submitted['vars'] ?? '';
-    if (trim((string) $raw) === '') {
+    $raw = self::toStringValue($submitted['vars'] ?? '');
+    if (trim($raw) === '') {
       return ['vars' => []];
     }
-    $decoded = json_decode((string) $raw, TRUE);
+    $decoded = json_decode($raw, TRUE);
     if (!is_array($decoded)) {
       throw new \CRM_Core_Exception(E::ts('Variables JSON is invalid: %1', [1 => json_last_error_msg()]));
     }
     return ['vars' => $decoded];
   }
 
+  /**
+   * @return array<string, mixed>
+   */
   protected function extraDefaults(): array {
     $params = $this->getActionParameters();
     $vars = $params['vars'] ?? [];
-    return ['vars' => is_array($vars) ? json_encode($vars, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : (string) $vars];
+    return ['vars' => is_array($vars) ? json_encode($vars, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) : self::toStringValue($vars)];
   }
 
   /**
@@ -46,7 +53,13 @@ class CRM_Herald_Form_CivirulesAction_SendNotification extends CRM_Herald_Form_C
       ->getArrayCopy();
     $opts = [];
     foreach ($rows as $row) {
-      $opts[$row['workflow_name']] = $row['msg_title'] ?: $row['workflow_name'];
+      if (!is_array($row) || !is_string($row['workflow_name'] ?? NULL)) {
+        continue;
+      }
+      $workflowName = $row['workflow_name'];
+      $msgTitle = $row['msg_title'] ?? NULL;
+      $msgTitle = is_string($msgTitle) ? $msgTitle : '';
+      $opts[$workflowName] = $msgTitle !== '' ? $msgTitle : $workflowName;
     }
     return $opts;
   }

@@ -9,7 +9,7 @@ interface ChannelInterface {
    *
    * @param string $renderedBody
    *   The fully-rendered message (HTML, Markdown, or plain — channel decides what it accepts).
-   * @param array $config
+   * @param array<string, mixed> $config
    *   Per-call configuration. Shape depends on the channel; see getConfigSchema().
    *   For Telegram: ['chat_id' => string, 'parse_mode' => 'HTML'|'MarkdownV2'|null].
    */
@@ -26,6 +26,8 @@ interface ChannelInterface {
    * Used by the CiviRules action UI to render input fields.
    *
    * Return shape: ['field_key' => ['label' => string, 'required' => bool, 'type' => 'string'|'int'|'enum', 'options' => ?array]]
+   *
+   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string}>
    */
   public function getConfigSchema(): array;
 
