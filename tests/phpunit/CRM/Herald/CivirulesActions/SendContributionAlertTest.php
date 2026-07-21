@@ -1,6 +1,7 @@
 <?php
 
 use Civi\Herald\Digest\ContributionStatsService;
+use Civi\Herald\Digest\SourceNormalizer;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -53,6 +54,21 @@ class CRM_Herald_CivirulesActions_SendContributionAlertTest extends TestCase {
     );
     $this->assertSame('Pending', $vars['from_status']);
     $this->assertSame('Completed', $vars['to_status']);
+  }
+
+  public function testContributionSourceCanBeNormalized(): void {
+    $vars = CRM_Herald_CivirulesActions_SendContributionAlert::buildVars(
+      [],
+      ['id' => 1, 'source' => 'Bank TX 123', 'contribution_status_id' => 1],
+      NULL,
+      $this->makeFakeStats(),
+      $this->statusResolver(),
+      new SourceNormalizer([
+        ['match' => 'Bank TX', 'type' => 'contains', 'label' => 'Ueberweisung'],
+      ])
+    );
+
+    $this->assertSame('Ueberweisung', $vars['contribution']['source']);
   }
 
   public function testCampaignBlockBuiltWhenIdAndGoalPresent(): void {

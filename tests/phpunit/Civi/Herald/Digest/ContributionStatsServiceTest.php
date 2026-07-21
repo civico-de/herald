@@ -93,6 +93,46 @@ class ContributionStatsServiceTest extends TestCase implements HeadlessInterface
     $this->assertSame(['total' => 50.0, 'count' => 1], $bySource['Bank']);
   }
 
+  public function testEmptySourceNormalizationLeavesGroupedRowsUnchanged(): void {
+    $yesterday = date('Y-m-d 12:00:00', strtotime('yesterday'));
+    $this->seedContributions([
+      ['amount' => 10.0, 'source' => 'Bank TX 123', 'receive_date' => $yesterday],
+      ['amount' => 20.0, 'source' => 'Ueberweisung Bank', 'receive_date' => $yesterday],
+    ]);
+    $service = new ContributionStatsService(new SourceNormalizer([]));
+
+    $summary = $service->getPeriodSummary([], DateRange::yesterday());
+    $sources = array_column($summary['bySource'], 'source');
+    sort($sources);
+
+    $this->assertSame(['Bank TX 123', 'Ueberweisung Bank'], $sources);
+    $this->assertSame(30.0, $summary['total']);
+    $this->assertSame(2, $summary['count']);
+  }
+
+  public function testSourceNormalizationMergesTotalsAndCounts(): void {
+    $yesterday = date('Y-m-d 12:00:00', strtotime('yesterday'));
+    $this->seedContributions([
+      ['amount' => 10.0, 'source' => 'Bank TX 123', 'receive_date' => $yesterday],
+      ['amount' => 20.0, 'source' => 'Bank TX 123', 'receive_date' => $yesterday],
+      ['amount' => 50.0, 'source' => 'Ueberweisung Bank', 'receive_date' => $yesterday],
+      ['amount' => 7.0, 'source' => 'Stripe', 'receive_date' => $yesterday],
+    ]);
+    $service = new ContributionStatsService(new SourceNormalizer([
+      ['match' => 'Bank TX', 'type' => 'contains', 'label' => 'Ueberweisung'],
+      ['match' => 'Ueberweisung', 'type' => 'prefix', 'label' => 'Ueberweisung'],
+    ]));
+
+    $summary = $service->getPeriodSummary([], DateRange::yesterday());
+    $bySource = array_column($summary['bySource'], NULL, 'source');
+
+    $this->assertSame(87.0, $summary['total']);
+    $this->assertSame(4, $summary['count']);
+    $this->assertCount(2, $summary['bySource']);
+    $this->assertSame(['source' => 'Ueberweisung', 'total' => 80.0, 'count' => 3], $bySource['Ueberweisung']);
+    $this->assertSame(['source' => 'Stripe', 'total' => 7.0, 'count' => 1], $bySource['Stripe']);
+  }
+
   public function testGetAllPendingExcludesCompleted(): void {
     $this->seedContributions([
       ['amount' => 100.0, 'status' => 'Completed'],

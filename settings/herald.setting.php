@@ -3,6 +3,24 @@
 use CRM_Herald_ExtensionUtil as E;
 
 return [
+  // Example (documentation only; the active default stays empty):
+  // [
+  //   ['match' => 'Bank TX', 'type' => 'contains', 'label' => 'Ueberweisung'],
+  //   ['match' => 'Ueberweisung', 'type' => 'prefix', 'label' => 'Ueberweisung'],
+  // ]
+  'herald_source_normalization' => [
+    'group_name' => 'Herald Settings',
+    'group' => 'herald',
+    'name' => 'herald_source_normalization',
+    'type' => 'Array',
+    'default' => [],
+    'add' => '5.81',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => E::ts('Ordered contribution-source rules (contains, prefix, or regex); the first match wins. Empty disables normalization.'),
+    'help_text' => E::ts('Each rule has match, type, and label keys. Regex matches use PHP preg_match syntax including delimiters.'),
+    'title' => E::ts('Contribution Source Normalization'),
+  ],
   'herald_telegram_bot_token' => [
     'group_name' => 'Herald Settings',
     'group' => 'herald',

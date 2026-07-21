@@ -1,6 +1,7 @@
 <?php
 
 use Civi\Herald\Digest\ContributionStatsService;
+use Civi\Herald\Digest\SourceNormalizer;
 use Civi\Herald\StatusTransitionDispatcher;
 
 /**
@@ -46,6 +47,7 @@ class CRM_Herald_CivirulesActions_SendContributionAlert extends CRM_Herald_Civir
    * @param int|null $previousStatusId Pre-edit status (NULL if unknown / not requested)
    * @param ContributionStatsService $stats Stats source (mockable)
    * @param callable(mixed): string $statusNameResolver Maps status_id → name (e.g. 2 → "Pending")
+   * @param SourceNormalizer|null $sourceNormalizer Optional test seam
    * @return array<string, mixed>
    */
   public static function buildVars(
@@ -53,8 +55,13 @@ class CRM_Herald_CivirulesActions_SendContributionAlert extends CRM_Herald_Civir
     array $contribution,
     ?int $previousStatusId,
     ContributionStatsService $stats,
-    callable $statusNameResolver
+    callable $statusNameResolver,
+    ?SourceNormalizer $sourceNormalizer = NULL
   ): array {
+    $sourceNormalizer ??= new SourceNormalizer();
+    if ($sourceNormalizer->isEnabled() && isset($contribution['source']) && is_string($contribution['source'])) {
+      $contribution['source'] = $sourceNormalizer->normalize($contribution['source']);
+    }
     $vars = [
       'contribution' => $contribution,
       'campaign' => ['title' => '', 'goal' => 0, 'total' => 0, 'count' => 0, 'percent' => 0],

@@ -19,6 +19,12 @@ namespace Civi\Herald\Digest;
  */
 class ContributionStatsService {
 
+  private SourceNormalizer $sourceNormalizer;
+
+  public function __construct(?SourceNormalizer $sourceNormalizer = NULL) {
+    $this->sourceNormalizer = $sourceNormalizer ?? new SourceNormalizer();
+  }
+
   /**
    * Period summary: total amount + count, grouped by source.
    *
@@ -39,6 +45,24 @@ class ContributionStatsService {
       ->execute()
       ->getArrayCopy();
 
+    if (!$this->sourceNormalizer->isEnabled()) {
+      $total = 0.0;
+      $count = 0;
+      $bySource = [];
+      foreach ($rows as $row) {
+        $rowTotal = (float) ($row['total'] ?? 0);
+        $rowCount = (int) ($row['cnt'] ?? 0);
+        $total += $rowTotal;
+        $count += $rowCount;
+        $bySource[] = [
+          'source' => $row['source'] ?: 'Unknown',
+          'total' => $rowTotal,
+          'count' => $rowCount,
+        ];
+      }
+      return ['total' => $total, 'count' => $count, 'bySource' => $bySource];
+    }
+
     $total = 0.0;
     $count = 0;
     $bySource = [];
@@ -47,13 +71,15 @@ class ContributionStatsService {
       $rowCount = (int) ($row['cnt'] ?? 0);
       $total += $rowTotal;
       $count += $rowCount;
-      $bySource[] = [
-        'source' => $row['source'] ?: 'Unknown',
-        'total' => $rowTotal,
-        'count' => $rowCount,
-      ];
+      $source = $row['source'] ?: 'Unknown';
+      $source = $this->sourceNormalizer->normalize($source);
+      if (!isset($bySource[$source])) {
+        $bySource[$source] = ['source' => $source, 'total' => 0.0, 'count' => 0];
+      }
+      $bySource[$source]['total'] += $rowTotal;
+      $bySource[$source]['count'] += $rowCount;
     }
-    return ['total' => $total, 'count' => $count, 'bySource' => $bySource];
+    return ['total' => $total, 'count' => $count, 'bySource' => array_values($bySource)];
   }
 
   /**
@@ -116,9 +142,9 @@ class ContributionStatsService {
       ->execute()
       ->getArrayCopy();
 
-    return array_map(static fn($r) => [
+    return array_map(fn($r) => [
       'amount' => (float) ($r['total_amount'] ?? 0),
-      'source' => $r['source'] ?: 'Unknown',
+      'source' => $this->sourceNormalizer->normalize($r['source'] ?: 'Unknown'),
       'date' => $r['modified_date'] ?? $r['receive_date'] ?? '',
     ], $rows);
   }
@@ -290,9 +316,9 @@ class ContributionStatsService {
       ->execute()
       ->getArrayCopy();
 
-    return array_map(static fn($r) => [
+    return array_map(fn($r) => [
       'amount' => (float) ($r['total_amount'] ?? 0),
-      'source' => $r['source'] ?: 'Unknown',
+      'source' => $this->sourceNormalizer->normalize($r['source'] ?: 'Unknown'),
       'date' => $r['receive_date'] ?? '',
     ], $rows);
   }
