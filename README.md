@@ -108,4 +108,4 @@ Pure unit tests without any CiviCRM checkout: run the `@group unit` files with `
 
 ## License
 
-AGPL-3.0
+Proprietary — © civico GmbH. All rights reserved.

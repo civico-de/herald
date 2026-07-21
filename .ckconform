@@ -1,0 +1,5 @@
+# Expected values for ckconform (the checker lives in the public civikitchen
+# image; these values are ours and stay in this private repo).
+license=Proprietary
+npm_license=UNLICENSED
+copyright=civico GmbH
