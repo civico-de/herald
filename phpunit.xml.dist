@@ -22,11 +22,6 @@
       <directory>tests/phpunit</directory>
     </testsuite>
   </testsuites>
-  <groups>
-    <exclude>
-      <group>e2e</group>
-    </exclude>
-  </groups>
   <listeners>
     <!-- Boots headless tests (HeadlessInterface) against TEST_DB_DSN and
          drives TransactionalInterface. Without it nothing boots Civi. -->
