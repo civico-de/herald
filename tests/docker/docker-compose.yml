@@ -58,7 +58,9 @@ services:
       retries: 10
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin:latest
+    # Pinned like every other image here: a floating tag makes a green run
+    # unreproducible and a red one unattributable.
+    image: phpmyadmin/phpmyadmin:5.2.3
     depends_on:
       - db
     ports:
@@ -67,7 +69,10 @@ services:
       PMA_HOST: db
 
   maildev:
-    image: maildev/maildev:latest
+    # Pinned: on 2026-07-06 ':latest' moved to 3.0.0-rc.1, whose built-in
+    # healthcheck queries a route its own app answers with 404 — every stack
+    # using it failed to come up. 2.2.1 is the last stable release.
+    image: maildev/maildev:2.2.1
     ports:
       - "1090:1080"
       - "1025"
