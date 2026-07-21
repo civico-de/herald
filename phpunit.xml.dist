@@ -5,6 +5,18 @@
   convertErrorsToExceptions="true"
   convertNoticesToExceptions="true"
   convertWarningsToExceptions="true">
+  <coverage>
+    <!-- Scoped to real extension code: the civix shim and DAO boilerplate
+         would otherwise dilute the numbers into meaninglessness. -->
+    <include>
+      <directory suffix=".php">./Civi</directory>
+      <directory suffix=".php">./CRM</directory>
+      <file>./herald.php</file>
+    </include>
+    <exclude>
+      <file>./herald.civix.php</file>
+    </exclude>
+  </coverage>
   <testsuites>
     <testsuite name="herald">
       <directory>tests/phpunit</directory>
