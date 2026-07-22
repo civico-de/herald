@@ -64,8 +64,13 @@ Params:
 | Field | Value |
 |---|---|
 | Trigger | `New entity is created — Contribution` |
-| Conditions | `Contribution status = Pending` |
+| Conditions | `Contribution status = Pending` AND `Financial type = Spende` |
 | Action | `Herald: Send contribution alert` |
+
+> **Financial-type condition is not optional.** Without it, EVERY pending
+> contribution fires the "Spende angekündigt" template — including pending
+> ticket/event orders created by the cart (their `source` is a cart UUID).
+> Tickets belong to Rule 5 (`herald_contribution_alert_ticket`) instead.
 
 Params:
 ```json
@@ -75,6 +80,28 @@ Params:
   "campaign_id": 2
 }
 ```
+
+### Rule 5 — Realtime alert: ticket sold (aggregated)
+
+| Field | Value |
+|---|---|
+| Trigger | `New entity is created — Contribution` |
+| Conditions | `Financial type = <ticket financial type>` AND `Contribution status = Completed` |
+| Action | `Herald: Send contribution alert` |
+
+Params:
+```json
+{
+  "channel": "telegram",
+  "template": "herald_contribution_alert_ticket",
+  "aggregate_minutes": 5
+}
+```
+
+With `aggregate_minutes` set, a sales burst (e.g. right after a program
+announcement) produces ONE Telegram message per 5-minute window —
+"📬 7 Meldungen, gesamt 385,00 €" plus the individual lines — instead of
+seven pings. See "Alert aggregation" below.
 
 ### Rule 4 — Realtime alert: pending → completed (bank match)
 
@@ -310,6 +337,28 @@ The From header comes from `herald_email_from` (`"Name" <email>`); when empty, t
 
 ---
 
+## Alert aggregation (anti-spam)
+
+Any send action can set `aggregate_minutes` (form field or param, default
+`0` = send immediately). With a value > 0 the rendered alert is NOT sent
+right away; it is parked in `civicrm_herald_buffer`. The scheduled job
+**"Herald: Flush alert aggregation buffer"** (`Job.herald_buffer_flush`,
+`run_frequency: Always`, installed managed) drains the buffer on every cron
+run: once a rule's OLDEST buffered alert is older than the window, everything
+that rule collected so far goes out as ONE message.
+
+- One buffered alert → sent unchanged (aggregation only delayed it).
+- Several → summary header with count and (for contribution alerts) the
+  summed amount — `📬 3 Meldungen, gesamt 295,00 € (gesammelt über 15 min)` —
+  followed by the individual alert bodies.
+- Grouping is per rule action: two rules (or the same rule with changed
+  params) never mix into one message.
+- Delivery failures keep the rows and retry on the next cron run.
+- Maximum latency = `aggregate_minutes` + cron interval. Pick the window per
+  rule: e.g. `5` for ticket sales, `60` for pending donations.
+
+---
+
 ## Available action parameters reference
 
 ### `Send contribution digest`
@@ -338,6 +387,7 @@ The From header comes from `herald_email_from` (`"Name" <email>`); when empty, t
 | `channel`, `template`, `chat_id`, `parse_mode` | — | — | (same as digest) |
 | `campaign_id` | int | none | Computes campaign progress |
 | `goal` | float | none | Required alongside campaign_id for percent |
+| `aggregate_minutes` | int | `0` | > 0: buffer alerts and send one combined message per window (see "Alert aggregation") |
 | `campaign_title` | string | none | Free-text title |
 | `include_status_transition` | bool | `true` | Pass `from_status` / `to_status` to template |
 

@@ -4,6 +4,19 @@ use CRM_Herald_ExtensionUtil as E;
 
 class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
 
+  public function install(): void {
+    \Civi\Herald\Buffer\AlertBuffer::createTable();
+  }
+
+  /**
+   * Existing installs: add the alert aggregation buffer table.
+   */
+  public function upgrade_1001(): bool {
+    $this->ctx->log->info('herald: creating civicrm_herald_buffer');
+    \Civi\Herald\Buffer\AlertBuffer::createTable();
+    return TRUE;
+  }
+
   public function enable(): void {
     // phpstan resolves CRM_Civirules_Utils_Upgrader via the scanDirectories
     // entry for org.civicoop.civirules (needed so the classes are known at

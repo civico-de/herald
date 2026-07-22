@@ -59,6 +59,7 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
     ], FALSE);
     $this->heraldCheckbox('disable_notification', E::ts('Silent message (Telegram)'));
     $this->heraldCheckbox('disable_web_page_preview', E::ts('Disable link previews (Telegram)'));
+    $this->add('text', 'aggregate_minutes', E::ts('Aggregate window in minutes (0 = send immediately; > 0 collects alerts and sends one combined message per window to prevent spam)'), ['size' => 5]);
     $this->add('textarea', 'channel_config', E::ts('Channel-specific config (JSON, optional)'), [
       'rows' => 5,
       'cols' => 60,
@@ -80,7 +81,7 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
     /** @var array<string, mixed> $defaults */
     $defaults = parent::setDefaultValues();
     $params = $this->getActionParameters();
-    foreach (['channel', 'template', 'chat_id', 'parse_mode', 'disable_notification', 'disable_web_page_preview', 'delivery_mode', 'subscription_type'] as $field) {
+    foreach (['channel', 'template', 'chat_id', 'parse_mode', 'disable_notification', 'disable_web_page_preview', 'delivery_mode', 'subscription_type', 'aggregate_minutes'] as $field) {
       if (array_key_exists($field, $params)) {
         $defaults[$field] = $params[$field];
       }
@@ -114,6 +115,7 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
       'parse_mode' => $values['parse_mode'] ?? 'HTML',
       'disable_notification' => !empty($values['disable_notification']),
       'disable_web_page_preview' => !empty($values['disable_web_page_preview']),
+      'aggregate_minutes' => max(0, (int) self::toStringValue($values['aggregate_minutes'] ?? '')),
       'channel_config' => self::parseChannelConfig(self::toStringValue($values['channel_config'] ?? '')),
     ];
     $params = array_merge($params, $this->getExtraValues($values));

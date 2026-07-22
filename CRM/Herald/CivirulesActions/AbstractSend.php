@@ -1,5 +1,6 @@
 <?php
 
+use Civi\Herald\Buffer\AlertBuffer;
 use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Renderer\TemplateRenderer;
 use Civi\Herald\Subscribers\SubscriberLookup;
@@ -55,6 +56,10 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
    *   delivery_mode       — "direct" (default) or "subscribers"
    *   subscription_type   — required when delivery_mode=subscribers; one of the
    *                         herald_subscription_type option-group values
+   *   aggregate_minutes   — int (default 0 = send immediately). When > 0, the
+   *                         rendered body is parked in the alert buffer and
+   *                         Job.herald_buffer_flush sends everything the rule
+   *                         collected within the window as ONE message.
    *   chat_id, parse_mode, disable_notification, … — channel-specific keys
    *                         (read by the channel implementations)
    *
@@ -62,6 +67,10 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
    */
   protected function dispatch(array $vars): void {
     $params = $this->getActionParameters();
+    // Group key for aggregation, taken from the RAW stored params: stable per
+    // rule action. Must be computed before applyDefaultEmailSubject() mixes a
+    // per-event rendered subject into $params.
+    $groupHash = md5(json_encode($params) ?: '');
     $workflowName = self::asString($params['template'] ?? '');
     if ($workflowName === '') {
       throw new \CRM_Core_Exception('herald: action parameter "template" (workflow_name) is required.');
@@ -72,6 +81,12 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
     $body = $parts['body'];
     $params = self::applyDefaultEmailSubject($params, $parts['subject']);
 
+    $aggregateMinutes = self::asInt($params['aggregate_minutes'] ?? 0);
+    if ($aggregateMinutes > 0) {
+      $this->makeAlertBuffer()->add($groupHash, $aggregateMinutes, $body, $params, self::aggregateAmount($vars));
+      return;
+    }
+
     if (($params['delivery_mode'] ?? 'direct') === 'subscribers') {
       $this->dispatchToSubscribers($body, $params);
     }
@@ -81,13 +96,68 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
   }
 
   /**
+   * Test-seam — overridable in tests to intercept buffering.
+   */
+  protected function makeAlertBuffer(): AlertBuffer {
+    return new AlertBuffer();
+  }
+
+  /**
+   * Monetary value of the event behind this alert, summed into the aggregate
+   * header ("N Meldungen, gesamt X €"). Default: the contribution amount when
+   * the variable bag carries one; NULL keeps the sum out of the header.
+   *
+   * @param array<string, mixed> $vars
+   */
+  protected static function aggregateAmount(array $vars): ?float {
+    $contribution = $vars['contribution'] ?? NULL;
+    if (is_array($contribution) && is_numeric($contribution['total_amount'] ?? NULL)) {
+      return (float) $contribution['total_amount'];
+    }
+    return NULL;
+  }
+
+  /**
+   * Static delivery entry point for non-CiviRules callers (the buffer-flush
+   * job). Same direct/subscriber branch as dispatch(), minus rendering —
+   * $body is already final.
+   *
+   * @param array<string, mixed> $params Stored action params.
+   */
+  public static function deliver(string $body, array $params, ?SubscriberLookup $lookup = NULL): void {
+    if (($params['delivery_mode'] ?? 'direct') === 'subscribers') {
+      $subscriptionType = self::asString($params['subscription_type'] ?? '');
+      if ($subscriptionType === '') {
+        throw new \CRM_Core_Exception('herald: subscriber-mode requires action parameter "subscription_type".');
+      }
+      $registry = ChannelRegistry::default();
+      $extras = self::filterSubscriberSafe(self::buildChannelConfig($params));
+      $lookup ??= new SubscriberLookup();
+      foreach ($lookup->findBySubscriptionType($subscriptionType) as $sub) {
+        try {
+          $registry->get($sub['channel'])->send($body, array_merge($extras, $sub['config']));
+        }
+        catch (\Throwable $e) {
+          \Civi::log()->warning('herald: subscriber dispatch failed', [
+            'contact_id' => $sub['contact_id'] ?? NULL,
+            'channel' => $sub['channel'] ?? NULL,
+            'error' => $e->getMessage(),
+          ]);
+        }
+      }
+      return;
+    }
+    $channel = ChannelRegistry::default()->get(self::asString($params['channel'] ?? 'telegram'));
+    $channel->send($body, self::buildChannelConfig($params));
+  }
+
+  /**
    * Direct delivery: one rendered body, one channel call. The historical path.
    *
    * @param array<string, mixed> $params
    */
   protected function dispatchDirect(string $body, array $params): void {
-    $channel = ChannelRegistry::default()->get(self::asString($params['channel'] ?? 'telegram'));
-    $channel->send($body, self::buildChannelConfig($params));
+    self::deliver($body, ['delivery_mode' => 'direct'] + $params);
   }
 
   /**
@@ -117,27 +187,7 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
    * @param array<string, mixed> $params
    */
   protected function dispatchToSubscribers(string $body, array $params): void {
-    $subscriptionType = self::asString($params['subscription_type'] ?? '');
-    if ($subscriptionType === '') {
-      throw new \CRM_Core_Exception('herald: subscriber-mode requires action parameter "subscription_type".');
-    }
-
-    $registry = ChannelRegistry::default();
-    $extras = self::filterSubscriberSafe(self::buildChannelConfig($params));
-
-    foreach ($this->makeSubscriberLookup()->findBySubscriptionType($subscriptionType) as $sub) {
-      try {
-        $channel = $registry->get($sub['channel']);
-        $channel->send($body, array_merge($extras, $sub['config']));
-      }
-      catch (\Throwable $e) {
-        \Civi::log()->warning('herald: subscriber dispatch failed', [
-          'contact_id' => $sub['contact_id'] ?? NULL,
-          'channel' => $sub['channel'] ?? NULL,
-          'error' => $e->getMessage(),
-        ]);
-      }
-    }
+    self::deliver($body, ['delivery_mode' => 'subscribers'] + $params, $this->makeSubscriberLookup());
   }
 
   /**
