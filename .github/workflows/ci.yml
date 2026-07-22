@@ -1,3 +1,5 @@
+# The pipeline lives in civikitchen now — see
+# jfilter/civikitchen/.github/workflows/extension-ci.yml. This is just the call.
 name: CI
 
 on:
@@ -5,33 +7,12 @@ on:
     branches: [main]
   pull_request:
 
-# The jobs only read the repo; do not inherit the org default token.
 permissions:
   contents: read
 
 jobs:
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v5
-
-      # civikitchen auto-installs CiviCRM, enables the mounted extension
-      # (plus CiviRules via CIVICRM_EXTRA_EXTENSIONS), seeds the civicrm_test
-      # scratch DB and runs the init.d hooks. --wait blocks until the app
-      # healthcheck passes.
-      - name: Start CiviCRM stack
-        run: docker compose -f tests/docker/docker-compose.yml up -d --wait --quiet-pull
-
-      - name: Lint (cklint + ckconform)
-        run: |
-          docker compose -f tests/docker/docker-compose.yml exec -T -u www-data app bash -c \
-            'cd /var/www/html/ext/herald && cklint --all && ckconform'
-
-      - name: PHPUnit (with coverage) + PHPStan
-        run: |
-          docker compose -f tests/docker/docker-compose.yml exec -T -u www-data app bash -c \
-            'cd /var/www/html/ext/herald && ckcoverage tests/phpunit && phpstan analyse'
-
-      - name: App logs on failure
-        if: failure()
-        run: docker compose -f tests/docker/docker-compose.yml logs app | tail -200
+  ci:
+    uses: jfilter/civikitchen/.github/workflows/extension-ci.yml@main
+    with:
+      key: herald
+      compose_file: tests/docker/docker-compose.yml
