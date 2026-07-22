@@ -157,6 +157,19 @@ Quelle: {$contribution.source}
 TPL,
   ],
   [
+    'workflow_name' => 'herald_group_subscription_alert',
+    'msg_title' => E::ts('Herald: New group/newsletter subscription'),
+    'msg_subject' => '📰 {$group.title}: {$contact.display_name}',
+    'msg_html' => <<<'TPL'
+📰 <b>Neue Anmeldung</b>: {$group.title}
+{$contact.display_name}
+TPL,
+    'msg_text' => <<<'TPL'
+Neue Anmeldung: {$group.title}
+{$contact.display_name}
+TPL,
+  ],
+  [
     'workflow_name' => 'herald_membership_signup_alert',
     'msg_title' => E::ts('Herald: New membership signup'),
     'msg_subject' => '🎉 Neue Mitgliedschaft: {$contact.display_name}',
