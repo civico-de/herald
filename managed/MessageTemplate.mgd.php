@@ -190,32 +190,34 @@ TPL,
   [
     'workflow_name' => 'herald_membership_signup_alert',
     'msg_title' => E::ts('Herald: New membership signup'),
-    'msg_subject' => '{crmScope extensionKey=\'herald\'}🎉 {ts}New membership{/ts}: {$contact.display_name}{/crmScope}',
+    // Privacy: masked_name only — see herald_group_subscription_alert.
+    'msg_subject' => '{crmScope extensionKey=\'herald\'}🎉 {ts}New membership{/ts}: {$contact.masked_name}{/crmScope}',
     'msg_html' => <<<'TPL'
 {crmScope extensionKey='herald'}🎉 <b>{ts}New membership{/ts}</b>
-{$contact.display_name} — {$membership.membership_type}
+{$contact.masked_name} — {$membership.membership_type}
 {ts}Status{/ts}: {$membership.status}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
 {crmScope extensionKey='herald'}{ts}New membership{/ts}
-{$contact.display_name} — {$membership.membership_type}
+{$contact.masked_name} — {$membership.membership_type}
 {ts}Status{/ts}: {$membership.status}{/crmScope}
 TPL,
   ],
   [
     'workflow_name' => 'herald_event_registration_alert',
     'msg_title' => E::ts('Herald: New event registration'),
-    'msg_subject' => '🎟️ {$event.title}: {$participant.display_name}',
+    // Privacy: masked_name only — see herald_group_subscription_alert.
+    'msg_subject' => '🎟️ {$event.title}: {$contact.masked_name}',
     'msg_html' => <<<'TPL'
 {crmScope extensionKey='herald'}🎟️ <b>{ts}New event registration{/ts}</b>
 {$event.title}
-{ts}Participant{/ts}: {$participant.display_name}
+{ts}Participant{/ts}: {$contact.masked_name}
 {if $participant.role}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
 {crmScope extensionKey='herald'}{ts}New event registration{/ts}
 {$event.title}
-{ts}Participant{/ts}: {$participant.display_name}
+{ts}Participant{/ts}: {$contact.masked_name}
 {if $participant.role}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
 TPL,
   ],

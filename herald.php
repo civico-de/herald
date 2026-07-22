@@ -78,3 +78,24 @@ function herald_civicrm_post($op, $objectName, $objectId, &$objectRef): void {
   }
   \Civi\Herald\StatusTransitionDispatcher::handlePostHook((int) $objectId, $objectRef);
 }
+
+/**
+ * hook_civicrm_heraldChecks — herald watches its own delivery pipeline.
+ *
+ * A buffered alert older than 3× its aggregation window means the flush job
+ * is not sending (job disabled, channel down, cron stopped mid-way). The
+ * monitor cannot see its own broken transport otherwise.
+ *
+ * @param array<string, callable> $checks
+ */
+function herald_civicrm_heraldChecks(array &$checks): void {
+  $checks['herald.buffer_backlog'] = function (): array {
+    $stuck = (int) CRM_Core_DAO::singleValueQuery('
+      SELECT COUNT(*) FROM `' . \Civi\Herald\Buffer\AlertBuffer::TABLE . '`
+      WHERE created_date < DATE_SUB(NOW(), INTERVAL window_minutes * 3 MINUTE)
+    ');
+    return $stuck > 0
+      ? ['status' => 'fail', 'detail' => "$stuck buffered alert(s) older than 3x their window — flush job not delivering"]
+      : ['status' => 'ok'];
+  };
+}

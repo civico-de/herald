@@ -69,7 +69,56 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
         \Civi::log()->warning('herald: could not resolve trigger group', ['group_id' => $groupId, 'error' => $e->getMessage()]);
       }
     }
+    $membership = $triggerData->getEntityData('Membership');
+    if (is_array($membership) && !empty($membership['id'])) {
+      try {
+        $vars['membership'] = [
+          'membership_type' => self::labelOf('civicrm_membership_type', 'name', self::asInt($membership['membership_type_id'] ?? 0)),
+          'status' => self::labelOf('civicrm_membership_status', 'label', self::asInt($membership['status_id'] ?? 0)),
+        ];
+      }
+      catch (\Throwable $e) {
+        \Civi::log()->warning('herald: could not resolve trigger membership', ['error' => $e->getMessage()]);
+      }
+    }
+    $participant = $triggerData->getEntityData('Participant');
+    if (is_array($participant) && !empty($participant['id'])) {
+      try {
+        $vars['event'] = [
+          'id' => self::asInt($participant['event_id'] ?? 0),
+          'title' => self::labelOf('civicrm_event', 'title', self::asInt($participant['event_id'] ?? 0)),
+        ];
+        $roleId = $participant['role_id'] ?? '';
+        $roleId = is_array($roleId) ? (string) reset($roleId) : self::asString($roleId);
+        $role = '';
+        if ($roleId !== '') {
+          $role = self::asString(\CRM_Core_DAO::singleValueQuery(
+            "SELECT label FROM civicrm_option_value
+             WHERE option_group_id = (SELECT id FROM civicrm_option_group WHERE name = 'participant_role')
+               AND value = %1",
+            [1 => [$roleId, 'String']]
+          ));
+        }
+        $vars['participant'] = ['role' => $role];
+      }
+      catch (\Throwable $e) {
+        \Civi::log()->warning('herald: could not resolve trigger participant', ['error' => $e->getMessage()]);
+      }
+    }
     return $vars;
+  }
+
+  /**
+   * Single-column lookup by primary key; '' when the row is gone.
+   */
+  private static function labelOf(string $table, string $column, int $id): string {
+    if ($id <= 0) {
+      return '';
+    }
+    return self::asString(\CRM_Core_DAO::singleValueQuery(
+      "SELECT `$column` FROM `$table` WHERE id = %1",
+      [1 => [$id, 'Integer']]
+    ));
   }
 
   /**
