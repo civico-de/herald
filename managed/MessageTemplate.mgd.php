@@ -118,6 +118,19 @@ Quelle: {$contribution.source}
 TPL,
   ],
   [
+    'workflow_name' => 'herald_contribution_alert_ticket',
+    'msg_title' => E::ts('Herald: New ticket/event contribution'),
+    'msg_subject' => '🎟 {$contribution.total_amount|crmMoney} — {$contribution.source}',
+    'msg_html' => <<<'TPL'
+🎟 <b>Ticket verkauft</b>: {$contribution.total_amount|crmMoney}
+Quelle: {$contribution.source}
+TPL,
+    'msg_text' => <<<'TPL'
+Ticket verkauft: {$contribution.total_amount|crmMoney}
+Quelle: {$contribution.source}
+TPL,
+  ],
+  [
     'workflow_name' => 'herald_membership_signup_alert',
     'msg_title' => E::ts('Herald: New membership signup'),
     'msg_subject' => '🎉 Neue Mitgliedschaft: {$contact.display_name}',
