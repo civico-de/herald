@@ -12,66 +12,71 @@ use CRM_Herald_ExtensionUtil as E;
  *
  * All bodies use Smarty syntax. Channel implementations decide which body to
  * use (Telegram → msg_html with parse_mode=HTML; Email → both).
+ *
+ * i18n: source strings are English, wrapped in {crmScope
+ * extensionKey='herald'} + {ts} so they render in the instance's locale
+ * (lcMessages) using the extension's l10n/<locale>/LC_MESSAGES/herald.mo.
+ * German ships in-tree (l10n/de_DE); other languages just add a .po/.mo.
  */
 
 $templates = [
   [
     'workflow_name' => 'herald_contribution_digest_daily',
     'msg_title' => E::ts('Herald: Daily contribution digest'),
-    'msg_subject' => '{$period.label} — {$totals.count} Spende(n), {$totals.amount|crmMoney}',
+    'msg_subject' => '{crmScope extensionKey=\'herald\'}{$period.label} — {$totals.count} {ts}donation(s){/ts}, {$totals.amount|crmMoney}{/crmScope}',
     'msg_html' => <<<'TPL'
-📊 <b>Tagesreport {$period.label}</b>
+{crmScope extensionKey='herald'}📊 <b>{ts 1=$period.label}Daily report %1{/ts}</b>
 
-Eingegangen: <b>{$totals.amount|crmMoney}</b> ({$totals.count})
+{ts}Received{/ts}: <b>{$totals.amount|crmMoney}</b> ({$totals.count})
 {foreach from=$by_source item=src}• {$src.source}: {$src.total|crmMoney} ({$src.count})
 {/foreach}
 {if $pending.count > 0}
-🏦 Offene Pending-Pool: <b>{$pending.amount|crmMoney}</b> ({$pending.count})
+🏦 {ts}Open pending pool{/ts}: <b>{$pending.amount|crmMoney}</b> ({$pending.count})
 {/if}
 <pre>{$histogram}</pre>
 
-{if $campaign.goal}Campaign <b>{$campaign.title}</b>: {$campaign.percent}% von {$campaign.goal|crmMoney}{/if}
+{if $campaign.goal}{ts}Campaign{/ts} <b>{$campaign.title}</b>: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-Tagesreport {$period.label}
+{crmScope extensionKey='herald'}{ts 1=$period.label}Daily report %1{/ts}
 
-Eingegangen: {$totals.amount|crmMoney} ({$totals.count})
+{ts}Received{/ts}: {$totals.amount|crmMoney} ({$totals.count})
 {foreach from=$by_source item=src}- {$src.source}: {$src.total|crmMoney} ({$src.count})
 {/foreach}
-{if $pending.count > 0}Pending-Pool: {$pending.amount|crmMoney} ({$pending.count}){/if}
+{if $pending.count > 0}{ts}Open pending pool{/ts}: {$pending.amount|crmMoney} ({$pending.count}){/if}
 
 {$histogram}
 
-{if $campaign.goal}{$campaign.title}: {$campaign.percent}% von {$campaign.goal|crmMoney}{/if}
+{if $campaign.goal}{$campaign.title}: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
 TPL,
   ],
   [
     'workflow_name' => 'herald_contribution_digest_weekly',
     'msg_title' => E::ts('Herald: Weekly contribution digest'),
-    'msg_subject' => '📈 {$period.label}: {$totals.count} Spende(n), {$totals.amount|crmMoney}',
+    'msg_subject' => '{crmScope extensionKey=\'herald\'}📈 {$period.label}: {$totals.count} {ts}donation(s){/ts}, {$totals.amount|crmMoney}{/crmScope}',
     'msg_html' => <<<'TPL'
-📈 <b>Wochenreport {$period.label}</b>
+{crmScope extensionKey='herald'}📈 <b>{ts 1=$period.label}Weekly report %1{/ts}</b>
 
-Eingegangen: <b>{$totals.amount|crmMoney}</b> ({$totals.count})
+{ts}Received{/ts}: <b>{$totals.amount|crmMoney}</b> ({$totals.count})
 {foreach from=$by_source item=src}• {$src.source}: {$src.total|crmMoney} ({$src.count})
 {/foreach}
 {if $pending.count > 0}
-🏦 Offene Pending-Pool: <b>{$pending.amount|crmMoney}</b> ({$pending.count})
+🏦 {ts}Open pending pool{/ts}: <b>{$pending.amount|crmMoney}</b> ({$pending.count})
 {/if}
 <pre>{$histogram}</pre>
 
-{if $campaign.goal}Campaign <b>{$campaign.title}</b>: {$campaign.percent}% von {$campaign.goal|crmMoney}{/if}
+{if $campaign.goal}{ts}Campaign{/ts} <b>{$campaign.title}</b>: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-Wochenreport {$period.label}
+{crmScope extensionKey='herald'}{ts 1=$period.label}Weekly report %1{/ts}
 
-Eingegangen: {$totals.amount|crmMoney} ({$totals.count})
+{ts}Received{/ts}: {$totals.amount|crmMoney} ({$totals.count})
 {foreach from=$by_source item=src}- {$src.source}: {$src.total|crmMoney} ({$src.count})
 {/foreach}
 
 {$histogram}
 
-{if $campaign.goal}{$campaign.title}: {$campaign.percent}% von {$campaign.goal|crmMoney}{/if}
+{if $campaign.goal}{$campaign.title}: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
 TPL,
   ],
   [
@@ -79,27 +84,27 @@ TPL,
     'msg_title' => E::ts('Herald: New completed contribution'),
     'msg_subject' => '✅ {$contribution.total_amount|crmMoney} — {$contribution.source}',
     'msg_html' => <<<'TPL'
-✅ <b>Spende eingegangen</b>: {$contribution.total_amount|crmMoney}
-Quelle: {$contribution.source}
-{if $campaign.title}Campaign: {$campaign.title}{if $campaign.goal} ({$campaign.percent}%){/if}{/if}
+{crmScope extensionKey='herald'}✅ <b>{ts}Donation received{/ts}</b>: {$contribution.total_amount|crmMoney}
+{ts}Source{/ts}: {$contribution.source}
+{if $campaign.title}{ts}Campaign{/ts}: {$campaign.title}{if $campaign.goal} ({$campaign.percent}%){/if}{/if}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-Spende eingegangen: {$contribution.total_amount|crmMoney}
-Quelle: {$contribution.source}
-{if $campaign.title}Campaign: {$campaign.title}{if $campaign.goal} ({$campaign.percent}%){/if}{/if}
+{crmScope extensionKey='herald'}{ts}Donation received{/ts}: {$contribution.total_amount|crmMoney}
+{ts}Source{/ts}: {$contribution.source}
+{if $campaign.title}{ts}Campaign{/ts}: {$campaign.title}{if $campaign.goal} ({$campaign.percent}%){/if}{/if}{/crmScope}
 TPL,
   ],
   [
     'workflow_name' => 'herald_contribution_alert_pending',
     'msg_title' => E::ts('Herald: New pending contribution'),
-    'msg_subject' => '🏦 {$contribution.total_amount|crmMoney} angekündigt',
+    'msg_subject' => '{crmScope extensionKey=\'herald\'}🏦 {$contribution.total_amount|crmMoney} {ts}announced{/ts}{/crmScope}',
     'msg_html' => <<<'TPL'
-🏦 <b>Spende angekündigt</b>: {$contribution.total_amount|crmMoney}
-Quelle: {$contribution.source}
+{crmScope extensionKey='herald'}🏦 <b>{ts}Donation announced{/ts}</b>: {$contribution.total_amount|crmMoney}
+{ts}Source{/ts}: {$contribution.source}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-Spende angekündigt: {$contribution.total_amount|crmMoney}
-Quelle: {$contribution.source}
+{crmScope extensionKey='herald'}{ts}Donation announced{/ts}: {$contribution.total_amount|crmMoney}
+{ts}Source{/ts}: {$contribution.source}{/crmScope}
 TPL,
   ],
   [
@@ -107,14 +112,14 @@ TPL,
     'msg_title' => E::ts('Herald: Contribution status changed'),
     'msg_subject' => '🔄 {$contribution.total_amount|crmMoney}: {$from_status} → {$to_status}',
     'msg_html' => <<<'TPL'
-🔄 <b>Status geändert</b>: {$from_status} → {$to_status}
-Betrag: {$contribution.total_amount|crmMoney}
-Quelle: {$contribution.source}
+{crmScope extensionKey='herald'}🔄 <b>{ts}Status changed{/ts}</b>: {$from_status} → {$to_status}
+{ts}Amount{/ts}: {$contribution.total_amount|crmMoney}
+{ts}Source{/ts}: {$contribution.source}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-Status geändert: {$from_status} → {$to_status}
-Betrag: {$contribution.total_amount|crmMoney}
-Quelle: {$contribution.source}
+{crmScope extensionKey='herald'}{ts}Status changed{/ts}: {$from_status} → {$to_status}
+{ts}Amount{/ts}: {$contribution.total_amount|crmMoney}
+{ts}Source{/ts}: {$contribution.source}{/crmScope}
 TPL,
   ],
   [
@@ -122,12 +127,12 @@ TPL,
     'msg_title' => E::ts('Herald: New ticket/event contribution'),
     'msg_subject' => '🎟 {$contribution.total_amount|crmMoney} — {$contribution.source}',
     'msg_html' => <<<'TPL'
-🎟 <b>Ticket verkauft</b>: {$contribution.total_amount|crmMoney}
-Quelle: {$contribution.source}
+{crmScope extensionKey='herald'}🎟 <b>{ts}Ticket sold{/ts}</b>: {$contribution.total_amount|crmMoney}
+{ts}Source{/ts}: {$contribution.source}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-Ticket verkauft: {$contribution.total_amount|crmMoney}
-Quelle: {$contribution.source}
+{crmScope extensionKey='herald'}{ts}Ticket sold{/ts}: {$contribution.total_amount|crmMoney}
+{ts}Source{/ts}: {$contribution.source}{/crmScope}
 TPL,
   ],
   [
@@ -135,12 +140,12 @@ TPL,
     'msg_title' => E::ts('Herald: Ticket ordered, bank transfer announced'),
     'msg_subject' => '🎟⏳ {$contribution.total_amount|crmMoney} — {$contribution.source}',
     'msg_html' => <<<'TPL'
-🎟⏳ <b>Ticket bestellt</b> (Überweisung): {$contribution.total_amount|crmMoney}
-Quelle: {$contribution.source}
+{crmScope extensionKey='herald'}🎟⏳ <b>{ts}Ticket ordered{/ts}</b> ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}
+{ts}Source{/ts}: {$contribution.source}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-Ticket bestellt (Überweisung): {$contribution.total_amount|crmMoney}
-Quelle: {$contribution.source}
+{crmScope extensionKey='herald'}{ts}Ticket ordered{/ts} ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}
+{ts}Source{/ts}: {$contribution.source}{/crmScope}
 TPL,
   ],
   [
@@ -148,12 +153,12 @@ TPL,
     'msg_title' => E::ts('Herald: Ticket bank transfer received'),
     'msg_subject' => '🎟✅ {$contribution.total_amount|crmMoney} — {$contribution.source}',
     'msg_html' => <<<'TPL'
-🎟✅ <b>Ticket bezahlt</b> (Überweisung): {$contribution.total_amount|crmMoney}
-Quelle: {$contribution.source}
+{crmScope extensionKey='herald'}🎟✅ <b>{ts}Ticket paid{/ts}</b> ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}
+{ts}Source{/ts}: {$contribution.source}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-Ticket bezahlt (Überweisung): {$contribution.total_amount|crmMoney}
-Quelle: {$contribution.source}
+{crmScope extensionKey='herald'}{ts}Ticket paid{/ts} ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}
+{ts}Source{/ts}: {$contribution.source}{/crmScope}
 TPL,
   ],
   [
@@ -161,14 +166,14 @@ TPL,
     'msg_title' => E::ts('Herald: New group/newsletter subscription'),
     // Privacy: masked_name / masked_email show 2 chars per word, then one
     // '*' per hidden character (see Civi\Herald\Privacy\Mask).
-    'msg_subject' => '📰 {$group.title}: {$contact.masked_name}',
+    'msg_subject' => '{crmScope extensionKey=\'herald\'}📰 {$group.title}: {$contact.masked_name}{/crmScope}',
     'msg_html' => <<<'TPL'
-📰 <b>Neue Anmeldung</b>: {$group.title}
-{$contact.masked_name} — {$contact.masked_email}
+{crmScope extensionKey='herald'}📰 <b>{ts}New subscription{/ts}</b>: {$group.title}
+{$contact.masked_name} — {$contact.masked_email}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-Neue Anmeldung: {$group.title}
-{$contact.masked_name} — {$contact.masked_email}
+{crmScope extensionKey='herald'}{ts}New subscription{/ts}: {$group.title}
+{$contact.masked_name} — {$contact.masked_email}{/crmScope}
 TPL,
   ],
   [
@@ -176,25 +181,25 @@ TPL,
     'msg_title' => E::ts('Herald: Monitor check transition'),
     'msg_subject' => '{if $status == "fail"}🔴{else}🟢{/if} {$check}',
     'msg_html' => <<<'TPL'
-{if $status == "fail"}🔴 Check <b>{$check}</b> fehlgeschlagen{if $detail}: {$detail}{/if}{else}🟢 Check <b>{$check}</b> wieder ok{/if}
+{crmScope extensionKey='herald'}{if $status == "fail"}🔴 {ts 1=$check}Check <b>%1</b> failed{/ts}{if $detail}: {$detail}{/if}{else}🟢 {ts 1=$check}Check <b>%1</b> ok again{/ts}{/if}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-{if $status == "fail"}Check {$check} fehlgeschlagen{if $detail}: {$detail}{/if}{else}Check {$check} wieder ok{/if}
+{crmScope extensionKey='herald'}{if $status == "fail"}{ts 1=$check}Check %1 failed{/ts}{if $detail}: {$detail}{/if}{else}{ts 1=$check}Check %1 ok again{/ts}{/if}{/crmScope}
 TPL,
   ],
   [
     'workflow_name' => 'herald_membership_signup_alert',
     'msg_title' => E::ts('Herald: New membership signup'),
-    'msg_subject' => '🎉 Neue Mitgliedschaft: {$contact.display_name}',
+    'msg_subject' => '{crmScope extensionKey=\'herald\'}🎉 {ts}New membership{/ts}: {$contact.display_name}{/crmScope}',
     'msg_html' => <<<'TPL'
-🎉 <b>Neue Mitgliedschaft</b>
+{crmScope extensionKey='herald'}🎉 <b>{ts}New membership{/ts}</b>
 {$contact.display_name} — {$membership.membership_type}
-Status: {$membership.status}
+{ts}Status{/ts}: {$membership.status}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-Neue Mitgliedschaft
+{crmScope extensionKey='herald'}{ts}New membership{/ts}
 {$contact.display_name} — {$membership.membership_type}
-Status: {$membership.status}
+{ts}Status{/ts}: {$membership.status}{/crmScope}
 TPL,
   ],
   [
@@ -202,16 +207,16 @@ TPL,
     'msg_title' => E::ts('Herald: New event registration'),
     'msg_subject' => '🎟️ {$event.title}: {$participant.display_name}',
     'msg_html' => <<<'TPL'
-🎟️ <b>Neue Event-Registrierung</b>
+{crmScope extensionKey='herald'}🎟️ <b>{ts}New event registration{/ts}</b>
 {$event.title}
-Teilnehmer: {$participant.display_name}
-{if $participant.role}Rolle: {$participant.role}{/if}
+{ts}Participant{/ts}: {$participant.display_name}
+{if $participant.role}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-Neue Event-Registrierung
+{crmScope extensionKey='herald'}{ts}New event registration{/ts}
 {$event.title}
-Teilnehmer: {$participant.display_name}
-{if $participant.role}Rolle: {$participant.role}{/if}
+{ts}Participant{/ts}: {$participant.display_name}
+{if $participant.role}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
 TPL,
   ],
   [
@@ -223,10 +228,10 @@ TPL,
     'msg_title' => E::ts('Herald: Contribution digest block (composable)'),
     'msg_subject' => '{$block_title}: {$totals.count} · {$totals.amount|crmMoney}',
     'msg_html' => <<<'TPL'
-<b>{$block_title}</b>{if $totals.count > 0}{"\n"}<b>{$totals.amount|crmMoney}</b> · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% von {$campaign.goal|crmMoney}{/if}{foreach from=$by_source item=src}{"\n"}• {$src.source}: {$src.total|crmMoney} ({$src.count}){/foreach}{else}{"\n"}<i>keine Eingänge</i>{/if}{if $pending.count > 0}{"\n"}🏦 offen: {$pending.amount|crmMoney} ({$pending.count}){/if}{if $histogram}{"\n"}<pre>{$histogram}</pre>{/if}
+{crmScope extensionKey='herald'}<b>{$block_title}</b>{if $totals.count > 0}{"\n"}<b>{$totals.amount|crmMoney}</b> · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{foreach from=$by_source item=src}{"\n"}• {$src.source}: {$src.total|crmMoney} ({$src.count}){/foreach}{else}{"\n"}<i>{ts}no receipts{/ts}</i>{/if}{if $pending.count > 0}{"\n"}🏦 {ts}open{/ts}: {$pending.amount|crmMoney} ({$pending.count}){/if}{if $histogram}{"\n"}<pre>{$histogram}</pre>{/if}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-{$block_title}{if $totals.count > 0}{"\n"}{$totals.amount|crmMoney} · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% von {$campaign.goal|crmMoney}{/if}{foreach from=$by_source item=src}{"\n"}- {$src.source}: {$src.total|crmMoney} ({$src.count}){/foreach}{else}{"\n"}keine Eingänge{/if}{if $pending.count > 0}{"\n"}offen: {$pending.amount|crmMoney} ({$pending.count}){/if}
+{crmScope extensionKey='herald'}{$block_title}{if $totals.count > 0}{"\n"}{$totals.amount|crmMoney} · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{foreach from=$by_source item=src}{"\n"}- {$src.source}: {$src.total|crmMoney} ({$src.count}){/foreach}{else}{"\n"}{ts}no receipts{/ts}{/if}{if $pending.count > 0}{"\n"}{ts}open{/ts}: {$pending.amount|crmMoney} ({$pending.count}){/if}{/crmScope}
 TPL,
   ],
 ];

@@ -1,0 +1,104 @@
+# German translation for herald message output.
+msgid ""
+msgstr ""
+"Project-Id-Version: herald\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: de\n"
+
+msgid "donation(s)"
+msgstr "Spende(n)"
+
+msgid "Daily report %1"
+msgstr "Tagesreport %1"
+
+msgid "Weekly report %1"
+msgstr "Wochenreport %1"
+
+msgid "Received"
+msgstr "Eingegangen"
+
+msgid "Open pending pool"
+msgstr "Offener Pending-Pool"
+
+msgid "Campaign"
+msgstr "Kampagne"
+
+msgid "of"
+msgstr "von"
+
+msgid "Donation received"
+msgstr "Spende eingegangen"
+
+msgid "Donation announced"
+msgstr "Spende angekündigt"
+
+msgid "announced"
+msgstr "angekündigt"
+
+msgid "Source"
+msgstr "Quelle"
+
+msgid "Status changed"
+msgstr "Status geändert"
+
+msgid "Amount"
+msgstr "Betrag"
+
+msgid "Ticket sold"
+msgstr "Ticket verkauft"
+
+msgid "Ticket ordered"
+msgstr "Ticket bestellt"
+
+msgid "Ticket paid"
+msgstr "Ticket bezahlt"
+
+msgid "bank transfer"
+msgstr "Überweisung"
+
+msgid "New subscription"
+msgstr "Neue Anmeldung"
+
+msgid "Check <b>%1</b> failed"
+msgstr "Check <b>%1</b> fehlgeschlagen"
+
+msgid "Check <b>%1</b> ok again"
+msgstr "Check <b>%1</b> wieder ok"
+
+msgid "Check %1 failed"
+msgstr "Check %1 fehlgeschlagen"
+
+msgid "Check %1 ok again"
+msgstr "Check %1 wieder ok"
+
+msgid "New membership"
+msgstr "Neue Mitgliedschaft"
+
+msgid "Status"
+msgstr "Status"
+
+msgid "New event registration"
+msgstr "Neue Event-Registrierung"
+
+msgid "Participant"
+msgstr "Teilnehmer:in"
+
+msgid "Role"
+msgstr "Rolle"
+
+msgid "no receipts"
+msgstr "keine Eingänge"
+
+msgid "open"
+msgstr "offen"
+
+msgid "%1 messages"
+msgstr "%1 Meldungen"
+
+msgid "total %1"
+msgstr "gesamt %1"
+
+msgid "collected over %1 min"
+msgstr "gesammelt über %1 min"

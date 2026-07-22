@@ -129,12 +129,28 @@ class AlertBuffer {
     if (count($bodies) <= 1) {
       return $bodies[0] ?? '';
     }
-    $header = sprintf('📬 <b>%d Meldungen</b>', count($bodies));
+    $header = '📬 <b>' . self::t('%1 messages', [1 => count($bodies)]) . '</b>';
     if ($amounts) {
-      $header .= sprintf(', gesamt <b>%s €</b>', number_format(array_sum($amounts), 2, ',', '.'));
+      $header .= ', ' . self::t('total %1', [1 => '<b>' . number_format(array_sum($amounts), 2, ',', '.') . ' €</b>']);
     }
-    $header .= sprintf(' (gesammelt über %d min)', $windowMinutes);
+    $header .= ' (' . self::t('collected over %1 min', [1 => $windowMinutes]) . ')';
     return $header . "\n\n" . implode("\n\n", $bodies);
+  }
+
+  /**
+   * Translate through Civi's ts() with the herald domain when Civi is booted;
+   * plain %N substitution otherwise (pure unit tests, no framework).
+   *
+   * @param array<int, string|int> $params
+   */
+  private static function t(string $text, array $params = []): string {
+    if (function_exists('ts')) {
+      return ts($text, $params + ['domain' => 'herald']);
+    }
+    foreach ($params as $key => $value) {
+      $text = str_replace('%' . $key, (string) $value, $text);
+    }
+    return $text;
   }
 
 }
