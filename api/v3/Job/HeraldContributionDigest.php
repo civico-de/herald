@@ -18,7 +18,9 @@ use Civi\Herald\Renderer\TemplateRenderer;
  * @param array $spec
  */
 function _civicrm_api3_job_herald_contribution_digest_spec(&$spec) {
-  $spec['template'] = ['title' => 'Workflow template name (required)', 'api.required' => 1, 'type' => CRM_Utils_Type::T_STRING];
+  $spec['blocks'] = ['title' => 'Composable multi-block digest: JSON array of block configs (each: title, template, campaign_id, financial_type_id, goal, campaign_title, show_pending, show_histogram, period). When given, one message is assembled from all blocks and single-block params below are ignored.', 'type' => CRM_Utils_Type::T_STRING];
+  $spec['header'] = ['title' => 'Optional header line prepended to a multi-block digest (e.g. "📊 <b>Tagesreport</b>")', 'type' => CRM_Utils_Type::T_STRING];
+  $spec['template'] = ['title' => 'Workflow template name (single-block mode)', 'type' => CRM_Utils_Type::T_STRING];
   $spec['channel'] = ['title' => 'Channel key (default telegram)', 'api.default' => 'telegram', 'type' => CRM_Utils_Type::T_STRING];
   $spec['period'] = ['title' => 'Period: yesterday|today|last_7_days|last_30_days', 'api.default' => 'yesterday', 'type' => CRM_Utils_Type::T_STRING];
   $spec['chat_id'] = ['title' => 'Telegram chat id (overrides default_chat_id)', 'type' => CRM_Utils_Type::T_STRING];
@@ -39,19 +41,59 @@ function _civicrm_api3_job_herald_contribution_digest_spec(&$spec) {
  * @throws CRM_Core_Exception
  */
 function civicrm_api3_job_herald_contribution_digest($params) {
-  $template = (string) ($params['template'] ?? '');
-  if ($template === '') {
-    throw new CRM_Core_Exception('herald: parameter "template" (workflow_name) is required.');
+  $stats = new ContributionStatsService();
+  $renderer = new TemplateRenderer();
+  $channelKey = (string) ($params['channel'] ?? 'telegram');
+
+  // Channel config: strip composition/query keys, keep only channel-relevant ones.
+  $configParams = $params;
+  unset($configParams['blocks'], $configParams['header'], $configParams['template'], $configParams['period']);
+  $config = CRM_Herald_CivirulesActions_AbstractSend::buildChannelConfig($configParams);
+  $channel = ChannelRegistry::default()->get($channelKey);
+
+  $blocks = $params['blocks'] ?? NULL;
+  if (is_string($blocks) && $blocks !== '') {
+    $blocks = json_decode($blocks, TRUE);
   }
 
-  $stats = new ContributionStatsService();
+  // ---- Multi-block composed digest: one message, N independently-filtered blocks ----
+  if (is_array($blocks) && $blocks) {
+    $sections = [];
+    $header = trim((string) ($params['header'] ?? ''));
+    if ($header !== '') {
+      $sections[] = $header;
+    }
+    $totalCount = 0;
+    $totalAmount = 0.0;
+    foreach ($blocks as $block) {
+      if (!is_array($block)) {
+        continue;
+      }
+      // Per-block config inherits the top-level period unless overridden.
+      $block += ['period' => $params['period'] ?? 'yesterday'];
+      $template = (string) ($block['template'] ?? 'herald_contribution_digest_block');
+      $vars = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars($block, $stats);
+      $vars['block_title'] = $block['title'] ?? '';
+      $body = trim($renderer->renderParts($template, $vars)['body']);
+      if ($body !== '') {
+        $sections[] = $body;
+      }
+      $totalCount += (int) ($vars['totals']['count'] ?? 0);
+      $totalAmount += (float) ($vars['totals']['amount'] ?? 0);
+    }
+    $channel->send(implode("\n\n", $sections), $config);
+    return civicrm_api3_create_success([
+      ['sent' => 1, 'channel' => $channelKey, 'blocks' => count($blocks), 'count' => $totalCount, 'amount' => $totalAmount],
+    ], $params, 'Job', 'herald_contribution_digest');
+  }
+
+  // ---- Single-block digest (backward compatible) ----
+  $template = (string) ($params['template'] ?? '');
+  if ($template === '') {
+    throw new CRM_Core_Exception('herald: parameter "template" (workflow_name) or "blocks" is required.');
+  }
   $vars = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars($params, $stats);
-
-  $parts = (new TemplateRenderer())->renderParts($template, $vars);
-  $config = CRM_Herald_CivirulesActions_AbstractSend::buildChannelConfig($params);
-
-  $channelKey = (string) ($params['channel'] ?? 'telegram');
-  ChannelRegistry::default()->get($channelKey)->send($parts['body'], $config);
+  $channel->send($renderer->renderParts($template, $vars)['body'], $config);
 
   return civicrm_api3_create_success([
     [
