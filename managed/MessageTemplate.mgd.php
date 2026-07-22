@@ -172,6 +172,17 @@ Neue Anmeldung: {$group.title}
 TPL,
   ],
   [
+    'workflow_name' => 'herald_monitor_alert',
+    'msg_title' => E::ts('Herald: Monitor check transition'),
+    'msg_subject' => '{if $status == "fail"}🔴{else}🟢{/if} {$check}',
+    'msg_html' => <<<'TPL'
+{if $status == "fail"}🔴 Check <b>{$check}</b> fehlgeschlagen{if $detail}: {$detail}{/if}{else}🟢 Check <b>{$check}</b> wieder ok{/if}
+TPL,
+    'msg_text' => <<<'TPL'
+{if $status == "fail"}Check {$check} fehlgeschlagen{if $detail}: {$detail}{/if}{else}Check {$check} wieder ok{/if}
+TPL,
+  ],
+  [
     'workflow_name' => 'herald_membership_signup_alert',
     'msg_title' => E::ts('Herald: New membership signup'),
     'msg_subject' => '🎉 Neue Mitgliedschaft: {$contact.display_name}',

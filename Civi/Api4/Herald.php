@@ -30,6 +30,11 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
       ->setCheckPermissions($checkPermissions);
   }
 
+  public static function publish(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\Publish {
+    return (new \Civi\Herald\Api4\Action\Publish(__CLASS__, 'publish'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
   public static function getChannels(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\GetChannels {
     return (new \Civi\Herald\Api4\Action\GetChannels(__CLASS__, 'getChannels'))
       ->setCheckPermissions($checkPermissions);

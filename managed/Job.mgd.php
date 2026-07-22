@@ -26,4 +26,23 @@ return [
       'match' => ['api_entity', 'api_action'],
     ],
   ],
+  [
+    'name' => 'herald_job_monitor',
+    'entity' => 'Job',
+    'cleanup' => 'unused',
+    'update' => 'unmodified',
+    'params' => [
+      'version' => 4,
+      'values' => [
+        'name' => E::ts('Herald: Run check monitor'),
+        'description' => E::ts('Runs checks contributed via hook_civicrm_heraldChecks and publishes ok/fail transitions to the herald_monitor_topic topic.'),
+        'run_frequency' => 'Always',
+        'api_entity' => 'Job',
+        'api_action' => 'herald_monitor',
+        'parameters' => '',
+        'is_active' => TRUE,
+      ],
+      'match' => ['api_entity', 'api_action'],
+    ],
+  ],
 ];

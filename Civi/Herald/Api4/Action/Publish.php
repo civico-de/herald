@@ -1,0 +1,94 @@
+<?php
+
+namespace Civi\Herald\Api4\Action;
+
+use Civi\Api4\Generic\AbstractAction;
+use Civi\Api4\Generic\Result;
+use Civi\Herald\Buffer\AlertBuffer;
+use Civi\Herald\Renderer\TemplateRenderer;
+use Civi\Herald\Topic\Router;
+
+/**
+ * Publish a message to a TOPIC — the recipient-agnostic entry point for
+ * other extensions and scripts.
+ *
+ * Where Herald.send addresses a channel directly (caller supplies chat_id
+ * etc.), Herald.publish only names a topic; the `herald_topics` setting maps
+ * topics to channel + recipient + aggregation. Integrations stay free of
+ * deployment specifics, and admins can reroute or batch a whole topic
+ * without touching the publisher.
+ *
+ * Body: either `message` (pre-rendered) or `template` (MessageTemplate
+ * workflow_name) plus `vars`. When the topic's route sets
+ * aggregate_minutes > 0, the message goes through the same aggregation
+ * buffer as the CiviRules alerts.
+ *
+ * Example:
+ *   cv api4 Herald.publish +v 'topic=ops' +v 'message="🔴 disk almost full"'
+ */
+class Publish extends AbstractAction {
+
+  /**
+   * Topic name resolved via the herald_topics setting.
+   * @var string
+   */
+  protected string $topic = '';
+
+  /**
+   * Pre-rendered message body. Mutually exclusive with template.
+   * @var string
+   */
+  protected string $message = '';
+
+  /**
+   * MessageTemplate workflow_name to render with vars.
+   * @var string
+   */
+  protected string $template = '';
+
+  /**
+   * Template variables (see Send::$config for why the annotation is plain
+   * `array`).
+   *
+   * @var array
+   * @phpstan-var array<string, mixed>
+   */
+  protected array $vars = [];
+
+  /**
+   * Optional monetary value summed into aggregate headers.
+   * @var float|null
+   */
+  protected ?float $amount = NULL;
+
+  public function _run(Result $result): void {
+    if ($this->topic === '') {
+      throw new \CRM_Core_Exception('Herald.publish: "topic" parameter is required.');
+    }
+    if (($this->message === '') === ($this->template === '')) {
+      throw new \CRM_Core_Exception('Herald.publish: pass exactly one of "message" or "template".');
+    }
+
+    $params = (new Router())->resolve($this->topic);
+    $body = $this->message;
+    if ($this->template !== '') {
+      $parts = (new TemplateRenderer())->renderParts($this->template, $this->vars);
+      $body = $parts['body'];
+      $params = \CRM_Herald_CivirulesActions_AbstractSend::applyDefaultEmailSubject($params, $parts['subject']);
+    }
+
+    $aggregateMinutes = (int) ($params['aggregate_minutes'] ?? 0);
+    if ($aggregateMinutes > 0) {
+      (new AlertBuffer())->add(
+        md5('topic:' . $this->topic . ':' . json_encode($params)),
+        $aggregateMinutes, $body, $params, $this->amount
+      );
+      $result[] = ['topic' => $this->topic, 'buffered' => TRUE];
+      return;
+    }
+
+    \CRM_Herald_CivirulesActions_AbstractSend::deliver($body, $params);
+    $result[] = ['topic' => $this->topic, 'buffered' => FALSE, 'channel' => $params['channel']];
+  }
+
+}

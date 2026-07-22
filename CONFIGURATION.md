@@ -359,6 +359,53 @@ that rule collected so far goes out as ONE message.
 
 ---
 
+## Topics — recipient-agnostic publishing (`Herald.publish`)
+
+Other extensions and scripts publish to a TOPIC; the `herald_topics` setting
+decides where each topic lands. Publishers never carry chat IDs.
+
+```bash
+cv api4 Setting.set +v 'herald_topics={
+  "default": {"channel": "telegram"},
+  "ops":     {"channel": "telegram", "chat_id": "-100…", "parse_mode": "HTML"},
+  "revenue": {"channel": "telegram", "chat_id": "-100…", "aggregate_minutes": 5}
+}'
+
+cv api4 Herald.publish +v 'topic=ops' +v 'message="🔴 disk almost full"'
+```
+
+Resolution = topic entry merged over the `default` entry; an unrouted topic
+(no entry, no default) throws. A route with `aggregate_minutes > 0` sends
+through the same aggregation buffer as the CiviRules alerts. Instead of
+`message`, pass `template` (workflow_name) + `vars` to render a
+MessageTemplate.
+
+---
+
+## Check monitor — push alerts for degraded states
+
+Any extension contributes health checks; herald runs them on every cron and
+publishes ONLY transitions (ok→fail, fail→ok) to the `herald_monitor_topic`
+topic (default `ops`) using the `herald_monitor_alert` template. Steady
+states never alert; a new check alerts only if it is already failing.
+
+```php
+// In any extension's main .php file:
+function myext_civicrm_heraldChecks(array &$checks): void {
+  $checks['myext.queue'] = fn() => ['status' => 'ok']; // or 'fail' + detail, or 'skipped'
+}
+```
+
+The **pulse** extension (≥ 0.2) contributes `pulse.database`, `pulse.cron`
+and `pulse.system` automatically when both extensions are installed.
+
+Division of labour: this monitor runs INSIDE the instance and cannot report
+a hard-down site. Keep an external poller (Uptime Kuma etc.) on pulse's
+`/civicrm/pulse` endpoint for dead-man coverage; the monitor covers
+everything short of that.
+
+---
+
 ## Available action parameters reference
 
 ### `Send contribution digest`
