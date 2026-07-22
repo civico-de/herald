@@ -39,7 +39,17 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
           'SELECT display_name FROM civicrm_contact WHERE id = %1',
           [1 => [$contactId, 'Integer']]
         );
-        $vars['contact'] = ['id' => $contactId, 'display_name' => (string) $displayName];
+        $email = \CRM_Core_DAO::singleValueQuery(
+          'SELECT email FROM civicrm_email WHERE contact_id = %1 ORDER BY is_primary DESC, id ASC LIMIT 1',
+          [1 => [$contactId, 'Integer']]
+        );
+        $vars['contact'] = [
+          'id' => $contactId,
+          'display_name' => (string) $displayName,
+          'email' => (string) $email,
+          'masked_name' => \Civi\Herald\Privacy\Mask::words((string) $displayName),
+          'masked_email' => \Civi\Herald\Privacy\Mask::email((string) $email),
+        ];
       }
       catch (\Throwable $e) {
         \Civi::log()->warning('herald: could not resolve trigger contact', ['contact_id' => $contactId, 'error' => $e->getMessage()]);
