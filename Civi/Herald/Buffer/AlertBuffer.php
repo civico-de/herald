@@ -131,10 +131,27 @@ class AlertBuffer {
     }
     $header = '📬 <b>' . self::t('%1 messages', [1 => count($bodies)]) . '</b>';
     if ($amounts) {
-      $header .= ', ' . self::t('total %1', [1 => '<b>' . number_format(array_sum($amounts), 2, ',', '.') . ' €</b>']);
+      $header .= ', ' . self::t('total %1', [1 => '<b>' . self::money(array_sum($amounts)) . '</b>']);
     }
     $header .= ' (' . self::t('collected over %1 min', [1 => $windowMinutes]) . ')';
     return $header . "\n\n" . implode("\n\n", $bodies);
+  }
+
+  /**
+   * Locale- and currency-correct money formatting (default currency of the
+   * instance) when Civi is booted; a fixed EUR/German rendering in pure unit
+   * tests, matching this extension's origin.
+   */
+  private static function money(float $amount): string {
+    if (class_exists('\Civi') && is_callable(['\Civi', 'format'])) {
+      try {
+        return \Civi::format()->money($amount);
+      }
+      catch (\Throwable $e) {
+        // Fall through to the static rendering.
+      }
+    }
+    return number_format($amount, 2, ',', '.') . ' €';
   }
 
   /**
