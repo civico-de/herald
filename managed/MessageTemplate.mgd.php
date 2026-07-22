@@ -131,6 +131,32 @@ Quelle: {$contribution.source}
 TPL,
   ],
   [
+    'workflow_name' => 'herald_contribution_alert_ticket_pending',
+    'msg_title' => E::ts('Herald: Ticket ordered, bank transfer announced'),
+    'msg_subject' => '🎟⏳ {$contribution.total_amount|crmMoney} — {$contribution.source}',
+    'msg_html' => <<<'TPL'
+🎟⏳ <b>Ticket bestellt</b> (Überweisung): {$contribution.total_amount|crmMoney}
+Quelle: {$contribution.source}
+TPL,
+    'msg_text' => <<<'TPL'
+Ticket bestellt (Überweisung): {$contribution.total_amount|crmMoney}
+Quelle: {$contribution.source}
+TPL,
+  ],
+  [
+    'workflow_name' => 'herald_contribution_alert_ticket_paid',
+    'msg_title' => E::ts('Herald: Ticket bank transfer received'),
+    'msg_subject' => '🎟✅ {$contribution.total_amount|crmMoney} — {$contribution.source}',
+    'msg_html' => <<<'TPL'
+🎟✅ <b>Ticket bezahlt</b> (Überweisung): {$contribution.total_amount|crmMoney}
+Quelle: {$contribution.source}
+TPL,
+    'msg_text' => <<<'TPL'
+Ticket bezahlt (Überweisung): {$contribution.total_amount|crmMoney}
+Quelle: {$contribution.source}
+TPL,
+  ],
+  [
     'workflow_name' => 'herald_membership_signup_alert',
     'msg_title' => E::ts('Herald: New membership signup'),
     'msg_subject' => '🎉 Neue Mitgliedschaft: {$contact.display_name}',
