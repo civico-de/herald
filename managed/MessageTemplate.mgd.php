@@ -158,18 +158,10 @@ TPL,
     'msg_title' => E::ts('Herald: Contribution digest block (composable)'),
     'msg_subject' => '{$block_title}: {$totals.count} · {$totals.amount|crmMoney}',
     'msg_html' => <<<'TPL'
-<b>{$block_title}</b>
-{if $totals.count > 0}{$totals.amount|crmMoney} · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% von {$campaign.goal|crmMoney}{/if}
-{foreach from=$by_source item=src}• {$src.source}: {$src.total|crmMoney} ({$src.count})
-{/foreach}{if $pending.count > 0}🏦 offen: {$pending.amount|crmMoney} ({$pending.count})
-{/if}{if $histogram}<pre>{$histogram}</pre>{/if}{else}—{/if}
+<b>{$block_title}</b>{if $totals.count > 0}{"\n"}<b>{$totals.amount|crmMoney}</b> · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% von {$campaign.goal|crmMoney}{/if}{foreach from=$by_source item=src}{"\n"}• {$src.source}: {$src.total|crmMoney} ({$src.count}){/foreach}{else}{"\n"}<i>keine Eingänge</i>{/if}{if $pending.count > 0}{"\n"}🏦 offen: {$pending.amount|crmMoney} ({$pending.count}){/if}{if $histogram}{"\n"}<pre>{$histogram}</pre>{/if}
 TPL,
     'msg_text' => <<<'TPL'
-{$block_title}
-{if $totals.count > 0}{$totals.amount|crmMoney} · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% von {$campaign.goal|crmMoney}{/if}
-{foreach from=$by_source item=src}- {$src.source}: {$src.total|crmMoney} ({$src.count})
-{/foreach}{if $pending.count > 0}offen: {$pending.amount|crmMoney} ({$pending.count})
-{/if}{else}—{/if}
+{$block_title}{if $totals.count > 0}{"\n"}{$totals.amount|crmMoney} · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% von {$campaign.goal|crmMoney}{/if}{foreach from=$by_source item=src}{"\n"}- {$src.source}: {$src.total|crmMoney} ({$src.count}){/foreach}{else}{"\n"}keine Eingänge{/if}{if $pending.count > 0}{"\n"}offen: {$pending.amount|crmMoney} ({$pending.count}){/if}
 TPL,
   ],
 ];
