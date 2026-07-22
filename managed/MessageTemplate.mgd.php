@@ -159,14 +159,15 @@ TPL,
   [
     'workflow_name' => 'herald_group_subscription_alert',
     'msg_title' => E::ts('Herald: New group/newsletter subscription'),
-    'msg_subject' => '📰 {$group.title}: {$contact.display_name}',
+    // Privacy: never leak full names into the chat — first 2 chars + ****.
+    'msg_subject' => '📰 {$group.title}: {$contact.display_name|truncate:6:"****":true}',
     'msg_html' => <<<'TPL'
 📰 <b>Neue Anmeldung</b>: {$group.title}
-{$contact.display_name}
+{$contact.display_name|truncate:6:"****":true}
 TPL,
     'msg_text' => <<<'TPL'
 Neue Anmeldung: {$group.title}
-{$contact.display_name}
+{$contact.display_name|truncate:6:"****":true}
 TPL,
   ],
   [
