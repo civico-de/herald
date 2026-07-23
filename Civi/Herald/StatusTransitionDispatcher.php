@@ -62,10 +62,12 @@ class StatusTransitionDispatcher {
    * @param object|null $triggerData CRM_Civirules_TriggerData_TriggerData
    */
   public static function resolvePreEditStatus(int $contributionId, $triggerData = NULL): ?int {
-    $snapshot = self::getPreEditStatus($contributionId);
-    if ($snapshot !== NULL) {
-      return $snapshot;
-    }
+    // Original-Daten ZUERST: CiviRules erfasst sie PRO EDIT. Payment.create/
+    // completeOrder editieren mehrfach in einer Transaktion; nur der Edit, der
+    // wirklich Pending→Completed schaltet, hat original=Pending — die
+    // Folge-Edits original=Completed und matchen nicht (kein Doppel-Alert).
+    // Der Request-weite Snapshot (first-wins) kann das nicht unterscheiden
+    // und bleibt Fallback für Pfade ohne OriginalData.
     if ($triggerData instanceof \CRM_Civirules_TriggerData_Interface_OriginalData
       && strtolower((string) $triggerData->getOriginalEntity()) === 'contribution') {
       $original = $triggerData->getOriginalData();
@@ -73,7 +75,7 @@ class StatusTransitionDispatcher {
         return (int) $original['contribution_status_id'];
       }
     }
-    return NULL;
+    return self::getPreEditStatus($contributionId);
   }
 
 }
