@@ -399,6 +399,21 @@ function myext_civicrm_heraldChecks(array &$checks): void {
 The **pulse** extension (≥ 0.2) contributes `pulse.database`, `pulse.cron`
 and `pulse.system` automatically when both extensions are installed.
 
+### Tuning (all optional, defaults reproduce the plain one-shot behaviour)
+
+| Setting | Default | Effect |
+| --- | --- | --- |
+| `herald_monitor_open_after` | `1` | Require N consecutive failing runs before a fail is reported (rides out flapping). |
+| `herald_monitor_close_after` | `1` | Require M consecutive ok runs before a recovery is reported. |
+| `herald_monitor_renotify_hours` | `24` | Re-announce a check stuck failing this long (⏰ "still failing"). `0` disables reminders. |
+| `herald_monitor_snooze` | `[]` | Map `check-name → ISO datetime`; the check stays silent (no fail, no renotify) until then. A fail→ok recovery still fires afterwards if a failure was announced before the snooze. Expired entries are pruned each run. |
+| `herald_monitor_expected` | `[]` | List of check names that must always be present; a listed check missing from the hook is reported as failing ("check missing — extension disabled?"). Empty keeps the default of silently dropping vanished checks. |
+
+Concurrency and durability: each run takes the `worker.herald.monitor` lock
+(overlapping crons skip rather than double-send), and the per-check state is
+persisted incrementally right after each alert is published, so a crash or a
+failing send mid-batch never re-sends alerts that already went out.
+
 Division of labour: this monitor runs INSIDE the instance and cannot report
 a hard-down site. Keep an external poller (Uptime Kuma etc.) on pulse's
 `/civicrm/pulse` endpoint for dead-man coverage; the monitor covers

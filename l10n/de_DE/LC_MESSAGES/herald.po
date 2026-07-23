@@ -73,6 +73,15 @@ msgstr "Check %1 fehlgeschlagen"
 msgid "Check %1 ok again"
 msgstr "Check %1 wieder ok"
 
+msgid "Check <b>%1</b> still failing"
+msgstr "Check <b>%1</b> weiterhin gestört"
+
+msgid "Check %1 still failing"
+msgstr "Check %1 weiterhin gestört"
+
+msgid "check missing — extension disabled?"
+msgstr "Check fehlt — Extension deaktiviert?"
+
 msgid "New membership"
 msgstr "Neue Mitgliedschaft"
 

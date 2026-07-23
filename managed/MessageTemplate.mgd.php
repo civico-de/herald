@@ -179,12 +179,12 @@ TPL,
   [
     'workflow_name' => 'herald_monitor_alert',
     'msg_title' => E::ts('Herald: Monitor check transition'),
-    'msg_subject' => '{if $status == "fail"}🔴{else}🟢{/if} {$check}',
+    'msg_subject' => '{if $status == "fail"}{if $renotify}⏰{else}🔴{/if}{else}🟢{/if} {$check}',
     'msg_html' => <<<'TPL'
-{crmScope extensionKey='herald'}{if $status == "fail"}🔴 {ts 1=$check}Check <b>%1</b> failed{/ts}{if $detail}: {$detail}{/if}{else}🟢 {ts 1=$check}Check <b>%1</b> ok again{/ts}{/if}{/crmScope}
+{crmScope extensionKey='herald'}{if $status == "fail"}{if $renotify}⏰ {ts 1=$check}Check <b>%1</b> still failing{/ts}{else}🔴 {ts 1=$check}Check <b>%1</b> failed{/ts}{/if}{if $detail}: {$detail}{/if}{else}🟢 {ts 1=$check}Check <b>%1</b> ok again{/ts}{/if}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-{crmScope extensionKey='herald'}{if $status == "fail"}{ts 1=$check}Check %1 failed{/ts}{if $detail}: {$detail}{/if}{else}{ts 1=$check}Check %1 ok again{/ts}{/if}{/crmScope}
+{crmScope extensionKey='herald'}{if $status == "fail"}{if $renotify}{ts 1=$check}Check %1 still failing{/ts}{else}{ts 1=$check}Check %1 failed{/ts}{/if}{if $detail}: {$detail}{/if}{else}{ts 1=$check}Check %1 ok again{/ts}{/if}{/crmScope}
 TPL,
   ],
   [

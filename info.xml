@@ -17,7 +17,7 @@
     <url desc="Support">https://github.com/civico-de/herald/issues</url>
   </urls>
   <releaseDate>2026-05-07</releaseDate>
-  <version>0.4.0</version>
+  <version>0.5.0</version>
   <develStage>alpha</develStage>
   <compatibility>
     <ver>6.12</ver>
