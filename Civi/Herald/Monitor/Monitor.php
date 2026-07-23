@@ -52,6 +52,13 @@ class Monitor {
    * a failing publish mid-batch never re-sends the transitions that already
    * went out on the next run.
    *
+   * Known limitation (deliberate): this is at-least-once, not exactly-once —
+   * a crash in the instant BETWEEN a successful publish and its state write
+   * re-sends that one transition next run. True exactly-once needs a
+   * persistent outbox with idempotent delivery; for ops alerts a rare
+   * duplicate beats the complexity (and beats losing an alert, which is what
+   * the reverse write-then-publish order would risk).
+   *
    * @return array{checks?: int, failing?: int, transitions?: int, skipped_locked?: bool}
    */
   public function run(): array {
@@ -238,6 +245,12 @@ class Monitor {
       // or, worse, swallow the recovery.
       $notified = (bool) ($p['notified'] ?? ($status === 'fail'));
       $lastNotified = isset($p['last_notified']) && is_numeric($p['last_notified']) ? (int) $p['last_notified'] : NULL;
+      // Legacy migration: an inferred already-notified fail carries no
+      // timestamp — without one, renotify would never fire for it. Anchor it
+      // to now so the first reminder comes one full window from migration.
+      if ($notified && $lastNotified === NULL) {
+        $lastNotified = $now;
+      }
 
       // Advance the raw run-length counters.
       if ($obsStatus === 'fail') {
@@ -288,14 +301,18 @@ class Monitor {
           if ($obsStatus === 'fail') {
             $detail = $obsDetail;
           }
-          if (!$snoozed && !$notified) {
+          // Both alert paths below require the CURRENT observation to be a
+          // fail: while close_after hysteresis rides out the first ok
+          // observations of a recovery, announcing (or re-announcing) a fail
+          // during those ok runs would be wrong — the incident may be over.
+          if (!$snoozed && !$notified && $obsStatus === 'fail') {
             // The fail was suppressed by a snooze that has since lapsed —
             // announce it now (delayed first alert).
             $notified = TRUE;
             $lastNotified = $now;
             $publish = ['check' => $name, 'status' => 'fail', 'detail' => $detail, 'renotify' => FALSE];
           }
-          elseif (!$snoozed && $notified && $renotifySeconds > 0
+          elseif (!$snoozed && $notified && $obsStatus === 'fail' && $renotifySeconds > 0
             && $lastNotified !== NULL && ($now - $lastNotified) >= $renotifySeconds) {
             // Stuck failing past the renotify window: re-announce.
             $lastNotified = $now;
