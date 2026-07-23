@@ -20,9 +20,17 @@ class StatusTransitionDispatcher {
 
   /**
    * Stash the pre-edit status. Call from hook_civicrm_pre.
+   *
+   * FIRST-WINS pro Contribution und Request: Payment.create/completeOrder
+   * editieren die Contribution MEHRFACH (Statuswechsel, dann Custom-Felder/
+   * Quittungsdatum). CiviRules wertet die Regeln erst nach Commit aus — würde
+   * jeder Edit den Snapshot überschreiben, stünde dort am Ende der NEUE
+   * Status (Completed) statt des echten Vorher-Status (Pending), und die
+   * Pending→Completed-Erkennung wäre für alle Zahlungs-Pfade blind
+   * (gefunden 23.07.2026 auf production: PayPal-Verkäufe ohne jede Meldung).
    */
   public static function rememberPreEditStatus(int $contributionId, ?int $statusId): void {
-    if ($statusId !== NULL) {
+    if ($statusId !== NULL && !isset(self::$preEditStatus[$contributionId])) {
       self::$preEditStatus[$contributionId] = $statusId;
     }
   }
