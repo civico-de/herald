@@ -127,12 +127,10 @@ TPL,
     'msg_title' => E::ts('Herald: New ticket/event contribution'),
     'msg_subject' => '🎟 {$contribution.total_amount|crmMoney} — {$contribution.source}',
     'msg_html' => <<<'TPL'
-{crmScope extensionKey='herald'}🎟 <b>{ts}Ticket sold{/ts}</b>: {$contribution.total_amount|crmMoney}
-{ts}Source{/ts}: {$contribution.source}{/crmScope}
+{crmScope extensionKey='herald'}🎟 <b>{ts}Ticket sold{/ts}</b>: {$contribution.total_amount|crmMoney}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-{crmScope extensionKey='herald'}{ts}Ticket sold{/ts}: {$contribution.total_amount|crmMoney}
-{ts}Source{/ts}: {$contribution.source}{/crmScope}
+{crmScope extensionKey='herald'}{ts}Ticket sold{/ts}: {$contribution.total_amount|crmMoney}{/crmScope}
 TPL,
   ],
   [
@@ -140,12 +138,10 @@ TPL,
     'msg_title' => E::ts('Herald: Ticket ordered, bank transfer announced'),
     'msg_subject' => '🎟⏳ {$contribution.total_amount|crmMoney} — {$contribution.source}',
     'msg_html' => <<<'TPL'
-{crmScope extensionKey='herald'}🎟⏳ <b>{ts}Ticket ordered{/ts}</b> ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}
-{ts}Source{/ts}: {$contribution.source}{/crmScope}
+{crmScope extensionKey='herald'}🎟⏳ <b>{ts}Ticket ordered{/ts}</b> ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-{crmScope extensionKey='herald'}{ts}Ticket ordered{/ts} ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}
-{ts}Source{/ts}: {$contribution.source}{/crmScope}
+{crmScope extensionKey='herald'}{ts}Ticket ordered{/ts} ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}{/crmScope}
 TPL,
   ],
   [
@@ -153,12 +149,10 @@ TPL,
     'msg_title' => E::ts('Herald: Ticket bank transfer received'),
     'msg_subject' => '🎟✅ {$contribution.total_amount|crmMoney} — {$contribution.source}',
     'msg_html' => <<<'TPL'
-{crmScope extensionKey='herald'}🎟✅ <b>{ts}Ticket paid{/ts}</b> ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}
-{ts}Source{/ts}: {$contribution.source}{/crmScope}
+{crmScope extensionKey='herald'}🎟✅ <b>{ts}Ticket paid{/ts}</b> ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}{/crmScope}
 TPL,
     'msg_text' => <<<'TPL'
-{crmScope extensionKey='herald'}{ts}Ticket paid{/ts} ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}
-{ts}Source{/ts}: {$contribution.source}{/crmScope}
+{crmScope extensionKey='herald'}{ts}Ticket paid{/ts} ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}{/crmScope}
 TPL,
   ],
   [

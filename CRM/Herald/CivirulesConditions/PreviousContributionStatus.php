@@ -14,19 +14,29 @@ use Civi\Herald\StatusTransitionDispatcher;
  */
 class CRM_Herald_CivirulesConditions_PreviousContributionStatus extends CRM_Civirules_Condition {
 
-  // $conditionParams comes from the base class — it decodes condition_params
-  // (serialized or array) in setRuleConditionData. No override needed.
-
   public function isConditionValid(CRM_Civirules_TriggerData_TriggerData $triggerData) {
     $contribution = $triggerData->getEntityData('Contribution');
     if (empty($contribution['id'])) {
       return FALSE;
     }
-    $expected = isset($this->conditionParams['previous_status_id'])
-      ? self::toInt($this->conditionParams['previous_status_id'])
-      : NULL;
+    $expected = $this->expectedPreviousStatusId();
     $previous = StatusTransitionDispatcher::resolvePreEditStatus(self::toInt($contribution['id']), $triggerData);
     return self::matches($expected, $previous);
+  }
+
+  /**
+   * previous_status_id aus den gespeicherten condition_params.
+   *
+   * ACHTUNG: CRM_Civirules_Condition::setRuleConditionData() legt NUR
+   * $this->ruleCondition ab — ein befülltes $this->conditionParams gibt es in
+   * der Basisklasse NICHT. Der frühere Zugriff darauf war deshalb immer NULL
+   * und die Condition damit immer FALSE (gefunden 2026-07-23 auf production: kein
+   * einziger "Ticket verkauft"-Alert). Wir dekodieren selbst.
+   */
+  private function expectedPreviousStatusId(): ?int {
+    $raw = $this->ruleCondition['condition_params'] ?? NULL;
+    $params = is_string($raw) ? (unserialize($raw) ?: []) : (array) $raw;
+    return isset($params['previous_status_id']) ? self::toInt($params['previous_status_id']) : NULL;
   }
 
   /**
@@ -50,11 +60,11 @@ class CRM_Herald_CivirulesConditions_PreviousContributionStatus extends CRM_Civi
   }
 
   public function userFriendlyConditionParams() {
-    $expected = $this->conditionParams['previous_status_id'] ?? NULL;
+    $expected = $this->expectedPreviousStatusId();
     if ($expected === NULL) {
       return '(no previous status configured)';
     }
-    return sprintf('previous status = #%d', self::toInt($expected));
+    return sprintf('previous status = #%d', $expected);
   }
 
   /**
