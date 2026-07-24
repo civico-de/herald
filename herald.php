@@ -43,18 +43,36 @@ function herald_civicrm_enable(): void {
  * @param array<string, mixed> $params
  */
 function herald_civicrm_pre($op, $objectName, $id, &$params): void {
-  if ($objectName !== 'Contribution' || $op !== 'edit' || !$id) {
+  if ($op !== 'edit' || !$id) {
     return;
   }
-  $contributionId = (int) $id;
-  $previousStatusId = \CRM_Core_DAO::singleValueQuery(
-    'SELECT contribution_status_id FROM civicrm_contribution WHERE id = %1',
-    [1 => [$contributionId, 'Integer']]
-  );
-  \Civi\Herald\StatusTransitionDispatcher::rememberPreEditStatus(
-    $contributionId,
-    is_scalar($previousStatusId) ? (int) $previousStatusId : NULL
-  );
+  if ($objectName === 'Contribution') {
+    $contributionId = (int) $id;
+    $previousStatusId = \CRM_Core_DAO::singleValueQuery(
+      'SELECT contribution_status_id FROM civicrm_contribution WHERE id = %1',
+      [1 => [$contributionId, 'Integer']]
+    );
+    \Civi\Herald\StatusTransitionDispatcher::rememberPreEditStatus(
+      $contributionId,
+      is_scalar($previousStatusId) ? (int) $previousStatusId : NULL
+    );
+    return;
+  }
+  if ($objectName === 'Event') {
+    // Pre-edit is_active, so the "Event deactivated" condition can tell a
+    // genuine 1 → 0 transition from an unrelated edit while already inactive.
+    $eventId = (int) $id;
+    $previousActive = \CRM_Core_DAO::singleValueQuery(
+      'SELECT is_active FROM civicrm_event WHERE id = %1',
+      [1 => [$eventId, 'Integer']]
+    );
+    \Civi\Herald\PreEditSnapshot::remember(
+      'Event',
+      $eventId,
+      'is_active',
+      is_scalar($previousActive) ? (int) $previousActive : NULL
+    );
+  }
 }
 
 /**

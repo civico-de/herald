@@ -187,7 +187,7 @@ bare-Event triggers, and three ready-made templates ship with the extension.
 | Rule | Trigger | Condition | Template |
 |------|---------|-----------|----------|
 | New event live | `Event is added` | — | `herald_event_created_alert` |
-| Event deactivated | `Event is changed` | `Field Value Comparison`: `Event` · `is_active` · `=` · `0` | `herald_event_deactivated_alert` |
+| Event deactivated | `Event is changed` | `Herald: Event was deactivated (is_active 1 → 0)` | `herald_event_deactivated_alert` |
 | Event deleted | `Event is deleted` | — | `herald_event_deleted_alert` |
 
 Action params for each (same shape as the other realtime alerts):
@@ -198,11 +198,13 @@ Action params for each (same shape as the other realtime alerts):
 
 > **On the "deactivated" rule** — a sync typically unpublishes (sets
 > `is_active = 0`) rather than hard-deleting, so this is the rule that fires on
-> the common "event removed from booking" case. It keys on the *current* value;
-> because a well-behaved sync only writes on a real change, it fires once on the
-> 1 → 0 transition. A separate manual edit while the event is already inactive
-> would re-fire — `aggregate_minutes` dampens any burst. Reserve `Event is
-> deleted` for genuine DB removals.
+> the common "event removed from booking" case. Do **not** use a plain
+> `Field Value Comparison` (`is_active = 0`) for it: a partial edit that omits
+> is_active reads it as NULL, and `null == 0` matches → false alarms on every
+> unrelated edit. The shipped `herald_event_became_inactive` condition instead
+> reads the pre-edit value from a hook_civicrm_pre snapshot and the current
+> value from the live row, firing only on a genuine 1 → 0 transition. Reserve
+> `Event is deleted` for genuine DB removals.
 
 An instance-specific seeder that creates all three via SQL lives in
 `an instance-specific script` (idempotent; edit `CHAT_ID` for another
