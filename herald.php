@@ -25,6 +25,41 @@ function herald_civicrm_install(): void {
  */
 function herald_civicrm_enable(): void {
   _herald_civix_civicrm_enable();
+  // Refresh the cached handler-class health so hook_civicrm_check (and thus the
+  // pulse endpoint) reflects the freshly-enabled code. Safe here: enable runs
+  // at deploy time, where a broken class failing loudly is the desired outcome.
+  \Civi\Herald\RuleHealth::refresh();
+}
+
+/**
+ * Implements hook_civicrm_check().
+ *
+ * Surfaces broken herald CiviRules handler classes (a condition/action class
+ * that no longer loads or is not instantiable) as a CRITICAL system-status
+ * check. It reads the CACHED scan (written by the deploy preflight + the enable
+ * hook) and never loads a handler class itself — so this hook, which also runs
+ * inside the token-protected pulse health endpoint (System.check), can never be
+ * taken down by the very load-fatal it reports.
+ *
+ * @param array<int, CRM_Utils_Check_Message> $messages
+ */
+function herald_civicrm_check(&$messages): void {
+  $broken = \Civi\Herald\RuleHealth::stored();
+  if ($broken === []) {
+    return;
+  }
+  $items = '';
+  foreach ($broken as $class => $reason) {
+    $items .= '<li><code>' . htmlspecialchars((string) $class) . '</code> — ' . htmlspecialchars((string) $reason) . '</li>';
+  }
+  $messages[] = new CRM_Utils_Check_Message(
+    'herald_rule_handler_unloadable',
+    ts('%1 Herald rule handler class(es) cannot be loaded. Any CiviRules rule using them will fail — under CiviRules\' synchronous evaluation that can 500 the triggering write (e.g. event edits, booking cart). Fix the class or disable the rule.', [1 => count($broken)])
+      . '<ul>' . $items . '</ul>',
+    ts('Herald: unloadable rule handler class'),
+    \Psr\Log\LogLevel::CRITICAL,
+    'fa-bolt'
+  );
 }
 
 /**

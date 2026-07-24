@@ -281,4 +281,16 @@ return [
     'description' => E::ts('List of check names that must always be present. A listed check missing from the hook is reported as failing (extension disabled?). Empty keeps the default of silently dropping vanished checks.'),
     'title' => E::ts('Monitor Expected Checks'),
   ],
+  'herald_rule_health' => [
+    'group_name' => 'Herald Settings',
+    'group' => 'herald',
+    'name' => 'herald_rule_health',
+    'type' => 'Array',
+    'default' => [],
+    'add' => '5.81',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => E::ts('Cached result of the handler-class loadability scan (class => reason for each broken handler). Written by the deploy preflight and the enable hook; read by hook_civicrm_check so the pulse health endpoint never has to load a possibly-broken class. Empty means healthy.'),
+    'title' => E::ts('Rule Handler Health (cached)'),
+  ],
 ];
