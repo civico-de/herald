@@ -35,6 +35,7 @@ function _civicrm_api3_job_herald_contribution_digest_spec(&$spec) {
   $spec['bucket_count'] = ['title' => 'Target histogram buckets', 'type' => CRM_Utils_Type::T_INT];
   $spec['parse_mode'] = ['title' => 'Telegram parse mode (e.g. HTML)', 'type' => CRM_Utils_Type::T_STRING];
   $spec['send_hour'] = ['title' => 'Only send during this hour of day (0–23, CiviCRM timezone). Set the job to Hourly frequency; runs outside the hour are skipped. Without this, a Daily job fires at the first cron run after midnight.', 'type' => CRM_Utils_Type::T_INT];
+  $spec['force'] = ['title' => 'Ignore send_hour and send immediately (for manual/ad-hoc runs)', 'type' => CRM_Utils_Type::T_BOOLEAN];
 }
 
 /**
@@ -46,7 +47,7 @@ function civicrm_api3_job_herald_contribution_digest($params) {
   // Uhrzeit-Gate: CiviCRM-Jobs kennen keine Sendezeit — "Daily" feuert beim
   // ersten Cron-Lauf nach Mitternacht. Mit send_hour läuft der Job Hourly
   // und sendet nur in der gewünschten Stunde (Civi-Zeitzone).
-  if (isset($params['send_hour']) && $params['send_hour'] !== '') {
+  if (empty($params['force']) && isset($params['send_hour']) && $params['send_hour'] !== '') {
     $tz = new DateTimeZone(CRM_Core_Config::singleton()->userSystem->getTimeZoneString() ?: date_default_timezone_get());
     $nowHour = (int) (new DateTime('now', $tz))->format('G');
     if ($nowHour !== (int) $params['send_hour']) {
