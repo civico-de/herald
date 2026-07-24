@@ -33,6 +33,7 @@ function _civicrm_api3_job_herald_contribution_digest_spec(&$spec) {
   $spec['show_histogram'] = ['title' => 'Include histogram', 'type' => CRM_Utils_Type::T_BOOLEAN, 'api.default' => 1];
   $spec['bucket_count'] = ['title' => 'Target histogram buckets', 'type' => CRM_Utils_Type::T_INT];
   $spec['parse_mode'] = ['title' => 'Telegram parse mode (e.g. HTML)', 'type' => CRM_Utils_Type::T_STRING];
+  $spec['send_hour'] = ['title' => 'Only send during this hour of day (0–23, CiviCRM timezone). Set the job to Hourly frequency; runs outside the hour are skipped. Without this, a Daily job fires at the first cron run after midnight.', 'type' => CRM_Utils_Type::T_INT];
 }
 
 /**
@@ -41,13 +42,25 @@ function _civicrm_api3_job_herald_contribution_digest_spec(&$spec) {
  * @throws CRM_Core_Exception
  */
 function civicrm_api3_job_herald_contribution_digest($params) {
+  // Uhrzeit-Gate: CiviCRM-Jobs kennen keine Sendezeit — "Daily" feuert beim
+  // ersten Cron-Lauf nach Mitternacht. Mit send_hour läuft der Job Hourly
+  // und sendet nur in der gewünschten Stunde (Civi-Zeitzone).
+  if (isset($params['send_hour']) && $params['send_hour'] !== '') {
+    $tz = new DateTimeZone(CRM_Core_Config::singleton()->userSystem->getTimeZoneString() ?: date_default_timezone_get());
+    $nowHour = (int) (new DateTime('now', $tz))->format('G');
+    if ($nowHour !== (int) $params['send_hour']) {
+      return civicrm_api3_create_success([
+        ['sent' => 0, 'skipped' => 'outside send_hour', 'send_hour' => (int) $params['send_hour'], 'current_hour' => $nowHour],
+      ], $params, 'Job', 'herald_contribution_digest');
+    }
+  }
   $stats = new ContributionStatsService();
   $renderer = new TemplateRenderer();
   $channelKey = (string) ($params['channel'] ?? 'telegram');
 
   // Channel config: strip composition/query keys, keep only channel-relevant ones.
   $configParams = $params;
-  unset($configParams['blocks'], $configParams['header'], $configParams['template'], $configParams['period']);
+  unset($configParams['blocks'], $configParams['header'], $configParams['template'], $configParams['period'], $configParams['send_hour']);
   $config = CRM_Herald_CivirulesActions_AbstractSend::buildChannelConfig($configParams);
   $channel = ChannelRegistry::default()->get($channelKey);
 
