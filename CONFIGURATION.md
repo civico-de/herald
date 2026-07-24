@@ -176,6 +176,40 @@ When automatic bucketing doesn't match the campaign's narrative (e.g. you want t
 
 ---
 
+## Recipe 4 — Event lifecycle notifications (created / deactivated / deleted)
+
+Notify an ops channel when the event catalogue changes — useful when events are
+maintained by a sync (e.g. pretalx → CiviCRM) rather than by hand, so a new or
+vanished event would otherwise pass unnoticed. The generic `Send notification`
+action exposes `$event` (`id`, `title`, `start_date`, `is_active`) for the
+bare-Event triggers, and three ready-made templates ship with the extension.
+
+| Rule | Trigger | Condition | Template |
+|------|---------|-----------|----------|
+| New event live | `Event is added` | — | `herald_event_created_alert` |
+| Event deactivated | `Event is changed` | `Field Value Comparison`: `Event` · `is_active` · `=` · `0` | `herald_event_deactivated_alert` |
+| Event deleted | `Event is deleted` | — | `herald_event_deleted_alert` |
+
+Action params for each (same shape as the other realtime alerts):
+
+```json
+{ "channel": "telegram", "template": "herald_event_created_alert", "chat_id": "-100…", "aggregate_minutes": 5 }
+```
+
+> **On the "deactivated" rule** — a sync typically unpublishes (sets
+> `is_active = 0`) rather than hard-deleting, so this is the rule that fires on
+> the common "event removed from booking" case. It keys on the *current* value;
+> because a well-behaved sync only writes on a real change, it fires once on the
+> 1 → 0 transition. A separate manual edit while the event is already inactive
+> would re-fire — `aggregate_minutes` dampens any burst. Reserve `Event is
+> deleted` for genuine DB removals.
+
+An instance-specific seeder that creates all three via SQL lives in
+`an instance-specific script` (idempotent; edit `CHAT_ID` for another
+instance) — run it with `cv scr`.
+
+---
+
 ## Subscriber-mode (per-contact preferences)
 
 For setups where multiple users want different notifications routed to *their own* channels, herald ships a per-contact preferences custom group (`herald_preferences`) plus a subscriber-fanout delivery mode on every action.

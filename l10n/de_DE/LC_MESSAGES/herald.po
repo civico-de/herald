@@ -111,3 +111,12 @@ msgstr "gesamt %1"
 
 msgid "collected over %1 min"
 msgstr "gesammelt über %1 min"
+
+msgid "New event"
+msgstr "Neuer Workshop"
+
+msgid "Event deactivated"
+msgstr "Workshop abgeschaltet"
+
+msgid "Event deleted"
+msgstr "Workshop gelöscht"

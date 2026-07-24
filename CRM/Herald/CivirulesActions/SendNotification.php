@@ -7,7 +7,10 @@
  * from the `vars` action param; on top of that the trigger's context is made
  * available to the template automatically: `$contact` (id + display_name) when
  * the trigger carries a contact, `$group` (id + title) when it carries a
- * GroupContact (e.g. the "Contact is added to Group" trigger). Explicit keys
+ * GroupContact (e.g. the "Contact is added to Group" trigger), `$membership`,
+ * `$participant` + `$event` (from a participant), and a bare `$event`
+ * (id + title + start_date + is_active) when the trigger carries an Event
+ * directly (the "Event is added / changed / deleted" triggers). Explicit keys
  * in `vars` win over the auto-filled ones.
  *
  * Action parameters (in addition to those from AbstractSend):
@@ -103,6 +106,39 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
       }
       catch (\Throwable $e) {
         \Civi::log()->warning('herald: could not resolve trigger participant', ['error' => $e->getMessage()]);
+      }
+    }
+    // A bare Event entity (the "Event is added / changed / deleted" triggers).
+    // The participant branch above already derives $event from its event_id, so
+    // only fill in here when the trigger carries an Event directly.
+    $eventData = $triggerData->getEntityData('Event');
+    if (!isset($vars['event']) && is_array($eventData) && !empty($eventData['id'])) {
+      try {
+        $eventId = self::asInt($eventData['id']);
+        // Default to the trigger's own snapshot: on a delete trigger the row is
+        // already gone, so the live SELECT below finds nothing and the snapshot
+        // is all we have for the human-readable bits.
+        $title = self::asString($eventData['title'] ?? '');
+        $start = self::asString($eventData['start_date'] ?? '');
+        $isActive = isset($eventData['is_active']) ? (int) $eventData['is_active'] : NULL;
+        $row = \CRM_Core_DAO::executeQuery(
+          'SELECT title, start_date, is_active FROM civicrm_event WHERE id = %1',
+          [1 => [$eventId, 'Integer']]
+        );
+        if ($row->fetch()) {
+          $title = (string) $row->title;
+          $start = (string) $row->start_date;
+          $isActive = (int) $row->is_active;
+        }
+        $vars['event'] = [
+          'id' => $eventId,
+          'title' => $title,
+          'start_date' => $start,
+          'is_active' => $isActive,
+        ];
+      }
+      catch (\Throwable $e) {
+        \Civi::log()->warning('herald: could not resolve trigger event', ['error' => $e->getMessage()]);
       }
     }
     return $vars;

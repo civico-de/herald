@@ -216,6 +216,42 @@ TPL,
 TPL,
   ],
   [
+    'workflow_name' => 'herald_event_created_alert',
+    'msg_title' => E::ts('Herald: New event created'),
+    'msg_subject' => '{crmScope extensionKey=\'herald\'}🆕 {ts}New event{/ts}: {$event.title}{/crmScope}',
+    'msg_html' => <<<'TPL'
+{crmScope extensionKey='herald'}🆕 <b>{ts}New event{/ts}</b>
+{$event.title}{if $event.start_date} — {$event.start_date|crmDate}{/if}{/crmScope}
+TPL,
+    'msg_text' => <<<'TPL'
+{crmScope extensionKey='herald'}{ts}New event{/ts}: {$event.title}{if $event.start_date} — {$event.start_date|crmDate}{/if}{/crmScope}
+TPL,
+  ],
+  [
+    'workflow_name' => 'herald_event_deactivated_alert',
+    'msg_title' => E::ts('Herald: Event deactivated'),
+    'msg_subject' => '{crmScope extensionKey=\'herald\'}🚫 {ts}Event deactivated{/ts}: {$event.title}{/crmScope}',
+    'msg_html' => <<<'TPL'
+{crmScope extensionKey='herald'}🚫 <b>{ts}Event deactivated{/ts}</b>
+{$event.title}{/crmScope}
+TPL,
+    'msg_text' => <<<'TPL'
+{crmScope extensionKey='herald'}{ts}Event deactivated{/ts}: {$event.title}{/crmScope}
+TPL,
+  ],
+  [
+    'workflow_name' => 'herald_event_deleted_alert',
+    'msg_title' => E::ts('Herald: Event deleted'),
+    'msg_subject' => '{crmScope extensionKey=\'herald\'}🗑 {ts}Event deleted{/ts}: {$event.title}{/crmScope}',
+    'msg_html' => <<<'TPL'
+{crmScope extensionKey='herald'}🗑 <b>{ts}Event deleted{/ts}</b>
+{$event.title}{/crmScope}
+TPL,
+    'msg_text' => <<<'TPL'
+{crmScope extensionKey='herald'}{ts}Event deleted{/ts}: {$event.title}{/crmScope}
+TPL,
+  ],
+  [
     // Generic, composable digest block. Rendered once per entry in a
     // multi-block digest (Job.herald_contribution_digest `blocks` param); the
     // caller injects {$block_title}. One block per revenue stream (donations,
