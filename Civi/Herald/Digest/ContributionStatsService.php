@@ -235,6 +235,62 @@ class ContributionStatsService {
   }
 
   /**
+   * Line-item summary: qty + total grouped by (label, unit_price) — "what was
+   * actually sold", independent of how contributions bundle items (carts).
+   *
+   * Filters mirror buildWhere(), but financial_type_id applies to the LINE
+   * ITEM's own financial type: in a mixed cart (ticket + pass in one
+   * contribution) each item counts toward its own block. 0-amount lines
+   * (code redemptions, free seats) are excluded. `$period` NULL = no date
+   * bound (outstanding pool, matches getAllPending()).
+   *
+   * @param HeraldFilters $filters
+   *
+   * @return array<int, array{label: string, unit_price: float, qty: float|int, total: float}>
+   */
+  public function getItemSummary(array $filters, ?DateRange $period, ?string $status = NULL): array {
+    $where = [
+      ['contribution_id.contribution_status_id:name', '=', $status ?? $this->statusOf($filters, 'Completed')],
+      ['line_total', '>', 0],
+    ];
+    if (!empty($filters['campaign_id'])) {
+      $where[] = ['contribution_id.campaign_id', '=', (int) self::asScalar($filters['campaign_id'])];
+    }
+    if (!empty($filters['financial_type_id'])) {
+      $where[] = ['financial_type_id', '=', (int) self::asScalar($filters['financial_type_id'])];
+    }
+    if (!empty($filters['source_pattern'])) {
+      $where[] = ['contribution_id.source', 'LIKE', $filters['source_pattern']];
+    }
+    if ($period !== NULL) {
+      $where[] = ['contribution_id.receive_date', '>=', $period->startSql()];
+      $where[] = ['contribution_id.receive_date', '<', $period->endSql()];
+    }
+
+    /** @var array<int, array{label: string|null, unit_price: float|int|numeric-string|null, qty: float|int|numeric-string|null, total: float|int|numeric-string|null}> $rows */
+    $rows = \Civi\Api4\LineItem::get(FALSE)
+      // Alias must differ from the field name (Api4SelectQuery restriction).
+      ->addSelect('label', 'unit_price', 'SUM(qty) AS qty_sum', 'SUM(line_total) AS total')
+      ->setWhere($where)
+      ->addGroupBy('label')
+      ->addGroupBy('unit_price')
+      ->addOrderBy('total', 'DESC')
+      ->execute()
+      ->getArrayCopy();
+
+    return array_map(static function ($r) {
+      $qty = (float) ($r['qty_sum'] ?? 0);
+      return [
+        'label' => (string) ($r['label'] ?? '') ?: 'Unknown',
+        'unit_price' => (float) ($r['unit_price'] ?? 0),
+        // Whole quantities render as "6×", not "6.00×".
+        'qty' => $qty == (int) $qty ? (int) $qty : $qty,
+        'total' => (float) ($r['total'] ?? 0),
+      ];
+    }, $rows);
+  }
+
+  /**
    * Translate a $filters array to APIv4 where-clauses, with the requested status
    * applied as `contribution_status_id:name`.
    *

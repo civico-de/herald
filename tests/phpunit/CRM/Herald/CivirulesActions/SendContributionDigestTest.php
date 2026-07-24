@@ -142,6 +142,55 @@ class CRM_Herald_CivirulesActions_SendContributionDigestTest extends TestCase {
     $this->assertSame(1234.5, $vars['campaign']['total']);
   }
 
+  public function testGroupByLineItemDerivesTotalsFromItems(): void {
+    $stats = new class extends ContributionStatsService {
+
+      public function getItemSummary(array $filters, ?DateRange $period, ?string $status = NULL): array {
+        if ($period === NULL) {
+          // Pending pool (no date bound)
+          return [['label' => 'Einzel – normal', 'unit_price' => 60.0, 'qty' => 2, 'total' => 120.0]];
+        }
+        return [
+          ['label' => 'Einzel – normal', 'unit_price' => 60.0, 'qty' => 4, 'total' => 240.0],
+          ['label' => 'Einzel – ermäßigt', 'unit_price' => 35.0, 'qty' => 5, 'total' => 175.0],
+        ];
+      }
+
+      public function getPeriodSummary(array $filters, DateRange $period): array {
+        throw new \LogicException('by-source query must not run in line_item mode');
+      }
+
+      public function getAllPending(array $filters): array {
+        throw new \LogicException('contribution-level pending must not run in line_item mode');
+      }
+
+      public function getAmountDistribution(array $filters): array {
+        return [];
+      }
+
+      public function getCampaignTotal(int $campaignId): array {
+        return ['total' => 0.0, 'count' => 0];
+      }
+
+    };
+    $params = array_merge($this->baseParams(), ['group_by' => 'line_item', 'show_histogram' => FALSE]);
+    unset($params['goal']);
+    $vars = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars($params, $stats);
+    $this->assertSame(415.0, $vars['totals']['amount']);
+    $this->assertSame(9, $vars['totals']['count']);
+    $this->assertCount(2, $vars['by_item']);
+    $this->assertSame([], $vars['by_source']);
+    $this->assertSame(120.0, $vars['pending']['amount']);
+    $this->assertSame(2, $vars['pending']['count']);
+    $this->assertCount(1, $vars['pending_items']);
+  }
+
+  public function testDefaultModeLeavesItemVarsEmpty(): void {
+    $vars = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars($this->baseParams(), $this->makeFakeStats());
+    $this->assertSame([], $vars['by_item']);
+    $this->assertSame([], $vars['pending_items']);
+  }
+
   public function testLegacyEmptyCampaignIdFallsBackToPeriodTotals(): void {
     // Legacy JSON-era params could store campaign_id as '' — that must behave
     // like "no campaign", not become getCampaignTotal(0).

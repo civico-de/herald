@@ -27,6 +27,7 @@ function _civicrm_api3_job_herald_contribution_digest_spec(&$spec) {
   $spec['campaign_id'] = ['title' => 'Campaign id (narrows all queries)', 'type' => CRM_Utils_Type::T_INT];
   $spec['financial_type_id'] = ['title' => 'Financial type id', 'type' => CRM_Utils_Type::T_INT];
   $spec['source_pattern'] = ['title' => 'LIKE pattern on source', 'type' => CRM_Utils_Type::T_STRING];
+  $spec['group_by'] = ['title' => 'Set to "line_item" to group by line-item label + unit price instead of contribution source (also available per block)', 'type' => CRM_Utils_Type::T_STRING];
   $spec['goal'] = ['title' => 'Campaign goal (renders progress)', 'type' => CRM_Utils_Type::T_FLOAT];
   $spec['campaign_title'] = ['title' => 'Campaign title', 'type' => CRM_Utils_Type::T_STRING];
   $spec['show_pending'] = ['title' => 'Include pending-pool block', 'type' => CRM_Utils_Type::T_BOOLEAN, 'api.default' => 1];

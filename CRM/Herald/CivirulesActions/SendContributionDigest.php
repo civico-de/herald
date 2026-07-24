@@ -12,6 +12,9 @@ use Civi\Herald\Digest\HistogramFormatter;
  *   campaign_id        — optional, narrows all queries
  *   financial_type_id  — optional
  *   source_pattern     — LIKE pattern applied to all queries (e.g. "%BB-TX-%")
+ *   group_by           — "line_item" groups by (line-item label, unit price)
+ *                        instead of contribution source; totals/pending are
+ *                        then derived from the items (mixed carts split)
  *   show_pending       — bool, include pending-pool block (default true)
  *   show_histogram     — bool, include histogram (default true)
  *   bucket_count       — int, target histogram buckets (default 8)
@@ -42,20 +45,48 @@ class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_Civi
   public static function buildVars(array $params, ContributionStatsService $stats): array {
     $filters = self::buildFiltersFromParams($params);
     $period = self::resolvePeriod(self::asString($params['period'] ?? 'yesterday'));
-    $summary = $stats->getPeriodSummary($filters, $period);
+    $groupBy = self::asString($params['group_by'] ?? '');
 
     $vars = [
       'period' => ['label' => $period->label, 'start' => $period->startSql(), 'end' => $period->endSql()],
-      'totals' => ['amount' => $summary['total'], 'count' => $summary['count']],
-      'by_source' => $summary['bySource'],
+      'totals' => ['amount' => 0, 'count' => 0],
+      'by_source' => [],
+      'by_item' => [],
       'pending' => ['amount' => 0, 'count' => 0],
+      'pending_items' => [],
       'campaign' => ['title' => '', 'goal' => 0, 'total' => 0, 'count' => 0, 'percent' => 0],
       'histogram' => '',
     ];
 
+    if ($groupBy === 'line_item') {
+      // Line-item view: totals are derived from the items themselves so the
+      // headline always matches the breakdown (mixed carts split per item).
+      $items = $stats->getItemSummary($filters, $period);
+      $vars['by_item'] = $items;
+      $vars['totals'] = [
+        'amount' => array_sum(array_column($items, 'total')),
+        'count' => (int) array_sum(array_column($items, 'qty')),
+      ];
+    }
+    else {
+      $summary = $stats->getPeriodSummary($filters, $period);
+      $vars['totals'] = ['amount' => $summary['total'], 'count' => $summary['count']];
+      $vars['by_source'] = $summary['bySource'];
+    }
+
     if ((bool) ($params['show_pending'] ?? TRUE)) {
-      $pending = $stats->getAllPending($filters);
-      $vars['pending'] = ['amount' => $pending['total'], 'count' => $pending['count']];
+      if ($groupBy === 'line_item') {
+        $pendingItems = $stats->getItemSummary($filters, NULL, 'Pending');
+        $vars['pending_items'] = $pendingItems;
+        $vars['pending'] = [
+          'amount' => array_sum(array_column($pendingItems, 'total')),
+          'count' => (int) array_sum(array_column($pendingItems, 'qty')),
+        ];
+      }
+      else {
+        $pending = $stats->getAllPending($filters);
+        $vars['pending'] = ['amount' => $pending['total'], 'count' => $pending['count']];
+      }
     }
 
     if ((bool) ($params['show_histogram'] ?? TRUE)) {
