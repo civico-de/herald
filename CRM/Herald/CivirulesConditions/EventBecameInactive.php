@@ -62,6 +62,13 @@ class CRM_Herald_CivirulesConditions_EventBecameInactive extends CRM_Civirules_C
     return FALSE;
   }
 
+  /**
+   * No extra-data form — this condition takes no parameters.
+   */
+  public function getExtraDataInputUrl($ruleConditionId) {
+    return FALSE;
+  }
+
   public function userFriendlyConditionParams() {
     return 'Event is_active changed 1 → 0 (deactivated)';
   }
