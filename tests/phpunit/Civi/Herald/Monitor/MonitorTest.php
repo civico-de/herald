@@ -300,6 +300,62 @@ class MonitorTest extends TestCase {
     $this->assertSame([], $pub);
   }
 
+  /**
+   * The state setting is JSON in the DB and hand-editable in the UI, so a
+   * counter can come back as something that is not a number at all. The
+   * narrowing in Monitor::int() restarts it from the documented default 0
+   * instead of taking PHP's cast of an array — which is 1 for any non-empty
+   * array and would silently credit a fail run-length that never happened,
+   * tripping open_after a full run too early.
+   */
+  public function testNonScalarCountersRestartFromZeroInsteadOfPhpsArrayCast(): void {
+    $corrupt = [
+      'a' => [
+        'status' => 'ok',
+        'detail' => '',
+        'consecutive_fails' => ['not', 'a', 'number'],
+        'consecutive_oks' => ['neither'],
+        'notified' => FALSE,
+        'last_notified' => NULL,
+      ],
+    ];
+    $cfg = ['open_after' => 2];
+
+    [$state, $pub] = $this->step($corrupt, ['a' => $this->obsFail('boom')], $cfg);
+    $this->assertSame(1, $state['a']['consecutive_fails'], 'garbage counter restarts at 0, this is fail #1');
+    $this->assertSame([], $pub, 'one fail is below open_after=2');
+
+    // Only the second real observation crosses the threshold.
+    [, $pub] = $this->step($state, ['a' => $this->obsFail('boom')], $cfg);
+    $this->assertCount(1, $pub);
+  }
+
+  /**
+   * Same helper, the other counter: a garbage ok-run must not declare an
+   * incident over one observation early. (int) ['garbage'] would be 1, and
+   * the first ok would then satisfy close_after=2 all by itself.
+   */
+  public function testNonScalarOkCounterDoesNotCloseAnEpisodeEarly(): void {
+    $state = [
+      'a' => [
+        'status' => 'fail',
+        'detail' => 'boom',
+        'consecutive_fails' => 3,
+        'consecutive_oks' => ['garbage'],
+        'notified' => TRUE,
+        'last_notified' => 0,
+      ],
+    ];
+    $cfg = ['close_after' => 2, 'now' => 1000];
+
+    [$state, $pub] = $this->step($state, ['a' => $this->obsOk()], $cfg);
+    $this->assertSame([], $pub, 'first real ok is not yet a recovery');
+    $this->assertSame(1, $state['a']['consecutive_oks']);
+
+    [, $pub] = $this->step($state, ['a' => $this->obsOk()], $cfg);
+    $this->assertSame([['check' => 'a', 'status' => 'ok', 'detail' => '', 'renotify' => FALSE]], $pub);
+  }
+
   public function testLegacyFailGetsRenotifyAnchor(): void {
     // Legacy entry: {status: fail, detail} only. Inferred notified=true had no
     // last_notified — renotify must anchor to now and fire one window LATER,
