@@ -1,122 +1,718 @@
 # German translation for herald message output.
+#
+# Sources: E::ts() literals in PHP, {ts}…{/ts} blocks in templates/ and in the
+# Smarty message bodies of managed/MessageTemplate.mgd.php. The #: lines name
+# the files a string comes from. Recompile with
+# `msgfmt --statistics -o herald.mo herald.po` after every edit — CiviCRM reads
+# only the .mo.
 msgid ""
 msgstr ""
 "Project-Id-Version: herald\n"
+"PO-Revision-Date: 2026-07-31\n"
+"Last-Translator: \n"
+"Language-Team: German\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Language: de\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-msgid "donation(s)"
-msgstr "Spende(n)"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "Delivery mode"
+msgstr "Zustellmodus"
 
-msgid "Daily report %1"
-msgstr "Tagesreport %1"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "Direct — send to one recipient configured below"
+msgstr "Direkt — an einen unten konfigurierten Empfänger senden"
 
-msgid "Weekly report %1"
-msgstr "Wochenreport %1"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "Subscribers — fan out to all contacts opted into a subscription type"
+msgstr "Abonnent:innen — an alle Kontakte verteilen, die einen Abo-Typ gewählt haben"
 
-msgid "Received"
-msgstr "Eingegangen"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "Subscription type (only used in subscriber mode)"
+msgstr "Abo-Typ (nur im Abonnent:innen-Modus verwendet)"
 
-msgid "Open pending pool"
-msgstr "Offener Pending-Pool"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "Channel (direct mode only — subscribers use their own preferred channel)"
+msgstr "Kanal (nur im Direktmodus — Abonnent:innen nutzen ihren eigenen bevorzugten Kanal)"
 
-msgid "Campaign"
-msgstr "Kampagne"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "Message template"
+msgstr "Nachrichtenvorlage"
 
-msgid "of"
-msgstr "von"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "Telegram chat ID (optional, falls back to default setting)"
+msgstr "Telegram-Chat-ID (optional, sonst greift die Standardeinstellung)"
 
-msgid "Donation received"
-msgstr "Spende eingegangen"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "Telegram parse mode"
+msgstr "Telegram-Parse-Modus"
 
-msgid "Donation announced"
-msgstr "Spende angekündigt"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php, Civi/Herald/Channel/TelegramChannel.php
+msgid "Plain text"
+msgstr "Klartext"
 
-msgid "announced"
-msgstr "angekündigt"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "Silent message (Telegram)"
+msgstr "Stille Nachricht (Telegram)"
 
-msgid "Source"
-msgstr "Quelle"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "Disable link previews (Telegram)"
+msgstr "Link-Vorschauen deaktivieren (Telegram)"
 
-msgid "Status changed"
-msgstr "Status geändert"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "Aggregate window in minutes (0 = send immediately; > 0 collects alerts and sends one combined message per window to prevent spam)"
+msgstr "Sammelfenster in Minuten (0 = sofort senden; > 0 sammelt Meldungen und sendet pro Fenster eine kombinierte Nachricht, um Spam zu vermeiden)"
 
-msgid "Amount"
-msgstr "Betrag"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "Channel-specific config (JSON, optional)"
+msgstr "Kanalspezifische Konfiguration (JSON, optional)"
 
-msgid "Ticket sold"
-msgstr "Ticket verkauft"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php, CRM/Herald/Form/CivirulesCondition/PreviousContributionStatus.php
+msgid "Save"
+msgstr "Speichern"
 
-msgid "Ticket ordered"
-msgstr "Ticket bestellt"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php, CRM/Herald/Form/CivirulesCondition/PreviousContributionStatus.php
+msgid "Cancel"
+msgstr "Abbrechen"
 
-msgid "Ticket paid"
-msgstr "Ticket bezahlt"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "herald action saved."
+msgstr "herald-Aktion gespeichert."
 
-msgid "bank transfer"
-msgstr "Überweisung"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "— none configured —"
+msgstr "— keine konfiguriert —"
 
-msgid "New subscription"
-msgstr "Neue Anmeldung"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "— none —"
+msgstr "— keine —"
 
-msgid "Check <b>%1</b> failed"
-msgstr "Check <b>%1</b> fehlgeschlagen"
+#: CRM/Herald/Form/CivirulesAction/AbstractSendForm.php
+msgid "Channel-specific config must be a JSON object: %1"
+msgstr "Die kanalspezifische Konfiguration muss ein JSON-Objekt sein: %1"
 
-msgid "Check <b>%1</b> ok again"
-msgstr "Check <b>%1</b> wieder ok"
+#: CRM/Herald/Form/CivirulesAction/SendContributionAlert.php, CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Campaign ID (optional)"
+msgstr "Kampagnen-ID (optional)"
 
-msgid "Check %1 failed"
-msgstr "Check %1 fehlgeschlagen"
+#: CRM/Herald/Form/CivirulesAction/SendContributionAlert.php
+msgid "Campaign goal (optional, enables progress)"
+msgstr "Kampagnenziel (optional, aktiviert die Fortschrittsanzeige)"
 
-msgid "Check %1 ok again"
-msgstr "Check %1 wieder ok"
+#: CRM/Herald/Form/CivirulesAction/SendContributionAlert.php
+msgid "Campaign title"
+msgstr "Kampagnentitel"
 
-msgid "Check <b>%1</b> still failing"
-msgstr "Check <b>%1</b> weiterhin gestört"
+#: CRM/Herald/Form/CivirulesAction/SendContributionAlert.php
+msgid "Include from_status / to_status (uses pre-edit snapshot)"
+msgstr "from_status / to_status einbeziehen (nutzt den Snapshot vor der Änderung)"
 
-msgid "Check %1 still failing"
-msgstr "Check %1 weiterhin gestört"
+#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Period"
+msgstr "Zeitraum"
 
+#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Yesterday"
+msgstr "Gestern"
+
+#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Today"
+msgstr "Heute"
+
+#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Last 7 days"
+msgstr "Letzte 7 Tage"
+
+#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Last 30 days"
+msgstr "Letzte 30 Tage"
+
+#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Financial type ID (optional)"
+msgstr "Finanztyp-ID (optional)"
+
+#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Source LIKE pattern (optional, e.g. %Bank TX%)"
+msgstr "LIKE-Muster für die Quelle (optional, z. B. %Bank TX%)"
+
+#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Show pending pool"
+msgstr "Pending-Pool anzeigen"
+
+#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Show histogram"
+msgstr "Histogramm anzeigen"
+
+#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Histogram bucket count"
+msgstr "Anzahl der Histogramm-Klassen"
+
+#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Histogram bucket edges (JSON array, optional)"
+msgstr "Klassengrenzen des Histogramms (JSON-Array, optional)"
+
+#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Campaign goal (optional, enables progress block)"
+msgstr "Kampagnenziel (optional, aktiviert den Fortschrittsblock)"
+
+#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
+msgid "Campaign title (free text, shown in template)"
+msgstr "Kampagnentitel (Freitext, wird in der Vorlage angezeigt)"
+
+#: CRM/Herald/Form/CivirulesAction/SendNotification.php
+msgid "Variables (JSON object passed to the template)"
+msgstr "Variablen (JSON-Objekt, das an die Vorlage übergeben wird)"
+
+#: CRM/Herald/Form/CivirulesAction/SendNotification.php
+msgid "Variables JSON is invalid: %1"
+msgstr "Das Variablen-JSON ist ungültig: %1"
+
+#: CRM/Herald/Form/CivirulesCondition/PreviousContributionStatus.php
+msgid "Previous Contribution Status"
+msgstr "Vorheriger Beitragsstatus"
+
+#: CRM/Herald/Form/CivirulesCondition/PreviousContributionStatus.php
+msgid "herald condition saved."
+msgstr "herald-Bedingung gespeichert."
+
+#: Civi/Herald/Channel/TelegramChannel.php
+msgid "Chat ID"
+msgstr "Chat-ID"
+
+#: Civi/Herald/Channel/TelegramChannel.php
+msgid "Telegram chat or group ID. Negative numbers are group chats. If empty, the default from settings is used."
+msgstr "Telegram-Chat- oder -Gruppen-ID. Negative Zahlen sind Gruppenchats. Bleibt das Feld leer, gilt der Standard aus den Einstellungen."
+
+#: Civi/Herald/Channel/TelegramChannel.php
+msgid "Parse Mode"
+msgstr "Parse-Modus"
+
+#: Civi/Herald/Channel/TelegramChannel.php
+msgid "Silent message"
+msgstr "Stille Nachricht"
+
+#: Civi/Herald/Channel/TelegramChannel.php
+msgid "Disable link previews"
+msgstr "Link-Vorschauen deaktivieren"
+
+#: Civi/Herald/Monitor/Monitor.php
 msgid "check missing — extension disabled?"
 msgstr "Check fehlt — Extension deaktiviert?"
 
+#: herald.php
+msgid "%1 Herald rule handler class(es) cannot be loaded. Any CiviRules rule using them will fail — under CiviRules' synchronous evaluation that can 500 the triggering write (e.g. event edits, booking cart). Fix the class or disable the rule."
+msgstr "%1 Herald-Regel-Handler-Klasse(n) lassen sich nicht laden. Jede CiviRules-Regel, die sie verwendet, schlägt fehl — bei der synchronen Auswertung von CiviRules kann das den auslösenden Schreibvorgang mit einem 500er abbrechen (z. B. Event-Bearbeitung, Buchungswarenkorb). Klasse reparieren oder Regel deaktivieren."
+
+#: herald.php
+msgid "Herald: unloadable rule handler class"
+msgstr "Herald: nicht ladbare Regel-Handler-Klasse"
+
+#: managed/Job.mgd.php
+msgid "Herald: Flush alert aggregation buffer"
+msgstr "Herald: Sammelpuffer für Meldungen leeren"
+
+#: managed/Job.mgd.php
+msgid "Sends alerts collected via aggregate_minutes as one composed message per rule once their window has passed."
+msgstr "Sendet die über aggregate_minutes gesammelten Meldungen als eine zusammengesetzte Nachricht pro Regel, sobald deren Fenster abgelaufen ist."
+
+#: managed/Job.mgd.php
+msgid "Herald: Run check monitor"
+msgstr "Herald: Check-Monitor ausführen"
+
+#: managed/Job.mgd.php
+msgid "Runs checks contributed via hook_civicrm_heraldChecks and publishes ok/fail transitions to the herald_monitor_topic topic."
+msgstr "Führt die über hook_civicrm_heraldChecks bereitgestellten Checks aus und veröffentlicht ok/fail-Übergänge im Topic herald_monitor_topic."
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: Daily contribution digest"
+msgstr "Herald: Täglicher Beitragsreport"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: Weekly contribution digest"
+msgstr "Herald: Wöchentlicher Beitragsreport"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: New completed contribution"
+msgstr "Herald: Neuer abgeschlossener Beitrag"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: New pending contribution"
+msgstr "Herald: Neuer ausstehender Beitrag"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: Contribution status changed"
+msgstr "Herald: Beitragsstatus geändert"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: New ticket/event contribution"
+msgstr "Herald: Neuer Ticket-/Event-Beitrag"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: Ticket ordered, bank transfer announced"
+msgstr "Herald: Ticket bestellt, Überweisung angekündigt"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: Ticket bank transfer received"
+msgstr "Herald: Ticket-Überweisung eingegangen"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: New group/newsletter subscription"
+msgstr "Herald: Neue Gruppen-/Newsletter-Anmeldung"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: Monitor check transition"
+msgstr "Herald: Statuswechsel eines Monitor-Checks"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: New membership signup"
+msgstr "Herald: Neue Mitgliedschaftsanmeldung"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: New event registration"
+msgstr "Herald: Neue Event-Registrierung"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: New event created"
+msgstr "Herald: Neues Event angelegt"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: Event deactivated"
+msgstr "Herald: Event deaktiviert"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: Event deleted"
+msgstr "Herald: Event gelöscht"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: Contribution digest block (composable)"
+msgstr "Herald: Beitragsreport-Block (kombinierbar)"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Daily report %1"
+msgstr "Tagesreport %1"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Received"
+msgstr "Eingegangen"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Open pending pool"
+msgstr "Offener Pending-Pool"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Campaign"
+msgstr "Kampagne"
+
+#: managed/MessageTemplate.mgd.php
+msgid "of"
+msgstr "von"
+
+#: managed/MessageTemplate.mgd.php
+msgid "donation(s)"
+msgstr "Spende(n)"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Weekly report %1"
+msgstr "Wochenreport %1"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Donation received"
+msgstr "Spende eingegangen"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Source"
+msgstr "Quelle"
+
+#: managed/MessageTemplate.mgd.php
+msgid "announced"
+msgstr "angekündigt"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Donation announced"
+msgstr "Spende angekündigt"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Status changed"
+msgstr "Status geändert"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Amount"
+msgstr "Betrag"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Ticket sold"
+msgstr "Ticket verkauft"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Ticket ordered"
+msgstr "Ticket bestellt"
+
+#: managed/MessageTemplate.mgd.php
+msgid "bank transfer"
+msgstr "Überweisung"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Ticket paid"
+msgstr "Ticket bezahlt"
+
+#: managed/MessageTemplate.mgd.php
+msgid "New subscription"
+msgstr "Neue Anmeldung"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Check <b>%1</b> still failing"
+msgstr "Check <b>%1</b> weiterhin gestört"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Check <b>%1</b> failed"
+msgstr "Check <b>%1</b> fehlgeschlagen"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Check <b>%1</b> ok again"
+msgstr "Check <b>%1</b> wieder ok"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Check %1 still failing"
+msgstr "Check %1 weiterhin gestört"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Check %1 failed"
+msgstr "Check %1 fehlgeschlagen"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Check %1 ok again"
+msgstr "Check %1 wieder ok"
+
+#: managed/MessageTemplate.mgd.php
 msgid "New membership"
 msgstr "Neue Mitgliedschaft"
 
+#: managed/MessageTemplate.mgd.php
 msgid "Status"
 msgstr "Status"
 
+#: managed/MessageTemplate.mgd.php
 msgid "New event registration"
 msgstr "Neue Event-Registrierung"
 
+#: managed/MessageTemplate.mgd.php
 msgid "Participant"
 msgstr "Teilnehmer:in"
 
+#: managed/MessageTemplate.mgd.php
 msgid "Role"
 msgstr "Rolle"
 
-msgid "no receipts"
-msgstr "keine Eingänge"
-
-msgid "open"
-msgstr "offen"
-
-msgid "%1 messages"
-msgstr "%1 Meldungen"
-
-msgid "total %1"
-msgstr "gesamt %1"
-
-msgid "collected over %1 min"
-msgstr "gesammelt über %1 min"
-
+#: managed/MessageTemplate.mgd.php
 msgid "New event"
 msgstr "Neuer Workshop"
 
+#: managed/MessageTemplate.mgd.php
 msgid "Event deactivated"
 msgstr "Workshop abgeschaltet"
 
+#: managed/MessageTemplate.mgd.php
 msgid "Event deleted"
 msgstr "Workshop gelöscht"
+
+#: managed/MessageTemplate.mgd.php
+msgid "no receipts"
+msgstr "keine Eingänge"
+
+#: managed/MessageTemplate.mgd.php
+msgid "open"
+msgstr "offen"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Every completed contribution"
+msgstr "Jeder abgeschlossene Beitrag"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Every pending contribution"
+msgstr "Jeder ausstehende Beitrag"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Pending → Completed transitions"
+msgstr "Übergänge Ausstehend → Abgeschlossen"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Daily digest"
+msgstr "Täglicher Report"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Weekly digest"
+msgstr "Wöchentlicher Report"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Preferred channel"
+msgstr "Bevorzugter Kanal"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Telegram"
+msgstr "Telegram"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Webhook (Slack/Discord/Mattermost/custom)"
+msgstr "Webhook (Slack/Discord/Mattermost/eigener)"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "ntfy.sh"
+msgstr "ntfy.sh"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Pushover"
+msgstr "Pushover"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Email (your primary address)"
+msgstr "E-Mail (primäre Adresse)"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Pick the channel where you want to receive notifications. Then fill in the recipient identifier for that channel below. Email needs no identifier — it goes to your primary address."
+msgstr "Kanal auswählen, über den Benachrichtigungen ankommen sollen. Danach unten die passende Empfängerkennung für diesen Kanal eintragen. E-Mail braucht keine Kennung — sie geht an die primäre Adresse."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Telegram chat ID"
+msgstr "Telegram-Chat-ID"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Your personal Telegram chat ID with the bot. Talk to @userinfobot or send /start to the configured bot to find it."
+msgstr "Die persönliche Telegram-Chat-ID mit dem Bot. Zu finden über @userinfobot oder indem /start an den konfigurierten Bot gesendet wird."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Pushover user/group key"
+msgstr "Pushover-Benutzer-/Gruppenschlüssel"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "ntfy topic"
+msgstr "ntfy-Topic"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Webhook URL"
+msgstr "Webhook-URL"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Your personal incoming-webhook URL (e.g. a Slack DM webhook)."
+msgstr "Die persönliche Incoming-Webhook-URL (z. B. ein Slack-DM-Webhook)."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Subscriptions"
+msgstr "Abonnements"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Tick the kinds of notifications you want to receive on your preferred channel."
+msgstr "Die Arten von Benachrichtigungen ankreuzen, die über den bevorzugten Kanal ankommen sollen."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Herald: Subscription type"
+msgstr "Herald: Abo-Typ"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Kinds of notification a contact can opt into. Used by herald subscriber-mode actions."
+msgstr "Benachrichtigungsarten, die ein Kontakt abonnieren kann. Wird von den herald-Aktionen im Abonnent:innen-Modus verwendet."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Notification preferences"
+msgstr "Benachrichtigungseinstellungen"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "How and when this contact wants to receive herald alerts and digests."
+msgstr "Wie und wann dieser Kontakt herald-Meldungen und -Reports erhalten möchte."
+
+#: settings/herald.setting.php
+msgid "Ordered contribution-source rules (contains, prefix, or regex); the first match wins. Empty disables normalization."
+msgstr "Geordnete Regeln für die Beitragsquelle (contains, prefix oder regex); der erste Treffer gewinnt. Leer deaktiviert die Normalisierung."
+
+#: settings/herald.setting.php
+msgid "Each rule has match, type, and label keys. Regex matches use PHP preg_match syntax including delimiters."
+msgstr "Jede Regel hat die Schlüssel match, type und label. Regex-Treffer nutzen die PHP-preg_match-Syntax inklusive Delimitern."
+
+#: settings/herald.setting.php
+msgid "Contribution Source Normalization"
+msgstr "Normalisierung der Beitragsquelle"
+
+#: settings/herald.setting.php
+msgid "Telegram Bot API token (from @BotFather)."
+msgstr "Telegram-Bot-API-Token (von @BotFather)."
+
+#: settings/herald.setting.php
+msgid "Stored encrypted at rest if Civi key is configured."
+msgstr "Wird verschlüsselt gespeichert, sofern ein Civi-Key konfiguriert ist."
+
+#: settings/herald.setting.php
+msgid "Telegram Bot Token"
+msgstr "Telegram-Bot-Token"
+
+#: settings/herald.setting.php
+msgid "Fallback chat/group ID used when an action does not specify one. Negative numbers are group chats."
+msgstr "Ersatz-Chat-/Gruppen-ID, wenn eine Aktion keine angibt. Negative Zahlen sind Gruppenchats."
+
+#: settings/herald.setting.php
+msgid "Default Telegram Chat ID"
+msgstr "Standard-Telegram-Chat-ID"
+
+#: settings/herald.setting.php
+msgid "Fallback URL for the generic Webhook channel when no webhook_url is set on the action."
+msgstr "Ersatz-URL für den generischen Webhook-Kanal, wenn an der Aktion kein webhook_url gesetzt ist."
+
+#: settings/herald.setting.php
+msgid "Default Webhook URL"
+msgstr "Standard-Webhook-URL"
+
+#: settings/herald.setting.php
+msgid "Bearer token sent as Authorization header. Skip if your webhook uses a different auth scheme — pass it via the action's webhook_headers instead."
+msgstr "Bearer-Token, das als Authorization-Header gesendet wird. Entfällt, wenn der Webhook ein anderes Auth-Schema nutzt — dann stattdessen über webhook_headers der Aktion übergeben."
+
+#: settings/herald.setting.php
+msgid "Default Webhook Bearer Token"
+msgstr "Standard-Webhook-Bearer-Token"
+
+#: settings/herald.setting.php
+msgid "ntfy server base URL. Defaults to the public ntfy.sh; set to your self-hosted instance if applicable."
+msgstr "Basis-URL des ntfy-Servers. Standard ist das öffentliche ntfy.sh; bei Bedarf auf die selbst gehostete Instanz setzen."
+
+#: settings/herald.setting.php
+msgid "ntfy Server"
+msgstr "ntfy-Server"
+
+#: settings/herald.setting.php
+msgid "Fallback ntfy topic when an action does not set its own."
+msgstr "Ersatz-ntfy-Topic, wenn eine Aktion kein eigenes setzt."
+
+#: settings/herald.setting.php
+msgid "Default ntfy Topic"
+msgstr "Standard-ntfy-Topic"
+
+#: settings/herald.setting.php
+msgid "Bearer token for protected ntfy topics (Authorization header). Leave empty for public ntfy.sh topics."
+msgstr "Bearer-Token für geschützte ntfy-Topics (Authorization-Header). Für öffentliche ntfy.sh-Topics leer lassen."
+
+#: settings/herald.setting.php
+msgid "ntfy Token"
+msgstr "ntfy-Token"
+
+#: settings/herald.setting.php
+msgid "Pushover application/API token (create one at pushover.net/apps)."
+msgstr "Pushover-Anwendungs-/API-Token (unter pushover.net/apps anlegen)."
+
+#: settings/herald.setting.php
+msgid "Pushover App Token"
+msgstr "Pushover-App-Token"
+
+#: settings/herald.setting.php
+msgid "Default Pushover user or group key. Override per action via pushover_user_key."
+msgstr "Standard-Benutzer- oder -Gruppenschlüssel für Pushover. Pro Aktion über pushover_user_key überschreibbar."
+
+#: settings/herald.setting.php
+msgid "Default Pushover User/Group Key"
+msgstr "Standard-Pushover-Benutzer-/Gruppenschlüssel"
+
+#: settings/herald.setting.php
+msgid "From header for the email channel, e.g. \"Herald\" <noreply@example.org>. Leave empty to use the site default from address."
+msgstr "From-Header für den E-Mail-Kanal, z. B. \"Herald\" <noreply@example.org>. Leer lassen, um die Standard-Absenderadresse der Site zu verwenden."
+
+#: settings/herald.setting.php
+msgid "Email From Address"
+msgstr "E-Mail-Absenderadresse"
+
+#: settings/herald.setting.php
+msgid "Fallback recipient for the email channel when an action does not set email_to."
+msgstr "Ersatzempfänger für den E-Mail-Kanal, wenn eine Aktion kein email_to setzt."
+
+#: settings/herald.setting.php
+msgid "Default Email Recipient"
+msgstr "Standard-E-Mail-Empfänger"
+
+#: settings/herald.setting.php
+msgid "Topic routing for Herald.publish: map of topic name to delivery params (channel, chat_id, aggregate_minutes, …). A \"default\" entry backs all topics."
+msgstr "Topic-Routing für Herald.publish: Zuordnung von Topic-Namen zu Zustellparametern (channel, chat_id, aggregate_minutes, …). Ein Eintrag \"default\" greift für alle Topics."
+
+#: settings/herald.setting.php
+msgid "Topic Routes"
+msgstr "Topic-Routen"
+
+#: settings/herald.setting.php
+msgid "Topic the check monitor publishes ok/fail transitions to."
+msgstr "Topic, in dem der Check-Monitor ok/fail-Übergänge veröffentlicht."
+
+#: settings/herald.setting.php
+msgid "Monitor Topic"
+msgstr "Monitor-Topic"
+
+#: settings/herald.setting.php
+msgid "Internal: last observed status per monitor check (used to detect transitions). Not meant for manual editing."
+msgstr "Intern: zuletzt beobachteter Status je Monitor-Check (dient der Erkennung von Übergängen). Nicht für die manuelle Bearbeitung gedacht."
+
+#: settings/herald.setting.php
+msgid "Monitor State (internal)"
+msgstr "Monitor-Status (intern)"
+
+#: settings/herald.setting.php
+msgid "Hysteresis: number of consecutive failing runs before a check's fail transition is reported. 1 = report on the first failure (default)."
+msgstr "Hysterese: Anzahl aufeinanderfolgender fehlgeschlagener Läufe, bevor der fail-Übergang eines Checks gemeldet wird. 1 = beim ersten Fehler melden (Standard)."
+
+#: settings/herald.setting.php
+msgid "Monitor Open-After Threshold"
+msgstr "Monitor-Schwelle zum Öffnen"
+
+#: settings/herald.setting.php
+msgid "Hysteresis: number of consecutive ok runs before a check's recovery is reported. 1 = report on the first recovery (default)."
+msgstr "Hysterese: Anzahl aufeinanderfolgender erfolgreicher Läufe, bevor die Erholung eines Checks gemeldet wird. 1 = bei der ersten Erholung melden (Standard)."
+
+#: settings/herald.setting.php
+msgid "Monitor Close-After Threshold"
+msgstr "Monitor-Schwelle zum Schließen"
+
+#: settings/herald.setting.php
+msgid "Re-announce a check that has stayed in the reported-fail state this many hours. 0 disables reminders."
+msgstr "Einen Check, der so viele Stunden im gemeldeten Fehlerzustand bleibt, erneut melden. 0 deaktiviert Erinnerungen."
+
+#: settings/herald.setting.php
+msgid "Monitor Renotify Hours"
+msgstr "Monitor-Erinnerungsintervall (Stunden)"
+
+#: settings/herald.setting.php
+msgid "Map of check-name to ISO datetime: the check produces no fail/renotify alerts until then. Expired entries are pruned on each run."
+msgstr "Zuordnung von Check-Name zu ISO-Zeitstempel: Bis dahin erzeugt der Check keine fail- und keine Erinnerungsmeldungen. Abgelaufene Einträge werden bei jedem Lauf entfernt."
+
+#: settings/herald.setting.php
+msgid "A fail→ok recovery still fires after the snooze lapses if a failure had already been announced before it was set."
+msgstr "Eine fail→ok-Erholung wird nach Ablauf der Stummschaltung trotzdem gemeldet, wenn vorher bereits ein Fehler gemeldet wurde."
+
+#: settings/herald.setting.php
+msgid "Monitor Snooze"
+msgstr "Monitor-Stummschaltung"
+
+#: settings/herald.setting.php
+msgid "List of check names that must always be present. A listed check missing from the hook is reported as failing (extension disabled?). Empty keeps the default of silently dropping vanished checks."
+msgstr "Liste von Check-Namen, die immer vorhanden sein müssen. Ein gelisteter Check, der im Hook fehlt, wird als fehlgeschlagen gemeldet (Extension deaktiviert?). Leer behält das Standardverhalten bei, verschwundene Checks stillschweigend zu ignorieren."
+
+#: settings/herald.setting.php
+msgid "Monitor Expected Checks"
+msgstr "Erwartete Monitor-Checks"
+
+#: settings/herald.setting.php
+msgid "Cached result of the handler-class loadability scan (class => reason for each broken handler). Written by the deploy preflight and the enable hook; read by hook_civicrm_check so the pulse health endpoint never has to load a possibly-broken class. Empty means healthy."
+msgstr "Zwischengespeichertes Ergebnis der Ladbarkeitsprüfung für Handler-Klassen (Klasse => Grund je defektem Handler). Wird vom Deploy-Preflight und vom enable-Hook geschrieben und von hook_civicrm_check gelesen, damit der Pulse-Health-Endpunkt nie eine möglicherweise defekte Klasse laden muss. Leer bedeutet gesund."
+
+#: settings/herald.setting.php
+msgid "Rule Handler Health (cached)"
+msgstr "Zustand der Regel-Handler (zwischengespeichert)"
+
+#: templates/CRM/Herald/Form/CivirulesAction/SendContributionAlert.tpl, templates/CRM/Herald/Form/CivirulesAction/SendContributionDigest.tpl, templates/CRM/Herald/Form/CivirulesAction/SendNotification.tpl, templates/CRM/Herald/Form/CivirulesCondition/PreviousContributionStatus.tpl
+msgid "herald: Send Notification"
+msgstr "herald: Benachrichtigung senden"
+
+#: Civi/Herald/Buffer/AlertBuffer.php
+msgid "%1 messages"
+msgstr "%1 Meldungen"
+
+#: Civi/Herald/Buffer/AlertBuffer.php
+msgid "total %1"
+msgstr "gesamt %1"
+
+#: Civi/Herald/Buffer/AlertBuffer.php
+msgid "collected over %1 min"
+msgstr "gesammelt über %1 min"
