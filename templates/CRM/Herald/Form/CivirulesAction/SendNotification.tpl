@@ -1,4 +1,5 @@
 {* herald: SendNotification action form *}
+{crmScope extensionKey='herald'}
 <h3>{ts}herald: Send Notification{/ts}</h3>
 
 <div class="crm-block crm-form-block">
@@ -17,3 +18,4 @@
 <div class="crm-submit-buttons">
   {include file="CRM/common/formButtons.tpl" location="bottom"}
 </div>
+{/crmScope}

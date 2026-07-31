@@ -9,6 +9,10 @@
 #
 # Re-provision from scratch (re-runs init.d hooks): docker compose down -v && up -d
 
+# Explicit project name — unnamed .docker/ stacks all become one project
+# called "docker" and share volumes across checkouts.
+name: herald
+
 services:
   app:
     image: ${CIVIKITCHEN_IMAGE:-ghcr.io/jfilter/civikitchen:standalone}
