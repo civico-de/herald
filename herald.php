@@ -54,9 +54,9 @@ function herald_civicrm_check(&$messages): void {
   }
   $messages[] = new CRM_Utils_Check_Message(
     'herald_rule_handler_unloadable',
-    ts('%1 Herald rule handler class(es) cannot be loaded. Any CiviRules rule using them will fail — under CiviRules\' synchronous evaluation that can 500 the triggering write (e.g. event edits, booking cart). Fix the class or disable the rule.', [1 => count($broken)])
+    E::ts('%1 Herald rule handler class(es) cannot be loaded. Any CiviRules rule using them will fail — under CiviRules\' synchronous evaluation that can 500 the triggering write (e.g. event edits, booking cart). Fix the class or disable the rule.', [1 => count($broken)])
       . '<ul>' . $items . '</ul>',
-    ts('Herald: unloadable rule handler class'),
+    E::ts('Herald: unloadable rule handler class'),
     \Psr\Log\LogLevel::CRITICAL,
     'fa-bolt'
   );

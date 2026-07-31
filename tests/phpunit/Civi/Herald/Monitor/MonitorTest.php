@@ -262,10 +262,16 @@ class MonitorTest extends TestCase {
     // Snoozed fail flipped internal state silently; snooze lapsed while the
     // check is ALREADY observing ok, but close_after=2 keeps the episode open.
     // The lapsed snooze must NOT fire a delayed fail alert off an ok run.
-    $state = ['a' => [
-      'status' => 'fail', 'detail' => 'old', 'consecutive_fails' => 3,
-      'consecutive_oks' => 0, 'notified' => FALSE, 'last_notified' => NULL,
-    ]];
+    $state = [
+      'a' => [
+        'status' => 'fail',
+        'detail' => 'old',
+        'consecutive_fails' => 3,
+        'consecutive_oks' => 0,
+        'notified' => FALSE,
+        'last_notified' => NULL,
+      ],
+    ];
     [$state, $pub] = $this->step($state, ['a' => $this->obsOk()], ['close_after' => 2, 'now' => 1000]);
     $this->assertSame([], $pub);
     // Second ok closes the episode — silently, because the fail was never announced.
@@ -274,14 +280,22 @@ class MonitorTest extends TestCase {
   }
 
   public function testNoRenotifyDuringRecoveryHysteresis(): void {
-    $state = ['a' => [
-      'status' => 'fail', 'detail' => 'boom', 'consecutive_fails' => 5,
-      'consecutive_oks' => 0, 'notified' => TRUE, 'last_notified' => 0,
-    ]];
+    $state = [
+      'a' => [
+        'status' => 'fail',
+        'detail' => 'boom',
+        'consecutive_fails' => 5,
+        'consecutive_oks' => 0,
+        'notified' => TRUE,
+        'last_notified' => 0,
+      ],
+    ];
     // Renotify window long past, but the current observation is ok (close_after=2):
     // re-announcing a possibly-over incident would be wrong.
     [, $pub] = $this->step($state, ['a' => $this->obsOk()], [
-      'close_after' => 2, 'renotify_seconds' => 60, 'now' => 100000,
+      'close_after' => 2,
+      'renotify_seconds' => 60,
+      'now' => 100000,
     ]);
     $this->assertSame([], $pub);
   }
@@ -292,12 +306,14 @@ class MonitorTest extends TestCase {
     // not never and not immediately.
     $legacy = ['a' => ['status' => 'fail', 'detail' => 'old']];
     [$state, $pub] = $this->step($legacy, ['a' => $this->obsFail('old')], [
-      'renotify_seconds' => 3600, 'now' => 10000,
+      'renotify_seconds' => 3600,
+      'now' => 10000,
     ]);
     $this->assertSame([], $pub);
     $this->assertSame(10000, $state['a']['last_notified']);
     [, $pub] = $this->step($state, ['a' => $this->obsFail('old')], [
-      'renotify_seconds' => 3600, 'now' => 10000 + 3600,
+      'renotify_seconds' => 3600,
+      'now' => 10000 + 3600,
     ]);
     $this->assertCount(1, $pub);
     $this->assertTrue($pub[0]['renotify']);

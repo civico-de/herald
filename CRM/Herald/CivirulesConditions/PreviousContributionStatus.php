@@ -35,7 +35,10 @@ class CRM_Herald_CivirulesConditions_PreviousContributionStatus extends CRM_Civi
    */
   private function expectedPreviousStatusId(): ?int {
     $raw = $this->ruleCondition['condition_params'] ?? NULL;
-    $params = is_string($raw) ? (unserialize($raw) ?: []) : (array) $raw;
+    // allowed_classes=FALSE: condition_params ist ein Array aus Skalaren, wir
+    // lesen daraus genau eine Status-ID. Objekte sind hier nie erwartet, also
+    // gibt es keinen Grund, beim Dekodieren fremder DB-Inhalte welche zu bauen.
+    $params = is_string($raw) ? (unserialize($raw, ['allowed_classes' => FALSE]) ?: []) : (array) $raw;
     return isset($params['previous_status_id']) ? self::toInt($params['previous_status_id']) : NULL;
   }
 

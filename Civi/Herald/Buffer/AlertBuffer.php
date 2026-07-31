@@ -155,14 +155,14 @@ class AlertBuffer {
   }
 
   /**
-   * Translate through Civi's ts() with the herald domain when Civi is booted;
-   * plain %N substitution otherwise (pure unit tests, no framework).
+   * Translate through the civix ExtensionUtil (herald's own domain) when Civi
+   * is booted; plain %N substitution otherwise (pure unit tests, no framework).
    *
    * @param array<int, string|int> $params
    */
   private static function t(string $text, array $params = []): string {
-    if (function_exists('ts')) {
-      return ts($text, $params + ['domain' => 'herald']);
+    if (function_exists('ts') && class_exists(\CRM_Herald_ExtensionUtil::class)) {
+      return \CRM_Herald_ExtensionUtil::ts($text, $params);
     }
     foreach ($params as $key => $value) {
       $text = str_replace('%' . $key, (string) $value, $text);

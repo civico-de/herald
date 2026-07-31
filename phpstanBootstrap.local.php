@@ -52,4 +52,3 @@ spl_autoload_register(static function (string $class) use ($extDir): void {
 if (class_exists('CRM_Core_DAO_Base') && !class_exists('CRM_Civirules_DAO_Base', FALSE)) {
   class_alias('CRM_Core_DAO_Base', 'CRM_Civirules_DAO_Base');
 }
-
