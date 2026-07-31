@@ -59,7 +59,7 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
       }
     }
     $groupContact = $triggerData->getEntityData('GroupContact');
-    $groupId = is_array($groupContact) ? (int) ($groupContact['group_id'] ?? 0) : 0;
+    $groupId = is_array($groupContact) ? self::asInt($groupContact['group_id'] ?? 0) : 0;
     if ($groupId > 0) {
       try {
         $title = \CRM_Core_DAO::singleValueQuery(
@@ -92,7 +92,7 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
           'title' => self::labelOf('civicrm_event', 'title', self::asInt($participant['event_id'] ?? 0)),
         ];
         $roleId = $participant['role_id'] ?? '';
-        $roleId = is_array($roleId) ? (string) reset($roleId) : self::asString($roleId);
+        $roleId = is_array($roleId) ? self::asString(reset($roleId)) : self::asString($roleId);
         $role = '';
         if ($roleId !== '') {
           $role = self::asString(\CRM_Core_DAO::singleValueQuery(
@@ -120,15 +120,19 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
         // is all we have for the human-readable bits.
         $title = self::asString($eventData['title'] ?? '');
         $start = self::asString($eventData['start_date'] ?? '');
-        $isActive = isset($eventData['is_active']) ? (int) $eventData['is_active'] : NULL;
+        $isActive = isset($eventData['is_active']) ? self::asInt($eventData['is_active']) : NULL;
+        // executeQuery() is documented as CRM_Core_DAO|object — the `object`
+        // half exists only so IDEs stop flagging the result-row properties,
+        // which the DAO sets dynamically. Spell the SELECT list out instead.
+        /** @var \CRM_Core_DAO&object{title: ?string, start_date: ?string, is_active: ?string} $row */
         $row = \CRM_Core_DAO::executeQuery(
           'SELECT title, start_date, is_active FROM civicrm_event WHERE id = %1',
           [1 => [$eventId, 'Integer']]
         );
         if ($row->fetch()) {
-          $title = (string) $row->title;
-          $start = (string) $row->start_date;
-          $isActive = (int) $row->is_active;
+          $title = self::asString($row->title);
+          $start = self::asString($row->start_date);
+          $isActive = self::asInt($row->is_active);
         }
         $vars['event'] = [
           'id' => $eventId,

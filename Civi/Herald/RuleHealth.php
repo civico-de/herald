@@ -47,8 +47,9 @@ class RuleHealth {
       }
       $entries = json_decode((string) file_get_contents($path), TRUE);
       foreach (is_array($entries) ? $entries : [] as $entry) {
-        if (!empty($entry['class_name'])) {
-          $classes[] = (string) $entry['class_name'];
+        $className = is_array($entry) ? ($entry['class_name'] ?? NULL) : NULL;
+        if (!empty($className) && is_scalar($className)) {
+          $classes[] = (string) $className;
         }
       }
     }
@@ -111,7 +112,15 @@ class RuleHealth {
    */
   public static function stored(): array {
     $value = \Civi::settings()->get(self::SETTING);
-    return is_array($value) ? $value : [];
+    $broken = [];
+    // Written by refresh() as class => reason; re-narrowed on read because a
+    // setting is untyped storage that an admin can also have edited by hand.
+    foreach (is_array($value) ? $value : [] as $class => $reason) {
+      if (is_string($class) && is_scalar($reason)) {
+        $broken[$class] = (string) $reason;
+      }
+    }
+    return $broken;
   }
 
 }

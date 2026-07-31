@@ -47,6 +47,10 @@ class Router {
         $topic, self::SETTING
       ));
     }
+    // Both halves come out of the herald_topics JSON object, so their keys are
+    // the parameter names AbstractSend::deliver() reads; unknown keys are
+    // ignored there rather than being an error here.
+    /** @var array<string, mixed> $params */
     $params = array_merge($default ?? [], $entry ?? []);
     $params += ['channel' => 'telegram'];
     return $params;

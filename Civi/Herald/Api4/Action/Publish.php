@@ -25,6 +25,21 @@ use Civi\Herald\Topic\Router;
  *
  * Example:
  *   cv api4 Herald.publish +v 'topic=ops' +v 'message="🔴 disk almost full"'
+ *
+ * The setters/getters below are served by AbstractAction::__call (APIv4's magic
+ * accessors for the protected parameter properties); they are declared so the
+ * fluent PHP API is part of the contract instead of an undocumented side effect.
+ *
+ * @method $this setTopic(string $topic)
+ * @method string getTopic()
+ * @method $this setMessage(string $message)
+ * @method string getMessage()
+ * @method $this setTemplate(string $template)
+ * @method string getTemplate()
+ * @method $this setVars(array<string, mixed> $vars)
+ * @method array<string, mixed> getVars()
+ * @method $this setAmount(?float $amount)
+ * @method float|null getAmount()
  */
 class Publish extends AbstractAction {
 
@@ -77,7 +92,8 @@ class Publish extends AbstractAction {
       $params = \CRM_Herald_CivirulesActions_AbstractSend::applyDefaultEmailSubject($params, $parts['subject']);
     }
 
-    $aggregateMinutes = (int) ($params['aggregate_minutes'] ?? 0);
+    $rawMinutes = $params['aggregate_minutes'] ?? 0;
+    $aggregateMinutes = is_scalar($rawMinutes) ? (int) $rawMinutes : 0;
     if ($aggregateMinutes > 0) {
       (new AlertBuffer())->add(
         md5('topic:' . $this->topic . ':' . json_encode($params)),

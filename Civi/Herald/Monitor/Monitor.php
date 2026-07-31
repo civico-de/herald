@@ -83,6 +83,10 @@ class Monitor {
    * @return array{checks: int, failing: int, transitions: int}
    */
   private function doRun(): array {
+    // Filled BY REFERENCE by the hook listeners — implementors are asked for
+    // name => callable, but nothing enforces that, hence the loose type and the
+    // guards below.
+    /** @var array<array-key, mixed> $checks */
     $checks = [];
     \Civi::dispatcher()->dispatch('hook_civicrm_heraldChecks', GenericHookEvent::create(['checks' => &$checks]));
 
@@ -119,14 +123,24 @@ class Monitor {
       }
     }
 
-    $prev = \Civi::settings()->get(self::STATE_SETTING);
-    $prev = is_array($prev) ? $prev : [];
+    // Written by this class only (see the state entry schema on
+    // computeTransitions), which is why the shape can be asserted here; every
+    // individual field is still read defensively over there.
+    $prevRaw = \Civi::settings()->get(self::STATE_SETTING);
+    /** @var array<string, array<string, mixed>> $prev */
+    $prev = is_array($prevRaw) ? $prevRaw : [];
+
+    // Admin-editable map check-name => ISO datetime. Entries that are not
+    // strings are ignored by both consumers below.
+    $snoozeRaw = \Civi::settings()->get('herald_monitor_snooze');
+    /** @var array<string, string> $snooze */
+    $snooze = is_array($snoozeRaw) ? $snoozeRaw : [];
 
     $config = [
-      'open_after' => max(1, (int) (\Civi::settings()->get('herald_monitor_open_after') ?: 1)),
-      'close_after' => max(1, (int) (\Civi::settings()->get('herald_monitor_close_after') ?: 1)),
-      'renotify_seconds' => max(0, (int) (\Civi::settings()->get('herald_monitor_renotify_hours') ?? 24)) * 3600,
-      'snooze' => is_array($s = \Civi::settings()->get('herald_monitor_snooze')) ? $s : [],
+      'open_after' => max(1, self::int(\Civi::settings()->get('herald_monitor_open_after') ?: 1)),
+      'close_after' => max(1, self::int(\Civi::settings()->get('herald_monitor_close_after') ?: 1)),
+      'renotify_seconds' => max(0, self::int(\Civi::settings()->get('herald_monitor_renotify_hours') ?? 24)) * 3600,
+      'snooze' => $snooze,
       'now' => \CRM_Utils_Time::time(),
     ];
 
@@ -156,7 +170,7 @@ class Monitor {
     }
     \Civi::settings()->set(self::STATE_SETTING, $state);
 
-    $topic = (string) (\Civi::settings()->get(self::TOPIC_SETTING) ?: 'ops');
+    $topic = self::str(\Civi::settings()->get(self::TOPIC_SETTING) ?: 'ops', 'ops');
     $transitions = 0;
     foreach ($plans as $plan) {
       $name = $plan['check'];
@@ -237,8 +251,8 @@ class Monitor {
       $p = $prev[$name] ?? [];
       $status = ($p['status'] ?? 'ok') === 'fail' ? 'fail' : 'ok';
       $detail = is_scalar($p['detail'] ?? NULL) ? (string) $p['detail'] : '';
-      $cf = max(0, (int) ($p['consecutive_fails'] ?? 0));
-      $co = max(0, (int) ($p['consecutive_oks'] ?? 0));
+      $cf = max(0, self::int($p['consecutive_fails'] ?? 0));
+      $co = max(0, self::int($p['consecutive_oks'] ?? 0));
       // Migration: legacy state entries (bare {status, detail}) carry no
       // 'notified' flag. The old monitor always announced a fail, so infer a
       // legacy reported-fail as already-notified — otherwise it would re-alert
@@ -336,6 +350,22 @@ class Monitor {
     }
 
     return $plans;
+  }
+
+  /**
+   * Coerce an untyped setting / persisted-state value to int. Non-scalars are
+   * config errors, not numbers, so they collapse to the documented default
+   * instead of PHP's cast of an array.
+   */
+  private static function int(mixed $value, int $default = 0): int {
+    return is_scalar($value) ? (int) $value : $default;
+  }
+
+  /**
+   * Coerce an untyped setting value to string. See self::int().
+   */
+  private static function str(mixed $value, string $default = ''): string {
+    return is_scalar($value) ? (string) $value : $default;
   }
 
   /**

@@ -24,7 +24,8 @@ class CRM_Herald_CivirulesConditions_EventBecameInactive extends CRM_Civirules_C
 
   public function isConditionValid(CRM_Civirules_TriggerData_TriggerData $triggerData) {
     $event = $triggerData->getEntityData('Event');
-    $eventId = is_array($event) ? (int) ($event['id'] ?? 0) : 0;
+    $rawId = is_array($event) ? ($event['id'] ?? 0) : 0;
+    $eventId = is_scalar($rawId) ? (int) $rawId : 0;
     if ($eventId <= 0) {
       return FALSE;
     }
@@ -49,7 +50,9 @@ class CRM_Herald_CivirulesConditions_EventBecameInactive extends CRM_Civirules_C
   private static function wasActive(int $eventId, CRM_Civirules_TriggerData_TriggerData $triggerData): bool {
     $previous = PreEditSnapshot::get('Event', $eventId, 'is_active');
     if ($previous !== NULL) {
-      return (int) $previous === 1;
+      // is_active is a boolean column; a non-scalar snapshot is not a "was
+      // active" answer, so it falls through to "unknown" like a missing one.
+      return is_scalar($previous) && (int) $previous === 1;
     }
     if ($triggerData instanceof CRM_Civirules_TriggerData_Interface_OriginalData
       && strtolower((string) $triggerData->getOriginalEntity()) === 'event') {

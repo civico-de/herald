@@ -68,6 +68,11 @@ class AlertBuffer {
    * @return list<array{group_hash: string, window: int, ids: list<int>, bodies: list<string>, amounts: list<float>, delivery: array<string, mixed>}>
    */
   public function claimDue(): array {
+    // executeQuery() is documented as CRM_Core_DAO|object — the `object` half of
+    // that union exists only so IDEs stop flagging the result-row properties,
+    // which the DAO sets dynamically. Spell the SELECT list out instead: the
+    // annotation narrows the union AND documents the columns each loop reads.
+    /** @var \CRM_Core_DAO&object{group_hash: string} $due */
     $due = \CRM_Core_DAO::executeQuery('
       SELECT group_hash
       FROM `' . self::TABLE . '`
@@ -76,26 +81,41 @@ class AlertBuffer {
     ');
     $groups = [];
     while ($due->fetch()) {
+      $groupHash = self::str($due->group_hash);
+      /** @var \CRM_Core_DAO&object{id: string, window_minutes: string, body: string, delivery: string, amount: ?string} $rows */
       $rows = \CRM_Core_DAO::executeQuery(
         'SELECT id, window_minutes, body, delivery, amount FROM `' . self::TABLE . '` WHERE group_hash = %1 ORDER BY id',
-        [1 => [(string) $due->group_hash, 'String']]
+        [1 => [$groupHash, 'String']]
       );
-      $group = ['group_hash' => (string) $due->group_hash, 'window' => 0, 'ids' => [], 'bodies' => [], 'amounts' => [], 'delivery' => []];
+      $ids = [];
+      $bodies = [];
+      $amounts = [];
+      $window = 0;
+      $deliveryParams = [];
       while ($rows->fetch()) {
-        $group['ids'][] = (int) $rows->id;
-        $group['bodies'][] = (string) $rows->body;
+        $ids[] = self::int($rows->id);
+        $bodies[] = self::str($rows->body);
         if ($rows->amount !== NULL) {
-          $group['amounts'][] = (float) $rows->amount;
+          $amounts[] = self::flt($rows->amount);
         }
-        $group['window'] = max($group['window'], (int) $rows->window_minutes);
-        $delivery = json_decode((string) $rows->delivery, TRUE);
+        $window = max($window, self::int($rows->window_minutes));
+        $delivery = json_decode(self::str($rows->delivery), TRUE);
         if (is_array($delivery)) {
           // Last writer wins — all entries in a group carry the same params.
-          $group['delivery'] = $delivery;
+          // add() encodes an array<string, mixed>; the keys survive the round trip.
+          /** @var array<string, mixed> $deliveryParams */
+          $deliveryParams = $delivery;
         }
       }
-      if ($group['ids']) {
-        $groups[] = $group;
+      if ($ids) {
+        $groups[] = [
+          'group_hash' => $groupHash,
+          'window' => $window,
+          'ids' => $ids,
+          'bodies' => $bodies,
+          'amounts' => $amounts,
+          'delivery' => $deliveryParams,
+        ];
       }
     }
     return $groups;
@@ -135,6 +155,29 @@ class AlertBuffer {
     }
     $header .= ' (' . self::t('collected over %1 min', [1 => $windowMinutes]) . ')';
     return $header . "\n\n" . implode("\n\n", $bodies);
+  }
+
+  /**
+   * Coerce a DAO result-row value (dynamic property, therefore untyped) to
+   * string. Every column read here is declared scalar in createTable(), so the
+   * default only ever guards against the theoretical mixed type.
+   */
+  private static function str(mixed $value): string {
+    return is_scalar($value) ? (string) $value : '';
+  }
+
+  /**
+   * Coerce a DAO result-row value to int. See self::str().
+   */
+  private static function int(mixed $value): int {
+    return is_scalar($value) ? (int) $value : 0;
+  }
+
+  /**
+   * Coerce a DAO result-row value to float. See self::str().
+   */
+  private static function flt(mixed $value): float {
+    return is_scalar($value) ? (float) $value : 0.0;
   }
 
   /**

@@ -101,7 +101,10 @@ class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_Civi
       $goal = self::asFloat($params['goal']);
       $campaignTotal = !empty($filters['campaign_id'])
         ? $stats->getCampaignTotal(self::asInt($filters['campaign_id']))
-        : ['total' => $summary['total'], 'count' => $summary['count']];
+        // Without a campaign filter the digest's own totals ARE the campaign
+        // total. Read them back from $vars, which both branches above fill —
+        // $summary only exists in the non-line_item one.
+        : ['total' => $vars['totals']['amount'], 'count' => $vars['totals']['count']];
       $vars['campaign'] = [
         'title' => $params['campaign_title'] ?? '',
         'goal' => $goal,
