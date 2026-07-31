@@ -1,0 +1,12 @@
+# LF everywhere the tooling reads bytes: ckinit --check compares managed files
+# byte-for-byte against the template, so a CRLF checkout would read as
+# permanent drift. text=auto keeps genuine binaries untouched.
+* text=auto
+*.php text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.xml text eol=lf
+*.sh text eol=lf
+*.sql text eol=lf
+*.json text eol=lf
+*.md text eol=lf

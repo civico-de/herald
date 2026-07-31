@@ -1,0 +1,56 @@
+# CI stack — standalone, NOT an override of docker-compose.yml. App + db
+# only: no ports, no SMTP sink, no sibling mounts (CI checks out this
+# extension alone; unit tests use stub mailers, integrations are covered by
+# the E2E suites, which run locally against the full dev stack).
+#
+#   docker compose -f .docker/docker-compose.ci.yml up -d --wait
+#   docker compose -f .docker/docker-compose.ci.yml exec -T -u www-data app bash -c \
+#     'cd /var/www/html/ext/herald && CIVICRM_UF=UnitTests phpunit --coverage-text tests/phpunit && phpstan analyse'
+#
+# Keep image tag and db version in sync with docker-compose.yml.
+#
+# DEVIATION from the civikitchen template (declared in .ckconform as
+# template_custom): CiviRules is a hard dependency of herald, so the stack
+# downloads it before enabling herald. Everything else is the template — keep
+# it that way.
+
+# Explicit project name: compose otherwise derives it from the parent directory,
+# which is `.docker` in every repo here — so every stack in the estate would share
+# one project called "docker".
+name: herald-ci
+
+services:
+  app:
+    image: ${CIVIKITCHEN_IMAGE:-ghcr.io/jfilter/civikitchen:standalone}
+    pull_policy: always
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      CIVICRM_AUTO_INSTALL: "1"
+      CIVICRM_DB_HOST: db
+      CIVICRM_DB_NAME: civicrm
+      CIVICRM_DB_USER: civicrm
+      CIVICRM_DB_PASSWORD: civicrm
+      CIVIKITCHEN_SITE_URL: "http://localhost:8080"
+      # CiviRules is a hard dependency of herald — pull it on first install.
+      CIVIKITCHEN_EXTRA_EXTENSIONS: "org.civicoop.civirules"
+      CIVIKITCHEN_ENABLE_EXTENSIONS: "herald"
+    volumes:
+      - ..:/var/www/html/ext/herald
+      - ./init.d:/civikitchen-init.d:ro
+
+  db:
+    image: mariadb:10.11
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: civicrm
+      MYSQL_USER: civicrm
+      MYSQL_PASSWORD: civicrm
+    volumes:
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10

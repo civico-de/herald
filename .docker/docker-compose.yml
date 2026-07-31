@@ -1,0 +1,83 @@
+# herald dev stack — CiviCRM (civikitchen standalone) + MariaDB + maildev
+# + phpMyAdmin.
+#
+# Usage:
+#   cd .docker && docker compose up -d        # first boot: auto-install + provisioning
+#
+# URLs:  CiviCRM http://localhost:8080 (admin/admin)
+#        maildev http://localhost:1080 · phpMyAdmin http://localhost:8081
+#
+# Re-provision from scratch (re-runs init.d hooks): docker compose down -v && up -d
+
+services:
+  app:
+    image: ${CIVIKITCHEN_IMAGE:-ghcr.io/jfilter/civikitchen:standalone}
+    # Override CIVIKITCHEN_IMAGE to pin a specific CiviCRM minor for this
+    # extension. Always pull so a stale local layer doesn't mask entrypoint fixes.
+    pull_policy: always
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:80"
+    environment:
+      CIVICRM_AUTO_INSTALL: "1"
+      CIVICRM_DB_HOST: db
+      CIVICRM_DB_NAME: civicrm
+      CIVICRM_DB_USER: civicrm
+      CIVICRM_DB_PASSWORD: civicrm
+      # Must match the host:port opened in the browser (asset URLs).
+      CIVIKITCHEN_SITE_URL: "http://localhost:8080"
+      CIVIKITCHEN_DEMO_USER: admin
+      # Outbound mail lands in maildev.
+      CIVIKITCHEN_SMTP_HOST: maildev
+      CIVIKITCHEN_SMTP_PORT: "1025"
+      # Enable the mounted extension reproducibly on first boot. Add sibling
+      # extensions here (comma-separated) instead of coupling them in info.xml
+      # when the integration is optional by design.
+      # CiviRules is a hard dependency of herald — without it `ext:enable herald`
+      # fails and the first boot aborts.
+      CIVIKITCHEN_EXTRA_EXTENSIONS: "org.civicoop.civirules"
+      CIVIKITCHEN_ENABLE_EXTENSIONS: "herald"
+    volumes:
+      - ..:/var/www/html/ext/herald
+      # Sibling extension example (mount + add to CIVIKITCHEN_ENABLE_EXTENSIONS):
+      # - ../../othersibling:/var/www/html/ext/othersibling
+      # First-boot provisioning hooks (seed data, API users, settings) — run
+      # after install + ext:enable, in lexical order. See init.d/README.md.
+      - ./init.d:/civikitchen-init.d:ro
+
+  db:
+    image: mariadb:10.11
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: civicrm
+      MYSQL_USER: civicrm
+      MYSQL_PASSWORD: civicrm
+    volumes:
+      - db-data:/var/lib/mysql
+      # Global grants so headless tests can (re)create the civicrm_test scratch DB.
+      - ./db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  maildev:
+    image: maildev/maildev:2.1.0
+    ports:
+      - "1080:1080"
+      - "1025:1025"
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:5.2.2
+    depends_on:
+      - db
+    ports:
+      - "8081:80"
+    environment:
+      PMA_HOST: db
+
+volumes:
+  db-data:

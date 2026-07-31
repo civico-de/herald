@@ -28,6 +28,10 @@ parameters:
 		- /var/www/html/core/ext
 	bootstrapFiles:
 		- phpstanBootstrap.php
+		# Repo-specific half (Smarty preload, the extension-class autoloader and
+		# the CiviRules DAO alias) — kept out of the template-managed file above,
+		# which ckinit --update rewrites wholesale.
+		- phpstanBootstrap.local.php
 	# ignoreErrors: only ever narrowly scoped (identifier + path + count) and
 	# carrying a comment that says WHY the report is wrong — never blanket
 	# patterns, never a baseline file.

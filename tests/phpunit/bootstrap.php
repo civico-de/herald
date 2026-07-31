@@ -1,54 +1,18 @@
 <?php
 
-/**
- * PHPUnit bootstrap for herald.
- *
- * Boots only the CiviCRM CLASSLOADER — not a full Civi boot. Under
- * CIVICRM_UF=UnitTests the Civi\Test framework then bootstraps headless
- * against TEST_DB_DSN (the isolated civicrm_test scratch DB that civikitchen
- * configures in ~/.cv.json). A `php:boot --level=full` here would bootstrap
- * against the LIVE database first, and the headless run would write its test
- * fixtures and settings into the dev site.
- */
-
 ini_set('memory_limit', '2G');
-error_reporting(E_ALL);
 
-if (PHP_SAPI !== 'cli') {
-  echo "phpunit must be run from the CLI.\n";
-  exit(1);
-}
-
-if (!function_exists('cv')) {
-
-  /**
-   * Call the "cv" command. Mirrors the helper bundled by civicrm-buildkit /
-   * civikitchen — kept inline so the extension is portable.
-   */
-  function cv(string $cmd, string $decode = 'json') {
-    $cmd = "cv $cmd";
-    $descriptorSpec = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => STDERR];
-    $oldOutput = getenv('CV_OUTPUT');
-    putenv('CV_OUTPUT=json-strict');
-    $process = proc_open($cmd, $descriptorSpec, $pipes, __DIR__);
-    putenv('CV_OUTPUT' . ($oldOutput === FALSE ? '' : '=' . $oldOutput));
-    fclose($pipes[0]);
-    $result = stream_get_contents($pipes[1]);
-    fclose($pipes[1]);
-    if (proc_close($process) !== 0) {
-      throw new RuntimeException('cv command failed: ' . $cmd);
-    }
-    if ($decode === 'raw' || $decode === 'phpcode') {
-      return $result;
-    }
-    return json_decode($result, TRUE);
-  }
-
-}
+// phpcs:disable
+eval(cv('php:boot --level=classloader', 'phpcode'));
+// phpcs:enable
 
 // CRITICAL GUARD: the headless suite must run against a SEPARATE scratch
-// database. Without this, a missing TEST_DB_DSN lets civicrm.settings.php fall
-// back to the MAIN dev DB and Civi\Test wipes all dev data.
+// database. The DSN comes from cv's config (TEST_DB_DSN in ~/.cv.json —
+// provisioned by the civikitchen entrypoint for BOTH /root and /var/www):
+// the phpunit listener re-boots via `cv php:boot --level=full`, whose
+// $GLOBALS['_CV'] replaces anything set here. If the config is missing,
+// civicrm.settings.php silently falls back to the MAIN dev DB and
+// Civi\Test wipes all dev data — so fail loudly instead.
 // Parsed, not grepped: the old form looked for the substrings '"TEST_DB_DSN"'
 // and 'civicrm_test' anywhere in the raw file. Two unrelated matches satisfied
 // it — 'civicrm_test' out of a directory *path*, or a TEST_DB_DSN belonging to
@@ -84,41 +48,76 @@ if ($ckTestDsns === [] || $ckBadDsn !== NULL) {
   exit(1);
 }
 
-// On Standalone, SettingsManager::bootSettings() composes CIVICRM_DSN from
-// the CIVICRM_DB_* environment variables BEFORE the settings file can apply
-// TEST_DB_DSN — env wins and the suite would silently run against the LIVE
-// database. Strip them so the UnitTests branch in civicrm.settings.php picks
-// the isolated test DSN.
-foreach (['CIVICRM_DB_HOST', 'CIVICRM_DB_PORT', 'CIVICRM_DB_NAME', 'CIVICRM_DB_USER', 'CIVICRM_DB_PASSWORD'] as $var) {
-  putenv($var);
-  unset($_ENV[$var], $_SERVER[$var]);
+// Standalone quirk: SettingsManager::bootSettings() composes CIVICRM_DSN
+// from the CIVICRM_DB_* env vars BEFORE settings.php gets a chance to apply
+// TEST_DB_DSN — the env-composed (main!) DSN would win. Repoint the DB name
+// at the scratch DB for this whole test process (inherited by the
+// listener's `cv php:boot --level=full` subprocess too).
+putenv('CIVICRM_DB_NAME=civicrm_test');
+$_ENV['CIVICRM_DB_NAME'] = 'civicrm_test';
+
+// Allow autoloading of PHPUnit helper classes in this extension.
+$loader = new \Composer\Autoload\ClassLoader();
+$loader->add('CRM_', [__DIR__ . '/../..', __DIR__]);
+$loader->addPsr4('Civi\\', [__DIR__ . '/../../Civi', __DIR__ . '/Civi']);
+$loader->add('api_', [__DIR__ . '/../..', __DIR__]);
+$loader->addPsr4('api\\', [__DIR__ . '/../../api', __DIR__ . '/api']);
+
+$loader->register();
+
+/**
+ * Call the "cv" command.
+ *
+ * @param string $cmd
+ *   The rest of the command to send.
+ * @param string $decode
+ *   Ex: 'json' or 'phpcode'.
+ * @return mixed
+ *   Response output (if the command executed normally).
+ *   For 'raw' or 'phpcode', this will be a string. For 'json', it could be any JSON value.
+ * @throws \RuntimeException
+ *   If the command terminates abnormally.
+ */
+function cv(string $cmd, string $decode = 'json') {
+  $cmd = 'cv ' . $cmd;
+  $descriptorSpec = [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => STDERR];
+  $oldOutput = getenv('CV_OUTPUT');
+  putenv('CV_OUTPUT=json');
+
+  // Execute `cv` in the original folder. This is a work-around for
+  // phpunit/codeception, which seem to manipulate PWD.
+  $cmd = sprintf('cd %s; %s', escapeshellarg(getenv('PWD')), $cmd);
+
+  $process = proc_open($cmd, $descriptorSpec, $pipes, __DIR__);
+  putenv("CV_OUTPUT=$oldOutput");
+  fclose($pipes[0]);
+  $result = stream_get_contents($pipes[1]);
+  fclose($pipes[1]);
+  if (proc_close($process) !== 0) {
+    throw new RuntimeException("Command failed ($cmd):\n$result");
+  }
+  switch ($decode) {
+    case 'raw':
+      return $result;
+
+    case 'phpcode':
+      // If the last output is /*PHPCODE*/, then we managed to complete execution.
+      if (substr(trim($result), 0, 12) !== '/*BEGINPHP*/' || substr(trim($result), -10) !== '/*ENDPHP*/') {
+        throw new \RuntimeException("Command failed ($cmd):\n$result");
+      }
+      return $result;
+
+    case 'json':
+      return json_decode($result, 1);
+
+    default:
+      throw new RuntimeException("Bad decoder format ($decode)");
+  }
 }
 
-// --test boots with CIVICRM_UF=UnitTests and CIVICRM_DSN=TEST_DB_DSN (the
-// isolated civicrm_test scratch DB from ~/.cv.json). Level "settings" defines
-// the constants WITHOUT a full Civi boot — Civi\Test\CiviTestListener then
-// installs/boots headless on demand.
-// phpcs:ignore Drupal.Functions.DiscouragedFunctions.Discouraged -- cv emits PHP code by design; this is the standard civix/buildkit boot pattern.
-eval(cv('php:boot --level=settings --test', 'phpcode'));
-
-// The settings boot registers core classes only. The extension's own
-// CRM_/Civi\Herald\ classes come from composer's autoload (psr-0/psr-4 in
-// composer.json); the dev-deps (Guzzle MockHandler etc.) ride along.
-require_once __DIR__ . '/../../vendor/autoload.php';
-
-// CiviRules' base classes (parents of our actions/conditions) must be
-// loadable BEFORE the first headless test boots Civi — the pure (@group unit)
-// CRM_ tests run first and no extension classloader is active yet. In the
-// tests/docker stack CiviRules sits next to herald in the ext dir; elsewhere
-// point CIVIRULES_PATH at a checkout.
-$civirulesDir = getenv('CIVIRULES_PATH') ?: dirname(__DIR__, 3) . '/org.civicoop.civirules';
-if (is_dir($civirulesDir)) {
-  $civirulesLoader = new \Composer\Autoload\ClassLoader();
-  $civirulesLoader->add('CRM_Civirules', [$civirulesDir]);
-  $civirulesLoader->add('CRM_CivirulesActions', [$civirulesDir]);
-  $civirulesLoader->add('CRM_CivirulesConditions', [$civirulesDir]);
-  // Civi\Api4\CiviRules* etc. — needed while the headless installer enables
-  // CiviRules, before the extension classloader is registered.
-  $civirulesLoader->addPsr4('Civi\\', [$civirulesDir . '/Civi']);
-  $civirulesLoader->register();
+// Repo-specific test setup (extra constants, fixture loaders) goes in
+// bootstrap.local.php — THIS file is template-managed and rewritten wholesale
+// by ckinit --update.
+if (file_exists(__DIR__ . '/bootstrap.local.php')) {
+  require __DIR__ . '/bootstrap.local.php';
 }
