@@ -33,7 +33,9 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
       'histogram' => '5–10 ████ 3 (15)',
     ]);
 
-    $this->assertStringContainsString('Tagesreport 2026-05-06', $body);
+    // Source string, not the de_DE rendering — the test env has no German
+    // locale; translation correctness lives in l10n/de_DE, not here.
+    $this->assertStringContainsString('Daily report 2026-05-06', $body);
     $this->assertStringContainsString('Stripe', $body);
     $this->assertStringContainsString('<pre>5–10 ████ 3 (15)</pre>', $body);
     // No campaign block when goal=0
