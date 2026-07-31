@@ -13,4 +13,7 @@
   <exclude-pattern>*/dist/*</exclude-pattern>
   <exclude-pattern>*.civix.php</exclude-pattern>
   <exclude-pattern>*/CRM/*/DAO/*</exclude-pattern>
+
+  <!-- Prose documentation — the 80-column code rule does not apply. -->
+  <exclude-pattern>*.md</exclude-pattern>
 </ruleset>

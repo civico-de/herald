@@ -21,7 +21,7 @@ name: herald-ci
 
 services:
   app:
-    image: ${CIVIKITCHEN_IMAGE:-ghcr.io/jfilter/civikitchen:standalone}
+    image: ${CIVIKITCHEN_IMAGE:-ghcr.io/jfilter/civikitchen:v1}
     pull_policy: always
     depends_on:
       db:
