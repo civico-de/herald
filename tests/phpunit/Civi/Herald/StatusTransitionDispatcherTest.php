@@ -35,10 +35,15 @@ class StatusTransitionDispatcherTest extends TestCase {
     $this->assertSame(7, StatusTransitionDispatcher::getPreEditStatus(5005));
   }
 
-  public function testLastValueWins(): void {
+  /**
+   * Payment.create/completeOrder edit the contribution several times before
+   * CiviRules evaluates post-commit; only the FIRST pre-edit status is the
+   * real previous status (93b7582 — last-wins hid Pending→Completed).
+   */
+  public function testFirstValueWins(): void {
     StatusTransitionDispatcher::rememberPreEditStatus(6006, 2);
     StatusTransitionDispatcher::rememberPreEditStatus(6006, 1);
-    $this->assertSame(1, StatusTransitionDispatcher::getPreEditStatus(6006));
+    $this->assertSame(2, StatusTransitionDispatcher::getPreEditStatus(6006));
   }
 
   public function testHandlePostHookIsHarmlessNoop(): void {

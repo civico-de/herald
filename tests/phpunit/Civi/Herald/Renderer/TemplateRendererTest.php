@@ -60,7 +60,7 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
       'contribution' => ['total_amount' => 42.5, 'source' => 'Stripe'],
       'campaign' => ['title' => '', 'goal' => 0, 'percent' => 0],
     ]);
-    $this->assertStringContainsString('Spende eingegangen', $body);
+    $this->assertStringContainsString('Donation received', $body);
     $this->assertStringContainsString('Stripe', $body);
   }
 
@@ -82,7 +82,7 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
     ]);
     $this->assertStringContainsString('Stripe', $parts['subject']);
     $this->assertStringNotContainsString('{$', $parts['subject']);
-    $this->assertStringContainsString('Spende eingegangen', $parts['body']);
+    $this->assertStringContainsString('Donation received', $parts['body']);
   }
 
   public function testThrowsOnMissingTemplate(): void {
