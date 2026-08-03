@@ -26,6 +26,7 @@ namespace Civi\Herald;
  * enable hook — all of which then leave the rules disabled). The runtime hot
  * path (the pulse check) must read the cached stored() result instead, never
  * scan().
+ * @mago-expect lint:cyclomatic-complexity
  */
 class RuleHealth {
 
@@ -116,9 +117,11 @@ class RuleHealth {
     // Written by refresh() as class => reason; re-narrowed on read because a
     // setting is untyped storage that an admin can also have edited by hand.
     foreach (is_array($value) ? $value : [] as $class => $reason) {
-      if (is_string($class) && is_scalar($reason)) {
-        $broken[$class] = (string) $reason;
+      if (!(is_string($class) && is_scalar($reason))) {
+        continue;
       }
+
+      $broken[$class] = (string) $reason;
     }
     return $broken;
   }

@@ -24,6 +24,7 @@ use PHPUnit\Framework\TestCase;
  * assertions name checks explicitly instead of counting them.
  *
  * @group headless
+ * @mago-expect lint:too-many-methods
  */
 class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 
@@ -99,7 +100,7 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
       'herald.test.skipped' => static fn (): array => ['status' => 'skipped', 'detail' => 'off'],
     ]);
 
-    $result = new Monitor()->run();
+    $result = (new Monitor())->run();
 
     $this->assertSame(0, $result['failing']);
     $this->assertSame(0, $result['transitions']);
@@ -122,7 +123,7 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
     };
     \Civi::dispatcher()->addListener('hook_civicrm_heraldChecks', $this->listener);
 
-    $result = new Monitor()->run();
+    $result = (new Monitor())->run();
 
     $this->assertSame(0, $result['failing']);
     $this->assertArrayHasKey('herald.test.good', $this->state());
@@ -136,7 +137,7 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
       },
     ]);
 
-    $result = new Monitor()->run();
+    $result = (new Monitor())->run();
 
     $this->assertSame(1, $result['failing']);
     $this->assertSame(1, $result['transitions']);
@@ -156,7 +157,7 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
       'herald.test.disk' => static fn (): array => ['status' => 'fail', 'detail' => 'disk full'],
     ]);
 
-    $result = new Monitor()->run();
+    $result = (new Monitor())->run();
 
     // Routed, published, buffered — none of which happens for an unknown topic.
     $this->assertSame(1, $result['transitions']);
@@ -174,7 +175,7 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
   public function testExpectedButAbsentCheckIsReportedAsFailure(): void {
     \Civi::settings()->set('herald_monitor_expected', ['someext.queue']);
 
-    $result = new Monitor()->run();
+    $result = (new Monitor())->run();
 
     $this->assertSame(1, $result['failing']);
     $this->assertSame(1, $result['transitions']);
@@ -191,8 +192,8 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
       'herald.test.stuck' => static fn (): array => ['status' => 'fail', 'detail' => 'still down'],
     ]);
 
-    $this->assertSame(1, new Monitor()->run()['transitions']);
-    $this->assertSame(0, new Monitor()->run()['transitions']);
+    $this->assertSame(1, (new Monitor())->run()['transitions']);
+    $this->assertSame(0, (new Monitor())->run()['transitions']);
     $this->assertCount(1, $this->bufferedBodies());
   }
 
@@ -210,7 +211,7 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
       'herald.test.snoozed' => static fn (): array => ['status' => 'ok'],
     ]);
 
-    new Monitor()->run();
+    (new Monitor())->run();
 
     $this->assertSame(
       ['herald.test.later' => '2099-01-01T00:00:00Z'],
@@ -227,7 +228,7 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
       'herald.test.noisy' => static fn (): array => ['status' => 'fail', 'detail' => 'flapping'],
     ]);
 
-    $result = new Monitor()->run();
+    $result = (new Monitor())->run();
 
     $this->assertSame(1, $result['failing']);
     $this->assertSame(0, $result['transitions']);
@@ -245,7 +246,7 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
       'gone.check' => ['status' => 'fail', 'detail' => 'from a previous life', 'notified' => TRUE],
     ]);
 
-    $result = new Monitor()->run();
+    $result = (new Monitor())->run();
 
     $this->assertArrayNotHasKey('gone.check', $this->state());
     $this->assertSame(0, $result['transitions']);

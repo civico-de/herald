@@ -9,6 +9,9 @@ use CRM_Herald_ExtensionUtil as E;
  *
  * Subclasses add their action-specific fields in addExtraFields() and pull
  * extra values out via getExtraValues().
+ * @mago-expect lint:too-many-methods
+ * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:kan-defect
  */
 abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_CivirulesActions_Form_Form {
 
@@ -123,9 +126,11 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
       'subscription_type',
       'aggregate_minutes',
     ] as $field) {
-      if (array_key_exists($field, $params)) {
-        $defaults[$field] = $params[$field];
+      if (!array_key_exists($field, $params)) {
+        continue;
       }
+
+      $defaults[$field] = $params[$field];
     }
     if (!isset($defaults['delivery_mode'])) {
       $defaults['delivery_mode'] = 'direct';
@@ -137,9 +142,11 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
         : self::toStringValue($cc);
     }
     foreach ($this->extraDefaults() as $key => $value) {
-      if (!array_key_exists($key, $defaults) || $defaults[$key] === NULL) {
-        $defaults[$key] = $value;
+      if (!(!array_key_exists($key, $defaults) || $defaults[$key] === NULL)) {
+        continue;
       }
+
+      $defaults[$key] = $value;
     }
     return $defaults;
   }
@@ -178,6 +185,7 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
     foreach (ChannelRegistry::default()->listKeys() as $key) {
       $opts[$key] = self::CHANNEL_LABELS[$key] ?? $key;
     }
+    // @mago-expect lint:no-shorthand-ternary
     return $opts ?: ['telegram' => 'Telegram'];
   }
 

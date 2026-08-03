@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @group headless
+ * @mago-expect lint:too-many-methods
  */
 class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 
@@ -86,6 +87,8 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
     $channel->send('x', [
       'webhook_url' => 'https://example.com/x',
+      // @mago-expect lint:no-literal-password
+      // Test fixture, not a real credential.
       'webhook_auth_token' => 'abc123',
     ]);
     $this->assertSame('Bearer abc123', $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
@@ -119,6 +122,8 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
     $channel->send('x', [
       'webhook_url' => 'https://example.com/x',
+      // @mago-expect lint:no-literal-password
+      // Test fixture, not a real credential.
       'webhook_auth_token' => 'shorthand',
       'webhook_headers' => ['Authorization' => 'Basic abc=='],
     ]);

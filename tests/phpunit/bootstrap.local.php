@@ -20,6 +20,7 @@ if (file_exists($heraldVendor)) {
 // CRM_ tests run first and no extension classloader is active yet. In the CI
 // stack CiviRules sits next to herald in the ext dir; elsewhere point
 // CIVIRULES_PATH at a checkout.
+// @mago-expect lint:no-shorthand-ternary
 $civirulesDir = getenv('CIVIRULES_PATH') ?: dirname(__DIR__, 3) . '/org.civicoop.civirules';
 if (is_dir($civirulesDir)) {
   $civirulesLoader = new \Composer\Autoload\ClassLoader();

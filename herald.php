@@ -159,7 +159,7 @@ function herald_civicrm_heraldChecks(array &$checks): void {
       $stuck > 0
         ? [
           'status' => 'fail',
-          'detail' => "$stuck buffered alert(s) older than 3x their window — flush job not delivering",
+          'detail' => "{$stuck} buffered alert(s) older than 3x their window — flush job not delivering",
         ]
         : ['status' => 'ok']
     );

@@ -38,11 +38,10 @@ class CRM_Herald_Form_CivirulesAction_SendNotification extends CRM_Herald_Form_C
   protected function extraDefaults(): array {
     $params = $this->getActionParameters();
     $vars = $params['vars'] ?? [];
-    return [
-      'vars' => is_array($vars)
-        ? json_encode($vars, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-        : self::toStringValue($vars),
-    ];
+    $encoded = is_array($vars)
+      ? json_encode($vars, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+      : self::toStringValue($vars);
+    return ['vars' => $encoded];
   }
 
   /**

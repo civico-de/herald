@@ -38,6 +38,7 @@ class CRM_Herald_CivirulesConditions_PreviousContributionStatus extends CRM_Civi
     // allowed_classes=FALSE: condition_params ist ein Array aus Skalaren, wir
     // lesen daraus genau eine Status-ID. Objekte sind hier nie erwartet, also
     // gibt es keinen Grund, beim Dekodieren fremder DB-Inhalte welche zu bauen.
+    // @mago-expect lint:no-shorthand-ternary
     $decoded = is_string($raw) ? (unserialize($raw, ['allowed_classes' => FALSE]) ?: []) : (array) $raw;
     $params = is_array($decoded) ? $decoded : [];
     return isset($params['previous_status_id']) ? self::toInt($params['previous_status_id']) : NULL;

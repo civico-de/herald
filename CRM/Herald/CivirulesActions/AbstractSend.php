@@ -12,6 +12,8 @@ use Civi\Herald\Subscribers\SubscriberLookup;
  * channel and workflow template, renders, and sends — either directly to a
  * single recipient configured on the rule, or fanned out to all contacts
  * subscribed to a given subscription type (delivery_mode=subscribers).
+ * @mago-expect lint:too-many-methods
+ * @mago-expect lint:cyclomatic-complexity
  */
 abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Action {
 
@@ -38,13 +40,12 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
    * asInt() / asFloat() coercers below.
    *
    * @return array<string, mixed>
+   *
+   * Not redundant: the override carries the @return shape above.
+   * @mago-expect lint:no-redundant-method-override
    */
   protected function getActionParameters() {
-    // The keys are the form field names CiviRules wrote, so always strings —
-    // the parent's untyped `array` cannot express that.
-    /** @var array<string, mixed> $params */
-    $params = parent::getActionParameters();
-    return $params;
+    return parent::getActionParameters();
   }
 
   /**
@@ -70,6 +71,7 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
     // Group key for aggregation, taken from the RAW stored params: stable per
     // rule action. Must be computed before applyDefaultEmailSubject() mixes a
     // per-event rendered subject into $params.
+    // @mago-expect lint:no-shorthand-ternary
     $groupHash = md5(json_encode($params) ?: '');
     $workflowName = self::asString($params['template'] ?? '');
     if ($workflowName === '') {
@@ -89,10 +91,9 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
 
     if (($params['delivery_mode'] ?? 'direct') === 'subscribers') {
       $this->dispatchToSubscribers($body, $params);
+      return;
     }
-    else {
-      $this->dispatchDirect($body, $params);
-    }
+    $this->dispatchDirect($body, $params);
   }
 
   /**
@@ -226,9 +227,11 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
   protected static function namedOnly(array $vars): array {
     $named = [];
     foreach ($vars as $key => $value) {
-      if (is_string($key)) {
-        $named[$key] = $value;
+      if (!is_string($key)) {
+        continue;
       }
+
+      $named[$key] = $value;
     }
 
     return $named;

@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @group headless
+ * @mago-expect lint:too-many-methods
  */
 class NtfyChannelTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 

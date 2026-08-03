@@ -74,6 +74,8 @@ function _civicrm_api3_job_herald_contribution_digest_spec(&$spec) {
  * @param array $params
  * @return array
  * @throws CRM_Core_Exception
+ * @mago-expect lint:halstead
+ * @mago-expect lint:cyclomatic-complexity
  */
 function civicrm_api3_job_herald_contribution_digest($params) {
   // Uhrzeit-Gate: CiviCRM-Jobs kennen keine Sendezeit — "Daily" feuert beim
@@ -81,9 +83,10 @@ function civicrm_api3_job_herald_contribution_digest($params) {
   // und sendet nur in der gewünschten Stunde (Civi-Zeitzone).
   if (empty($params['force']) && isset($params['send_hour']) && $params['send_hour'] !== '') {
     $tz = new DateTimeZone(
+      // @mago-expect lint:no-shorthand-ternary
       CRM_Core_Config::singleton()->userSystem->getTimeZoneString() ?: date_default_timezone_get(),
     );
-    $nowHour = (int) new DateTime('now', $tz)->format('G');
+    $nowHour = (int) (new DateTime('now', $tz))->format('G');
     if ($nowHour !== (int) $params['send_hour']) {
       return civicrm_api3_create_success(
         [

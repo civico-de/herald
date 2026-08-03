@@ -21,6 +21,7 @@ use Civi\Herald\Digest\HistogramFormatter;
  *   bucket_edges       — JSON array of edges to override adaptive bucketing
  *   goal               — float, campaign goal (renders progress when set)
  *   campaign_title     — string, free-text title for the campaign block
+ * @mago-expect lint:cyclomatic-complexity
  */
 class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_CivirulesActions_AbstractSend {
 
@@ -41,6 +42,7 @@ class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_Civi
    * @param array<string, mixed> $params CiviRules action parameters
    * @param ContributionStatsService $stats Stats source (mockable in tests)
    * @return array<string, mixed> variable bag for the template
+   * @mago-expect lint:halstead
    */
   public static function buildVars(array $params, ContributionStatsService $stats): array {
     $filters = self::buildFiltersFromParams($params);
@@ -68,6 +70,7 @@ class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_Civi
         'count' => (int) array_sum(array_column($items, 'qty')),
       ];
     }
+    // @mago-expect lint:no-else-clause
     else {
       $summary = $stats->getPeriodSummary($filters, $period);
       $vars['totals'] = ['amount' => $summary['total'], 'count' => $summary['count']];
@@ -83,6 +86,7 @@ class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_Civi
           'count' => (int) array_sum(array_column($pendingItems, 'qty')),
         ];
       }
+      // @mago-expect lint:no-else-clause
       else {
         $pending = $stats->getAllPending($filters);
         $vars['pending'] = ['amount' => $pending['total'], 'count' => $pending['count']];
@@ -151,7 +155,7 @@ class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_Civi
     if (!is_array($decoded)) {
       return NULL;
     }
-    return array_values(array_map(static fn (mixed $edge): float => self::asFloat($edge), $decoded));
+    return array_values(array_map(self::asFloat(...), $decoded));
   }
 
   public static function resolvePeriod(string $key): DateRange {

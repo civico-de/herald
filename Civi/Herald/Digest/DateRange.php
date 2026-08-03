@@ -24,7 +24,7 @@ class DateRange {
   }
 
   public static function today(): self {
-    $start = new \DateTimeImmutable('now')->setTime(0, 0, 0);
+    $start = (new \DateTimeImmutable('now'))->setTime(0, 0, 0);
     $end = $start->modify('+1 day');
     return new self($start, $end, $start->format('Y-m-d'));
   }

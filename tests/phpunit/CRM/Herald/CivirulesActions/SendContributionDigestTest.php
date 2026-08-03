@@ -10,6 +10,7 @@ use PHPUnit\Framework\TestCase;
  * separately by an integration test against civikitchen.
  *
  * @group unit
+ * @mago-expect lint:too-many-methods
  */
 class CRM_Herald_CivirulesActions_SendContributionDigestTest extends TestCase {
 
@@ -33,7 +34,7 @@ class CRM_Herald_CivirulesActions_SendContributionDigestTest extends TestCase {
       }
 
       public function getCampaignTotal(int $campaignId): array {
-        return ['total' => 25000.0, 'count' => 50];
+        return ['total' => 25_000.0, 'count' => 50];
       }
 
     };
@@ -47,7 +48,7 @@ class CRM_Herald_CivirulesActions_SendContributionDigestTest extends TestCase {
       'campaign_id' => 2,
       'show_pending' => TRUE,
       'show_histogram' => TRUE,
-      'goal' => 30000,
+      'goal' => 30_000,
       'campaign_title' => 'Campaign 2026',
     ];
   }
@@ -73,8 +74,8 @@ class CRM_Herald_CivirulesActions_SendContributionDigestTest extends TestCase {
 
   public function testCampaignProgressIsComputed(): void {
     $vars = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars($this->baseParams(), $this->makeFakeStats());
-    $this->assertSame(30000.0, $vars['campaign']['goal']);
-    $this->assertSame(25000.0, $vars['campaign']['total']);
+    $this->assertSame(30_000.0, $vars['campaign']['goal']);
+    $this->assertSame(25_000.0, $vars['campaign']['total']);
     $this->assertEqualsWithDelta(83.3, $vars['campaign']['percent'], 0.1);
     $this->assertSame('Campaign 2026', $vars['campaign']['title']);
   }
@@ -111,7 +112,7 @@ class CRM_Herald_CivirulesActions_SendContributionDigestTest extends TestCase {
   }
 
   public function testPeriodResolution(): void {
-    $today = new DateTime('today')->format('Y-m-d');
+    $today = (new DateTime('today'))->format('Y-m-d');
     $vars = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars(
       array_merge($this->baseParams(), ['period' => 'today']),
       $this->makeFakeStats(),
@@ -135,7 +136,7 @@ class CRM_Herald_CivirulesActions_SendContributionDigestTest extends TestCase {
       $this->makeFakeStats(),
     );
     // unknown period falls back to yesterday
-    $yesterday = new DateTime('yesterday')->format('Y-m-d');
+    $yesterday = (new DateTime('yesterday'))->format('Y-m-d');
     $this->assertSame($yesterday, $varsUnknown['period']['label']);
   }
 

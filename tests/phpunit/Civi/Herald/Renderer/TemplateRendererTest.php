@@ -48,7 +48,7 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
       'totals' => ['amount' => 100, 'count' => 1],
       'by_source' => [],
       'pending' => ['amount' => 0, 'count' => 0],
-      'campaign' => ['title' => 'Campaign 2026', 'goal' => 30000, 'total' => 25000, 'count' => 50, 'percent' => 83.3],
+      'campaign' => ['title' => 'Campaign 2026', 'goal' => 30_000, 'total' => 25_000, 'count' => 50, 'percent' => 83.3],
       'histogram' => '',
     ]);
 

@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Pure-logic tests for SubscriberLookup::mapRows / buildConfigForChannel.
  * @group unit
+ * @mago-expect lint:too-many-methods
  */
 class SubscriberLookupTest extends TestCase {
 
@@ -26,11 +27,12 @@ class SubscriberLookupTest extends TestCase {
   }
 
   public function testTelegramSubscriberMapped(): void {
-    $rows = [$this->row([
+    $row = $this->row([
       'id' => 42,
       'herald_preferences.preferred_channel' => 'telegram',
       'herald_preferences.telegram_chat_id' => '111',
-    ])];
+    ]);
+    $rows = [$row];
     $this->assertSame(
       [
         ['contact_id' => 42, 'channel' => 'telegram', 'config' => ['chat_id' => '111']],
@@ -40,41 +42,45 @@ class SubscriberLookupTest extends TestCase {
   }
 
   public function testNtfySubscriberMapped(): void {
-    $rows = [$this->row([
+    $row = $this->row([
       'id' => 7,
       'herald_preferences.preferred_channel' => 'ntfy',
       'herald_preferences.ntfy_topic' => 'mytopic',
-    ])];
+    ]);
+    $rows = [$row];
     $mapped = SubscriberLookup::mapRows($rows);
     $this->assertSame('ntfy', $mapped[0]['channel']);
     $this->assertSame(['ntfy_topic' => 'mytopic'], $mapped[0]['config']);
   }
 
   public function testPushoverSubscriberMapped(): void {
-    $rows = [$this->row([
+    $row = $this->row([
       'id' => 9,
       'herald_preferences.preferred_channel' => 'pushover',
       'herald_preferences.pushover_user_key' => 'uvw',
-    ])];
+    ]);
+    $rows = [$row];
     $mapped = SubscriberLookup::mapRows($rows);
     $this->assertSame(['pushover_user_key' => 'uvw'], $mapped[0]['config']);
   }
 
   public function testWebhookSubscriberMapped(): void {
-    $rows = [$this->row([
+    $row = $this->row([
       'id' => 11,
       'herald_preferences.preferred_channel' => 'webhook',
       'herald_preferences.webhook_url' => 'https://example.com/x',
-    ])];
+    ]);
+    $rows = [$row];
     $this->assertSame(['webhook_url' => 'https://example.com/x'], SubscriberLookup::mapRows($rows)[0]['config']);
   }
 
   public function testEmailSubscriberMappedToPrimaryAddress(): void {
-    $rows = [$this->row([
+    $row = $this->row([
       'id' => 13,
       'herald_preferences.preferred_channel' => 'email',
       'email_primary.email' => 'ada@example.org',
-    ])];
+    ]);
+    $rows = [$row];
     $this->assertSame(
       [
         ['contact_id' => 13, 'channel' => 'email', 'config' => ['email_to' => 'ada@example.org']],
@@ -84,20 +90,22 @@ class SubscriberLookupTest extends TestCase {
   }
 
   public function testEmailSubscriberWithDoNotEmailSkipped(): void {
-    $rows = [$this->row([
+    $row = $this->row([
       'id' => 13,
       'herald_preferences.preferred_channel' => 'email',
       'email_primary.email' => 'ada@example.org',
       'do_not_email' => TRUE,
-    ])];
+    ]);
+    $rows = [$row];
     $this->assertSame([], SubscriberLookup::mapRows($rows));
   }
 
   public function testEmailSubscriberWithoutAddressSkipped(): void {
-    $rows = [$this->row([
+    $row = $this->row([
       'id' => 13,
       'herald_preferences.preferred_channel' => 'email',
-    ])];
+    ]);
+    $rows = [$row];
     $this->assertSame([], SubscriberLookup::mapRows($rows));
   }
 
@@ -117,19 +125,21 @@ class SubscriberLookupTest extends TestCase {
   }
 
   public function testContactWithChannelButNoRecipientSkipped(): void {
-    $rows = [$this->row([
+    $row = $this->row([
       'id' => 1,
       'herald_preferences.preferred_channel' => 'telegram',
       // no telegram_chat_id
-    ])];
+    ]);
+    $rows = [$row];
     $this->assertSame([], SubscriberLookup::mapRows($rows));
   }
 
   public function testUnknownChannelSkipped(): void {
-    $rows = [$this->row([
+    $row = $this->row([
       'id' => 1,
       'herald_preferences.preferred_channel' => 'matrix',
-    ])];
+    ]);
+    $rows = [$row];
     $this->assertSame([], SubscriberLookup::mapRows($rows));
   }
 

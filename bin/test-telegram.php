@@ -10,7 +10,9 @@
 
 use Civi\Herald\Channel\TelegramChannel;
 
+// @mago-expect lint:no-shorthand-ternary
 $body = getenv('HERALD_TEST_MESSAGE') ?: '<b>herald smoke test</b> — sent ' . date('c');
+// @mago-expect lint:no-shorthand-ternary
 $chatId = getenv('HERALD_TEST_CHAT_ID') ?: NULL;
 
 $channel = new TelegramChannel();

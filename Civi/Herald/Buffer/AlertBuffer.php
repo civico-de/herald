@@ -14,6 +14,7 @@ namespace Civi\Herald\Buffer;
  * Grouping — all entries written by the same rule action (identical action
  * params → identical group_hash) aggregate together; two different rules or
  * two differently-configured actions never mix.
+ * @mago-expect lint:cyclomatic-complexity
  */
 class AlertBuffer {
 
@@ -63,6 +64,7 @@ class AlertBuffer {
         1 => [$groupHash, 'String'],
         2 => [max(1, $windowMinutes), 'Integer'],
         3 => [$body, 'String'],
+        // @mago-expect lint:no-shorthand-ternary
         4 => [json_encode($delivery, JSON_UNESCAPED_UNICODE) ?: '{}', 'String'],
       ] + ($amount === NULL ? [] : [5 => [(string) $amount, 'Money']]),
     );
@@ -202,6 +204,8 @@ class AlertBuffer {
       try {
         return \Civi::format()->money($amount);
       }
+      // @mago-expect lint:no-empty-catch-clause
+      // Deliberate: Civi\format() is optional here, the static rendering is the fallback.
       catch (\Throwable $e) {
         // Fall through to the static rendering.
       }

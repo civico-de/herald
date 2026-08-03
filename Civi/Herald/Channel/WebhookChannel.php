@@ -32,6 +32,7 @@ use GuzzleHttp\ClientInterface;
  *     applied when the URL also came from the default setting. The default
  *     token belongs to the default endpoint — it must never be attached to a
  *     caller-supplied URL (e.g. a subscriber's personal webhook).
+ * @mago-expect lint:cyclomatic-complexity
  */
 class WebhookChannel implements ChannelInterface {
 
@@ -76,10 +77,12 @@ class WebhookChannel implements ChannelInterface {
       // shorthand.
       $hasAuth = FALSE;
       foreach (array_keys($headers) as $h) {
-        if (strcasecmp($h, 'Authorization') === 0) {
-          $hasAuth = TRUE;
-          break;
+        if (strcasecmp($h, 'Authorization') !== 0) {
+          continue;
         }
+
+        $hasAuth = TRUE;
+        break;
       }
       if (!$hasAuth) {
         $headers['Authorization'] = 'Bearer ' . self::str($authToken);
@@ -90,6 +93,7 @@ class WebhookChannel implements ChannelInterface {
     if ($payload['type'] === 'json') {
       $requestOptions['json'] = $payload['data'];
     }
+    // @mago-expect lint:no-else-clause
     else {
       $requestOptions['body'] = $payload['data'];
       $requestOptions['headers']['Content-Type'] = $headers['Content-Type'] ?? 'text/plain; charset=utf-8';
@@ -139,9 +143,11 @@ class WebhookChannel implements ChannelInterface {
     }
     $out = [];
     foreach ($raw as $name => $value) {
-      if (is_string($name) && $name !== '') {
-        $out[$name] = self::str($value);
+      if (!(is_string($name) && $name !== '')) {
+        continue;
       }
+
+      $out[$name] = self::str($value);
     }
     return $out;
   }

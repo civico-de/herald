@@ -6,6 +6,8 @@ use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
+// phpcs:disable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
+// ckfmt wraps this declaration with 2-space continuations; the sniff wants 4.
 /**
  * The condition's two misfire guards, exercised against a real row.
  *
@@ -16,11 +18,14 @@ use PHPUnit\Framework\TestCase;
  * snapshot with CiviRules' original-data as fallback.
  *
  * @group headless
+ * @mago-expect lint:too-many-methods
  */
 class CRM_Herald_CivirulesConditions_EventBecameInactiveTest extends TestCase implements
   HeadlessInterface,
   HookInterface,
   TransactionalInterface {
+
+  // phpcs:enable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 
   public function setUpHeadless() {
     return \Civi\Test::headless()

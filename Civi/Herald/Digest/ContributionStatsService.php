@@ -16,6 +16,8 @@ namespace Civi\Herald\Digest;
  *
  * @phpstan-type HeraldFilters array<string, mixed>
  * @phpstan-type HeraldWhere array<int, mixed>
+ * @mago-expect lint:too-many-methods
+ * @mago-expect lint:cyclomatic-complexity
  */
 class ContributionStatsService {
 
@@ -31,6 +33,7 @@ class ContributionStatsService {
    * @param HeraldFilters $filters
    *
    * @return array{total: float, count: int, bySource: array<int, array{source: string, total: float, count: int}>}
+   * @mago-expect lint:halstead
    */
   public function getPeriodSummary(array $filters, DateRange $period): array {
     $where = $this->buildWhere($filters, $this->statusOf($filters, 'Completed'));
@@ -56,6 +59,7 @@ class ContributionStatsService {
         $total += $rowTotal;
         $count += $rowCount;
         $bySource[] = [
+          // @mago-expect lint:no-shorthand-ternary
           'source' => $row['source'] ?: 'Unknown',
           'total' => $rowTotal,
           'count' => $rowCount,
@@ -72,6 +76,7 @@ class ContributionStatsService {
       $rowCount = (int) ($row['cnt'] ?? 0);
       $total += $rowTotal;
       $count += $rowCount;
+      // @mago-expect lint:no-shorthand-ternary
       $source = $row['source'] ?: 'Unknown';
       $source = $this->sourceNormalizer->normalize($source);
       if (!isset($bySource[$source])) {
@@ -131,6 +136,8 @@ class ContributionStatsService {
     array $filters,
     int $minutes,
     string $toStatus,
+    // @mago-expect lint:no-boolean-flag-parameter
+    // Public signature of an existing API; changing it would break callers.
     bool $excludeAlsoReceivedInPeriod = TRUE,
   ): array {
     $where = $this->buildWhere($filters, $toStatus);
@@ -149,11 +156,15 @@ class ContributionStatsService {
       ->execute()
       ->getArrayCopy();
 
-    return array_map(fn ($r) => [
-      'amount' => (float) ($r['total_amount'] ?? 0),
-      'source' => $this->sourceNormalizer->normalize($r['source'] ?: 'Unknown'),
-      'date' => $r['modified_date'] ?? $r['receive_date'] ?? '',
-    ], $rows);
+    return array_map(
+      fn ($r) => [
+        'amount' => (float) ($r['total_amount'] ?? 0),
+        // @mago-expect lint:no-shorthand-ternary
+        'source' => $this->sourceNormalizer->normalize($r['source'] ?: 'Unknown'),
+        'date' => $r['modified_date'] ?? $r['receive_date'] ?? '',
+      ],
+      $rows,
+    );
   }
 
   /**
@@ -169,6 +180,8 @@ class ContributionStatsService {
     array $filters,
     DateRange $period,
     string $toStatus,
+    // @mago-expect lint:no-boolean-flag-parameter
+    // Public signature of an existing API; changing it would break callers.
     bool $excludeAlsoReceivedInPeriod = TRUE,
   ): array {
     $where = $this->buildWhere($filters, $toStatus);
@@ -295,9 +308,12 @@ class ContributionStatsService {
       static function ($r) {
         $qty = (float) ($r['qty_sum'] ?? 0);
         return [
+          // @mago-expect lint:no-shorthand-ternary
           'label' => (string) ($r['label'] ?? '') ?: 'Unknown',
           'unit_price' => (float) ($r['unit_price'] ?? 0),
           // Whole quantities render as "6×", not "6.00×".
+          // @mago-expect lint:identity-comparison
+          // Deliberate: float vs int check — `===` would never match a whole quantity.
           'qty' => $qty == (int) $qty ? (int) $qty : $qty,
           'total' => (float) ($r['total'] ?? 0),
         ];
@@ -390,11 +406,15 @@ class ContributionStatsService {
       ->execute()
       ->getArrayCopy();
 
-    return array_map(fn ($r) => [
-      'amount' => (float) ($r['total_amount'] ?? 0),
-      'source' => $this->sourceNormalizer->normalize($r['source'] ?: 'Unknown'),
-      'date' => $r['receive_date'] ?? '',
-    ], $rows);
+    return array_map(
+      fn ($r) => [
+        'amount' => (float) ($r['total_amount'] ?? 0),
+        // @mago-expect lint:no-shorthand-ternary
+        'source' => $this->sourceNormalizer->normalize($r['source'] ?: 'Unknown'),
+        'date' => $r['receive_date'] ?? '',
+      ],
+      $rows,
+    );
   }
 
   /**

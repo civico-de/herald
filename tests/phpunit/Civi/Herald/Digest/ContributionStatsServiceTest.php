@@ -9,13 +9,18 @@ use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
+// phpcs:disable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
+// ckfmt wraps this declaration with 2-space continuations; the sniff wants 4.
 /**
  * @group headless
+ * @mago-expect lint:too-many-methods
  */
 class ContributionStatsServiceTest extends TestCase implements
   HeadlessInterface,
   HookInterface,
   TransactionalInterface {
+
+  // phpcs:enable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 
   private int $contactId;
   private ContributionStatsService $service;
@@ -26,7 +31,7 @@ class ContributionStatsServiceTest extends TestCase implements
       ->installMe(__DIR__)
       // Campaign tests need the CiviCampaign component (off in a minimal
       // headless install).
-      ->callback(function () {
+      ->callback(static function () {
         \CRM_Core_BAO_ConfigSetting::enableComponent('CiviCampaign');
       }, 'enableCiviCampaign')
       ->apply();

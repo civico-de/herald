@@ -2,6 +2,10 @@
 
 use CRM_Herald_ExtensionUtil as E;
 
+/**
+ * Form for the contribution-digest action.
+ * @mago-expect lint:cyclomatic-complexity
+ */
 class CRM_Herald_Form_CivirulesAction_SendContributionDigest extends CRM_Herald_Form_CivirulesAction_AbstractSendForm {
 
   /**

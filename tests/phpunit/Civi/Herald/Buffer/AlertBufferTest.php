@@ -57,7 +57,7 @@ class AlertBufferTest extends TestCase {
    * more machinery than the two lines under test.
    */
   private static function narrow(string $method, mixed $value): mixed {
-    return new \ReflectionMethod(AlertBuffer::class, $method)->invoke(NULL, $value);
+    return (new \ReflectionMethod(AlertBuffer::class, $method))->invoke(NULL, $value);
   }
 
   public function testNarrowingHelpersConvertScalarDaoValues(): void {

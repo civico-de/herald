@@ -26,27 +26,27 @@ namespace Civi\Api4;
 class Herald extends \Civi\Api4\Generic\AbstractEntity {
 
   public static function send(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\Send {
-    return new \Civi\Herald\Api4\Action\Send(__CLASS__, 'send')
+    return (new \Civi\Herald\Api4\Action\Send(__CLASS__, 'send'))
       ->setCheckPermissions($checkPermissions);
   }
 
   public static function publish(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\Publish {
-    return new \Civi\Herald\Api4\Action\Publish(__CLASS__, 'publish')
+    return (new \Civi\Herald\Api4\Action\Publish(__CLASS__, 'publish'))
       ->setCheckPermissions($checkPermissions);
   }
 
   public static function getChannels(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\GetChannels {
-    return new \Civi\Herald\Api4\Action\GetChannels(__CLASS__, 'getChannels')
+    return (new \Civi\Herald\Api4\Action\GetChannels(__CLASS__, 'getChannels'))
       ->setCheckPermissions($checkPermissions);
   }
 
   public static function testTelegram(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\TestTelegram {
-    return new \Civi\Herald\Api4\Action\TestTelegram(__CLASS__, 'testTelegram')
+    return (new \Civi\Herald\Api4\Action\TestTelegram(__CLASS__, 'testTelegram'))
       ->setCheckPermissions($checkPermissions);
   }
 
   public static function renderTemplate(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\RenderTemplate {
-    return new \Civi\Herald\Api4\Action\RenderTemplate(__CLASS__, 'renderTemplate')
+    return (new \Civi\Herald\Api4\Action\RenderTemplate(__CLASS__, 'renderTemplate'))
       ->setCheckPermissions($checkPermissions);
   }
 
@@ -71,7 +71,7 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
   }
 
   public static function getFields(bool $checkPermissions = TRUE): \Civi\Api4\Generic\BasicGetFieldsAction {
-    return new \Civi\Api4\Generic\BasicGetFieldsAction(__CLASS__, 'getFields', static fn () => [])
+    return (new \Civi\Api4\Generic\BasicGetFieldsAction(__CLASS__, 'getFields', static fn () => []))
       ->setCheckPermissions($checkPermissions);
   }
 

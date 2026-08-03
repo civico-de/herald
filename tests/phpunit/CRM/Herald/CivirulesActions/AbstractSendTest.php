@@ -55,6 +55,8 @@ class CRM_Herald_CivirulesActions_AbstractSendTest extends TestCase {
     $filtered = CRM_Herald_CivirulesActions_AbstractSend::filterSubscriberSafe([
       'chat_id' => '-100',
       'webhook_url' => 'https://example.com/rule-endpoint',
+      // @mago-expect lint:no-literal-password
+      // Test fixture, not a real credential.
       'webhook_auth_token' => 'secret',
       'webhook_headers' => ['Authorization' => 'Basic abc=='],
       'ntfy_topic' => 'rule-topic',

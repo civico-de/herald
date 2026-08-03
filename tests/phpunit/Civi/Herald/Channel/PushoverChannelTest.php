@@ -13,6 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @group headless
+ * @mago-expect lint:too-many-methods
  */
 class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 
@@ -138,10 +139,10 @@ class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInt
     $form = PushoverChannel::buildForm('app', 'u', 'msg', [
       'pushover_priority' => 2,
       'pushover_retry' => 5,
-      'pushover_expire' => 99999,
+      'pushover_expire' => 99_999,
     ]);
     $this->assertSame(30, $form['retry']);
-    $this->assertSame(10800, $form['expire']);
+    $this->assertSame(10_800, $form['expire']);
   }
 
   public function testNonEmergencyPriorityHasNoRetryExpire(): void {

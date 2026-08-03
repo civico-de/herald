@@ -84,12 +84,7 @@ class EmailChannel implements ChannelInterface {
       'toName' => self::str($config['email_to_name'] ?? ''),
       'subject' => !empty($config['email_subject']) ? self::str($config['email_subject']) : self::DEFAULT_SUBJECT,
     ];
-    if (($config['email_format'] ?? 'html') === 'text') {
-      $params['text'] = $body;
-    }
-    else {
-      $params['html'] = $body;
-    }
+    $params[($config['email_format'] ?? 'html') === 'text' ? 'text' : 'html'] = $body;
     if (!empty($config['email_cc'])) {
       $params['cc'] = self::str($config['email_cc']);
     }

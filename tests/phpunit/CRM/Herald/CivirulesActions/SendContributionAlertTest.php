@@ -14,7 +14,7 @@ class CRM_Herald_CivirulesActions_SendContributionAlertTest extends TestCase {
     return new class extends ContributionStatsService {
 
       public function getCampaignTotal(int $campaignId): array {
-        return ['total' => 18000.0, 'count' => 42];
+        return ['total' => 18_000.0, 'count' => 42];
       }
 
     };
@@ -73,14 +73,14 @@ class CRM_Herald_CivirulesActions_SendContributionAlertTest extends TestCase {
 
   public function testCampaignBlockBuiltWhenIdAndGoalPresent(): void {
     $vars = CRM_Herald_CivirulesActions_SendContributionAlert::buildVars(
-      ['campaign_id' => 2, 'goal' => 30000, 'campaign_title' => 'Campaign 2026'],
+      ['campaign_id' => 2, 'goal' => 30_000, 'campaign_title' => 'Campaign 2026'],
       ['id' => 5, 'contribution_status_id' => 1],
       NULL,
       $this->makeFakeStats(),
       $this->statusResolver(),
     );
-    $this->assertSame(30000.0, $vars['campaign']['goal']);
-    $this->assertSame(18000.0, $vars['campaign']['total']);
+    $this->assertSame(30_000.0, $vars['campaign']['goal']);
+    $this->assertSame(18_000.0, $vars['campaign']['total']);
     $this->assertEqualsWithDelta(60.0, $vars['campaign']['percent'], 0.1);
     $this->assertSame('Campaign 2026', $vars['campaign']['title']);
   }

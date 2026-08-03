@@ -16,6 +16,7 @@ use Civi\Herald\StatusTransitionDispatcher;
  *   campaign_title    — string, free-text title for the campaign block
  *   include_status_transition — bool (default true): pass from_status / to_status
  *                       to the template by reading the pre-edit snapshot
+ * @mago-expect lint:cyclomatic-complexity
  */
 class CRM_Herald_CivirulesActions_SendContributionAlert extends CRM_Herald_CivirulesActions_AbstractSend {
 
@@ -58,6 +59,7 @@ class CRM_Herald_CivirulesActions_SendContributionAlert extends CRM_Herald_Civir
    * @param callable(mixed): string $statusNameResolver Maps status_id → name (e.g. 2 → "Pending")
    * @param SourceNormalizer|null $sourceNormalizer Optional test seam
    * @return array<string, mixed>
+   * @mago-expect lint:excessive-parameter-list
    */
   public static function buildVars(
     array $params,

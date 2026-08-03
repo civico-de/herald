@@ -14,6 +14,7 @@ use PHPUnit\Framework\TestCase;
  * covered without a booted CiviCRM.
  *
  * @group unit
+ * @mago-expect lint:too-many-methods
  */
 class MonitorTest extends TestCase {
 
@@ -36,9 +37,11 @@ class MonitorTest extends TestCase {
     }
     // Mirror the wrapper: drop state for checks no longer observed.
     foreach (array_keys($state) as $name) {
-      if (!isset($obs[$name])) {
-        unset($state[$name]);
+      if (isset($obs[$name])) {
+        continue;
       }
+
+      unset($state[$name]);
     }
     return [$state, $publishes];
   }
@@ -128,7 +131,7 @@ class MonitorTest extends TestCase {
 
   public function testRenotifyAfterWindow(): void {
     $hour = 3600;
-    $cfg = fn (int $now) => ['renotify_seconds' => 4 * $hour, 'now' => $now];
+    $cfg = static fn (int $now) => ['renotify_seconds' => 4 * $hour, 'now' => $now];
     [$state, $pub] = $this->step([], ['a' => $this->obsFail('down')], $cfg(0));
     $this->assertSame([['check' => 'a', 'status' => 'fail', 'detail' => 'down', 'renotify' => FALSE]], $pub);
     // 3h later: within window, silent.
@@ -148,14 +151,14 @@ class MonitorTest extends TestCase {
   public function testRenotifyOffByDefault(): void {
     [$state, $pub] = $this->step([], ['a' => $this->obsFail()], ['renotify_seconds' => 0, 'now' => 0]);
     $this->assertCount(1, $pub);
-    [, $pub] = $this->step($state, ['a' => $this->obsFail()], ['renotify_seconds' => 0, 'now' => 999999]);
+    [, $pub] = $this->step($state, ['a' => $this->obsFail()], ['renotify_seconds' => 0, 'now' => 999_999]);
     $this->assertSame([], $pub);
   }
 
   // --- snooze ---------------------------------------------------------------
 
   public function testSnoozeSuppressesFailAndRenotify(): void {
-    $cfg = fn (int $now) => [
+    $cfg = static fn (int $now) => [
       'renotify_seconds' => 3600,
       'snooze' => ['a' => '2026-01-01T01:00:00Z'],
       'now' => $now,
@@ -225,15 +228,13 @@ class MonitorTest extends TestCase {
       ['ext.check' => $this->obsFail('check missing — extension disabled?')],
       [],
     );
-    $this->assertSame(
-      [[
-        'check' => 'ext.check',
-        'status' => 'fail',
-        'detail' => 'check missing — extension disabled?',
-        'renotify' => FALSE,
-      ]],
-      $pub,
-    );
+    $expected = [
+      'check' => 'ext.check',
+      'status' => 'fail',
+      'detail' => 'check missing — extension disabled?',
+      'renotify' => FALSE,
+    ];
+    $this->assertSame([$expected], $pub);
   }
 
   // --- migration: old state entries without the new keys --------------------
@@ -303,7 +304,7 @@ class MonitorTest extends TestCase {
       [
         'close_after' => 2,
         'renotify_seconds' => 60,
-        'now' => 100000,
+        'now' => 100_000,
       ],
     );
     $this->assertSame([], $pub);
@@ -375,17 +376,17 @@ class MonitorTest extends TestCase {
       ['a' => $this->obsFail('old')],
       [
         'renotify_seconds' => 3600,
-        'now' => 10000,
+        'now' => 10_000,
       ],
     );
     $this->assertSame([], $pub);
-    $this->assertSame(10000, $state['a']['last_notified']);
+    $this->assertSame(10_000, $state['a']['last_notified']);
     [, $pub] = $this->step(
       $state,
       ['a' => $this->obsFail('old')],
       [
         'renotify_seconds' => 3600,
-        'now' => 10000 + 3600,
+        'now' => 10_000 + 3600,
       ],
     );
     $this->assertCount(1, $pub);

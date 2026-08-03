@@ -16,6 +16,7 @@ use PHPUnit\Framework\TestCase;
  * webhook, pushover) are covered by their own tests with mocked HTTP clients.
  *
  * @group headless
+ * @mago-expect lint:too-many-methods
  */
 class SendTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 

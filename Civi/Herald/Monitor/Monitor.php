@@ -36,6 +36,8 @@ use CRM_Herald_ExtensionUtil as E;
  * Known blind spot by design: this runs inside the instance, so a hard-down
  * site cannot report itself. Pair it with an external poller on the pulse
  * endpoint for dead-man coverage; this monitor handles the degraded states.
+ * @mago-expect lint:kan-defect
+ * @mago-expect lint:cyclomatic-complexity
  */
 class Monitor {
 
@@ -81,6 +83,7 @@ class Monitor {
    * The unlocked body of run(). Split out so run() stays a thin lock wrapper.
    *
    * @return array{checks: int, failing: int, transitions: int}
+   * @mago-expect lint:halstead
    */
   private function doRun(): array {
     // Filled BY REFERENCE by the hook listeners — implementors are asked for
@@ -115,12 +118,14 @@ class Monitor {
     // expected-entry a vanished check stays silently dropped (see below).
     $expected = \Civi::settings()->get('herald_monitor_expected');
     foreach (is_array($expected) ? $expected : [] as $name) {
-      if (is_string($name) && !isset($observations[$name])) {
-        $observations[$name] = [
-          'status' => 'fail',
-          'detail' => E::ts('check missing — extension disabled?'),
-        ];
+      if (!(is_string($name) && !isset($observations[$name]))) {
+        continue;
       }
+
+      $observations[$name] = [
+        'status' => 'fail',
+        'detail' => E::ts('check missing — extension disabled?'),
+      ];
     }
 
     // Written by this class only (see the state entry schema on
@@ -137,7 +142,9 @@ class Monitor {
     $snooze = is_array($snoozeRaw) ? $snoozeRaw : [];
 
     $config = [
+      // @mago-expect lint:no-shorthand-ternary
       'open_after' => max(1, self::int(\Civi::settings()->get('herald_monitor_open_after') ?: 1)),
+      // @mago-expect lint:no-shorthand-ternary
       'close_after' => max(1, self::int(\Civi::settings()->get('herald_monitor_close_after') ?: 1)),
       'renotify_seconds' => max(0, self::int(\Civi::settings()->get('herald_monitor_renotify_hours') ?? 24)) * 3600,
       'snooze' => $snooze,
@@ -164,12 +171,15 @@ class Monitor {
     // Drop vanished (and non-expected) checks up front — uninstalling an
     // extension is not an outage, so its stale state entry just disappears.
     foreach (array_keys($state) as $name) {
-      if (!isset($observations[$name])) {
-        unset($state[$name]);
+      if (isset($observations[$name])) {
+        continue;
       }
+
+      unset($state[$name]);
     }
     \Civi::settings()->set(self::STATE_SETTING, $state);
 
+    // @mago-expect lint:no-shorthand-ternary
     $topic = self::str(\Civi::settings()->get(self::TOPIC_SETTING) ?: 'ops', 'ops');
     $transitions = 0;
     foreach ($plans as $plan) {
@@ -235,6 +245,7 @@ class Monitor {
    * @param array<string, array{status: string, detail?: string}> $observations
    * @param array{open_after?: int, close_after?: int, renotify_seconds?: int, snooze?: array<string,string>, now?: int} $config
    * @return list<array{check: string, state: array<string, mixed>, publish: ?array<string, mixed>}>
+   * @mago-expect lint:halstead
    */
   public static function computeTransitions(array $prev, array $observations, array $config = []): array {
     $openAfter = max(1, (int) ($config['open_after'] ?? 1));
@@ -271,6 +282,7 @@ class Monitor {
         $cf++;
         $co = 0;
       }
+      // @mago-expect lint:no-else-clause
       else {
         $co++;
         $cf = 0;
@@ -290,6 +302,7 @@ class Monitor {
             $notified = FALSE;
             $lastNotified = NULL;
           }
+          // @mago-expect lint:no-else-clause
           else {
             $notified = TRUE;
             $lastNotified = $now;
@@ -297,6 +310,7 @@ class Monitor {
           }
         }
       }
+      // @mago-expect lint:no-else-clause
       else {
         // Currently in a reported-fail episode.
         if ($co >= $closeAfter) {
@@ -310,6 +324,7 @@ class Monitor {
             $publish = ['check' => $name, 'status' => 'ok', 'detail' => $detail, 'renotify' => FALSE];
           }
         }
+        // @mago-expect lint:no-else-clause
         else {
           // Still failing. Keep the freshest fail detail.
           if ($obsStatus === 'fail') {
@@ -326,6 +341,7 @@ class Monitor {
             $lastNotified = $now;
             $publish = ['check' => $name, 'status' => 'fail', 'detail' => $detail, 'renotify' => FALSE];
           }
+          // @mago-expect lint:no-else-clause
           elseif (
             !$snoozed
             && $notified

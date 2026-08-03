@@ -34,6 +34,7 @@ if ($existing) {
   $gid = (int) $existing['id'];
   echo "[herald] UFGroup '{$profileName}' already exists (id={$gid}).\n";
 }
+// @mago-expect lint:no-else-clause
 else {
   $gid = (int) UFGroup::create(FALSE)
     ->addValue('name', $profileName)
@@ -64,9 +65,10 @@ foreach ($fieldOrder as $f) {
     ->execute()
     ->first();
   if (!$cf) {
-    echo
-      "[herald] WARN: custom field 'herald_preferences.{$f['name']}' missing — did you run `cv ext:enable herald` first?\n"
-    ;
+    printf(
+      "[herald] WARN: custom field 'herald_preferences.%s' missing — did you run `cv ext:enable herald` first?\n",
+      $f['name'],
+    );
     continue;
   }
   $fieldName = 'custom_' . $cf['id'];

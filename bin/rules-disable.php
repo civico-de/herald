@@ -41,12 +41,9 @@ $existing = is_file(HERALD_DEPLOY_MARKER)
 $all = array_values(array_unique(array_merge($existing, $ids)));
 file_put_contents(HERALD_DEPLOY_MARKER, implode(',', $all));
 
-echo
-  '[herald deploy] disabled '
-    . count($ids)
-    . ' herald rule(s) for the swap: '
-    . implode(',', $ids)
-    . ' (marker now holds '
-    . count($all)
-    . ")\n"
-;
+printf(
+  "[herald deploy] disabled %d herald rule(s) for the swap: %s (marker now holds %d)\n",
+  count($ids),
+  implode(',', $ids),
+  count($all),
+);

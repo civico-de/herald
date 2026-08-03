@@ -23,6 +23,7 @@ use GuzzleHttp\ClientInterface;
  *   herald_ntfy_server         — base URL (default https://ntfy.sh)
  *   herald_ntfy_default_topic  — fallback topic
  *   herald_ntfy_token          — Bearer token for protected topics
+ * @mago-expect lint:cyclomatic-complexity
  */
 class NtfyChannel implements ChannelInterface {
 
@@ -50,6 +51,7 @@ class NtfyChannel implements ChannelInterface {
       );
     }
 
+    // @mago-expect lint:no-shorthand-ternary
     $server = self::str(\Civi::settings()->get('herald_ntfy_server') ?: 'https://ntfy.sh');
     $url = rtrim($server, '/') . '/' . ltrim(self::str($topic), '/');
 

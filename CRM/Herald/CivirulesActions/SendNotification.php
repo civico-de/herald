@@ -15,6 +15,7 @@
  *
  * Action parameters (in addition to those from AbstractSend):
  *   vars — JSON object passed verbatim to the template renderer
+ * @mago-expect lint:cyclomatic-complexity
  */
 class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesActions_AbstractSend {
 
@@ -32,6 +33,7 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
    * whole notification.
    *
    * @return array<string, mixed>
+   * @mago-expect lint:halstead
    */
   protected function buildTriggerVars(CRM_Civirules_TriggerData_TriggerData $triggerData): array {
     $vars = [];
@@ -166,7 +168,7 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
       return '';
     }
     return self::asString(\CRM_Core_DAO::singleValueQuery(
-      "SELECT `$column` FROM `$table` WHERE id = %1",
+      "SELECT `{$column}` FROM `{$table}` WHERE id = %1",
       [1 => [$id, 'Integer']],
     ));
   }

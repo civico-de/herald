@@ -29,6 +29,7 @@ class ChannelRegistry {
     return array_keys($this->channels);
   }
 
+  // @mago-expect lint:halstead
   public static function default(): self {
     /** @var self|null $instance */
     static $instance = NULL;

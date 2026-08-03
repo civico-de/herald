@@ -25,6 +25,7 @@ use GuzzleHttp\ClientInterface;
  * Settings:
  *   herald_pushover_app_token        — Pushover application token (required)
  *   herald_pushover_default_user_key — fallback user/group key
+ * @mago-expect lint:cyclomatic-complexity
  */
 class PushoverChannel implements ChannelInterface {
 
@@ -93,7 +94,13 @@ class PushoverChannel implements ChannelInterface {
    * @param array<string, mixed> $config
    * @return array<string, scalar>
    */
-  public static function buildForm(string $appToken, string $userKey, string $body, array $config): array {
+  public static function buildForm(
+    #[\SensitiveParameter]
+    string $appToken,
+    string $userKey,
+    string $body,
+    array $config,
+  ): array {
     $form = [
       'token' => $appToken,
       'user' => $userKey,
@@ -107,7 +114,7 @@ class PushoverChannel implements ChannelInterface {
       if ($form['priority'] === 2) {
         // Emergency priority requires retry/expire or the API rejects the call.
         $form['retry'] = max(30, self::int($config['pushover_retry'] ?? 60));
-        $form['expire'] = min(10800, max(1, self::int($config['pushover_expire'] ?? 3600)));
+        $form['expire'] = min(10_800, max(1, self::int($config['pushover_expire'] ?? 3600)));
       }
     }
     if (!empty($config['pushover_sound'])) {

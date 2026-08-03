@@ -33,6 +33,8 @@ final class SourceNormalizer {
       $matches = match ($rule['type']) {
         'contains' => str_contains($source, $rule['match']),
         'prefix' => str_starts_with($source, $rule['match']),
+        // @mago-expect lint:no-error-control-operator
+        // Deliberate: admin-supplied regexes may be invalid; the warning is not actionable.
         'regex' => @preg_match($rule['match'], $source) === 1,
         default => FALSE,
       };

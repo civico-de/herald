@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 /**
  * Pure-logic unit tests — no Civi headless needed.
  * @group unit
+ * @mago-expect lint:too-many-methods
  */
 class HistogramFormatterTest extends TestCase {
 
@@ -72,13 +73,13 @@ class HistogramFormatterTest extends TestCase {
 
   public function testMajorDonorRange(): void {
     // €1-€10k, n=200 — wide range, log mode with up to 8 buckets
-    $amounts = $this->logUniform(200, 1, 10000, 42);
+    $amounts = $this->logUniform(200, 1, 10_000, 42);
     $buckets = HistogramFormatter::compute($amounts);
 
     $this->assertGreaterThanOrEqual(6, count($buckets));
     $this->assertLessThanOrEqual(8, count($buckets));
     $this->assertSame(200, array_sum(array_column($buckets, 'count')));
-    $this->assertGreaterThanOrEqual(10000.0, end($buckets)['high']);
+    $this->assertGreaterThanOrEqual(10_000.0, end($buckets)['high']);
   }
 
   public function testTinyDatasetFallsBackToFewerBuckets(): void {
@@ -161,7 +162,7 @@ class HistogramFormatterTest extends TestCase {
   }
 
   private function isNiceNumber(float $x): bool {
-    if ($x == 0.0) {
+    if ($x === 0.0) {
       return TRUE;
     }
     $exp = floor(log10($x));
