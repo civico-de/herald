@@ -2,6 +2,7 @@
 
 use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Digest\ContributionStatsService;
+use Civi\Herald\Digest\ExtraSections;
 use Civi\Herald\Renderer\TemplateRenderer;
 
 /**
@@ -20,6 +21,7 @@ use Civi\Herald\Renderer\TemplateRenderer;
 function _civicrm_api3_job_herald_contribution_digest_spec(&$spec) {
   $spec['blocks'] = ['title' => 'Composable multi-block digest: JSON array of block configs (each: title, template, campaign_id, financial_type_id, goal, campaign_title, show_pending, show_histogram, period). When given, one message is assembled from all blocks and single-block params below are ignored.', 'type' => CRM_Utils_Type::T_STRING];
   $spec['header'] = ['title' => 'Optional header line prepended to a multi-block digest (e.g. "📊 <b>Tagesreport</b>")', 'type' => CRM_Utils_Type::T_STRING];
+  $spec['sections'] = ['title' => 'Extra sections contributed by other extensions via hook_civicrm_heraldDigestSections, comma-separated keys (e.g. "myext.seats"). Appended after the blocks, in the order listed. Multi-block mode only.', 'type' => CRM_Utils_Type::T_STRING];
   $spec['template'] = ['title' => 'Workflow template name (single-block mode)', 'type' => CRM_Utils_Type::T_STRING];
   $spec['channel'] = ['title' => 'Channel key (default telegram)', 'api.default' => 'telegram', 'type' => CRM_Utils_Type::T_STRING];
   $spec['period'] = ['title' => 'Period: yesterday|today|last_7_days|last_30_days', 'api.default' => 'yesterday', 'type' => CRM_Utils_Type::T_STRING];
@@ -62,7 +64,7 @@ function civicrm_api3_job_herald_contribution_digest($params) {
 
   // Channel config: strip composition/query keys, keep only channel-relevant ones.
   $configParams = $params;
-  unset($configParams['blocks'], $configParams['header'], $configParams['template'], $configParams['period'], $configParams['send_hour']);
+  unset($configParams['blocks'], $configParams['header'], $configParams['sections'], $configParams['template'], $configParams['period'], $configParams['send_hour']);
   $config = CRM_Herald_CivirulesActions_AbstractSend::buildChannelConfig($configParams);
   $channel = ChannelRegistry::default()->get($channelKey);
 
@@ -96,9 +98,23 @@ function civicrm_api3_job_herald_contribution_digest($params) {
       $totalCount += (int) ($vars['totals']['count'] ?? 0);
       $totalAmount += (float) ($vars['totals']['amount'] ?? 0);
     }
+    // Sections from other extensions — numbers no contribution query can answer.
+    $extraKeys = ExtraSections::parseKeys($params['sections'] ?? '');
+    $extra = ExtraSections::collect($extraKeys, [
+      'params' => $params,
+      'period' => $params['period'] ?? 'yesterday',
+    ]);
+    $sections = array_merge($sections, $extra);
     $channel->send(implode("\n\n", $sections), $config);
     return civicrm_api3_create_success([
-      ['sent' => 1, 'channel' => $channelKey, 'blocks' => count($blocks), 'count' => $totalCount, 'amount' => $totalAmount],
+      [
+        'sent' => 1,
+        'channel' => $channelKey,
+        'blocks' => count($blocks),
+        'sections' => count($extra),
+        'count' => $totalCount,
+        'amount' => $totalAmount,
+      ],
     ], $params, 'Job', 'herald_contribution_digest');
   }
 

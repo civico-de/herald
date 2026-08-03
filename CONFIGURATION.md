@@ -418,6 +418,31 @@ MessageTemplate.
 
 ---
 
+## Extra digest sections (`hook_civicrm_heraldDigestSections`)
+
+A composed digest (`Job.herald_contribution_digest` with `blocks`) can only
+report what a contribution query answers. Numbers from another entity — booked
+event seats, membership counts, queue depth — belong to the extension that owns
+them. The `sections` job parameter names the keys the digest wants; herald asks
+around and appends the answers after the blocks, in the order listed.
+
+```php
+// In any extension's main .php file:
+function myext_civicrm_heraldDigestSections(array $keys, array $context, array &$sections): void {
+  if (in_array('myext.seats', $keys, TRUE)) {
+    $sections['myext.seats'] = "🪑 <b>Seats</b>\n138 booked";
+  }
+}
+```
+
+Job parameter: `sections=myext.seats,myext.queue` (or a JSON array).
+`$context` carries the job params under `params` and the resolved `period`, so
+a listener can match the digest's timeframe. Unrequested keys and empty bodies
+are dropped, so a listener may answer unconditionally. Multi-block mode only —
+single-block digests render one template and have no section concept.
+
+---
+
 ## Check monitor — push alerts for degraded states
 
 Any extension contributes health checks; herald runs them on every cron and
@@ -477,6 +502,7 @@ everything short of that.
 | `bucket_edges` | array | (adaptive) | Override edges, e.g. `[0,10,25,100,1000]` |
 | `goal` | float | none | Renders campaign progress when set |
 | `campaign_title` | string | none | Free-text title for campaign block |
+| `sections` | string | none | Extra section keys from other extensions (see "Extra digest sections"), multi-block mode only |
 
 ### `Send contribution alert`
 
