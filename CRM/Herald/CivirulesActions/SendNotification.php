@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /**
  * Generic CiviRules action: render any workflow template and send it through any channel.
  *

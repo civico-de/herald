@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
 
   public function install(): void {

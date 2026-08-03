@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Digest\ContributionStatsService;
 use Civi\Herald\Digest\ExtraSections;

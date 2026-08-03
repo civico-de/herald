@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /**
  * Smoke-test the Telegram channel end-to-end.
  * Run with:  cv scr /var/www/html/ext/herald/bin/test-telegram.php

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Civi\Herald\Monitor;
 
 use Civi\Core\Event\GenericHookEvent;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /**
  * One-off: create the `herald_my_preferences` UFGroup (profile) so
  * users can self-manage their notification prefs at

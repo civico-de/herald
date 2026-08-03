@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 use CRM_Herald_ExtensionUtil as E;
 
 /**

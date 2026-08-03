@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Civi\Herald\Digest;
 
 use Civi\Api4\Contact;

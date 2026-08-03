@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /**
  * Repo-specific test setup — the sibling bootstrap.php is template-managed and
  * rewritten wholesale by `ckinit --update`, so anything herald-specific lives

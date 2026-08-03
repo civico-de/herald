@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Civi\Herald\Channel;
 
 use CRM_Herald_ExtensionUtil as E;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Civi\Herald\Buffer;
 
 use PHPUnit\Framework\TestCase;

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 use Civi\Herald\PreEditSnapshot;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\HookInterface;

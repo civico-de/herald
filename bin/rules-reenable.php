@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /**
  * Deploy step (core-only) — run via `cv scr` ONLY after bin/preflight-rules.php
  * passed. Re-enables exactly the rules that bin/rules-disable.php switched off

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 require_once 'herald.civix.php';
 
 use CRM_Herald_ExtensionUtil as E;

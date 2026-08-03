@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /**
  * Deploy step (core-only, version-independent) — run via `cv scr` BEFORE the
  * code swap. Disables every ACTIVE CiviRules rule backed by a herald

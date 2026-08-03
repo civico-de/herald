@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 namespace Civi\Herald\Api4\Action;
 
 use Civi\Api4\Generic\AbstractAction;

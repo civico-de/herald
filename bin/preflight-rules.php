@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /**
  * Deploy preflight — run via `cv scr /var/www/html/ext/herald/bin/preflight-rules.php`
  * AFTER deploying the new code and BEFORE re-enabling herald's CiviRules rules

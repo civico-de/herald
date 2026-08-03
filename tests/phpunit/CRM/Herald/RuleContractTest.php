@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 use Civi\Herald\RuleHealth;
 use PHPUnit\Framework\TestCase;
 
