@@ -7,7 +7,6 @@ use PHPUnit\Framework\TestCase;
 /**
  * Pure-logic tests for SubscriberLookup::mapRows / buildConfigForChannel.
  * @group unit
- * @mago-expect lint:too-many-methods
  */
 class SubscriberLookupTest extends TestCase {
 

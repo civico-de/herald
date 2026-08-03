@@ -16,7 +16,6 @@ final class Mask {
    * "Johannes Filter" → "Jo****** Fi****"
    */
   public static function words(string $value): string {
-    // @mago-expect lint:no-shorthand-ternary
     $words = preg_split('/(\s+)/u', $value, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$value];
     return implode('', array_map(
       static fn (string $part) => preg_match('/^\s+$/u', $part) ? $part : self::partial($part),

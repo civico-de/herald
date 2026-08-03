@@ -13,7 +13,6 @@ use PHPUnit\Framework\TestCase;
 // ckfmt wraps this declaration with 2-space continuations; the sniff wants 4.
 /**
  * @group headless
- * @mago-expect lint:too-many-methods
  */
 class ContributionStatsServiceTest extends TestCase implements
   HeadlessInterface,

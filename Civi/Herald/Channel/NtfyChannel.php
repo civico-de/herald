@@ -51,7 +51,6 @@ class NtfyChannel implements ChannelInterface {
       );
     }
 
-    // @mago-expect lint:no-shorthand-ternary
     $server = self::str(\Civi::settings()->get('herald_ntfy_server') ?: 'https://ntfy.sh');
     $url = rtrim($server, '/') . '/' . ltrim(self::str($topic), '/');
 

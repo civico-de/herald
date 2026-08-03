@@ -14,7 +14,6 @@ use PHPUnit\Framework\TestCase;
  * covered without a booted CiviCRM.
  *
  * @group unit
- * @mago-expect lint:too-many-methods
  */
 class MonitorTest extends TestCase {
 

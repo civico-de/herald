@@ -185,7 +185,6 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
     foreach (ChannelRegistry::default()->listKeys() as $key) {
       $opts[$key] = self::CHANNEL_LABELS[$key] ?? $key;
     }
-    // @mago-expect lint:no-shorthand-ternary
     return $opts ?: ['telegram' => 'Telegram'];
   }
 

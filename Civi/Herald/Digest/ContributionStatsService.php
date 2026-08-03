@@ -59,7 +59,6 @@ class ContributionStatsService {
         $total += $rowTotal;
         $count += $rowCount;
         $bySource[] = [
-          // @mago-expect lint:no-shorthand-ternary
           'source' => $row['source'] ?: 'Unknown',
           'total' => $rowTotal,
           'count' => $rowCount,
@@ -76,7 +75,6 @@ class ContributionStatsService {
       $rowCount = (int) ($row['cnt'] ?? 0);
       $total += $rowTotal;
       $count += $rowCount;
-      // @mago-expect lint:no-shorthand-ternary
       $source = $row['source'] ?: 'Unknown';
       $source = $this->sourceNormalizer->normalize($source);
       if (!isset($bySource[$source])) {
@@ -159,7 +157,6 @@ class ContributionStatsService {
     return array_map(
       fn ($r) => [
         'amount' => (float) ($r['total_amount'] ?? 0),
-        // @mago-expect lint:no-shorthand-ternary
         'source' => $this->sourceNormalizer->normalize($r['source'] ?: 'Unknown'),
         'date' => $r['modified_date'] ?? $r['receive_date'] ?? '',
       ],
@@ -308,7 +305,6 @@ class ContributionStatsService {
       static function ($r) {
         $qty = (float) ($r['qty_sum'] ?? 0);
         return [
-          // @mago-expect lint:no-shorthand-ternary
           'label' => (string) ($r['label'] ?? '') ?: 'Unknown',
           'unit_price' => (float) ($r['unit_price'] ?? 0),
           // Whole quantities render as "6×", not "6.00×".
@@ -409,7 +405,6 @@ class ContributionStatsService {
     return array_map(
       fn ($r) => [
         'amount' => (float) ($r['total_amount'] ?? 0),
-        // @mago-expect lint:no-shorthand-ternary
         'source' => $this->sourceNormalizer->normalize($r['source'] ?: 'Unknown'),
         'date' => $r['receive_date'] ?? '',
       ],

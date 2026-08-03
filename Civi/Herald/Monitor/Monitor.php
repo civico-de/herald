@@ -142,9 +142,7 @@ class Monitor {
     $snooze = is_array($snoozeRaw) ? $snoozeRaw : [];
 
     $config = [
-      // @mago-expect lint:no-shorthand-ternary
       'open_after' => max(1, self::int(\Civi::settings()->get('herald_monitor_open_after') ?: 1)),
-      // @mago-expect lint:no-shorthand-ternary
       'close_after' => max(1, self::int(\Civi::settings()->get('herald_monitor_close_after') ?: 1)),
       'renotify_seconds' => max(0, self::int(\Civi::settings()->get('herald_monitor_renotify_hours') ?? 24)) * 3600,
       'snooze' => $snooze,
@@ -179,7 +177,6 @@ class Monitor {
     }
     \Civi::settings()->set(self::STATE_SETTING, $state);
 
-    // @mago-expect lint:no-shorthand-ternary
     $topic = self::str(\Civi::settings()->get(self::TOPIC_SETTING) ?: 'ops', 'ops');
     $transitions = 0;
     foreach ($plans as $plan) {

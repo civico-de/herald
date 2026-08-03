@@ -8,7 +8,6 @@ declare(strict_types = 1);
  * needs lives here; phpstan.neon.dist loads both.
  */
 
-// @mago-expect lint:no-shorthand-ternary
 $coreDir = getenv('CIVICRM_CORE_DIR') ?: '/var/www/html/core';
 
 // Preload Smarty. Core's CRM/Core/SmartyCompatibility.php resolves the Smarty
@@ -30,14 +29,12 @@ if (!class_exists('Smarty', FALSE) && is_file($smarty)) {
 //
 // Extensions follow the same PSR-0-ish layout as core (CRM_Foo_Bar =>
 // CRM/Foo/Bar.php), so map the class name onto each extension root.
-// @mago-expect lint:no-shorthand-ternary
 $extDir = getenv('CIVICRM_EXT_DIR') ?: dirname($coreDir) . '/ext';
 spl_autoload_register(static function (string $class) use ($extDir): void {
   if (!str_starts_with($class, 'CRM_')) {
     return;
   }
   $relative = str_replace('_', '/', $class) . '.php';
-  // @mago-expect lint:no-shorthand-ternary
   foreach (glob($extDir . '/*', GLOB_ONLYDIR) ?: [] as $ext) {
     $file = $ext . '/' . $relative;
     if (is_file($file)) {

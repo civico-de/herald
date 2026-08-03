@@ -64,7 +64,6 @@ class AlertBuffer {
         1 => [$groupHash, 'String'],
         2 => [max(1, $windowMinutes), 'Integer'],
         3 => [$body, 'String'],
-        // @mago-expect lint:no-shorthand-ternary
         4 => [json_encode($delivery, JSON_UNESCAPED_UNICODE) ?: '{}', 'String'],
       ] + ($amount === NULL ? [] : [5 => [(string) $amount, 'Money']]),
     );

@@ -18,7 +18,6 @@ use PHPUnit\Framework\TestCase;
  * snapshot with CiviRules' original-data as fallback.
  *
  * @group headless
- * @mago-expect lint:too-many-methods
  */
 class CRM_Herald_CivirulesConditions_EventBecameInactiveTest extends TestCase implements
   HeadlessInterface,

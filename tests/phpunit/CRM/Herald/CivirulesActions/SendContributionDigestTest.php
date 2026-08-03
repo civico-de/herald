@@ -10,7 +10,6 @@ use PHPUnit\Framework\TestCase;
  * separately by an integration test against civikitchen.
  *
  * @group unit
- * @mago-expect lint:too-many-methods
  */
 class CRM_Herald_CivirulesActions_SendContributionDigestTest extends TestCase {
 

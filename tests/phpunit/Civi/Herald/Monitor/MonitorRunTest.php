@@ -24,7 +24,6 @@ use PHPUnit\Framework\TestCase;
  * assertions name checks explicitly instead of counting them.
  *
  * @group headless
- * @mago-expect lint:too-many-methods
  */
 class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 

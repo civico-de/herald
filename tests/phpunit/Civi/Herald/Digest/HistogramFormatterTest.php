@@ -7,7 +7,6 @@ use PHPUnit\Framework\TestCase;
 /**
  * Pure-logic unit tests — no Civi headless needed.
  * @group unit
- * @mago-expect lint:too-many-methods
  */
 class HistogramFormatterTest extends TestCase {
 

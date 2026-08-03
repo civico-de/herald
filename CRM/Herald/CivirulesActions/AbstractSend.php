@@ -71,7 +71,6 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
     // Group key for aggregation, taken from the RAW stored params: stable per
     // rule action. Must be computed before applyDefaultEmailSubject() mixes a
     // per-event rendered subject into $params.
-    // @mago-expect lint:no-shorthand-ternary
     $groupHash = md5(json_encode($params) ?: '');
     $workflowName = self::asString($params['template'] ?? '');
     if ($workflowName === '') {

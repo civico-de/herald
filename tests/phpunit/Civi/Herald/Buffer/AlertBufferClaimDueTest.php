@@ -22,7 +22,6 @@ use PHPUnit\Framework\TestCase;
  * transactional rollback this test relies on.
  *
  * @group headless
- * @mago-expect lint:too-many-methods
  */
 class AlertBufferClaimDueTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 

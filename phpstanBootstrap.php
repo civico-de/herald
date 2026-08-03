@@ -6,7 +6,6 @@ declare(strict_types = 1);
  * phpstan bootstrap: register CiviCRM's class loader so core symbols
  * (Civi, CRM_*, Civi\Api4\*) resolve. Runs inside the dev container
  * (civikitchen standalone layout); override CIVICRM_CORE_DIR if needed.
- * @mago-expect lint:no-shorthand-ternary
  */
 $coreDir = getenv('CIVICRM_CORE_DIR') ?: '/var/www/html/core';
 

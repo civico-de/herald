@@ -13,7 +13,6 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * @group headless
- * @mago-expect lint:too-many-methods
  */
 class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 

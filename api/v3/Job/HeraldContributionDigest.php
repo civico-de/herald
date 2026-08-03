@@ -83,7 +83,6 @@ function civicrm_api3_job_herald_contribution_digest($params) {
   // und sendet nur in der gewünschten Stunde (Civi-Zeitzone).
   if (empty($params['force']) && isset($params['send_hour']) && $params['send_hour'] !== '') {
     $tz = new DateTimeZone(
-      // @mago-expect lint:no-shorthand-ternary
       CRM_Core_Config::singleton()->userSystem->getTimeZoneString() ?: date_default_timezone_get(),
     );
     $nowHour = (int) (new DateTime('now', $tz))->format('G');
