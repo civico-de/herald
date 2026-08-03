@@ -44,22 +44,53 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
   abstract protected function getExtraValues(array $submitted): array;
 
   public function buildQuickForm(): void {
-    $this->add('select', 'delivery_mode', E::ts('Delivery mode'), [
-      'direct' => E::ts('Direct — send to one recipient configured below'),
-      'subscribers' => E::ts('Subscribers — fan out to all contacts opted into a subscription type'),
-    ], TRUE);
-    $this->add('select', 'subscription_type', E::ts('Subscription type (only used in subscriber mode)'), $this->getSubscriptionTypeOptions(), FALSE);
-    $this->add('select', 'channel', E::ts('Channel (direct mode only — subscribers use their own preferred channel)'), $this->getChannelOptions(), TRUE);
+    $this->add(
+      'select',
+      'delivery_mode',
+      E::ts('Delivery mode'),
+      [
+        'direct' => E::ts('Direct — send to one recipient configured below'),
+        'subscribers' => E::ts('Subscribers — fan out to all contacts opted into a subscription type'),
+      ],
+      TRUE,
+    );
+    $this->add(
+      'select',
+      'subscription_type',
+      E::ts('Subscription type (only used in subscriber mode)'),
+      $this->getSubscriptionTypeOptions(),
+      FALSE,
+    );
+    $this->add(
+      'select',
+      'channel',
+      E::ts('Channel (direct mode only — subscribers use their own preferred channel)'),
+      $this->getChannelOptions(),
+      TRUE,
+    );
     $this->add('select', 'template', E::ts('Message template'), $this->getTemplateOptions(), TRUE);
     $this->add('text', 'chat_id', E::ts('Telegram chat ID (optional, falls back to default setting)'), ['size' => 30]);
-    $this->add('select', 'parse_mode', E::ts('Telegram parse mode'), [
-      'HTML' => 'HTML',
-      'MarkdownV2' => 'MarkdownV2',
-      '' => E::ts('Plain text'),
-    ], FALSE);
+    $this->add(
+      'select',
+      'parse_mode',
+      E::ts('Telegram parse mode'),
+      [
+        'HTML' => 'HTML',
+        'MarkdownV2' => 'MarkdownV2',
+        '' => E::ts('Plain text'),
+      ],
+      FALSE,
+    );
     $this->heraldCheckbox('disable_notification', E::ts('Silent message (Telegram)'));
     $this->heraldCheckbox('disable_web_page_preview', E::ts('Disable link previews (Telegram)'));
-    $this->add('text', 'aggregate_minutes', E::ts('Aggregate window in minutes (0 = send immediately; > 0 collects alerts and sends one combined message per window to prevent spam)'), ['size' => 5]);
+    $this->add(
+      'text',
+      'aggregate_minutes',
+      E::ts(
+        'Aggregate window in minutes (0 = send immediately; > 0 collects alerts and sends one combined message per window to prevent spam)',
+      ),
+      ['size' => 5],
+    );
     $this->add('textarea', 'channel_config', E::ts('Channel-specific config (JSON, optional)'), [
       'rows' => 5,
       'cols' => 60,
@@ -81,7 +112,17 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
     /** @var array<string, mixed> $defaults */
     $defaults = parent::setDefaultValues();
     $params = $this->getActionParameters();
-    foreach (['channel', 'template', 'chat_id', 'parse_mode', 'disable_notification', 'disable_web_page_preview', 'delivery_mode', 'subscription_type', 'aggregate_minutes'] as $field) {
+    foreach ([
+      'channel',
+      'template',
+      'chat_id',
+      'parse_mode',
+      'disable_notification',
+      'disable_web_page_preview',
+      'delivery_mode',
+      'subscription_type',
+      'aggregate_minutes',
+    ] as $field) {
       if (array_key_exists($field, $params)) {
         $defaults[$field] = $params[$field];
       }
@@ -189,7 +230,9 @@ abstract class CRM_Herald_Form_CivirulesAction_AbstractSendForm extends CRM_Civi
     }
     $decoded = json_decode($raw, TRUE);
     if (!is_array($decoded)) {
-      throw new \CRM_Core_Exception(E::ts('Channel-specific config must be a JSON object: %1', [1 => json_last_error_msg()]));
+      throw new \CRM_Core_Exception(E::ts('Channel-specific config must be a JSON object: %1', [
+        1 => json_last_error_msg(),
+      ]));
     }
     return $decoded;
   }

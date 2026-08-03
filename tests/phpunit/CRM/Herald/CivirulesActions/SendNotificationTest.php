@@ -33,16 +33,22 @@ class CRM_Herald_CivirulesActions_SendNotificationTest extends TestCase {
   }
 
   public function testInvalidJsonCollapsesToEmpty(): void {
-    $this->assertSame([], CRM_Herald_CivirulesActions_SendNotification::decodeVars([
-      'vars' => 'not-json',
-    ]));
+    $this->assertSame(
+      [],
+      CRM_Herald_CivirulesActions_SendNotification::decodeVars([
+        'vars' => 'not-json',
+      ]),
+    );
   }
 
   public function testJsonScalarCollapsesToEmpty(): void {
     // json_decode("42", true) returns 42, not an array — must collapse.
-    $this->assertSame([], CRM_Herald_CivirulesActions_SendNotification::decodeVars([
-      'vars' => '42',
-    ]));
+    $this->assertSame(
+      [],
+      CRM_Herald_CivirulesActions_SendNotification::decodeVars([
+        'vars' => '42',
+      ]),
+    );
   }
 
 }

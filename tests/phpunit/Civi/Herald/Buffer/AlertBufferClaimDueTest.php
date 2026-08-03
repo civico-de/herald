@@ -48,8 +48,10 @@ class AlertBufferClaimDueTest extends TestCase implements HeadlessInterface, Hoo
    */
   private function backdate(string $groupHash, int $minutes): void {
     \CRM_Core_DAO::executeQuery(
-      'UPDATE `' . AlertBuffer::TABLE . '` SET created_date = DATE_SUB(NOW(), INTERVAL %2 MINUTE) WHERE group_hash = %1',
-      [1 => [$groupHash, 'String'], 2 => [$minutes, 'Integer']]
+      'UPDATE `'
+      . AlertBuffer::TABLE
+      . '` SET created_date = DATE_SUB(NOW(), INTERVAL %2 MINUTE) WHERE group_hash = %1',
+      [1 => [$groupHash, 'String'], 2 => [$minutes, 'Integer']],
     );
   }
 
@@ -70,7 +72,7 @@ class AlertBufferClaimDueTest extends TestCase implements HeadlessInterface, Hoo
   private function countRows(string $groupHash): int {
     return (int) \CRM_Core_DAO::singleValueQuery(
       'SELECT COUNT(*) FROM `' . AlertBuffer::TABLE . '` WHERE group_hash = %1',
-      [1 => [$groupHash, 'String']]
+      [1 => [$groupHash, 'String']],
     );
   }
 
@@ -144,7 +146,7 @@ class AlertBufferClaimDueTest extends TestCase implements HeadlessInterface, Hoo
     $this->buffer->add($hash, 5, 'body survives', self::DELIVERY);
     \CRM_Core_DAO::executeQuery(
       'UPDATE `' . AlertBuffer::TABLE . '` SET delivery = %2 WHERE group_hash = %1',
-      [1 => [$hash, 'String'], 2 => ['{not valid json', 'String']]
+      [1 => [$hash, 'String'], 2 => ['{not valid json', 'String']],
     );
     $this->backdate($hash, 10);
 

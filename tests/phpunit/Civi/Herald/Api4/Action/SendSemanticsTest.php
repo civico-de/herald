@@ -43,10 +43,15 @@ class SendSemanticsTest extends TestCase {
   }
 
   public function testOtherConfigKeysArePreserved(): void {
-    $config = Send::applySemantics(['email_to' => 'a@example.org', 'email_cc' => 'b@example.org'], self::EMAIL_FIELDS, 'S', 'html');
+    $config = Send::applySemantics(
+      ['email_to' => 'a@example.org', 'email_cc' => 'b@example.org'],
+      self::EMAIL_FIELDS,
+      'S',
+      'html',
+    );
     $this->assertSame(
       ['email_to' => 'a@example.org', 'email_cc' => 'b@example.org', 'email_subject' => 'S', 'email_format' => 'html'],
-      $config
+      $config,
     );
   }
 

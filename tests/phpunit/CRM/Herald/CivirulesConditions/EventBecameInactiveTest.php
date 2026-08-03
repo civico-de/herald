@@ -17,7 +17,10 @@ use PHPUnit\Framework\TestCase;
  *
  * @group headless
  */
-class CRM_Herald_CivirulesConditions_EventBecameInactiveTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
+class CRM_Herald_CivirulesConditions_EventBecameInactiveTest extends TestCase implements
+  HeadlessInterface,
+  HookInterface,
+  TransactionalInterface {
 
   public function setUpHeadless() {
     return \Civi\Test::headless()
@@ -37,11 +40,12 @@ class CRM_Herald_CivirulesConditions_EventBecameInactiveTest extends TestCase im
       ->addValue('start_date', '2026-09-01')
       ->addValue('event_type_id', 1)
       ->addValue('is_active', $active)
-      ->execute()->first()['id'];
+      ->execute()
+      ->first()['id'];
   }
 
   private function triggerData(?int $eventId): CRM_Civirules_TriggerData_TriggerData {
-    $data = new class () extends CRM_Civirules_TriggerData_TriggerData {};
+    $data = new class() extends CRM_Civirules_TriggerData_TriggerData {};
     if ($eventId !== NULL) {
       $data->setEntityData('Event', ['id' => $eventId]);
     }
@@ -49,7 +53,8 @@ class CRM_Herald_CivirulesConditions_EventBecameInactiveTest extends TestCase im
   }
 
   private function triggerDataWithOriginal(int $eventId, array $original): CRM_Civirules_TriggerData_TriggerData {
-    $data = new class () extends CRM_Civirules_TriggerData_TriggerData implements CRM_Civirules_TriggerData_Interface_OriginalData {
+    $data = new class() extends CRM_Civirules_TriggerData_TriggerData implements
+      CRM_Civirules_TriggerData_Interface_OriginalData {
 
       /**
        * @var array<string, mixed> */
@@ -97,10 +102,10 @@ class CRM_Herald_CivirulesConditions_EventBecameInactiveTest extends TestCase im
     $id = $this->createEvent(FALSE);
     $condition = new CRM_Herald_CivirulesConditions_EventBecameInactive();
     $this->assertTrue(
-      $condition->isConditionValid($this->triggerDataWithOriginal($id, ['is_active' => 1]))
+      $condition->isConditionValid($this->triggerDataWithOriginal($id, ['is_active' => 1])),
     );
     $this->assertFalse(
-      $condition->isConditionValid($this->triggerDataWithOriginal($id, ['is_active' => 0]))
+      $condition->isConditionValid($this->triggerDataWithOriginal($id, ['is_active' => 0])),
     );
   }
 
@@ -110,7 +115,7 @@ class CRM_Herald_CivirulesConditions_EventBecameInactiveTest extends TestCase im
     $condition = new CRM_Herald_CivirulesConditions_EventBecameInactive();
     // Snapshot (was already inactive) wins over a stale original payload.
     $this->assertFalse(
-      $condition->isConditionValid($this->triggerDataWithOriginal($id, ['is_active' => 1]))
+      $condition->isConditionValid($this->triggerDataWithOriginal($id, ['is_active' => 1])),
     );
   }
 

@@ -76,7 +76,10 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
       'webhook_body_format' => 'json',
       'webhook_body_key' => 'message',
     ]);
-    $this->assertSame(['message' => 'hi'], json_decode((string) $this->capturedRequests[0]['request']->getBody(), TRUE));
+    $this->assertSame(
+      ['message' => 'hi'],
+      json_decode((string) $this->capturedRequests[0]['request']->getBody(), TRUE),
+    );
   }
 
   public function testBearerTokenFromConfig(): void {
@@ -146,15 +149,15 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
   public function testBuildPayloadIsPure(): void {
     $this->assertSame(
       ['type' => 'json', 'data' => ['text' => 'hi']],
-      WebhookChannel::buildPayload('hi', 'slack')
+      WebhookChannel::buildPayload('hi', 'slack'),
     );
     $this->assertSame(
       ['type' => 'json', 'data' => ['content' => 'hi']],
-      WebhookChannel::buildPayload('hi', 'discord')
+      WebhookChannel::buildPayload('hi', 'discord'),
     );
     $this->assertSame(
       ['type' => 'json', 'data' => ['msg' => 'hi']],
-      WebhookChannel::buildPayload('hi', 'json', 'msg')
+      WebhookChannel::buildPayload('hi', 'json', 'msg'),
     );
     $this->assertSame(['type' => 'raw', 'data' => 'hi'], WebhookChannel::buildPayload('hi', 'text'));
   }

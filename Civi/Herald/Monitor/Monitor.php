@@ -99,7 +99,7 @@ class Monitor {
         $r = $callable();
         // Anything that is not an explicit non-failure counts as fail;
         // 'skipped' (check disabled by config) is not an outage.
-        $status = is_array($r) ? ($r['status'] ?? NULL) : NULL;
+        $status = is_array($r) ? $r['status'] ?? NULL : NULL;
         $observations[$name] = [
           'status' => in_array($status, ['ok', 'skipped'], TRUE) ? 'ok' : 'fail',
           'detail' => is_array($r) && is_scalar($r['detail'] ?? NULL) ? (string) $r['detail'] : '',
@@ -149,7 +149,7 @@ class Monitor {
     // anything has no reason to linger.
     $liveSnooze = array_filter(
       $config['snooze'],
-      static fn($iso) => is_string($iso) && ($t = strtotime($iso)) !== FALSE && $t > $config['now']
+      static fn ($iso) => is_string($iso) && ($t = strtotime($iso)) !== FALSE && $t > $config['now'],
     );
     if ($liveSnooze !== $config['snooze']) {
       \Civi::settings()->set('herald_monitor_snooze', $liveSnooze);
@@ -205,7 +205,7 @@ class Monitor {
 
     return [
       'checks' => count($observations),
-      'failing' => count(array_filter($observations, static fn(array $c) => $c['status'] === 'fail')),
+      'failing' => count(array_filter($observations, static fn (array $c) => $c['status'] === 'fail')),
       'transitions' => $transitions,
     ];
   }
@@ -257,7 +257,7 @@ class Monitor {
       // 'notified' flag. The old monitor always announced a fail, so infer a
       // legacy reported-fail as already-notified — otherwise it would re-alert
       // or, worse, swallow the recovery.
-      $notified = (bool) ($p['notified'] ?? ($status === 'fail'));
+      $notified = (bool) ($p['notified'] ?? $status === 'fail');
       $lastNotified = isset($p['last_notified']) && is_numeric($p['last_notified']) ? (int) $p['last_notified'] : NULL;
       // Legacy migration: an inferred already-notified fail carries no
       // timestamp — without one, renotify would never fire for it. Anchor it
@@ -326,8 +326,14 @@ class Monitor {
             $lastNotified = $now;
             $publish = ['check' => $name, 'status' => 'fail', 'detail' => $detail, 'renotify' => FALSE];
           }
-          elseif (!$snoozed && $notified && $obsStatus === 'fail' && $renotifySeconds > 0
-            && $lastNotified !== NULL && ($now - $lastNotified) >= $renotifySeconds) {
+          elseif (
+            !$snoozed
+            && $notified
+            && $obsStatus === 'fail'
+            && $renotifySeconds > 0
+            && $lastNotified !== NULL
+            && ($now - $lastNotified) >= $renotifySeconds
+          ) {
             // Stuck failing past the renotify window: re-announce.
             $lastNotified = $now;
             $publish = ['check' => $name, 'status' => 'fail', 'detail' => $detail, 'renotify' => TRUE];

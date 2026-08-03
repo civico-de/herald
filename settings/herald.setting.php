@@ -17,8 +17,12 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('Ordered contribution-source rules (contains, prefix, or regex); the first match wins. Empty disables normalization.'),
-    'help_text' => E::ts('Each rule has match, type, and label keys. Regex matches use PHP preg_match syntax including delimiters.'),
+    'description' => E::ts(
+      'Ordered contribution-source rules (contains, prefix, or regex); the first match wins. Empty disables normalization.',
+    ),
+    'help_text' => E::ts(
+      'Each rule has match, type, and label keys. Regex matches use PHP preg_match syntax including delimiters.',
+    ),
     'title' => E::ts('Contribution Source Normalization'),
   ],
   'herald_telegram_bot_token' => [
@@ -46,7 +50,9 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('Fallback chat/group ID used when an action does not specify one. Negative numbers are group chats.'),
+    'description' => E::ts(
+      'Fallback chat/group ID used when an action does not specify one. Negative numbers are group chats.',
+    ),
     'title' => E::ts('Default Telegram Chat ID'),
     'settings_pages' => ['herald' => ['weight' => 20]],
   ],
@@ -74,7 +80,9 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('Bearer token sent as Authorization header. Skip if your webhook uses a different auth scheme — pass it via the action\'s webhook_headers instead.'),
+    'description' => E::ts(
+      'Bearer token sent as Authorization header. Skip if your webhook uses a different auth scheme — pass it via the action\'s webhook_headers instead.',
+    ),
     'title' => E::ts('Default Webhook Bearer Token'),
     'settings_pages' => ['herald' => ['weight' => 31]],
   ],
@@ -88,7 +96,9 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('ntfy server base URL. Defaults to the public ntfy.sh; set to your self-hosted instance if applicable.'),
+    'description' => E::ts(
+      'ntfy server base URL. Defaults to the public ntfy.sh; set to your self-hosted instance if applicable.',
+    ),
     'title' => E::ts('ntfy Server'),
     'settings_pages' => ['herald' => ['weight' => 40]],
   ],
@@ -116,7 +126,9 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('Bearer token for protected ntfy topics (Authorization header). Leave empty for public ntfy.sh topics.'),
+    'description' => E::ts(
+      'Bearer token for protected ntfy topics (Authorization header). Leave empty for public ntfy.sh topics.',
+    ),
     'title' => E::ts('ntfy Token'),
     'settings_pages' => ['herald' => ['weight' => 42]],
   ],
@@ -158,7 +170,9 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('From header for the email channel, e.g. "Herald" <noreply@example.org>. Leave empty to use the site default from address.'),
+    'description' => E::ts(
+      'From header for the email channel, e.g. "Herald" <noreply@example.org>. Leave empty to use the site default from address.',
+    ),
     'title' => E::ts('Email From Address'),
     'settings_pages' => ['herald' => ['weight' => 60]],
   ],
@@ -185,7 +199,9 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('Topic routing for Herald.publish: map of topic name to delivery params (channel, chat_id, aggregate_minutes, …). A "default" entry backs all topics.'),
+    'description' => E::ts(
+      'Topic routing for Herald.publish: map of topic name to delivery params (channel, chat_id, aggregate_minutes, …). A "default" entry backs all topics.',
+    ),
     'title' => E::ts('Topic Routes'),
   ],
   'herald_monitor_topic' => [
@@ -211,7 +227,9 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('Internal: last observed status per monitor check (used to detect transitions). Not meant for manual editing.'),
+    'description' => E::ts(
+      'Internal: last observed status per monitor check (used to detect transitions). Not meant for manual editing.',
+    ),
     'title' => E::ts('Monitor State (internal)'),
   ],
   'herald_monitor_open_after' => [
@@ -224,7 +242,9 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('Hysteresis: number of consecutive failing runs before a check\'s fail transition is reported. 1 = report on the first failure (default).'),
+    'description' => E::ts(
+      'Hysteresis: number of consecutive failing runs before a check\'s fail transition is reported. 1 = report on the first failure (default).',
+    ),
     'title' => E::ts('Monitor Open-After Threshold'),
     'settings_pages' => ['herald' => ['weight' => 71]],
   ],
@@ -238,7 +258,9 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('Hysteresis: number of consecutive ok runs before a check\'s recovery is reported. 1 = report on the first recovery (default).'),
+    'description' => E::ts(
+      'Hysteresis: number of consecutive ok runs before a check\'s recovery is reported. 1 = report on the first recovery (default).',
+    ),
     'title' => E::ts('Monitor Close-After Threshold'),
     'settings_pages' => ['herald' => ['weight' => 72]],
   ],
@@ -252,7 +274,9 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('Re-announce a check that has stayed in the reported-fail state this many hours. 0 disables reminders.'),
+    'description' => E::ts(
+      'Re-announce a check that has stayed in the reported-fail state this many hours. 0 disables reminders.',
+    ),
     'title' => E::ts('Monitor Renotify Hours'),
     'settings_pages' => ['herald' => ['weight' => 73]],
   ],
@@ -265,8 +289,12 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('Map of check-name to ISO datetime: the check produces no fail/renotify alerts until then. Expired entries are pruned on each run.'),
-    'help_text' => E::ts('A fail→ok recovery still fires after the snooze lapses if a failure had already been announced before it was set.'),
+    'description' => E::ts(
+      'Map of check-name to ISO datetime: the check produces no fail/renotify alerts until then. Expired entries are pruned on each run.',
+    ),
+    'help_text' => E::ts(
+      'A fail→ok recovery still fires after the snooze lapses if a failure had already been announced before it was set.',
+    ),
     'title' => E::ts('Monitor Snooze'),
   ],
   'herald_monitor_expected' => [
@@ -278,7 +306,9 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('List of check names that must always be present. A listed check missing from the hook is reported as failing (extension disabled?). Empty keeps the default of silently dropping vanished checks.'),
+    'description' => E::ts(
+      'List of check names that must always be present. A listed check missing from the hook is reported as failing (extension disabled?). Empty keeps the default of silently dropping vanished checks.',
+    ),
     'title' => E::ts('Monitor Expected Checks'),
   ],
   'herald_rule_health' => [
@@ -290,7 +320,9 @@ return [
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
-    'description' => E::ts('Cached result of the handler-class loadability scan (class => reason for each broken handler). Written by the deploy preflight and the enable hook; read by hook_civicrm_check so the pulse health endpoint never has to load a possibly-broken class. Empty means healthy.'),
+    'description' => E::ts(
+      'Cached result of the handler-class loadability scan (class => reason for each broken handler). Written by the deploy preflight and the enable hook; read by hook_civicrm_check so the pulse health endpoint never has to load a possibly-broken class. Empty means healthy.',
+    ),
     'title' => E::ts('Rule Handler Health (cached)'),
   ],
 ];

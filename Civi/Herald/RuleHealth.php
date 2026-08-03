@@ -47,7 +47,7 @@ class RuleHealth {
       }
       $entries = json_decode((string) file_get_contents($path), TRUE);
       foreach (is_array($entries) ? $entries : [] as $entry) {
-        $className = is_array($entry) ? ($entry['class_name'] ?? NULL) : NULL;
+        $className = is_array($entry) ? $entry['class_name'] ?? NULL : NULL;
         if (!empty($className) && is_scalar($className)) {
           $classes[] = (string) $className;
         }

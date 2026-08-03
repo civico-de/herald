@@ -24,7 +24,7 @@ class CRM_Herald_CivirulesConditions_EventBecameInactive extends CRM_Civirules_C
 
   public function isConditionValid(CRM_Civirules_TriggerData_TriggerData $triggerData) {
     $event = $triggerData->getEntityData('Event');
-    $rawId = is_array($event) ? ($event['id'] ?? 0) : 0;
+    $rawId = is_array($event) ? $event['id'] ?? 0 : 0;
     $eventId = is_scalar($rawId) ? (int) $rawId : 0;
     if ($eventId <= 0) {
       return FALSE;
@@ -33,7 +33,7 @@ class CRM_Herald_CivirulesConditions_EventBecameInactive extends CRM_Civirules_C
     // CURRENT value from the live row — authoritative, unlike the payload.
     $current = \CRM_Core_DAO::singleValueQuery(
       'SELECT is_active FROM civicrm_event WHERE id = %1',
-      [1 => [$eventId, 'Integer']]
+      [1 => [$eventId, 'Integer']],
     );
     if ($current === NULL || (int) $current !== 0) {
       // Row gone (a delete, handled by its own trigger) or still active.
@@ -54,8 +54,10 @@ class CRM_Herald_CivirulesConditions_EventBecameInactive extends CRM_Civirules_C
       // active" answer, so it falls through to "unknown" like a missing one.
       return is_scalar($previous) && (int) $previous === 1;
     }
-    if ($triggerData instanceof CRM_Civirules_TriggerData_Interface_OriginalData
-      && strtolower((string) $triggerData->getOriginalEntity()) === 'event') {
+    if (
+      $triggerData instanceof CRM_Civirules_TriggerData_Interface_OriginalData
+      && strtolower((string) $triggerData->getOriginalEntity()) === 'event'
+    ) {
       $original = $triggerData->getOriginalData();
       if (isset($original['is_active']) && is_scalar($original['is_active'])) {
         return (int) $original['is_active'] === 1;

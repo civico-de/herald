@@ -32,10 +32,19 @@ class CRM_Herald_CivirulesActions_SendContributionAlert extends CRM_Herald_Civir
 
     $previousStatusId = NULL;
     if (!empty($contribution['id']) && (bool) ($params['include_status_transition'] ?? TRUE)) {
-      $previousStatusId = StatusTransitionDispatcher::resolvePreEditStatus(self::asInt($contribution['id']), $triggerData);
+      $previousStatusId = StatusTransitionDispatcher::resolvePreEditStatus(
+        self::asInt($contribution['id']),
+        $triggerData,
+      );
     }
 
-    $vars = self::buildVars($params, $contribution, $previousStatusId, $this->makeStatsService(), [$this, 'resolveStatusName']);
+    $vars = self::buildVars(
+      $params,
+      $contribution,
+      $previousStatusId,
+      $this->makeStatsService(),
+      [$this, 'resolveStatusName'],
+    );
     $this->dispatch($vars);
   }
 
@@ -56,7 +65,7 @@ class CRM_Herald_CivirulesActions_SendContributionAlert extends CRM_Herald_Civir
     ?int $previousStatusId,
     ContributionStatsService $stats,
     callable $statusNameResolver,
-    ?SourceNormalizer $sourceNormalizer = NULL
+    ?SourceNormalizer $sourceNormalizer = NULL,
   ): array {
     $sourceNormalizer ??= new SourceNormalizer();
     if ($sourceNormalizer->isEnabled() && isset($contribution['source']) && is_string($contribution['source'])) {
@@ -81,7 +90,7 @@ class CRM_Herald_CivirulesActions_SendContributionAlert extends CRM_Herald_Civir
         'goal' => $goal,
         'total' => $campaignTotal['total'],
         'count' => $campaignTotal['count'],
-        'percent' => $goal > 0 ? round($campaignTotal['total'] / $goal * 100, 1) : 0,
+        'percent' => $goal > 0 ? round(($campaignTotal['total'] / $goal) * 100, 1) : 0,
       ];
     }
 

@@ -38,7 +38,8 @@ class ContributionStatsService {
     $where[] = ['receive_date', '<', $period->endSql()];
 
     /** @var array<int, array{total: float|int|numeric-string|null, cnt: int|numeric-string|null, source: string|null}> $rows */
-    $rows = $this->contributionGet()
+    $rows = $this
+      ->contributionGet()
       ->addSelect('SUM(total_amount) AS total', 'COUNT(*) AS cnt', 'source')
       ->setWhere($where)
       ->addGroupBy('source')
@@ -93,7 +94,7 @@ class ContributionStatsService {
     $period = DateRange::lastMinutes($minutes);
     return $this->fetchRecentByReceiveDate(
       $this->buildWhere($filters, $this->statusOf($filters, 'Completed')),
-      $period
+      $period,
     );
   }
 
@@ -108,7 +109,7 @@ class ContributionStatsService {
     $period = DateRange::lastMinutes($minutes);
     return $this->fetchRecentByReceiveDate(
       $this->buildWhere($filters, $this->statusOf($filters, 'Pending')),
-      $period
+      $period,
     );
   }
 
@@ -126,7 +127,12 @@ class ContributionStatsService {
    *
    * @return array<int, array{amount: float, source: string, date: string}>
    */
-  public function getRecentStatusTransitions(array $filters, int $minutes, string $toStatus, bool $excludeAlsoReceivedInPeriod = TRUE): array {
+  public function getRecentStatusTransitions(
+    array $filters,
+    int $minutes,
+    string $toStatus,
+    bool $excludeAlsoReceivedInPeriod = TRUE,
+  ): array {
     $where = $this->buildWhere($filters, $toStatus);
     $period = DateRange::lastMinutes($minutes);
     $where[] = ['modified_date', '>=', $period->startSql()];
@@ -135,14 +141,15 @@ class ContributionStatsService {
     }
 
     /** @var array<int, array{total_amount: float|int|numeric-string|null, source: string|null, receive_date: string|null, modified_date: string|null}> $rows */
-    $rows = $this->contributionGet()
+    $rows = $this
+      ->contributionGet()
       ->addSelect('total_amount', 'source', 'receive_date', 'modified_date')
       ->setWhere($where)
       ->addOrderBy('modified_date', 'DESC')
       ->execute()
       ->getArrayCopy();
 
-    return array_map(fn($r) => [
+    return array_map(fn ($r) => [
       'amount' => (float) ($r['total_amount'] ?? 0),
       'source' => $this->sourceNormalizer->normalize($r['source'] ?: 'Unknown'),
       'date' => $r['modified_date'] ?? $r['receive_date'] ?? '',
@@ -158,7 +165,12 @@ class ContributionStatsService {
    *
    * @return array{total: float, count: int}
    */
-  public function getStatusTransitionsInPeriod(array $filters, DateRange $period, string $toStatus, bool $excludeAlsoReceivedInPeriod = TRUE): array {
+  public function getStatusTransitionsInPeriod(
+    array $filters,
+    DateRange $period,
+    string $toStatus,
+    bool $excludeAlsoReceivedInPeriod = TRUE,
+  ): array {
     $where = $this->buildWhere($filters, $toStatus);
     $where[] = ['modified_date', '>=', $period->startSql()];
     $where[] = ['modified_date', '<', $period->endSql()];
@@ -224,14 +236,15 @@ class ContributionStatsService {
     $where = $this->buildWhere($filters, $this->statusOf($filters, 'Completed'));
 
     /** @var array<int, array{total_amount: float|int|numeric-string|null}> $rows */
-    $rows = $this->contributionGet()
+    $rows = $this
+      ->contributionGet()
       ->addSelect('total_amount')
       ->setWhere($where)
       ->setLimit(0)
       ->execute()
       ->getArrayCopy();
 
-    return array_values(array_map(static fn($r) => (float) ($r['total_amount'] ?? 0), $rows));
+    return array_values(array_map(static fn ($r) => (float) ($r['total_amount'] ?? 0), $rows));
   }
 
   /**
@@ -278,16 +291,19 @@ class ContributionStatsService {
       ->execute()
       ->getArrayCopy();
 
-    return array_map(static function ($r) {
-      $qty = (float) ($r['qty_sum'] ?? 0);
-      return [
-        'label' => (string) ($r['label'] ?? '') ?: 'Unknown',
-        'unit_price' => (float) ($r['unit_price'] ?? 0),
-        // Whole quantities render as "6×", not "6.00×".
-        'qty' => $qty == (int) $qty ? (int) $qty : $qty,
-        'total' => (float) ($r['total'] ?? 0),
-      ];
-    }, $rows);
+    return array_map(
+      static function ($r) {
+        $qty = (float) ($r['qty_sum'] ?? 0);
+        return [
+          'label' => (string) ($r['label'] ?? '') ?: 'Unknown',
+          'unit_price' => (float) ($r['unit_price'] ?? 0),
+          // Whole quantities render as "6×", not "6.00×".
+          'qty' => $qty == (int) $qty ? (int) $qty : $qty,
+          'total' => (float) ($r['total'] ?? 0),
+        ];
+      },
+      $rows,
+    );
   }
 
   /**
@@ -341,7 +357,8 @@ class ContributionStatsService {
    */
   private function fetchTotalAndCount(array $where): array {
     /** @var array<int, array{total: float|int|numeric-string|null, cnt: int|numeric-string|null}> $rows */
-    $rows = $this->contributionGet()
+    $rows = $this
+      ->contributionGet()
       ->addSelect('SUM(total_amount) AS total', 'COUNT(*) AS cnt')
       ->setWhere($where)
       ->execute()
@@ -365,14 +382,15 @@ class ContributionStatsService {
     $where[] = ['receive_date', '>=', $period->startSql()];
 
     /** @var array<int, array{total_amount: float|int|numeric-string|null, source: string|null, receive_date: string|null}> $rows */
-    $rows = $this->contributionGet()
+    $rows = $this
+      ->contributionGet()
       ->addSelect('total_amount', 'source', 'receive_date')
       ->setWhere($where)
       ->addOrderBy('receive_date', 'DESC')
       ->execute()
       ->getArrayCopy();
 
-    return array_map(fn($r) => [
+    return array_map(fn ($r) => [
       'amount' => (float) ($r['total_amount'] ?? 0),
       'source' => $this->sourceNormalizer->normalize($r['source'] ?: 'Unknown'),
       'date' => $r['receive_date'] ?? '',

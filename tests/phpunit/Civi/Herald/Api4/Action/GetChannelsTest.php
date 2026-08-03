@@ -55,7 +55,7 @@ class GetChannelsTest extends TestCase implements HeadlessInterface, HookInterfa
         $this->assertArrayHasKey(
           $key,
           $row['config_schema'],
-          sprintf('channel "%s" maps semantic "%s" to unknown config key "%s"', $row['key'], $semantic, $key)
+          sprintf('channel "%s" maps semantic "%s" to unknown config key "%s"', $row['key'], $semantic, $key),
         );
       }
     }

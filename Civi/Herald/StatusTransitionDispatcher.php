@@ -68,8 +68,10 @@ class StatusTransitionDispatcher {
     // Folge-Edits original=Completed und matchen nicht (kein Doppel-Alert).
     // Der Request-weite Snapshot (first-wins) kann das nicht unterscheiden
     // und bleibt Fallback für Pfade ohne OriginalData.
-    if ($triggerData instanceof \CRM_Civirules_TriggerData_Interface_OriginalData
-      && strtolower((string) $triggerData->getOriginalEntity()) === 'contribution') {
+    if (
+      $triggerData instanceof \CRM_Civirules_TriggerData_Interface_OriginalData
+      && strtolower((string) $triggerData->getOriginalEntity()) === 'contribution'
+    ) {
       $original = $triggerData->getOriginalData();
       if (!empty($original['contribution_status_id']) && is_scalar($original['contribution_status_id'])) {
         return (int) $original['contribution_status_id'];

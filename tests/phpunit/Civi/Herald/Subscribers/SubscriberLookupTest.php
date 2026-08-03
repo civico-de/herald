@@ -11,7 +11,8 @@ use PHPUnit\Framework\TestCase;
 class SubscriberLookupTest extends TestCase {
 
   private function row(array $overrides): array {
-    return $overrides + [
+    return $overrides
+    + [
       'id' => 0,
       'herald_preferences.preferred_channel' => '',
       'herald_preferences.telegram_chat_id' => '',
@@ -29,11 +30,13 @@ class SubscriberLookupTest extends TestCase {
       'id' => 42,
       'herald_preferences.preferred_channel' => 'telegram',
       'herald_preferences.telegram_chat_id' => '111',
-    ]),
-    ];
-    $this->assertSame([
-      ['contact_id' => 42, 'channel' => 'telegram', 'config' => ['chat_id' => '111']],
-    ], SubscriberLookup::mapRows($rows));
+    ])];
+    $this->assertSame(
+      [
+        ['contact_id' => 42, 'channel' => 'telegram', 'config' => ['chat_id' => '111']],
+      ],
+      SubscriberLookup::mapRows($rows),
+    );
   }
 
   public function testNtfySubscriberMapped(): void {
@@ -41,8 +44,7 @@ class SubscriberLookupTest extends TestCase {
       'id' => 7,
       'herald_preferences.preferred_channel' => 'ntfy',
       'herald_preferences.ntfy_topic' => 'mytopic',
-    ]),
-    ];
+    ])];
     $mapped = SubscriberLookup::mapRows($rows);
     $this->assertSame('ntfy', $mapped[0]['channel']);
     $this->assertSame(['ntfy_topic' => 'mytopic'], $mapped[0]['config']);
@@ -53,8 +55,7 @@ class SubscriberLookupTest extends TestCase {
       'id' => 9,
       'herald_preferences.preferred_channel' => 'pushover',
       'herald_preferences.pushover_user_key' => 'uvw',
-    ]),
-    ];
+    ])];
     $mapped = SubscriberLookup::mapRows($rows);
     $this->assertSame(['pushover_user_key' => 'uvw'], $mapped[0]['config']);
   }
@@ -64,8 +65,7 @@ class SubscriberLookupTest extends TestCase {
       'id' => 11,
       'herald_preferences.preferred_channel' => 'webhook',
       'herald_preferences.webhook_url' => 'https://example.com/x',
-    ]),
-    ];
+    ])];
     $this->assertSame(['webhook_url' => 'https://example.com/x'], SubscriberLookup::mapRows($rows)[0]['config']);
   }
 
@@ -74,11 +74,13 @@ class SubscriberLookupTest extends TestCase {
       'id' => 13,
       'herald_preferences.preferred_channel' => 'email',
       'email_primary.email' => 'ada@example.org',
-    ]),
-    ];
-    $this->assertSame([
-      ['contact_id' => 13, 'channel' => 'email', 'config' => ['email_to' => 'ada@example.org']],
-    ], SubscriberLookup::mapRows($rows));
+    ])];
+    $this->assertSame(
+      [
+        ['contact_id' => 13, 'channel' => 'email', 'config' => ['email_to' => 'ada@example.org']],
+      ],
+      SubscriberLookup::mapRows($rows),
+    );
   }
 
   public function testEmailSubscriberWithDoNotEmailSkipped(): void {
@@ -87,8 +89,7 @@ class SubscriberLookupTest extends TestCase {
       'herald_preferences.preferred_channel' => 'email',
       'email_primary.email' => 'ada@example.org',
       'do_not_email' => TRUE,
-    ]),
-    ];
+    ])];
     $this->assertSame([], SubscriberLookup::mapRows($rows));
   }
 
@@ -96,16 +97,19 @@ class SubscriberLookupTest extends TestCase {
     $rows = [$this->row([
       'id' => 13,
       'herald_preferences.preferred_channel' => 'email',
-    ]),
-    ];
+    ])];
     $this->assertSame([], SubscriberLookup::mapRows($rows));
   }
 
   public function testContactWithoutChannelSkipped(): void {
     $rows = [
-    // no preferred_channel
+      // no preferred_channel
       $this->row(['id' => 1]),
-      $this->row(['id' => 2, 'herald_preferences.preferred_channel' => 'telegram', 'herald_preferences.telegram_chat_id' => '999']),
+      $this->row([
+        'id' => 2,
+        'herald_preferences.preferred_channel' => 'telegram',
+        'herald_preferences.telegram_chat_id' => '999',
+      ]),
     ];
     $mapped = SubscriberLookup::mapRows($rows);
     $this->assertCount(1, $mapped);
@@ -117,8 +121,7 @@ class SubscriberLookupTest extends TestCase {
       'id' => 1,
       'herald_preferences.preferred_channel' => 'telegram',
       // no telegram_chat_id
-    ]),
-    ];
+    ])];
     $this->assertSame([], SubscriberLookup::mapRows($rows));
   }
 
@@ -126,16 +129,19 @@ class SubscriberLookupTest extends TestCase {
     $rows = [$this->row([
       'id' => 1,
       'herald_preferences.preferred_channel' => 'matrix',
-    ]),
-    ];
+    ])];
     $this->assertSame([], SubscriberLookup::mapRows($rows));
   }
 
   public function testMixedSubscribersAcrossChannels(): void {
     $rows = [
-      $this->row(['id' => 1, 'herald_preferences.preferred_channel' => 'telegram', 'herald_preferences.telegram_chat_id' => 'A']),
+      $this->row([
+        'id' => 1,
+        'herald_preferences.preferred_channel' => 'telegram',
+        'herald_preferences.telegram_chat_id' => 'A',
+      ]),
       $this->row(['id' => 2, 'herald_preferences.preferred_channel' => 'ntfy', 'herald_preferences.ntfy_topic' => 'B']),
-    // missing recipient → skip
+      // missing recipient → skip
       $this->row(['id' => 3, 'herald_preferences.preferred_channel' => 'pushover']),
     ];
     $mapped = SubscriberLookup::mapRows($rows);

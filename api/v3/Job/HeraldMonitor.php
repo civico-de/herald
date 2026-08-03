@@ -21,7 +21,9 @@ function _civicrm_api3_job_herald_monitor_spec(&$spec) {
  */
 function civicrm_api3_job_herald_monitor($params) {
   return civicrm_api3_create_success(
-    [(new Monitor())->run()],
-    $params, 'Job', 'herald_monitor'
+    [new Monitor()->run()],
+    $params,
+    'Job',
+    'herald_monitor',
   );
 }

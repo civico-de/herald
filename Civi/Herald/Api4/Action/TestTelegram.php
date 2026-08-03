@@ -33,7 +33,7 @@ class TestTelegram extends AbstractAction {
   protected ?string $chatId = NULL;
 
   public function _run(Result $result): void {
-    $body = $this->message !== '' ? $this->message : ('<b>herald smoke test</b> — sent ' . date('c'));
+    $body = $this->message !== '' ? $this->message : '<b>herald smoke test</b> — sent ' . date('c');
 
     $config = [];
     if ($this->chatId !== NULL && $this->chatId !== '') {

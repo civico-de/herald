@@ -110,7 +110,7 @@ class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_Civi
         'goal' => $goal,
         'total' => $campaignTotal['total'],
         'count' => $campaignTotal['count'],
-        'percent' => $goal > 0 ? round($campaignTotal['total'] / $goal * 100, 1) : 0,
+        'percent' => $goal > 0 ? round(($campaignTotal['total'] / $goal) * 100, 1) : 0,
       ];
     }
 
@@ -128,12 +128,15 @@ class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_Civi
   private static function buildFiltersFromParams(array $params): array {
     // The 0-check also drops legacy params where an empty form field was
     // stored as '' and would otherwise survive as (int) 0.
-    return array_filter([
-      'campaign_id' => isset($params['campaign_id']) ? self::asInt($params['campaign_id']) : NULL,
-      'financial_type_id' => isset($params['financial_type_id']) ? self::asInt($params['financial_type_id']) : NULL,
-      'source_pattern' => $params['source_pattern'] ?? NULL,
-      'status' => $params['status'] ?? NULL,
-    ], static fn($v) => $v !== NULL && $v !== '' && $v !== 0);
+    return array_filter(
+      [
+        'campaign_id' => isset($params['campaign_id']) ? self::asInt($params['campaign_id']) : NULL,
+        'financial_type_id' => isset($params['financial_type_id']) ? self::asInt($params['financial_type_id']) : NULL,
+        'source_pattern' => $params['source_pattern'] ?? NULL,
+        'status' => $params['status'] ?? NULL,
+      ],
+      static fn ($v) => $v !== NULL && $v !== '' && $v !== 0,
+    );
   }
 
   /**
@@ -148,7 +151,7 @@ class CRM_Herald_CivirulesActions_SendContributionDigest extends CRM_Herald_Civi
     if (!is_array($decoded)) {
       return NULL;
     }
-    return array_values(array_map(static fn(mixed $edge): float => self::asFloat($edge), $decoded));
+    return array_values(array_map(static fn (mixed $edge): float => self::asFloat($edge), $decoded));
   }
 
   public static function resolvePeriod(string $key): DateRange {

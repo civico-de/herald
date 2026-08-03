@@ -24,7 +24,7 @@ class CRM_Herald_CivirulesActions_SendContributionAlertTest extends TestCase {
    * Resolver mapping: 1=Completed, 2=Pending, 3=Cancelled. */
   private function statusResolver(): callable {
     $map = [1 => 'Completed', 2 => 'Pending', 3 => 'Cancelled'];
-    return static fn($id) => $map[(int) $id] ?? '';
+    return static fn ($id) => $map[(int) $id] ?? '';
   }
 
   public function testContributionIsForwarded(): void {
@@ -34,7 +34,7 @@ class CRM_Herald_CivirulesActions_SendContributionAlertTest extends TestCase {
       $contribution,
       NULL,
       $this->makeFakeStats(),
-      $this->statusResolver()
+      $this->statusResolver(),
     );
     $this->assertSame($contribution, $vars['contribution']);
     $this->assertSame('Completed', $vars['to_status']);
@@ -47,10 +47,10 @@ class CRM_Herald_CivirulesActions_SendContributionAlertTest extends TestCase {
     $vars = CRM_Herald_CivirulesActions_SendContributionAlert::buildVars(
       [],
       ['id' => 1, 'contribution_status_id' => 1],
-    // previous = Pending
+      // previous = Pending
       2,
       $this->makeFakeStats(),
-      $this->statusResolver()
+      $this->statusResolver(),
     );
     $this->assertSame('Pending', $vars['from_status']);
     $this->assertSame('Completed', $vars['to_status']);
@@ -65,7 +65,7 @@ class CRM_Herald_CivirulesActions_SendContributionAlertTest extends TestCase {
       $this->statusResolver(),
       new SourceNormalizer([
         ['match' => 'Bank TX', 'type' => 'contains', 'label' => 'Ueberweisung'],
-      ])
+      ]),
     );
 
     $this->assertSame('Ueberweisung', $vars['contribution']['source']);
@@ -77,7 +77,7 @@ class CRM_Herald_CivirulesActions_SendContributionAlertTest extends TestCase {
       ['id' => 5, 'contribution_status_id' => 1],
       NULL,
       $this->makeFakeStats(),
-      $this->statusResolver()
+      $this->statusResolver(),
     );
     $this->assertSame(30000.0, $vars['campaign']['goal']);
     $this->assertSame(18000.0, $vars['campaign']['total']);
@@ -91,7 +91,7 @@ class CRM_Herald_CivirulesActions_SendContributionAlertTest extends TestCase {
       ['id' => 5, 'contribution_status_id' => 1],
       NULL,
       $this->makeFakeStats(),
-      $this->statusResolver()
+      $this->statusResolver(),
     );
     // campaign block always present with zeros to keep Smarty {if $campaign.goal} happy
     $this->assertSame(0, $vars['campaign']['goal']);
@@ -103,7 +103,7 @@ class CRM_Herald_CivirulesActions_SendContributionAlertTest extends TestCase {
       ['id' => 5, 'contribution_status_id' => 1],
       NULL,
       $this->makeFakeStats(),
-      $this->statusResolver()
+      $this->statusResolver(),
     );
     // goal=0 is falsy → campaign block should be empty (matches digest behaviour)
     // campaign block always present with zeros to keep Smarty {if $campaign.goal} happy
@@ -116,7 +116,7 @@ class CRM_Herald_CivirulesActions_SendContributionAlertTest extends TestCase {
       ['id' => 1, 'contribution_status_id' => 99],
       NULL,
       $this->makeFakeStats(),
-      $this->statusResolver()
+      $this->statusResolver(),
     );
     $this->assertSame('', $vars['to_status']);
   }

@@ -12,7 +12,10 @@ use PHPUnit\Framework\TestCase;
 /**
  * @group headless
  */
-class ContributionStatsServiceTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
+class ContributionStatsServiceTest extends TestCase implements
+  HeadlessInterface,
+  HookInterface,
+  TransactionalInterface {
 
   private int $contactId;
   private ContributionStatsService $service;
@@ -23,7 +26,7 @@ class ContributionStatsServiceTest extends TestCase implements HeadlessInterface
       ->installMe(__DIR__)
       // Campaign tests need the CiviCampaign component (off in a minimal
       // headless install).
-      ->callback(function() {
+      ->callback(function () {
         \CRM_Core_BAO_ConfigSetting::enableComponent('CiviCampaign');
       }, 'enableCiviCampaign')
       ->apply();
@@ -39,7 +42,8 @@ class ContributionStatsServiceTest extends TestCase implements HeadlessInterface
       ->addValue('contact_type', 'Individual')
       ->addValue('first_name', 'Stats')
       ->addValue('last_name', 'Test')
-      ->execute()->first()['id'];
+      ->execute()
+      ->first()['id'];
     $this->service = new ContributionStatsService();
   }
 
@@ -56,7 +60,8 @@ class ContributionStatsServiceTest extends TestCase implements HeadlessInterface
         ->addValue('total_amount', $row['amount'])
         ->addValue('source', $row['source'] ?? 'Stripe')
         ->addValue('receive_date', $row['receive_date'] ?? date('Y-m-d H:i:s'))
-        ->execute()->first()['id'];
+        ->execute()
+        ->first()['id'];
       if (isset($row['modified_date'])) {
         // modified_date is normally auto-populated; force it for transition tests.
         \CRM_Core_DAO::executeQuery(
@@ -64,7 +69,7 @@ class ContributionStatsServiceTest extends TestCase implements HeadlessInterface
           [
             1 => [$row['modified_date'], 'String'],
             2 => [$id, 'Integer'],
-          ]
+          ],
         );
       }
       $ids[] = $id;
@@ -149,7 +154,8 @@ class ContributionStatsServiceTest extends TestCase implements HeadlessInterface
     $campaignId = (int) \Civi\Api4\Campaign::create(FALSE)
       ->addValue('title', 'TestCampaign')
       ->addValue('campaign_type_id', 1)
-      ->execute()->first()['id'];
+      ->execute()
+      ->first()['id'];
 
     $yesterday = date('Y-m-d 12:00:00', strtotime('yesterday'));
     Contribution::create(FALSE)
@@ -227,7 +233,8 @@ class ContributionStatsServiceTest extends TestCase implements HeadlessInterface
     $campaignId = (int) \Civi\Api4\Campaign::create(FALSE)
       ->addValue('title', 'TotalCampaign')
       ->addValue('campaign_type_id', 1)
-      ->execute()->first()['id'];
+      ->execute()
+      ->first()['id'];
 
     Contribution::create(FALSE)
       ->addValue('contact_id', $this->contactId)
@@ -253,9 +260,19 @@ class ContributionStatsServiceTest extends TestCase implements HeadlessInterface
     $now = date('Y-m-d H:i:s');
     $this->seedContributions([
       // Genuine transition: received long ago, modified just now.
-      ['amount' => 100.0, 'status' => 'Completed', 'receive_date' => date('Y-m-d H:i:s', strtotime('-1 day')), 'modified_date' => $now],
+      [
+        'amount' => 100.0,
+        'status' => 'Completed',
+        'receive_date' => date('Y-m-d H:i:s', strtotime('-1 day')),
+        'modified_date' => $now,
+      ],
       // Outside the window: modified 2 hours ago.
-      ['amount' => 200.0, 'status' => 'Completed', 'receive_date' => date('Y-m-d H:i:s', strtotime('-1 day')), 'modified_date' => date('Y-m-d H:i:s', strtotime('-2 hours'))],
+      [
+        'amount' => 200.0,
+        'status' => 'Completed',
+        'receive_date' => date('Y-m-d H:i:s', strtotime('-1 day')),
+        'modified_date' => date('Y-m-d H:i:s', strtotime('-2 hours')),
+      ],
     ]);
     $recent = $this->service->getRecentStatusTransitions([], 10, 'Completed');
     $this->assertCount(1, $recent);

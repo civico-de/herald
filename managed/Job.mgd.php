@@ -16,7 +16,9 @@ return [
       'version' => 4,
       'values' => [
         'name' => E::ts('Herald: Flush alert aggregation buffer'),
-        'description' => E::ts('Sends alerts collected via aggregate_minutes as one composed message per rule once their window has passed.'),
+        'description' => E::ts(
+          'Sends alerts collected via aggregate_minutes as one composed message per rule once their window has passed.',
+        ),
         'run_frequency' => 'Always',
         'api_entity' => 'Job',
         'api_action' => 'herald_buffer_flush',
@@ -35,7 +37,9 @@ return [
       'version' => 4,
       'values' => [
         'name' => E::ts('Herald: Run check monitor'),
-        'description' => E::ts('Runs checks contributed via hook_civicrm_heraldChecks and publishes ok/fail transitions to the herald_monitor_topic topic.'),
+        'description' => E::ts(
+          'Runs checks contributed via hook_civicrm_heraldChecks and publishes ok/fail transitions to the herald_monitor_topic topic.',
+        ),
         'run_frequency' => 'Always',
         'api_entity' => 'Job',
         'api_action' => 'herald_monitor',

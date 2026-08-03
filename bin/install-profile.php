@@ -64,7 +64,9 @@ foreach ($fieldOrder as $f) {
     ->execute()
     ->first();
   if (!$cf) {
-    echo "[herald] WARN: custom field 'herald_preferences.{$f['name']}' missing — did you run `cv ext:enable herald` first?\n";
+    echo
+      "[herald] WARN: custom field 'herald_preferences.{$f['name']}' missing — did you run `cv ext:enable herald` first?\n"
+    ;
     continue;
   }
   $fieldName = 'custom_' . $cf['id'];

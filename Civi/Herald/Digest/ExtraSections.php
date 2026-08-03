@@ -65,7 +65,7 @@ class ExtraSections {
       if ($trimmed === '') {
         return [];
       }
-      $decoded = ($trimmed[0] === '[') ? json_decode($trimmed, TRUE) : NULL;
+      $decoded = $trimmed[0] === '[' ? json_decode($trimmed, TRUE) : NULL;
       $raw = is_array($decoded) ? $decoded : explode(',', $trimmed);
     }
     if (!is_array($raw)) {

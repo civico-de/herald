@@ -169,13 +169,26 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
    * credentials must never be sent to a contact-supplied endpoint.
    */
   private const SUBSCRIBER_SAFE_KEYS = [
-    'parse_mode', 'disable_notification', 'disable_web_page_preview',
-    'webhook_body_format', 'webhook_body_key',
-    'ntfy_title', 'ntfy_priority', 'ntfy_tags', 'ntfy_click', 'ntfy_markdown',
-    'pushover_title', 'pushover_priority', 'pushover_sound',
-    'pushover_url', 'pushover_url_title', 'pushover_html',
-    'pushover_retry', 'pushover_expire',
-    'email_subject', 'email_format',
+    'parse_mode',
+    'disable_notification',
+    'disable_web_page_preview',
+    'webhook_body_format',
+    'webhook_body_key',
+    'ntfy_title',
+    'ntfy_priority',
+    'ntfy_tags',
+    'ntfy_click',
+    'ntfy_markdown',
+    'pushover_title',
+    'pushover_priority',
+    'pushover_sound',
+    'pushover_url',
+    'pushover_url_title',
+    'pushover_html',
+    'pushover_retry',
+    'pushover_expire',
+    'email_subject',
+    'email_format',
   ];
 
   /**

@@ -23,7 +23,7 @@ $ckHome = getenv('HOME') ?: '';
 $ckRaw = $ckHome !== '' ? (string) @file_get_contents($ckHome . '/.cv.json') : '';
 $ckConfig = $ckRaw !== '' ? json_decode($ckRaw, TRUE) : NULL;
 foreach ((array) ($ckConfig['sites'] ?? []) as $ckSite) {
-  $ckDsn = is_array($ckSite) ? ($ckSite['TEST_DB_DSN'] ?? NULL) : NULL;
+  $ckDsn = is_array($ckSite) ? $ckSite['TEST_DB_DSN'] ?? NULL : NULL;
   if (is_string($ckDsn) && $ckDsn !== '') {
     $ckTestDsns[] = $ckDsn;
   }
@@ -40,11 +40,14 @@ foreach ($ckTestDsns as $ckDsn) {
   }
 }
 if ($ckTestDsns === [] || $ckBadDsn !== NULL) {
-  fwrite(STDERR, $ckBadDsn !== NULL
-    ? "ABORT: TEST_DB_DSN does not name a *_test database ({$ckBadDsn}) — headless tests would rebuild it.\n"
-    : "ABORT: no TEST_DB_DSN in \$HOME/.cv.json — headless tests would rebuild the MAIN dev DB.\n"
+  fwrite(
+    STDERR,
+    $ckBadDsn !== NULL
+      ? "ABORT: TEST_DB_DSN does not name a *_test database ({$ckBadDsn}) — headless tests would rebuild it.\n"
+      : "ABORT: no TEST_DB_DSN in \$HOME/.cv.json — headless tests would rebuild the MAIN dev DB.\n"
       . "Re-provision the stack (`docker compose down -v && up -d`) — the civikitchen\n"
-      . "entrypoint writes TEST_DB_DSN and seeds the civicrm_test scratch DB on first boot.\n");
+      . "entrypoint writes TEST_DB_DSN and seeds the civicrm_test scratch DB on first boot.\n",
+  );
   exit(1);
 }
 

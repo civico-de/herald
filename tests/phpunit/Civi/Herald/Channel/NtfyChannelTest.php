@@ -53,7 +53,10 @@ class NtfyChannelTest extends TestCase implements HeadlessInterface, HookInterfa
     \Civi::settings()->set('herald_ntfy_default_topic', 'fallback-topic');
     $channel = new NtfyChannel($this->makeMockedClient(new Response(200, [], '')));
     $channel->send('hi', []);
-    $this->assertSame('https://ntfy.example.com/fallback-topic', (string) $this->capturedRequests[0]['request']->getUri());
+    $this->assertSame(
+      'https://ntfy.example.com/fallback-topic',
+      (string) $this->capturedRequests[0]['request']->getUri(),
+    );
   }
 
   public function testFallsBackToPublicNtfyShWhenServerUnset(): void {

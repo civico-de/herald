@@ -20,7 +20,11 @@ class EmailChannelParamsTest extends TestCase {
   }
 
   public function testTextFormat(): void {
-    $params = EmailChannel::buildMailParams('x', ['email_to' => 'a@example.org', 'email_format' => 'text'], 'from@example.org');
+    $params = EmailChannel::buildMailParams(
+      'x',
+      ['email_to' => 'a@example.org', 'email_format' => 'text'],
+      'from@example.org',
+    );
     $this->assertSame('x', $params['text']);
     $this->assertArrayNotHasKey('html', $params);
   }
@@ -33,11 +37,15 @@ class EmailChannelParamsTest extends TestCase {
   }
 
   public function testExplicitSubjectAndToName(): void {
-    $params = EmailChannel::buildMailParams('x', [
-      'email_to' => 'a@example.org',
-      'email_to_name' => 'Ada',
-      'email_subject' => 'Hi',
-    ], 'f');
+    $params = EmailChannel::buildMailParams(
+      'x',
+      [
+        'email_to' => 'a@example.org',
+        'email_to_name' => 'Ada',
+        'email_subject' => 'Hi',
+      ],
+      'f',
+    );
     $this->assertSame('Hi', $params['subject']);
     $this->assertSame('Ada', $params['toName']);
     $this->assertSame('a@example.org', $params['toEmail']);
@@ -48,7 +56,11 @@ class EmailChannelParamsTest extends TestCase {
     $this->assertArrayNotHasKey('cc', $params);
     $this->assertArrayNotHasKey('bcc', $params);
 
-    $params = EmailChannel::buildMailParams('x', ['email_to' => 'a@example.org', 'email_cc' => 'c@example.org', 'email_bcc' => 'b@example.org'], 'f');
+    $params = EmailChannel::buildMailParams(
+      'x',
+      ['email_to' => 'a@example.org', 'email_cc' => 'c@example.org', 'email_bcc' => 'b@example.org'],
+      'f',
+    );
     $this->assertSame('c@example.org', $params['cc']);
     $this->assertSame('b@example.org', $params['bcc']);
   }

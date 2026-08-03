@@ -11,8 +11,8 @@ class DateRangeTest extends TestCase {
 
   public function testYesterdayIsExclusiveEndAtMidnight(): void {
     $r = DateRange::yesterday();
-    $expectedStart = (new \DateTimeImmutable('yesterday'))->setTime(0, 0, 0);
-    $expectedEnd = (new \DateTimeImmutable('today'))->setTime(0, 0, 0);
+    $expectedStart = new \DateTimeImmutable('yesterday')->setTime(0, 0, 0);
+    $expectedEnd = new \DateTimeImmutable('today')->setTime(0, 0, 0);
     $this->assertEquals($expectedStart, $r->start);
     $this->assertEquals($expectedEnd, $r->end);
     $this->assertSame($expectedStart->format('Y-m-d'), $r->label);
@@ -20,7 +20,7 @@ class DateRangeTest extends TestCase {
 
   public function testTodayHasMidnightStartAndTomorrowEnd(): void {
     $r = DateRange::today();
-    $expectedStart = (new \DateTimeImmutable('today'))->setTime(0, 0, 0);
+    $expectedStart = new \DateTimeImmutable('today')->setTime(0, 0, 0);
     $expectedEnd = $expectedStart->modify('+1 day');
     $this->assertEquals($expectedStart, $r->start);
     $this->assertEquals($expectedEnd, $r->end);

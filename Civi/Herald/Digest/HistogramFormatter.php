@@ -30,7 +30,7 @@ class HistogramFormatter {
    * @return array<int, array{low: float, high: float, count: int, sum: float, label: string}>
    */
   public static function compute(array $amounts, int $bucketCount = 8, ?array $overrideEdges = NULL): array {
-    $amounts = array_values(array_filter($amounts, static fn($a) => $a > 0));
+    $amounts = array_values(array_filter($amounts, static fn ($a) => $a > 0));
     if (empty($amounts)) {
       return [];
     }
@@ -66,11 +66,11 @@ class HistogramFormatter {
       return '(no data)';
     }
 
-    $labelWidth = max(array_map(static fn($b) => mb_strlen($b['label']), $buckets));
+    $labelWidth = max(array_map(static fn ($b) => mb_strlen($b['label']), $buckets));
 
     $lines = [];
     foreach ($buckets as $bucket) {
-      $blocks = (int) round($bucket['count'] / $maxCount * $maxBlocks);
+      $blocks = (int) round(($bucket['count'] / $maxCount) * $maxBlocks);
       $bar = str_repeat('█', max(0, $blocks));
       $label = self::padLabel($bucket['label'], $labelWidth);
       $lines[] = sprintf('%s %s %d (%s)', $label, $bar, $bucket['count'], self::formatNumber($bucket['sum']));
@@ -94,7 +94,7 @@ class HistogramFormatter {
       return [self::niceFloor($min), self::niceCeiling($max + 1)];
     }
 
-    if ($count < $bucketCount * 2) {
+    if ($count < ($bucketCount * 2)) {
       return self::linearEdges($min, $max, min($bucketCount, max(2, intdiv($count, 2))));
     }
 
@@ -115,7 +115,7 @@ class HistogramFormatter {
 
     $edges = [$low];
     for ($i = 1; $i < $count; $i++) {
-      $raw = $low + $step * $i;
+      $raw = $low + ($step * $i);
       $nice = self::niceCeiling($raw);
       if ($nice > end($edges) && $nice < $high) {
         $edges[] = $nice;
@@ -135,7 +135,7 @@ class HistogramFormatter {
 
     $edges = [self::niceFloor(max($min, 1))];
     for ($i = 1; $i < $count; $i++) {
-      $raw = pow(10, $logMin + $step * $i);
+      $raw = pow(10, $logMin + ($step * $i));
       $nice = self::niceCeiling($raw);
       if ($nice > end($edges)) {
         $edges[] = $nice;
@@ -158,7 +158,7 @@ class HistogramFormatter {
     $exp = (int) floor(log10($x));
     $mantissa = $x / (10 ** $exp);
     foreach (self::NICE_MANTISSAS as $m) {
-      if ($mantissa <= $m + 1e-9) {
+      if ($mantissa <= ($m + 1e-9)) {
         return $m * (10 ** $exp);
       }
     }
@@ -175,7 +175,7 @@ class HistogramFormatter {
     $exp = (int) floor(log10($x));
     $mantissa = $x / (10 ** $exp);
     foreach (array_reverse(self::NICE_MANTISSAS) as $m) {
-      if ($mantissa >= $m - 1e-9) {
+      if ($mantissa >= ($m - 1e-9)) {
         return $m * (10 ** $exp);
       }
     }
@@ -221,7 +221,7 @@ class HistogramFormatter {
         continue;
       }
       for ($i = 0; $i < $bucketCount; $i++) {
-        $isLast = ($i === $bucketCount - 1);
+        $isLast = $i === ($bucketCount - 1);
         $inBucket = $amount >= $edges[$i] && ($isLast ? $amount <= $edges[$i + 1] : $amount < $edges[$i + 1]);
         if ($inBucket) {
           // Read-modify-write rather than `$buckets[$i]['count']++`: phpstan

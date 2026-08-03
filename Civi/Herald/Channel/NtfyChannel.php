@@ -45,7 +45,9 @@ class NtfyChannel implements ChannelInterface {
       ? $config['ntfy_topic']
       : \Civi::settings()->get('herald_ntfy_default_topic');
     if (!$topic) {
-      throw new \CRM_Core_Exception('herald: ntfy channel requires ntfy_topic (action param or herald_ntfy_default_topic setting).');
+      throw new \CRM_Core_Exception(
+        'herald: ntfy channel requires ntfy_topic (action param or herald_ntfy_default_topic setting).',
+      );
     }
 
     $server = self::str(\Civi::settings()->get('herald_ntfy_server') ?: 'https://ntfy.sh');
@@ -75,7 +77,7 @@ class NtfyChannel implements ChannelInterface {
       throw new \CRM_Core_Exception(sprintf(
         'herald: ntfy returned HTTP %d. Body: %s',
         $status,
-        substr((string) $response->getBody(), 0, 500)
+        substr((string) $response->getBody(), 0, 500),
       ));
     }
   }

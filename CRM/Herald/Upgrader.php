@@ -33,12 +33,14 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
     // install, headless tests), the entity registry was built before
     // CiviRules came online and Api4 "CiviRulesAction" is unknown. Flush so
     // it rebuilds with CiviRules' entities included.
-    if (class_exists('\Civi\Schema\EntityRepository')
-      && !\Civi\Schema\EntityRepository::entityExists('CiviRulesAction')) {
+    if (
+      class_exists('\Civi\Schema\EntityRepository')
+      && !\Civi\Schema\EntityRepository::entityExists('CiviRulesAction')
+    ) {
       \Civi\Schema\EntityRepository::flush();
     }
     CRM_Civirules_Utils_Upgrader::insertActionsFromJson(
-      $this->extensionDir . DIRECTORY_SEPARATOR . 'civirules_actions.json'
+      $this->extensionDir . DIRECTORY_SEPARATOR . 'civirules_actions.json',
     );
     // Same rationale as the enable() guard above: phpstan sees this as
     // always true because of scanDirectories, but the method may genuinely
@@ -46,7 +48,7 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
     // @phpstan-ignore function.alreadyNarrowedType
     if (method_exists('CRM_Civirules_Utils_Upgrader', 'insertConditionsFromJson')) {
       CRM_Civirules_Utils_Upgrader::insertConditionsFromJson(
-        $this->extensionDir . DIRECTORY_SEPARATOR . 'civirules_conditions.json'
+        $this->extensionDir . DIRECTORY_SEPARATOR . 'civirules_conditions.json',
       );
     }
   }

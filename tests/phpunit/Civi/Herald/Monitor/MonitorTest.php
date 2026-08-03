@@ -57,13 +57,13 @@ class MonitorTest extends TestCase {
     [$state, $pub] = $this->step([], ['a' => $this->obsFail('boom')], []);
     $this->assertSame(
       [['check' => 'a', 'status' => 'fail', 'detail' => 'boom', 'renotify' => FALSE]],
-      $pub
+      $pub,
     );
     // Recovery closes the loop.
     [, $pub] = $this->step($state, ['a' => $this->obsOk()], []);
     $this->assertSame(
       [['check' => 'a', 'status' => 'ok', 'detail' => '', 'renotify' => FALSE]],
-      $pub
+      $pub,
     );
   }
 
@@ -79,7 +79,7 @@ class MonitorTest extends TestCase {
     [, $pub] = $this->step([], ['new_ok' => $this->obsOk(), 'new_fail' => $this->obsFail()], []);
     $this->assertSame(
       [['check' => 'new_fail', 'status' => 'fail', 'detail' => '', 'renotify' => FALSE]],
-      $pub
+      $pub,
     );
   }
 
@@ -128,7 +128,7 @@ class MonitorTest extends TestCase {
 
   public function testRenotifyAfterWindow(): void {
     $hour = 3600;
-    $cfg = fn(int $now) => ['renotify_seconds' => 4 * $hour, 'now' => $now];
+    $cfg = fn (int $now) => ['renotify_seconds' => 4 * $hour, 'now' => $now];
     [$state, $pub] = $this->step([], ['a' => $this->obsFail('down')], $cfg(0));
     $this->assertSame([['check' => 'a', 'status' => 'fail', 'detail' => 'down', 'renotify' => FALSE]], $pub);
     // 3h later: within window, silent.
@@ -155,7 +155,7 @@ class MonitorTest extends TestCase {
   // --- snooze ---------------------------------------------------------------
 
   public function testSnoozeSuppressesFailAndRenotify(): void {
-    $cfg = fn(int $now) => [
+    $cfg = fn (int $now) => [
       'renotify_seconds' => 3600,
       'snooze' => ['a' => '2026-01-01T01:00:00Z'],
       'now' => $now,
@@ -211,7 +211,7 @@ class MonitorTest extends TestCase {
     [$state, $pub] = $this->step(
       ['gone' => ['status' => 'fail', 'notified' => TRUE]],
       [],
-      []
+      [],
     );
     $this->assertSame([], $pub);
     $this->assertArrayNotHasKey('gone', $state);
@@ -223,11 +223,16 @@ class MonitorTest extends TestCase {
     [, $pub] = $this->step(
       [],
       ['ext.check' => $this->obsFail('check missing — extension disabled?')],
-      []
+      [],
     );
     $this->assertSame(
-      [['check' => 'ext.check', 'status' => 'fail', 'detail' => 'check missing — extension disabled?', 'renotify' => FALSE]],
-      $pub
+      [[
+        'check' => 'ext.check',
+        'status' => 'fail',
+        'detail' => 'check missing — extension disabled?',
+        'renotify' => FALSE,
+      ]],
+      $pub,
     );
   }
 
@@ -292,11 +297,15 @@ class MonitorTest extends TestCase {
     ];
     // Renotify window long past, but the current observation is ok (close_after=2):
     // re-announcing a possibly-over incident would be wrong.
-    [, $pub] = $this->step($state, ['a' => $this->obsOk()], [
-      'close_after' => 2,
-      'renotify_seconds' => 60,
-      'now' => 100000,
-    ]);
+    [, $pub] = $this->step(
+      $state,
+      ['a' => $this->obsOk()],
+      [
+        'close_after' => 2,
+        'renotify_seconds' => 60,
+        'now' => 100000,
+      ],
+    );
     $this->assertSame([], $pub);
   }
 
@@ -361,16 +370,24 @@ class MonitorTest extends TestCase {
     // last_notified — renotify must anchor to now and fire one window LATER,
     // not never and not immediately.
     $legacy = ['a' => ['status' => 'fail', 'detail' => 'old']];
-    [$state, $pub] = $this->step($legacy, ['a' => $this->obsFail('old')], [
-      'renotify_seconds' => 3600,
-      'now' => 10000,
-    ]);
+    [$state, $pub] = $this->step(
+      $legacy,
+      ['a' => $this->obsFail('old')],
+      [
+        'renotify_seconds' => 3600,
+        'now' => 10000,
+      ],
+    );
     $this->assertSame([], $pub);
     $this->assertSame(10000, $state['a']['last_notified']);
-    [, $pub] = $this->step($state, ['a' => $this->obsFail('old')], [
-      'renotify_seconds' => 3600,
-      'now' => 10000 + 3600,
-    ]);
+    [, $pub] = $this->step(
+      $state,
+      ['a' => $this->obsFail('old')],
+      [
+        'renotify_seconds' => 3600,
+        'now' => 10000 + 3600,
+      ],
+    );
     $this->assertCount(1, $pub);
     $this->assertTrue($pub[0]['renotify']);
   }

@@ -32,7 +32,10 @@ class CRM_Herald_Form_CivirulesAction_SendContributionAlert extends CRM_Herald_F
     $this->add('text', 'campaign_id', E::ts('Campaign ID (optional)'), ['size' => 10]);
     $this->add('text', 'goal', E::ts('Campaign goal (optional, enables progress)'), ['size' => 15]);
     $this->add('text', 'campaign_title', E::ts('Campaign title'), ['size' => 40]);
-    $this->heraldCheckbox('include_status_transition', E::ts('Include from_status / to_status (uses pre-edit snapshot)'));
+    $this->heraldCheckbox(
+      'include_status_transition',
+      E::ts('Include from_status / to_status (uses pre-edit snapshot)'),
+    );
   }
 
   /**

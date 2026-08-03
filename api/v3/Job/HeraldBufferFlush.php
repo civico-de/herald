@@ -45,6 +45,8 @@ function civicrm_api3_job_herald_buffer_flush($params) {
   }
   return civicrm_api3_create_success(
     [['sent' => $sent, 'failed' => $failed]],
-    $params, 'Job', 'herald_buffer_flush'
+    $params,
+    'Job',
+    'herald_buffer_flush',
   );
 }

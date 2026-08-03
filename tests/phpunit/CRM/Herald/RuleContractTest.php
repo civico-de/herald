@@ -31,7 +31,7 @@ class CRM_Herald_RuleContractTest extends TestCase {
       // named in the fatal — both fail the build, which is the point.
       $this->assertNull(
         RuleHealth::problem($class),
-        "Registered CiviRules handler {$class} is not a usable handler: " . (RuleHealth::problem($class) ?? '')
+        "Registered CiviRules handler {$class} is not a usable handler: " . (RuleHealth::problem($class) ?? ''),
       );
     }
   }

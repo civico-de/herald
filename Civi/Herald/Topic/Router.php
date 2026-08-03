@@ -44,7 +44,8 @@ class Router {
     if ($entry === NULL && $default === NULL) {
       throw new \CRM_Core_Exception(sprintf(
         'herald: no route for topic "%s" — add it (or a "default" entry) to the %s setting.',
-        $topic, self::SETTING
+        $topic,
+        self::SETTING,
       ));
     }
     // Both halves come out of the herald_topics JSON object, so their keys are

@@ -23,7 +23,9 @@ class TelegramChannel implements ChannelInterface {
   public function send(string $renderedBody, array $config): void {
     $token = self::str(\Civi::settings()->get('herald_telegram_bot_token'));
     if ($token === '') {
-      throw new \CRM_Core_Exception('herald: Telegram bot token is not configured. Set "herald_telegram_bot_token" in CRM settings.');
+      throw new \CRM_Core_Exception(
+        'herald: Telegram bot token is not configured. Set "herald_telegram_bot_token" in CRM settings.',
+      );
     }
 
     // !empty, not ??: the action form always stores chat_id (possibly ''),
@@ -72,7 +74,7 @@ class TelegramChannel implements ChannelInterface {
       throw new \CRM_Core_Exception(sprintf(
         'herald: Telegram API returned HTTP %d. Body: %s',
         $status,
-        substr($body, 0, 500)
+        substr($body, 0, 500),
       ));
     }
 
@@ -101,7 +103,9 @@ class TelegramChannel implements ChannelInterface {
         'label' => E::ts('Chat ID'),
         'required' => FALSE,
         'type' => 'string',
-        'help' => E::ts('Telegram chat or group ID. Negative numbers are group chats. If empty, the default from settings is used.'),
+        'help' => E::ts(
+          'Telegram chat or group ID. Negative numbers are group chats. If empty, the default from settings is used.',
+        ),
       ],
       'parse_mode' => [
         'label' => E::ts('Parse Mode'),

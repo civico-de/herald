@@ -26,7 +26,9 @@ class SendTest extends TestCase implements HeadlessInterface, HookInterface, Tra
   public function setUp(): void {
     parent::setUp();
     // Spool outbound mail into the DB instead of handing it to an MTA.
-    \Civi::settings()->set('mailing_backend', ['outBound_option' => \CRM_Mailing_Config::OUTBOUND_OPTION_REDIRECT_TO_DB]);
+    \Civi::settings()->set('mailing_backend', [
+      'outBound_option' => \CRM_Mailing_Config::OUTBOUND_OPTION_REDIRECT_TO_DB,
+    ]);
     \Civi::settings()->set('herald_email_from', '"Herald" <noreply@example.org>');
     \Civi::settings()->set('herald_email_default_to', '');
     \CRM_Core_DAO::executeQuery('DELETE FROM civicrm_mailing_spool');
@@ -171,7 +173,11 @@ class SendTest extends TestCase implements HeadlessInterface, HookInterface, Tra
     ])->single();
 
     foreach (['channel', 'message', 'config', 'subject', 'format'] as $name) {
-      $this->assertArrayHasKey($name, $action['params'], sprintf('Herald.send should expose the "%s" parameter', $name));
+      $this->assertArrayHasKey(
+        $name,
+        $action['params'],
+        sprintf('Herald.send should expose the "%s" parameter', $name),
+      );
     }
     // The exact symptom of a generic `@var` on an action property: core fails
     // to type the parameter and the whole call dies with "Unknown parameter

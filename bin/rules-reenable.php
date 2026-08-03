@@ -10,7 +10,10 @@
 const HERALD_DEPLOY_MARKER = '/tmp/herald_deploy_disabled_rules';
 
 $ids = is_file(HERALD_DEPLOY_MARKER)
-  ? array_values(array_filter(array_map('intval', explode(',', trim((string) file_get_contents(HERALD_DEPLOY_MARKER))))))
+  ? array_values(array_filter(array_map('intval', explode(
+    ',',
+    trim((string) file_get_contents(HERALD_DEPLOY_MARKER)),
+  ))))
   : [];
 
 if ($ids) {

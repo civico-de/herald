@@ -24,7 +24,7 @@ class AlertBufferTest extends TestCase {
     $msg = AlertBuffer::compose(
       ['🎟 Ticket verkauft: 60,00 €', '🎟 Ticket verkauft: 35,00 €', '🎟 Ticket verkauft: 200,00 €'],
       15,
-      [60.0, 35.0, 200.0]
+      [60.0, 35.0, 200.0],
     );
     // English source strings, and no assertion on the formatted total: money
     // formatting follows the instance locale/currency, which is en_US in the
@@ -57,7 +57,7 @@ class AlertBufferTest extends TestCase {
    * more machinery than the two lines under test.
    */
   private static function narrow(string $method, mixed $value): mixed {
-    return (new \ReflectionMethod(AlertBuffer::class, $method))->invoke(NULL, $value);
+    return new \ReflectionMethod(AlertBuffer::class, $method)->invoke(NULL, $value);
   }
 
   public function testNarrowingHelpersConvertScalarDaoValues(): void {

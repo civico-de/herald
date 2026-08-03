@@ -10,7 +10,7 @@
 
 use Civi\Herald\Channel\TelegramChannel;
 
-$body = getenv('HERALD_TEST_MESSAGE') ?: ('<b>herald smoke test</b> — sent ' . date('c'));
+$body = getenv('HERALD_TEST_MESSAGE') ?: '<b>herald smoke test</b> — sent ' . date('c');
 $chatId = getenv('HERALD_TEST_CHAT_ID') ?: NULL;
 
 $channel = new TelegramChannel();

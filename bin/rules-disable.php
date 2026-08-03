@@ -23,7 +23,7 @@ $dao = CRM_Core_DAO::executeQuery(
    LEFT JOIN civirule_rule_condition rc ON rc.rule_id = r.id
    LEFT JOIN civirule_condition c ON c.id = rc.condition_id
    WHERE r.is_active = 1
-     AND (a.class_name LIKE 'CRM_Herald%' OR c.class_name LIKE 'CRM_Herald%')"
+     AND (a.class_name LIKE 'CRM_Herald%' OR c.class_name LIKE 'CRM_Herald%')",
 );
 while ($dao->fetch()) {
   $ids[] = (int) $dao->id;
@@ -41,5 +41,12 @@ $existing = is_file(HERALD_DEPLOY_MARKER)
 $all = array_values(array_unique(array_merge($existing, $ids)));
 file_put_contents(HERALD_DEPLOY_MARKER, implode(',', $all));
 
-echo '[herald deploy] disabled ' . count($ids) . ' herald rule(s) for the swap: ' . implode(',', $ids)
-  . ' (marker now holds ' . count($all) . ")\n";
+echo
+  '[herald deploy] disabled '
+    . count($ids)
+    . ' herald rule(s) for the swap: '
+    . implode(',', $ids)
+    . ' (marker now holds '
+    . count($all)
+    . ")\n"
+;

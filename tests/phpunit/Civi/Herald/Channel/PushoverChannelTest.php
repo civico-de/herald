@@ -108,7 +108,9 @@ class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInt
   }
 
   public function testThrowsWhenStatusNotOne(): void {
-    $channel = new PushoverChannel($this->makeMockedClient(new Response(200, [], '{"status":0,"errors":["bad token"]}')));
+    $channel = new PushoverChannel($this->makeMockedClient(
+      new Response(200, [], '{"status":0,"errors":["bad token"]}'),
+    ));
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/status != 1/');
     $channel->send('x', ['pushover_user_key' => 'u']);

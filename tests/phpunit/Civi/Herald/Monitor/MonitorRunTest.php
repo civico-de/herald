@@ -94,12 +94,12 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
 
   public function testHealthyChecksAreRecordedButNeverAnnounced(): void {
     $this->registerChecks([
-      'herald.test.ok' => static fn(): array => ['status' => 'ok'],
+      'herald.test.ok' => static fn (): array => ['status' => 'ok'],
       // 'skipped' means "check disabled by config", not "outage".
-      'herald.test.skipped' => static fn(): array => ['status' => 'skipped', 'detail' => 'off'],
+      'herald.test.skipped' => static fn (): array => ['status' => 'skipped', 'detail' => 'off'],
     ]);
 
-    $result = (new Monitor())->run();
+    $result = new Monitor()->run();
 
     $this->assertSame(0, $result['failing']);
     $this->assertSame(0, $result['transitions']);
@@ -116,13 +116,13 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
    */
   public function testMalformedHookEntriesAreIgnored(): void {
     $this->listener = static function (GenericHookEvent $e): void {
-      $e->checks[] = static fn(): array => ['status' => 'fail', 'detail' => 'numeric key'];
+      $e->checks[] = static fn (): array => ['status' => 'fail', 'detail' => 'numeric key'];
       $e->checks['herald.test.notcallable'] = 'this is a string, not a callable';
-      $e->checks['herald.test.good'] = static fn(): array => ['status' => 'ok'];
+      $e->checks['herald.test.good'] = static fn (): array => ['status' => 'ok'];
     };
     \Civi::dispatcher()->addListener('hook_civicrm_heraldChecks', $this->listener);
 
-    $result = (new Monitor())->run();
+    $result = new Monitor()->run();
 
     $this->assertSame(0, $result['failing']);
     $this->assertArrayHasKey('herald.test.good', $this->state());
@@ -136,7 +136,7 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
       },
     ]);
 
-    $result = (new Monitor())->run();
+    $result = new Monitor()->run();
 
     $this->assertSame(1, $result['failing']);
     $this->assertSame(1, $result['transitions']);
@@ -153,10 +153,10 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
   public function testNonScalarTopicSettingFallsBackToTheDefaultTopic(): void {
     \Civi::settings()->set(Monitor::TOPIC_SETTING, ['ops', 'oops']);
     $this->registerChecks([
-      'herald.test.disk' => static fn(): array => ['status' => 'fail', 'detail' => 'disk full'],
+      'herald.test.disk' => static fn (): array => ['status' => 'fail', 'detail' => 'disk full'],
     ]);
 
-    $result = (new Monitor())->run();
+    $result = new Monitor()->run();
 
     // Routed, published, buffered — none of which happens for an unknown topic.
     $this->assertSame(1, $result['transitions']);
@@ -174,7 +174,7 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
   public function testExpectedButAbsentCheckIsReportedAsFailure(): void {
     \Civi::settings()->set('herald_monitor_expected', ['someext.queue']);
 
-    $result = (new Monitor())->run();
+    $result = new Monitor()->run();
 
     $this->assertSame(1, $result['failing']);
     $this->assertSame(1, $result['transitions']);
@@ -188,11 +188,11 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
    */
   public function testSecondRunOfTheSameFailureStaysSilent(): void {
     $this->registerChecks([
-      'herald.test.stuck' => static fn(): array => ['status' => 'fail', 'detail' => 'still down'],
+      'herald.test.stuck' => static fn (): array => ['status' => 'fail', 'detail' => 'still down'],
     ]);
 
-    $this->assertSame(1, (new Monitor())->run()['transitions']);
-    $this->assertSame(0, (new Monitor())->run()['transitions']);
+    $this->assertSame(1, new Monitor()->run()['transitions']);
+    $this->assertSame(0, new Monitor()->run()['transitions']);
     $this->assertCount(1, $this->bufferedBodies());
   }
 
@@ -207,14 +207,14 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
       'herald.test.garbage' => 'not a timestamp',
     ]);
     $this->registerChecks([
-      'herald.test.snoozed' => static fn(): array => ['status' => 'ok'],
+      'herald.test.snoozed' => static fn (): array => ['status' => 'ok'],
     ]);
 
-    (new Monitor())->run();
+    new Monitor()->run();
 
     $this->assertSame(
       ['herald.test.later' => '2099-01-01T00:00:00Z'],
-      \Civi::settings()->get('herald_monitor_snooze')
+      \Civi::settings()->get('herald_monitor_snooze'),
     );
   }
 
@@ -224,10 +224,10 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
   public function testSnoozedFailureIsRecordedWithoutPublishing(): void {
     \Civi::settings()->set('herald_monitor_snooze', ['herald.test.noisy' => '2099-01-01T00:00:00Z']);
     $this->registerChecks([
-      'herald.test.noisy' => static fn(): array => ['status' => 'fail', 'detail' => 'flapping'],
+      'herald.test.noisy' => static fn (): array => ['status' => 'fail', 'detail' => 'flapping'],
     ]);
 
-    $result = (new Monitor())->run();
+    $result = new Monitor()->run();
 
     $this->assertSame(1, $result['failing']);
     $this->assertSame(0, $result['transitions']);
@@ -245,7 +245,7 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
       'gone.check' => ['status' => 'fail', 'detail' => 'from a previous life', 'notified' => TRUE],
     ]);
 
-    $result = (new Monitor())->run();
+    $result = new Monitor()->run();
 
     $this->assertArrayNotHasKey('gone.check', $this->state());
     $this->assertSame(0, $result['transitions']);

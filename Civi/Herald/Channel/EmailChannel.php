@@ -51,7 +51,9 @@ class EmailChannel implements ChannelInterface {
       ? $config['email_to']
       : \Civi::settings()->get('herald_email_default_to');
     if (!$to) {
-      throw new \CRM_Core_Exception('herald: email channel requires email_to (action param or herald_email_default_to setting).');
+      throw new \CRM_Core_Exception(
+        'herald: email channel requires email_to (action param or herald_email_default_to setting).',
+      );
     }
 
     $from = self::str(\Civi::settings()->get('herald_email_from'));
@@ -61,9 +63,11 @@ class EmailChannel implements ChannelInterface {
 
     $params = self::buildMailParams($renderedBody, ['email_to' => $to] + $config, $from);
 
-    $mailer = $this->mailer ?? static fn(array $p): bool => (bool) \CRM_Utils_Mail::send($p);
+    $mailer = $this->mailer ?? static fn (array $p): bool => (bool) \CRM_Utils_Mail::send($p);
     if (!$mailer($params)) {
-      throw new \CRM_Core_Exception('herald: email delivery failed — CRM_Utils_Mail::send returned FALSE. Check the outbound mail settings.');
+      throw new \CRM_Core_Exception(
+        'herald: email delivery failed — CRM_Utils_Mail::send returned FALSE. Check the outbound mail settings.',
+      );
     }
   }
 
@@ -113,7 +117,12 @@ class EmailChannel implements ChannelInterface {
       'email_to' => ['label' => 'Recipient address', 'required' => TRUE, 'type' => 'string'],
       'email_to_name' => ['label' => 'Recipient name', 'required' => FALSE, 'type' => 'string'],
       'email_subject' => ['label' => 'Subject', 'required' => FALSE, 'type' => 'string'],
-      'email_format' => ['label' => 'Body format', 'required' => FALSE, 'type' => 'enum', 'options' => ['html', 'text']],
+      'email_format' => [
+        'label' => 'Body format',
+        'required' => FALSE,
+        'type' => 'enum',
+        'options' => ['html', 'text'],
+      ],
       'email_cc' => ['label' => 'CC (comma-separated)', 'required' => FALSE, 'type' => 'string'],
       'email_bcc' => ['label' => 'BCC (comma-separated)', 'required' => FALSE, 'type' => 'string'],
     ];

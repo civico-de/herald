@@ -53,7 +53,9 @@ class PushoverChannel implements ChannelInterface {
       ? $config['pushover_user_key']
       : \Civi::settings()->get('herald_pushover_default_user_key');
     if (!$userKey) {
-      throw new \CRM_Core_Exception('herald: Pushover user/group key required (pushover_user_key action param or herald_pushover_default_user_key setting).');
+      throw new \CRM_Core_Exception(
+        'herald: Pushover user/group key required (pushover_user_key action param or herald_pushover_default_user_key setting).',
+      );
     }
 
     $form = self::buildForm($appToken, self::str($userKey), $renderedBody, $config);
@@ -76,7 +78,7 @@ class PushoverChannel implements ChannelInterface {
       throw new \CRM_Core_Exception(sprintf(
         'herald: Pushover returned HTTP %d. Body: %s',
         $status,
-        substr($body, 0, 500)
+        substr($body, 0, 500),
       ));
     }
     $decoded = json_decode($body, TRUE);
@@ -148,8 +150,16 @@ class PushoverChannel implements ChannelInterface {
       'pushover_user_key' => ['label' => 'User/group key (override default)', 'required' => FALSE, 'type' => 'string'],
       'pushover_title' => ['label' => 'Title', 'required' => FALSE, 'type' => 'string'],
       'pushover_priority' => ['label' => 'Priority (-2…2)', 'required' => FALSE, 'type' => 'int'],
-      'pushover_retry' => ['label' => 'Emergency retry interval in seconds (priority 2 only)', 'required' => FALSE, 'type' => 'int'],
-      'pushover_expire' => ['label' => 'Emergency expiry in seconds (priority 2 only)', 'required' => FALSE, 'type' => 'int'],
+      'pushover_retry' => [
+        'label' => 'Emergency retry interval in seconds (priority 2 only)',
+        'required' => FALSE,
+        'type' => 'int',
+      ],
+      'pushover_expire' => [
+        'label' => 'Emergency expiry in seconds (priority 2 only)',
+        'required' => FALSE,
+        'type' => 'int',
+      ],
       'pushover_sound' => ['label' => 'Sound', 'required' => FALSE, 'type' => 'string'],
       'pushover_url' => ['label' => 'Supplementary URL', 'required' => FALSE, 'type' => 'string'],
       'pushover_url_title' => ['label' => 'URL label', 'required' => FALSE, 'type' => 'string'],

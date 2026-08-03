@@ -43,7 +43,7 @@ class TemplateRenderer {
     if (!$template) {
       throw new \CRM_Core_Exception(sprintf(
         'herald: MessageTemplate "%s" not found. Is the herald extension enabled?',
-        $workflowName
+        $workflowName,
       ));
     }
 
@@ -51,7 +51,7 @@ class TemplateRenderer {
     if ($body === '') {
       throw new \CRM_Core_Exception(sprintf(
         'herald: MessageTemplate "%s" has empty msg_html and msg_text.',
-        $workflowName
+        $workflowName,
       ));
     }
 

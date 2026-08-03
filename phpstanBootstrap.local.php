@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types = 1);
 
 /**
@@ -8,7 +9,6 @@ declare(strict_types = 1);
  */
 
 $coreDir = getenv('CIVICRM_CORE_DIR') ?: '/var/www/html/core';
-
 
 // Preload Smarty. Core's CRM/Core/SmartyCompatibility.php resolves the Smarty
 // path through \Civi::paths(), which needs a booted container — under phpstan it

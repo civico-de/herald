@@ -28,19 +28,30 @@ class CRM_Herald_Form_CivirulesAction_SendContributionDigest extends CRM_Herald_
   }
 
   protected function addExtraFields(): void {
-    $this->add('select', 'period', E::ts('Period'), [
-      'yesterday' => E::ts('Yesterday'),
-      'today' => E::ts('Today'),
-      'last_7_days' => E::ts('Last 7 days'),
-      'last_30_days' => E::ts('Last 30 days'),
-    ], TRUE);
+    $this->add(
+      'select',
+      'period',
+      E::ts('Period'),
+      [
+        'yesterday' => E::ts('Yesterday'),
+        'today' => E::ts('Today'),
+        'last_7_days' => E::ts('Last 7 days'),
+        'last_30_days' => E::ts('Last 30 days'),
+      ],
+      TRUE,
+    );
     $this->add('text', 'campaign_id', E::ts('Campaign ID (optional)'), ['size' => 10]);
     $this->add('text', 'financial_type_id', E::ts('Financial type ID (optional)'), ['size' => 10]);
-    $this->add('text', 'source_pattern', E::ts('Source LIKE pattern (optional, e.g. %Bank TX%)'), ['size' => 40]);
+    $this->add('text', 'source_pattern', E::ts('Source LIKE pattern (optional, e.g. %Bank TX%)'), [
+      'size' => 40,
+    ]);
     $this->heraldCheckbox('show_pending', E::ts('Show pending pool'));
     $this->heraldCheckbox('show_histogram', E::ts('Show histogram'));
     $this->add('text', 'bucket_count', E::ts('Histogram bucket count'), ['size' => 5]);
-    $this->add('text', 'bucket_edges', E::ts('Histogram bucket edges (JSON array, optional)'), ['size' => 50, 'placeholder' => '[0, 10, 50, 250, 5000]']);
+    $this->add('text', 'bucket_edges', E::ts('Histogram bucket edges (JSON array, optional)'), [
+      'size' => 50,
+      'placeholder' => '[0, 10, 50, 250, 5000]',
+    ]);
     $this->add('text', 'goal', E::ts('Campaign goal (optional, enables progress block)'), ['size' => 15]);
     $this->add('text', 'campaign_title', E::ts('Campaign title (free text, shown in template)'), ['size' => 40]);
   }

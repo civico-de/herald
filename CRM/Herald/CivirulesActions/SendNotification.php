@@ -40,11 +40,11 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
       try {
         $displayName = \CRM_Core_DAO::singleValueQuery(
           'SELECT display_name FROM civicrm_contact WHERE id = %1',
-          [1 => [$contactId, 'Integer']]
+          [1 => [$contactId, 'Integer']],
         );
         $email = \CRM_Core_DAO::singleValueQuery(
           'SELECT email FROM civicrm_email WHERE contact_id = %1 ORDER BY is_primary DESC, id ASC LIMIT 1',
-          [1 => [$contactId, 'Integer']]
+          [1 => [$contactId, 'Integer']],
         );
         $vars['contact'] = [
           'id' => $contactId,
@@ -55,7 +55,10 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
         ];
       }
       catch (\Throwable $e) {
-        \Civi::log()->warning('herald: could not resolve trigger contact', ['contact_id' => $contactId, 'error' => $e->getMessage()]);
+        \Civi::log()->warning('herald: could not resolve trigger contact', [
+          'contact_id' => $contactId,
+          'error' => $e->getMessage(),
+        ]);
       }
     }
     $groupContact = $triggerData->getEntityData('GroupContact');
@@ -64,19 +67,26 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
       try {
         $title = \CRM_Core_DAO::singleValueQuery(
           'SELECT title FROM civicrm_group WHERE id = %1',
-          [1 => [$groupId, 'Integer']]
+          [1 => [$groupId, 'Integer']],
         );
         $vars['group'] = ['id' => $groupId, 'title' => (string) $title];
       }
       catch (\Throwable $e) {
-        \Civi::log()->warning('herald: could not resolve trigger group', ['group_id' => $groupId, 'error' => $e->getMessage()]);
+        \Civi::log()->warning('herald: could not resolve trigger group', [
+          'group_id' => $groupId,
+          'error' => $e->getMessage(),
+        ]);
       }
     }
     $membership = $triggerData->getEntityData('Membership');
     if (is_array($membership) && !empty($membership['id'])) {
       try {
         $vars['membership'] = [
-          'membership_type' => self::labelOf('civicrm_membership_type', 'name', self::asInt($membership['membership_type_id'] ?? 0)),
+          'membership_type' => self::labelOf(
+            'civicrm_membership_type',
+            'name',
+            self::asInt($membership['membership_type_id'] ?? 0),
+          ),
           'status' => self::labelOf('civicrm_membership_status', 'label', self::asInt($membership['status_id'] ?? 0)),
         ];
       }
@@ -99,7 +109,7 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
             "SELECT label FROM civicrm_option_value
              WHERE option_group_id = (SELECT id FROM civicrm_option_group WHERE name = 'participant_role')
                AND value = %1",
-            [1 => [$roleId, 'String']]
+            [1 => [$roleId, 'String']],
           ));
         }
         $vars['participant'] = ['role' => $role];
@@ -127,7 +137,7 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
         /** @var \CRM_Core_DAO&object{title: ?string, start_date: ?string, is_active: ?string} $row */
         $row = \CRM_Core_DAO::executeQuery(
           'SELECT title, start_date, is_active FROM civicrm_event WHERE id = %1',
-          [1 => [$eventId, 'Integer']]
+          [1 => [$eventId, 'Integer']],
         );
         if ($row->fetch()) {
           $title = self::asString($row->title);
@@ -157,7 +167,7 @@ class CRM_Herald_CivirulesActions_SendNotification extends CRM_Herald_CivirulesA
     }
     return self::asString(\CRM_Core_DAO::singleValueQuery(
       "SELECT `$column` FROM `$table` WHERE id = %1",
-      [1 => [$id, 'Integer']]
+      [1 => [$id, 'Integer']],
     ));
   }
 

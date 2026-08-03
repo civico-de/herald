@@ -84,10 +84,10 @@ class Publish extends AbstractAction {
       throw new \CRM_Core_Exception('Herald.publish: pass exactly one of "message" or "template".');
     }
 
-    $params = (new Router())->resolve($this->topic);
+    $params = new Router()->resolve($this->topic);
     $body = $this->message;
     if ($this->template !== '') {
-      $parts = (new TemplateRenderer())->renderParts($this->template, $this->vars);
+      $parts = new TemplateRenderer()->renderParts($this->template, $this->vars);
       $body = $parts['body'];
       $params = \CRM_Herald_CivirulesActions_AbstractSend::applyDefaultEmailSubject($params, $parts['subject']);
     }
@@ -95,9 +95,12 @@ class Publish extends AbstractAction {
     $rawMinutes = $params['aggregate_minutes'] ?? 0;
     $aggregateMinutes = is_scalar($rawMinutes) ? (int) $rawMinutes : 0;
     if ($aggregateMinutes > 0) {
-      (new AlertBuffer())->add(
+      new AlertBuffer()->add(
         md5('topic:' . $this->topic . ':' . json_encode($params)),
-        $aggregateMinutes, $body, $params, $this->amount
+        $aggregateMinutes,
+        $body,
+        $params,
+        $this->amount,
       );
       $result[] = ['topic' => $this->topic, 'buffered' => TRUE];
       return;

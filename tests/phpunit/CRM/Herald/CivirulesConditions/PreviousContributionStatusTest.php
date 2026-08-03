@@ -16,25 +16,25 @@ class CRM_Herald_CivirulesConditions_PreviousContributionStatusTest extends Test
 
   public function testMatchesReturnsTrueOnExactMatch(): void {
     $this->assertTrue(
-      CRM_Herald_CivirulesConditions_PreviousContributionStatus::matches(2, 2)
+      CRM_Herald_CivirulesConditions_PreviousContributionStatus::matches(2, 2),
     );
   }
 
   public function testMatchesReturnsFalseOnDifferentValue(): void {
     $this->assertFalse(
-      CRM_Herald_CivirulesConditions_PreviousContributionStatus::matches(2, 1)
+      CRM_Herald_CivirulesConditions_PreviousContributionStatus::matches(2, 1),
     );
   }
 
   public function testMatchesReturnsFalseWhenExpectedMissing(): void {
     $this->assertFalse(
-      CRM_Herald_CivirulesConditions_PreviousContributionStatus::matches(NULL, 2)
+      CRM_Herald_CivirulesConditions_PreviousContributionStatus::matches(NULL, 2),
     );
   }
 
   public function testMatchesReturnsFalseWhenSnapshotMissing(): void {
     $this->assertFalse(
-      CRM_Herald_CivirulesConditions_PreviousContributionStatus::matches(2, NULL)
+      CRM_Herald_CivirulesConditions_PreviousContributionStatus::matches(2, NULL),
     );
   }
 
@@ -43,10 +43,10 @@ class CRM_Herald_CivirulesConditions_PreviousContributionStatusTest extends Test
     StatusTransitionDispatcher::rememberPreEditStatus(8008, 2);
     $previous = StatusTransitionDispatcher::getPreEditStatus(8008);
     $this->assertTrue(
-      CRM_Herald_CivirulesConditions_PreviousContributionStatus::matches(2, $previous)
+      CRM_Herald_CivirulesConditions_PreviousContributionStatus::matches(2, $previous),
     );
     $this->assertFalse(
-      CRM_Herald_CivirulesConditions_PreviousContributionStatus::matches(1, $previous)
+      CRM_Herald_CivirulesConditions_PreviousContributionStatus::matches(1, $previous),
     );
   }
 

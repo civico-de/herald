@@ -46,15 +46,25 @@ class AlertBuffer {
    * @param float|null $amount Monetary value of the underlying event (e.g.
    *   contribution.total_amount) — summed into the aggregate header.
    */
-  public function add(string $groupHash, int $windowMinutes, string $body, array $delivery, ?float $amount = NULL): void {
+  public function add(
+    string $groupHash,
+    int $windowMinutes,
+    string $body,
+    array $delivery,
+    ?float $amount = NULL,
+  ): void {
     \CRM_Core_DAO::executeQuery(
-      'INSERT INTO `' . self::TABLE . '` (group_hash, window_minutes, body, delivery, amount) VALUES (%1, %2, %3, %4, ' . ($amount === NULL ? 'NULL' : '%5') . ')',
+      'INSERT INTO `'
+      . self::TABLE
+      . '` (group_hash, window_minutes, body, delivery, amount) VALUES (%1, %2, %3, %4, '
+      . ($amount === NULL ? 'NULL' : '%5')
+      . ')',
       [
         1 => [$groupHash, 'String'],
         2 => [max(1, $windowMinutes), 'Integer'],
         3 => [$body, 'String'],
         4 => [json_encode($delivery, JSON_UNESCAPED_UNICODE) ?: '{}', 'String'],
-      ] + ($amount === NULL ? [] : [5 => [(string) $amount, 'Money']])
+      ] + ($amount === NULL ? [] : [5 => [(string) $amount, 'Money']]),
     );
   }
 
@@ -84,8 +94,10 @@ class AlertBuffer {
       $groupHash = self::str($due->group_hash);
       /** @var \CRM_Core_DAO&object{id: string, window_minutes: string, body: string, delivery: string, amount: ?string} $rows */
       $rows = \CRM_Core_DAO::executeQuery(
-        'SELECT id, window_minutes, body, delivery, amount FROM `' . self::TABLE . '` WHERE group_hash = %1 ORDER BY id',
-        [1 => [$groupHash, 'String']]
+        'SELECT id, window_minutes, body, delivery, amount FROM `'
+        . self::TABLE
+        . '` WHERE group_hash = %1 ORDER BY id',
+        [1 => [$groupHash, 'String']],
       );
       $ids = [];
       $bodies = [];
@@ -129,7 +141,7 @@ class AlertBuffer {
       return;
     }
     \CRM_Core_DAO::executeQuery(
-      'DELETE FROM `' . self::TABLE . '` WHERE id IN (' . implode(',', array_map('intval', $ids)) . ')'
+      'DELETE FROM `' . self::TABLE . '` WHERE id IN (' . implode(',', array_map('intval', $ids)) . ')',
     );
   }
 
@@ -145,7 +157,7 @@ class AlertBuffer {
    * @param list<float> $amounts
    */
   public static function compose(array $bodies, int $windowMinutes, array $amounts = []): string {
-    $bodies = array_values(array_filter(array_map('trim', $bodies), static fn(string $b) => $b !== ''));
+    $bodies = array_values(array_filter(array_map('trim', $bodies), static fn (string $b) => $b !== ''));
     if (count($bodies) <= 1) {
       return $bodies[0] ?? '';
     }

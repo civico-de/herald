@@ -59,7 +59,7 @@ class CRM_Herald_CivirulesConditions_PreviousContributionStatus extends CRM_Civi
   public function getExtraDataInputUrl($ruleConditionId) {
     return CRM_Utils_System::url(
       'civicrm/herald/form/civirulescondition/previouscontributionstatus',
-      'reset=1&action=update&id=' . $ruleConditionId
+      'reset=1&action=update&id=' . $ruleConditionId,
     );
   }
 

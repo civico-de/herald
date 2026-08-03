@@ -17,7 +17,11 @@ class CRM_Herald_CivirulesActions_SendContributionDigestTest extends TestCase {
     return new class extends ContributionStatsService {
 
       public function getPeriodSummary(array $filters, DateRange $period): array {
-        return ['total' => 1234.5, 'count' => 7, 'bySource' => [['source' => 'Stripe', 'total' => 1234.5, 'count' => 7]]];
+        return [
+          'total' => 1234.5,
+          'count' => 7,
+          'bySource' => [['source' => 'Stripe', 'total' => 1234.5, 'count' => 7]],
+        ];
       }
 
       public function getAllPending(array $filters): array {
@@ -62,7 +66,7 @@ class CRM_Herald_CivirulesActions_SendContributionDigestTest extends TestCase {
 
     $off = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars(
       array_merge($this->baseParams(), ['show_pending' => FALSE]),
-      $stats
+      $stats,
     );
     $this->assertSame(0, $off['pending']['count']);
   }
@@ -107,31 +111,31 @@ class CRM_Herald_CivirulesActions_SendContributionDigestTest extends TestCase {
   }
 
   public function testPeriodResolution(): void {
-    $today = (new DateTime('today'))->format('Y-m-d');
+    $today = new DateTime('today')->format('Y-m-d');
     $vars = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars(
       array_merge($this->baseParams(), ['period' => 'today']),
-      $this->makeFakeStats()
+      $this->makeFakeStats(),
     );
     $this->assertSame($today, $vars['period']['label']);
 
     $varsWeek = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars(
       array_merge($this->baseParams(), ['period' => 'last_7_days']),
-      $this->makeFakeStats()
+      $this->makeFakeStats(),
     );
     $this->assertSame('last 7 days', $varsWeek['period']['label']);
 
     $varsMonth = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars(
       array_merge($this->baseParams(), ['period' => 'last_30_days']),
-      $this->makeFakeStats()
+      $this->makeFakeStats(),
     );
     $this->assertSame('last 30 days', $varsMonth['period']['label']);
 
     $varsUnknown = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars(
       array_merge($this->baseParams(), ['period' => 'wat']),
-      $this->makeFakeStats()
+      $this->makeFakeStats(),
     );
     // unknown period falls back to yesterday
-    $yesterday = (new DateTime('yesterday'))->format('Y-m-d');
+    $yesterday = new DateTime('yesterday')->format('Y-m-d');
     $this->assertSame($yesterday, $varsUnknown['period']['label']);
   }
 

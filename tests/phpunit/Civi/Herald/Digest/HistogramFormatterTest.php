@@ -98,7 +98,7 @@ class HistogramFormatterTest extends TestCase {
     $buckets = HistogramFormatter::compute(
       [5, 12, 28, 75, 200],
       8,
-      [0, 10, 25, 100, 1000]
+      [0, 10, 25, 100, 1000],
     );
     $this->assertCount(4, $buckets);
     // 5 → [0,10), 12 → [10,25), 28 → [25,100), 75 → [25,100), 200 → [100,1000]
@@ -155,7 +155,7 @@ class HistogramFormatterTest extends TestCase {
     $logMax = log10($max);
     $out = [];
     for ($i = 0; $i < $n; $i++) {
-      $out[] = round(10 ** ($logMin + mt_rand() / mt_getrandmax() * ($logMax - $logMin)), 2);
+      $out[] = round(10 ** ($logMin + ((mt_rand() / mt_getrandmax()) * ($logMax - $logMin))), 2);
     }
     return $out;
   }

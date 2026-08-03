@@ -13,9 +13,12 @@ class ChannelRegistryTest extends TestCase {
   private function makeFakeChannel(string $key): ChannelInterface {
     return new class($key) implements ChannelInterface {
 
-      public function __construct(private string $key) {}
+      public function __construct(
+        private string $key,
+      ) {}
 
-      public function send(string $renderedBody, array $config): void {}
+      public function send(string $renderedBody, array $config): void {
+      }
 
       public function getKey(): string {
         return $this->key;

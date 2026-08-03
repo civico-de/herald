@@ -71,20 +71,23 @@ class CRM_Herald_CivirulesActions_AbstractSendTest extends TestCase {
       'webhook_body_format' => 'slack',
       'email_subject' => 'Donation received',
     ]);
-    $this->assertSame([
-      'parse_mode' => 'HTML',
-      'disable_notification' => TRUE,
-      'ntfy_title' => 'Donation',
-      'pushover_sound' => 'cashregister',
-      'webhook_body_format' => 'slack',
-      'email_subject' => 'Donation received',
-    ], $filtered);
+    $this->assertSame(
+      [
+        'parse_mode' => 'HTML',
+        'disable_notification' => TRUE,
+        'ntfy_title' => 'Donation',
+        'pushover_sound' => 'cashregister',
+        'webhook_body_format' => 'slack',
+        'email_subject' => 'Donation received',
+      ],
+      $filtered,
+    );
   }
 
   public function testTemplateSubjectBecomesEmailSubjectDefault(): void {
     $params = CRM_Herald_CivirulesActions_AbstractSend::applyDefaultEmailSubject(
       ['channel' => 'email'],
-      '✅ 42,50 € — Stripe'
+      '✅ 42,50 € — Stripe',
     );
     $this->assertSame('✅ 42,50 € — Stripe', $params['email_subject']);
   }
@@ -92,7 +95,7 @@ class CRM_Herald_CivirulesActions_AbstractSendTest extends TestCase {
   public function testExplicitEmailSubjectWinsOverTemplateSubject(): void {
     $params = CRM_Herald_CivirulesActions_AbstractSend::applyDefaultEmailSubject(
       ['email_subject' => 'Manual subject'],
-      'Template subject'
+      'Template subject',
     );
     $this->assertSame('Manual subject', $params['email_subject']);
   }

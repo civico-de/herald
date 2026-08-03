@@ -50,15 +50,21 @@ function herald_civicrm_check(&$messages): void {
   }
   $items = '';
   foreach ($broken as $class => $reason) {
-    $items .= '<li><code>' . htmlspecialchars((string) $class) . '</code> — ' . htmlspecialchars((string) $reason) . '</li>';
+    $items .=
+      '<li><code>' . htmlspecialchars((string) $class) . '</code> — ' . htmlspecialchars((string) $reason) . '</li>';
   }
   $messages[] = new CRM_Utils_Check_Message(
     'herald_rule_handler_unloadable',
-    E::ts('%1 Herald rule handler class(es) cannot be loaded. Any CiviRules rule using them will fail — under CiviRules\' synchronous evaluation that can 500 the triggering write (e.g. event edits, booking cart). Fix the class or disable the rule.', [1 => count($broken)])
-      . '<ul>' . $items . '</ul>',
+    E::ts(
+      '%1 Herald rule handler class(es) cannot be loaded. Any CiviRules rule using them will fail — under CiviRules\' synchronous evaluation that can 500 the triggering write (e.g. event edits, booking cart). Fix the class or disable the rule.',
+      [1 => count($broken)],
+    )
+    . '<ul>'
+    . $items
+    . '</ul>',
     E::ts('Herald: unloadable rule handler class'),
     \Psr\Log\LogLevel::CRITICAL,
-    'fa-bolt'
+    'fa-bolt',
   );
 }
 
@@ -85,11 +91,11 @@ function herald_civicrm_pre($op, $objectName, $id, &$params): void {
     $contributionId = (int) $id;
     $previousStatusId = \CRM_Core_DAO::singleValueQuery(
       'SELECT contribution_status_id FROM civicrm_contribution WHERE id = %1',
-      [1 => [$contributionId, 'Integer']]
+      [1 => [$contributionId, 'Integer']],
     );
     \Civi\Herald\StatusTransitionDispatcher::rememberPreEditStatus(
       $contributionId,
-      is_scalar($previousStatusId) ? (int) $previousStatusId : NULL
+      is_scalar($previousStatusId) ? (int) $previousStatusId : NULL,
     );
     return;
   }
@@ -99,13 +105,13 @@ function herald_civicrm_pre($op, $objectName, $id, &$params): void {
     $eventId = (int) $id;
     $previousActive = \CRM_Core_DAO::singleValueQuery(
       'SELECT is_active FROM civicrm_event WHERE id = %1',
-      [1 => [$eventId, 'Integer']]
+      [1 => [$eventId, 'Integer']],
     );
     \Civi\Herald\PreEditSnapshot::remember(
       'Event',
       $eventId,
       'is_active',
-      is_scalar($previousActive) ? (int) $previousActive : NULL
+      is_scalar($previousActive) ? (int) $previousActive : NULL,
     );
   }
 }
@@ -144,11 +150,18 @@ function herald_civicrm_post($op, $objectName, $objectId, &$objectRef): void {
 function herald_civicrm_heraldChecks(array &$checks): void {
   $checks['herald.buffer_backlog'] = function (): array {
     $stuck = (int) CRM_Core_DAO::singleValueQuery('
-      SELECT COUNT(*) FROM `' . \Civi\Herald\Buffer\AlertBuffer::TABLE . '`
+      SELECT COUNT(*) FROM `'
+    . \Civi\Herald\Buffer\AlertBuffer::TABLE
+    . '`
       WHERE created_date < DATE_SUB(NOW(), INTERVAL window_minutes * 3 MINUTE)
     ');
-    return $stuck > 0
-      ? ['status' => 'fail', 'detail' => "$stuck buffered alert(s) older than 3x their window — flush job not delivering"]
-      : ['status' => 'ok'];
+    return (
+      $stuck > 0
+        ? [
+          'status' => 'fail',
+          'detail' => "$stuck buffered alert(s) older than 3x their window — flush job not delivering",
+        ]
+        : ['status' => 'ok']
+    );
   };
 }

@@ -54,7 +54,9 @@ class WebhookChannel implements ChannelInterface {
     $urlFromConfig = !empty($config['webhook_url']);
     $url = $urlFromConfig ? $config['webhook_url'] : \Civi::settings()->get('herald_webhook_default_url');
     if (!$url) {
-      throw new \CRM_Core_Exception('herald: webhook channel requires webhook_url (action param or herald_webhook_default_url setting).');
+      throw new \CRM_Core_Exception(
+        'herald: webhook channel requires webhook_url (action param or herald_webhook_default_url setting).',
+      );
     }
 
     $method = strtoupper(self::str($config['webhook_method'] ?? 'POST'));
@@ -106,7 +108,7 @@ class WebhookChannel implements ChannelInterface {
       throw new \CRM_Core_Exception(sprintf(
         'herald: webhook returned HTTP %d. Body: %s',
         $status,
-        substr((string) $response->getBody(), 0, 500)
+        substr((string) $response->getBody(), 0, 500),
       ));
     }
   }
@@ -160,11 +162,27 @@ class WebhookChannel implements ChannelInterface {
   public function getConfigSchema(): array {
     return [
       'webhook_url' => ['label' => 'URL', 'required' => TRUE, 'type' => 'string'],
-      'webhook_method' => ['label' => 'Method', 'required' => FALSE, 'type' => 'enum', 'options' => ['POST' => 'POST', 'PUT' => 'PUT'], 'default' => 'POST'],
-      'webhook_body_format' => ['label' => 'Body format', 'required' => FALSE, 'type' => 'enum', 'options' => ['text' => 'text', 'json' => 'json', 'slack' => 'slack', 'discord' => 'discord'], 'default' => 'text'],
+      'webhook_method' => [
+        'label' => 'Method',
+        'required' => FALSE,
+        'type' => 'enum',
+        'options' => ['POST' => 'POST', 'PUT' => 'PUT'],
+        'default' => 'POST',
+      ],
+      'webhook_body_format' => [
+        'label' => 'Body format',
+        'required' => FALSE,
+        'type' => 'enum',
+        'options' => ['text' => 'text', 'json' => 'json', 'slack' => 'slack', 'discord' => 'discord'],
+        'default' => 'text',
+      ],
       'webhook_body_key' => ['label' => 'JSON key (when body_format=json)', 'required' => FALSE, 'type' => 'string'],
       'webhook_headers' => ['label' => 'Extra headers', 'required' => FALSE, 'type' => 'object'],
-      'webhook_auth_token' => ['label' => 'Bearer token (Authorization header)', 'required' => FALSE, 'type' => 'string'],
+      'webhook_auth_token' => [
+        'label' => 'Bearer token (Authorization header)',
+        'required' => FALSE,
+        'type' => 'string',
+      ],
     ];
   }
 
