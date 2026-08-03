@@ -6,6 +6,13 @@ ini_set('memory_limit', '2G');
 eval(cv('php:boot --level=classloader', 'phpcode'));
 // phpcs:enable
 
+// Half of the deprecation gate. phpunit.xml.dist has
+// convertDeprecationsToExceptions, but PHPUnit's error handler ignores errors
+// outside error_reporting() — and the CLI default masks E_DEPRECATED (22527).
+// CiviTestListener raises it to E_ALL only for its own tests, so plain unit
+// tests would swallow engine deprecations without this line.
+error_reporting(E_ALL);
+
 // CRITICAL GUARD: the headless suite must run against a SEPARATE scratch
 // database. The DSN comes from cv's config (TEST_DB_DSN in ~/.cv.json —
 // provisioned by the civikitchen entrypoint for BOTH /root and /var/www):
