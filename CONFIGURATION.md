@@ -2,7 +2,7 @@
 
 Three end-to-end recipes for typical setups. Each one is admin-configurable in CiviCRM (`Administer → CiviRules`) — no extension code changes needed.
 
-Each action ships with a parameter form (see `CRM/Herald/Form/CivirulesAction/`), so admins fill in fields in the CiviRules UI rather than editing JSON. The JSON snippets below show the equivalent stored-parameter shape — handy as a reference, for `cv` scripting, or for diffing rule definitions across environments.
+Each action ships with a parameter form (see `CRM/Herald/CivirulesAdapter/Form/`), so admins fill in fields in the CiviRules UI rather than editing JSON. The JSON snippets below show the equivalent stored-parameter shape — handy as a reference, for `cv` scripting, or for diffing rule definitions across environments.
 
 ---
 

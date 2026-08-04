@@ -17,40 +17,21 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
     return TRUE;
   }
 
+  /**
+   * The CiviRules handlers moved into CRM/Herald/CivirulesAdapter/; re-register
+   * both manifests and rewrite any class_name still naming an old class.
+   */
+  public function upgrade_1002(): bool {
+    $this->ctx->log->info('herald: migrating CiviRules handler classes to the adapter namespace');
+    CRM_Herald_CivirulesAdapter_Registrar::register($this->extensionDir);
+    $migrated = CRM_Herald_CivirulesAdapter_Registrar::migrateRenamedClasses();
+    $this->ctx->log->info("herald: rewrote {$migrated} CiviRules handler class name(s)");
+    return TRUE;
+  }
+
   public function enable(): void {
-    // phpstan resolves CRM_Civirules_Utils_Upgrader via the scanDirectories
-    // entry for org.civicoop.civirules (needed so the classes are known at
-    // all), which makes this method_exists() look permanently true from a
-    // static-analysis standpoint. At runtime the guard is real: CiviRules
-    // may not be installed/enabled at all, and this call would otherwise
-    // fatal with an undefined-class error before we can raise our own
-    // message.
-    // @phpstan-ignore function.alreadyNarrowedType
-    if (!method_exists('CRM_Civirules_Utils_Upgrader', 'insertActionsFromJson')) {
-      throw new Exception('CiviRules extension is required by herald but not enabled.');
-    }
-    // When herald and CiviRules are installed in the SAME process (fresh
-    // install, headless tests), the entity registry was built before
-    // CiviRules came online and Api4 "CiviRulesAction" is unknown. Flush so
-    // it rebuilds with CiviRules' entities included.
-    if (
-      class_exists('\Civi\Schema\EntityRepository')
-      && !\Civi\Schema\EntityRepository::entityExists('CiviRulesAction')
-    ) {
-      \Civi\Schema\EntityRepository::flush();
-    }
-    CRM_Civirules_Utils_Upgrader::insertActionsFromJson(
-      $this->extensionDir . DIRECTORY_SEPARATOR . 'civirules_actions.json',
-    );
-    // Same rationale as the enable() guard above: phpstan sees this as
-    // always true because of scanDirectories, but the method may genuinely
-    // be absent on older CiviRules versions at runtime.
-    // @phpstan-ignore function.alreadyNarrowedType
-    if (method_exists('CRM_Civirules_Utils_Upgrader', 'insertConditionsFromJson')) {
-      CRM_Civirules_Utils_Upgrader::insertConditionsFromJson(
-        $this->extensionDir . DIRECTORY_SEPARATOR . 'civirules_conditions.json',
-      );
-    }
+    CRM_Herald_CivirulesAdapter_Registrar::register($this->extensionDir);
+    CRM_Herald_CivirulesAdapter_Registrar::migrateRenamedClasses();
   }
 
 }

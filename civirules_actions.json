@@ -2,16 +2,16 @@
   {
     "name": "herald_send",
     "label": "Herald: Send notification (generic)",
-    "class_name": "CRM_Herald_CivirulesActions_SendNotification"
+    "class_name": "CRM_Herald_CivirulesAdapter_Action_SendNotification"
   },
   {
     "name": "herald_contribution_digest",
     "label": "Herald: Send contribution digest",
-    "class_name": "CRM_Herald_CivirulesActions_SendContributionDigest"
+    "class_name": "CRM_Herald_CivirulesAdapter_Action_SendContributionDigest"
   },
   {
     "name": "herald_contribution_alert",
     "label": "Herald: Send contribution alert",
-    "class_name": "CRM_Herald_CivirulesActions_SendContributionAlert"
+    "class_name": "CRM_Herald_CivirulesAdapter_Action_SendContributionAlert"
   }
 ]

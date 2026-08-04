@@ -7,7 +7,7 @@ namespace Civi\Herald\Buffer;
 /**
  * Anti-spam aggregation buffer for realtime alerts.
  *
- * When a CiviRules send action has aggregate_minutes > 0, the rendered alert
+ * When a send has aggregate_minutes > 0, the rendered alert
  * body is parked here instead of being sent immediately. The scheduled job
  * Job.herald_buffer_flush (run_frequency "Always") drains the buffer: a group
  * becomes due once its OLDEST entry is older than the configured window, and
@@ -45,7 +45,7 @@ class AlertBuffer {
    * Park one rendered alert body for later aggregated delivery.
    *
    * @param array<string, mixed> $delivery Full action params — everything
-   *   AbstractSend::deliver() needs to send the composed message later.
+   *   Dispatcher::deliver() needs to send the composed message later.
    * @param float|null $amount Monetary value of the underlying event (e.g.
    *   contribution.total_amount) — summed into the aggregate header.
    */

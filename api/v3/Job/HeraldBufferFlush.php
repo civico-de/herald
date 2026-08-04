@@ -3,6 +3,7 @@
 declare(strict_types = 1);
 
 use Civi\Herald\Buffer\AlertBuffer;
+use Civi\Herald\Dispatch\Dispatcher;
 
 /**
  * Job.herald_buffer_flush
@@ -31,7 +32,7 @@ function civicrm_api3_job_herald_buffer_flush($params) {
     try {
       $body = AlertBuffer::compose($group['bodies'], $group['window'], $group['amounts']);
       if ($body !== '') {
-        CRM_Herald_CivirulesActions_AbstractSend::deliver($body, $group['delivery']);
+        Dispatcher::deliver($body, $group['delivery']);
       }
       $buffer->deleteRows($group['ids']);
       $sent++;

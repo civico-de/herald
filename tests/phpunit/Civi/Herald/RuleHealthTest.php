@@ -42,7 +42,7 @@ class RuleHealthTest extends TestCase implements HeadlessInterface, Transactiona
   }
 
   public function testProblemNamesAnAbstractClass(): void {
-    $problem = RuleHealth::problem(\CRM_Herald_CivirulesActions_AbstractSend::class);
+    $problem = RuleHealth::problem(\CRM_Herald_CivirulesAdapter_Action_AbstractSend::class);
     self::assertIsString($problem);
     self::assertStringContainsString('not instantiable', $problem);
   }

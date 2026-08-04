@@ -4,19 +4,19 @@ declare(strict_types = 1);
 
 use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Digest\ContributionStatsService;
+use Civi\Herald\Digest\DigestVars;
 use Civi\Herald\Digest\ExtraSections;
+use Civi\Herald\Dispatch\Dispatcher;
 use Civi\Herald\Renderer\TemplateRenderer;
 
 /**
  * Job.herald_contribution_digest
  *
  * Runs a contribution digest from a CiviCRM scheduled job (or manually),
- * WITHOUT a CiviRules trigger entity. The SendContributionDigest CiviRules
- * action needs no trigger entity for its work, but CiviRules cron triggers and
- * CiviCRM scheduled jobs both require an entry point — this API3 job action is
- * that entry point. It mirrors CRM_Herald_CivirulesActions_SendContributionDigest
- * (reuses its static buildVars) so digest content stays identical between the
- * CiviRules path and the scheduled path.
+ * WITHOUT a trigger entity. The digest needs none for its work, but CiviCRM
+ * scheduled jobs require an entry point — this API3 job action is that entry
+ * point. It shares Civi\Herald\Digest\DigestVars
+ * with the CiviRules path, so digest content stays identical on both.
  *
  * @param array $spec
  */
@@ -118,7 +118,7 @@ function civicrm_api3_job_herald_contribution_digest($params) {
     $configParams['period'],
     $configParams['send_hour'],
   );
-  $config = CRM_Herald_CivirulesActions_AbstractSend::buildChannelConfig($configParams);
+  $config = Dispatcher::buildChannelConfig($configParams);
   $channel = ChannelRegistry::default()->get($channelKey);
 
   $blocks = $params['blocks'] ?? NULL;
@@ -142,7 +142,7 @@ function civicrm_api3_job_herald_contribution_digest($params) {
       // Per-block config inherits the top-level period unless overridden.
       $block += ['period' => $params['period'] ?? 'yesterday'];
       $template = (string) ($block['template'] ?? 'herald_contribution_digest_block');
-      $vars = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars($block, $stats);
+      $vars = DigestVars::build($block, $stats);
       $vars['block_title'] = $block['title'] ?? '';
       $body = trim($renderer->renderParts($template, $vars)['body']);
       if ($body !== '') {
@@ -181,7 +181,7 @@ function civicrm_api3_job_herald_contribution_digest($params) {
   if ($template === '') {
     throw new CRM_Core_Exception('herald: parameter "template" (workflow_name) or "blocks" is required.');
   }
-  $vars = CRM_Herald_CivirulesActions_SendContributionDigest::buildVars($params, $stats);
+  $vars = DigestVars::build($params, $stats);
   $channel->send($renderer->renderParts($template, $vars)['body'], $config);
 
   return civicrm_api3_create_success(

@@ -25,6 +25,14 @@ actions (no bespoke cron for alerts). Live in production on production.
   re-enable. Templates render as Smarty strings via `CRM_Core_Smarty`.
 - The `Previous Contribution status` condition relies on the
   `hook_civicrm_pre` snapshot (`PreEditSnapshot`), not CiviRules change data.
+- CiviRules integration is an adapter layer: everything inheriting from a
+  CiviRules base class lives in `CRM/Herald/CivirulesAdapter/` and does nothing
+  but unpack `TriggerData` and call `Herald.notify*` / `Herald.check*` via
+  APIv4. Domain logic belongs in `Civi\Herald\*`; phpstan's phpat rule fails
+  the build on any CiviRules reference outside that directory.
+- Handler class names live in `civirule_action.class_name`, so renaming one is
+  a data migration — the manifests plus
+  `CRM_Herald_CivirulesAdapter_Registrar::migrateRenamedClasses()`.
 
 ## Verify
 

@@ -2,25 +2,25 @@
 <menu>
   <item>
     <path>civicrm/herald/form/civirulesaction/sendnotification</path>
-    <page_callback>CRM_Herald_Form_CivirulesAction_SendNotification</page_callback>
+    <page_callback>CRM_Herald_CivirulesAdapter_Form_SendNotification</page_callback>
     <title>herald: Send Notification</title>
     <access_arguments>administer CiviCRM</access_arguments>
   </item>
   <item>
     <path>civicrm/herald/form/civirulesaction/sendcontributiondigest</path>
-    <page_callback>CRM_Herald_Form_CivirulesAction_SendContributionDigest</page_callback>
+    <page_callback>CRM_Herald_CivirulesAdapter_Form_SendContributionDigest</page_callback>
     <title>herald: Send Contribution Digest</title>
     <access_arguments>administer CiviCRM</access_arguments>
   </item>
   <item>
     <path>civicrm/herald/form/civirulesaction/sendcontributionalert</path>
-    <page_callback>CRM_Herald_Form_CivirulesAction_SendContributionAlert</page_callback>
+    <page_callback>CRM_Herald_CivirulesAdapter_Form_SendContributionAlert</page_callback>
     <title>herald: Send Contribution Alert</title>
     <access_arguments>administer CiviCRM</access_arguments>
   </item>
   <item>
     <path>civicrm/herald/form/civirulescondition/previouscontributionstatus</path>
-    <page_callback>CRM_Herald_Form_CivirulesCondition_PreviousContributionStatus</page_callback>
+    <page_callback>CRM_Herald_CivirulesAdapter_Form_PreviousContributionStatus</page_callback>
     <title>herald: Previous Contribution Status</title>
     <access_arguments>administer CiviCRM</access_arguments>
   </item>

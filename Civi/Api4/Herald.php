@@ -13,6 +13,11 @@ namespace Civi\Api4;
  *   cv api4 Herald.send        — deliver a rendered message via a channel
  *   cv api4 Herald.getChannels — the channels and the config keys they accept
  *
+ * The pipeline entry points the CiviRules adapters call — render a herald
+ * template and deliver it, or answer a condition question:
+ *   cv api4 Herald.notify / notifyContribution / notifyDigest
+ *   cv api4 Herald.checkContributionTransition / checkEventDeactivated
+ *
  * Diagnostics:
  *   cv api4 Herald.testTelegram   — send a test message via the channel
  *   cv api4 Herald.renderTemplate — render a workflow template with sample vars
@@ -24,6 +29,7 @@ namespace Civi\Api4;
  *
  * @searchable none
  * @package Civi\Api4
+ * @mago-expect lint:too-many-methods
  */
 class Herald extends \Civi\Api4\Generic\AbstractEntity {
 
@@ -34,6 +40,33 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
 
   public static function publish(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\Publish {
     return (new \Civi\Herald\Api4\Action\Publish(__CLASS__, 'publish'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function notify(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\Notify {
+    return (new \Civi\Herald\Api4\Action\Notify(__CLASS__, 'notify'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function notifyContribution(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\NotifyContribution {
+    return (new \Civi\Herald\Api4\Action\NotifyContribution(__CLASS__, 'notifyContribution'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function notifyDigest(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\NotifyDigest {
+    return (new \Civi\Herald\Api4\Action\NotifyDigest(__CLASS__, 'notifyDigest'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function checkContributionTransition(
+    bool $checkPermissions = TRUE,
+  ): \Civi\Herald\Api4\Action\CheckContributionTransition {
+    return (new \Civi\Herald\Api4\Action\CheckContributionTransition(__CLASS__, 'checkContributionTransition'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function checkEventDeactivated(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\CheckEventDeactivated {
+    return (new \Civi\Herald\Api4\Action\CheckEventDeactivated(__CLASS__, 'checkEventDeactivated'))
       ->setCheckPermissions($checkPermissions);
   }
 

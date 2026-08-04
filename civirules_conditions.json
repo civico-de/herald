@@ -2,11 +2,11 @@
   {
     "name": "herald_previous_contribution_status",
     "label": "Herald: Previous Contribution status",
-    "class_name": "CRM_Herald_CivirulesConditions_PreviousContributionStatus"
+    "class_name": "CRM_Herald_CivirulesAdapter_Condition_PreviousContributionStatus"
   },
   {
     "name": "herald_event_became_inactive",
     "label": "Herald: Event was deactivated (is_active 1 → 0)",
-    "class_name": "CRM_Herald_CivirulesConditions_EventBecameInactive"
+    "class_name": "CRM_Herald_CivirulesAdapter_Condition_EventBecameInactive"
   }
 ]

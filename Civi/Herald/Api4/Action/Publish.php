@@ -7,6 +7,7 @@ namespace Civi\Herald\Api4\Action;
 use Civi\Api4\Generic\AbstractAction;
 use Civi\Api4\Generic\Result;
 use Civi\Herald\Buffer\AlertBuffer;
+use Civi\Herald\Dispatch\Dispatcher;
 use Civi\Herald\Renderer\TemplateRenderer;
 use Civi\Herald\Topic\Router;
 
@@ -91,7 +92,7 @@ class Publish extends AbstractAction {
     if ($this->template !== '') {
       $parts = (new TemplateRenderer())->renderParts($this->template, $this->vars);
       $body = $parts['body'];
-      $params = \CRM_Herald_CivirulesActions_AbstractSend::applyDefaultEmailSubject($params, $parts['subject']);
+      $params = Dispatcher::applyDefaultEmailSubject($params, $parts['subject']);
     }
 
     $rawMinutes = $params['aggregate_minutes'] ?? 0;
@@ -108,7 +109,7 @@ class Publish extends AbstractAction {
       return;
     }
 
-    \CRM_Herald_CivirulesActions_AbstractSend::deliver($body, $params);
+    Dispatcher::deliver($body, $params);
     $result[] = ['topic' => $this->topic, 'buffered' => FALSE, 'channel' => $params['channel']];
   }
 
