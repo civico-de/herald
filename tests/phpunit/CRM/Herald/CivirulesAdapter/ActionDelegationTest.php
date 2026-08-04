@@ -30,7 +30,7 @@ class CRM_Herald_CivirulesAdapter_ActionDelegationTest extends TestCase implemen
   }
 
   public function testSendNotificationReachesTheDispatcher(): void {
-    $action = new CRM_Herald_CivirulesAdapter_Action_SendNotification();
+    $action = new CRM_Herald_CivirulesAdapter_Action_Notification();
     $action->setRuleActionData($this->ruleActionData([
       'channel' => 'telegram',
       'template' => 'herald_event_created_alert',
@@ -44,7 +44,7 @@ class CRM_Herald_CivirulesAdapter_ActionDelegationTest extends TestCase implemen
   }
 
   public function testSendContributionDigestReachesTheDispatcher(): void {
-    $action = new CRM_Herald_CivirulesAdapter_Action_SendContributionDigest();
+    $action = new CRM_Herald_CivirulesAdapter_Action_ContributionDigest();
     $action->setRuleActionData($this->ruleActionData([
       'channel' => 'telegram',
       'template' => 'herald_contribution_digest_daily',
@@ -59,7 +59,7 @@ class CRM_Herald_CivirulesAdapter_ActionDelegationTest extends TestCase implemen
   }
 
   public function testContributionAlertRefusesATriggerWithoutAContribution(): void {
-    $action = new CRM_Herald_CivirulesAdapter_Action_SendContributionAlert();
+    $action = new CRM_Herald_CivirulesAdapter_Action_ContributionAlert();
     $action->setRuleActionData($this->ruleActionData(['template' => 'herald_contribution_alert_completed']));
 
     $this->expectException(\CRM_Core_Exception::class);

@@ -8,13 +8,16 @@ declare(strict_types = 1);
  * Unpacks the trigger's entity payloads into a plain context array and calls
  * Herald.notify, which builds the template variables and dispatches.
  */
-class CRM_Herald_CivirulesAdapter_Action_SendNotification extends CRM_Herald_CivirulesAdapter_Action_AbstractSend {
+class CRM_Herald_CivirulesAdapter_Action_Notification extends CRM_Herald_CivirulesAdapter_Action_AbstractSend {
 
   protected function getFormPath(): string {
     return 'civicrm/herald/form/civirulesaction/sendnotification';
   }
 
   public function processAction(CRM_Civirules_TriggerData_TriggerData $triggerData): void {
+    // CiviRules evaluates rules in a system context (cron, post-commit
+    // queue) — there is no acting user whose ACLs could apply.
+    // phpcs:ignore CiviKitchen.Security.PermissionBypass -- system context, see above
     civicrm_api4('Herald', 'notify', [
       'checkPermissions' => FALSE,
       'actionParams' => $this->getActionParameters(),

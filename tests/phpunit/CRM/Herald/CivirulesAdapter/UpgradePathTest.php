@@ -31,7 +31,7 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
 
   private const OLD_CLASS = 'CRM_Herald_CivirulesActions_SendContributionAlert';
 
-  private const NEW_CLASS = 'CRM_Herald_CivirulesAdapter_Action_SendContributionAlert';
+  private const NEW_CLASS = 'CRM_Herald_CivirulesAdapter_Action_ContributionAlert';
 
   public function setUpHeadless() {
     return \Civi\Test::headless()

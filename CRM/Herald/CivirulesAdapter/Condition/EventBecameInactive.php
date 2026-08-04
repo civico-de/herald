@@ -17,6 +17,9 @@ class CRM_Herald_CivirulesAdapter_Condition_EventBecameInactive extends CRM_Civi
     $event = $triggerData->getEntityData('Event');
     $rawId = is_array($event) ? $event['id'] ?? 0 : 0;
 
+    // CiviRules evaluates rules in a system context (cron, post-commit
+    // queue) — there is no acting user whose ACLs could apply.
+    // phpcs:ignore CiviKitchen.Security.PermissionBypass -- system context, see above
     $result = civicrm_api4('Herald', 'checkEventDeactivated', [
       'checkPermissions' => FALSE,
       'eventId' => is_scalar($rawId) ? (int) $rawId : 0,
