@@ -4,9 +4,6 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Monitor;
 
-use Civi\Core\Event\GenericHookEvent;
-use CRM_Herald_ExtensionUtil as E;
-
 /**
  * Generic health-check monitor: any extension contributes checks, herald
  * runs them on cron and publishes STATE TRANSITIONS (ok→fail, fail→ok) to a
@@ -38,8 +35,10 @@ use CRM_Herald_ExtensionUtil as E;
  * Known blind spot by design: this runs inside the instance, so a hard-down
  * site cannot report itself. Pair it with an external poller on the pulse
  * endpoint for dead-man coverage; this monitor handles the degraded states.
- * @mago-expect lint:kan-defect
- * @mago-expect lint:cyclomatic-complexity
+ *
+ * This class is the Civi-facing shell: locking, settings, publishing, state
+ * persistence. Observation gathering lives in CheckCollector, the state
+ * machine in TransitionPlanner.
  */
 class Monitor {
 
@@ -85,102 +84,78 @@ class Monitor {
    * The unlocked body of run(). Split out so run() stays a thin lock wrapper.
    *
    * @return array{checks: int, failing: int, transitions: int}
-   * @mago-expect lint:halstead
    */
   private function doRun(): array {
-    // Filled BY REFERENCE by the hook listeners — implementors are asked for
-    // name => callable, but nothing enforces that, hence the loose type and the
-    // guards below.
-    /** @var array<array-key, mixed> $checks */
-    $checks = [];
-    \Civi::dispatcher()->dispatch('hook_civicrm_heraldChecks', GenericHookEvent::create(['checks' => &$checks]));
-
-    $observations = [];
-    foreach ($checks as $name => $callable) {
-      if (!is_string($name) || !is_callable($callable)) {
-        continue;
-      }
-      try {
-        $r = $callable();
-        // Anything that is not an explicit non-failure counts as fail;
-        // 'skipped' (check disabled by config) is not an outage.
-        $status = is_array($r) ? $r['status'] ?? NULL : NULL;
-        $observations[$name] = [
-          'status' => in_array($status, ['ok', 'skipped'], TRUE) ? 'ok' : 'fail',
-          'detail' => is_array($r) && is_scalar($r['detail'] ?? NULL) ? (string) $r['detail'] : '',
-        ];
-      }
-      catch (\Throwable $e) {
-        $observations[$name] = ['status' => 'fail', 'detail' => $e->getMessage()];
-      }
-    }
-
-    // MISSING: a check we were told to expect but the hook no longer offers is
-    // itself a failure (its extension was probably disabled). Without an
-    // expected-entry a vanished check stays silently dropped (see below).
-    $expected = \Civi::settings()->get('herald_monitor_expected');
-    foreach (is_array($expected) ? $expected : [] as $name) {
-      if (!(is_string($name) && !isset($observations[$name]))) {
-        continue;
-      }
-
-      $observations[$name] = [
-        'status' => 'fail',
-        'detail' => E::ts('check missing — extension disabled?'),
-      ];
-    }
+    $observations = (new CheckCollector())->observe();
 
     // Written by this class only (see the state entry schema on
-    // computeTransitions), which is why the shape can be asserted here; every
+    // TransitionPlanner), which is why the shape can be asserted here; every
     // individual field is still read defensively over there.
     $prevRaw = \Civi::settings()->get(self::STATE_SETTING);
     /** @var array<string, array<string, mixed>> $prev */
     $prev = is_array($prevRaw) ? $prevRaw : [];
 
+    $plans = self::computeTransitions($prev, $observations, $this->runConfig());
+
+    // Start from the previous state; drop vanished (and non-expected) checks
+    // up front — uninstalling an extension is not an outage, so its stale
+    // state entry just disappears.
+    $state = array_intersect_key($prev, $observations);
+    \Civi::settings()->set(self::STATE_SETTING, $state);
+
+    return [
+      'checks' => count($observations),
+      'failing' => count(array_filter($observations, static fn (array $c) => $c['status'] === 'fail')),
+      'transitions' => $this->publishPlans($plans, $state),
+    ];
+  }
+
+  /**
+   * Read the run's thresholds and snooze map, and expire lapsed snoozes.
+   *
+   * @return array{open_after: int, close_after: int, renotify_seconds: int, snooze: array<string,string>, now: int}
+   */
+  private function runConfig(): array {
     // Admin-editable map check-name => ISO datetime. Entries that are not
     // strings are ignored by both consumers below.
     $snoozeRaw = \Civi::settings()->get('herald_monitor_snooze');
     /** @var array<string, string> $snooze */
     $snooze = is_array($snoozeRaw) ? $snoozeRaw : [];
-
-    $config = [
-      'open_after' => max(1, self::int(\Civi::settings()->get('herald_monitor_open_after') ?: 1)),
-      'close_after' => max(1, self::int(\Civi::settings()->get('herald_monitor_close_after') ?: 1)),
-      'renotify_seconds' => max(0, self::int(\Civi::settings()->get('herald_monitor_renotify_hours') ?? 24)) * 3600,
-      'snooze' => $snooze,
-      'now' => \CRM_Utils_Time::time(),
-    ];
+    $now = \CRM_Utils_Time::time();
 
     // Housekeeping: drop snooze entries whose deadline has passed so the
-    // setting does not accumulate stale rows. A snooze that no longer suppresses
-    // anything has no reason to linger.
+    // setting does not accumulate stale rows. A snooze that no longer
+    // suppresses anything has no reason to linger.
     $liveSnooze = array_filter(
-      $config['snooze'],
-      static fn ($iso) => is_string($iso) && ($t = strtotime($iso)) !== FALSE && $t > $config['now'],
+      $snooze,
+      static fn ($iso) => is_string($iso) && ($t = strtotime($iso)) !== FALSE && $t > $now,
     );
-    if ($liveSnooze !== $config['snooze']) {
+    if ($liveSnooze !== $snooze) {
       \Civi::settings()->set('herald_monitor_snooze', $liveSnooze);
     }
 
-    $plans = self::computeTransitions($prev, $observations, $config);
+    return [
+      'open_after' => max(1, Coerce::int(\Civi::settings()->get('herald_monitor_open_after') ?: 1)),
+      'close_after' => max(1, Coerce::int(\Civi::settings()->get('herald_monitor_close_after') ?: 1)),
+      'renotify_seconds' => max(0, Coerce::int(\Civi::settings()->get('herald_monitor_renotify_hours') ?? 24)) * 3600,
+      'snooze' => $snooze,
+      'now' => $now,
+    ];
+  }
 
-    // Start from the previous state; mutate + persist per check so a partial
-    // run is always consistent with what has actually been published.
-    $state = $prev;
-
-    // Drop vanished (and non-expected) checks up front — uninstalling an
-    // extension is not an outage, so its stale state entry just disappears.
-    foreach (array_keys($state) as $name) {
-      if (isset($observations[$name])) {
-        continue;
-      }
-
-      unset($state[$name]);
-    }
-    \Civi::settings()->set(self::STATE_SETTING, $state);
-
-    $topic = self::str(\Civi::settings()->get(self::TOPIC_SETTING) ?: 'ops', 'ops');
+  /**
+   * Publish the due messages, persisting each check's new state only after its
+   * own send succeeded, so a later failure in the batch cannot resurrect an
+   * already-sent alert.
+   *
+   * @param list<array{check: string, state: array<string, mixed>, publish: ?array<string, mixed>}> $plans
+   * @param array<string, array<string, mixed>> $state The state written so far.
+   * @return int The number of transitions actually published.
+   */
+  private function publishPlans(array $plans, array $state): int {
+    $topic = Coerce::str(\Civi::settings()->get(self::TOPIC_SETTING) ?: 'ops', 'ops');
     $transitions = 0;
+
     foreach ($plans as $plan) {
       $name = $plan['check'];
       if ($plan['publish'] === NULL) {
@@ -191,13 +166,11 @@ class Monitor {
         continue;
       }
       try {
-        \Civi\Api4\Herald::publish(FALSE)
+        \Civi\Api4\Herald::publish(checkPermissions: FALSE)
           ->setTopic($topic)
           ->setTemplate('herald_monitor_alert')
           ->setVars($plan['publish'])
           ->execute();
-        // Persist THIS check's new state only after its send succeeded, so a
-        // later failure in the batch cannot resurrect an already-sent alert.
         $state[$name] = $plan['state'];
         \Civi::settings()->set(self::STATE_SETTING, $state);
         $transitions++;
@@ -212,195 +185,20 @@ class Monitor {
       }
     }
 
-    return [
-      'checks' => count($observations),
-      'failing' => count(array_filter($observations, static fn (array $c) => $c['status'] === 'fail')),
-      'transitions' => $transitions,
-    ];
+    return $transitions;
   }
 
   /**
-   * Pure transition planner — the test-seam. No Civi calls: everything it
-   * needs (now, thresholds, snooze) is injected via $config.
-   *
-   * Per check it folds the raw observation into the persisted state machine
-   * and decides whether a message is due. It returns, for every observed
-   * check, a plan the thin Civi wrapper can act on one at a time:
-   *
-   *   ['check' => name, 'state' => <entry to persist>, 'publish' => <vars>|NULL]
-   *
-   * State entry schema (old entries without the extra keys are tolerated —
-   * status defaults to 'ok', counters to 0, notified to false):
-   *   status: 'ok'|'fail'  — last REPORTED state (the edge we alerted on)
-   *   detail: string
-   *   consecutive_fails / consecutive_oks: int  — raw observation run-lengths
-   *   notified: bool        — did we actually send a fail alert this episode
-   *   last_notified: int|null — timestamp of the last fail alert (for renotify)
-   *
-   * A check seen for the FIRST time baselines to reported-ok, so a healthy
-   * newcomer is not news but a failing one still alerts once open_after is met.
+   * Plan the transitions for a set of observations. Pure; see
+   * TransitionPlanner for the state machine and its state entry schema.
    *
    * @param array<string, array<string, mixed>> $prev
    * @param array<string, array{status: string, detail?: string}> $observations
    * @param array{open_after?: int, close_after?: int, renotify_seconds?: int, snooze?: array<string,string>, now?: int} $config
    * @return list<array{check: string, state: array<string, mixed>, publish: ?array<string, mixed>}>
-   * @mago-expect lint:halstead
    */
   public static function computeTransitions(array $prev, array $observations, array $config = []): array {
-    $openAfter = max(1, (int) ($config['open_after'] ?? 1));
-    $closeAfter = max(1, (int) ($config['close_after'] ?? 1));
-    $renotifySeconds = max(0, (int) ($config['renotify_seconds'] ?? 0));
-    $snooze = $config['snooze'] ?? [];
-    $now = (int) ($config['now'] ?? 0);
-
-    $plans = [];
-    foreach ($observations as $name => $obs) {
-      $obsStatus = ($obs['status'] ?? 'ok') === 'fail' ? 'fail' : 'ok';
-      $obsDetail = is_scalar($obs['detail'] ?? NULL) ? (string) $obs['detail'] : '';
-
-      $p = $prev[$name] ?? [];
-      $status = ($p['status'] ?? 'ok') === 'fail' ? 'fail' : 'ok';
-      $detail = is_scalar($p['detail'] ?? NULL) ? (string) $p['detail'] : '';
-      $cf = max(0, self::int($p['consecutive_fails'] ?? 0));
-      $co = max(0, self::int($p['consecutive_oks'] ?? 0));
-      // Migration: legacy state entries (bare {status, detail}) carry no
-      // 'notified' flag. The old monitor always announced a fail, so infer a
-      // legacy reported-fail as already-notified — otherwise it would re-alert
-      // or, worse, swallow the recovery.
-      $notified = (bool) ($p['notified'] ?? $status === 'fail');
-      $lastNotified = isset($p['last_notified']) && is_numeric($p['last_notified']) ? (int) $p['last_notified'] : NULL;
-      // Legacy migration: an inferred already-notified fail carries no
-      // timestamp — without one, renotify would never fire for it. Anchor it
-      // to now so the first reminder comes one full window from migration.
-      if ($notified && $lastNotified === NULL) {
-        $lastNotified = $now;
-      }
-
-      // Advance the raw run-length counters.
-      if ($obsStatus === 'fail') {
-        $cf++;
-        $co = 0;
-      }
-      // @mago-expect lint:no-else-clause
-      else {
-        $co++;
-        $cf = 0;
-      }
-
-      $snoozed = self::isSnoozed($name, $snooze, $now);
-      $publish = NULL;
-
-      if ($status === 'ok') {
-        if ($cf >= $openAfter) {
-          // Hysteresis met: report a fail edge — unless snoozed, in which case
-          // we still flip the internal state but keep quiet (a later recovery
-          // must not fire a fail→ok for an unannounced fail).
-          $status = 'fail';
-          $detail = $obsDetail;
-          if ($snoozed) {
-            $notified = FALSE;
-            $lastNotified = NULL;
-          }
-          // @mago-expect lint:no-else-clause
-          else {
-            $notified = TRUE;
-            $lastNotified = $now;
-            $publish = ['check' => $name, 'status' => 'fail', 'detail' => $detail, 'renotify' => FALSE];
-          }
-        }
-      }
-      // @mago-expect lint:no-else-clause
-      else {
-        // Currently in a reported-fail episode.
-        if ($co >= $closeAfter) {
-          // Recovered. Only close the loop if we actually opened it loudly.
-          $status = 'ok';
-          $detail = $obsDetail;
-          $wasNotified = $notified;
-          $notified = FALSE;
-          $lastNotified = NULL;
-          if ($wasNotified) {
-            $publish = ['check' => $name, 'status' => 'ok', 'detail' => $detail, 'renotify' => FALSE];
-          }
-        }
-        // @mago-expect lint:no-else-clause
-        else {
-          // Still failing. Keep the freshest fail detail.
-          if ($obsStatus === 'fail') {
-            $detail = $obsDetail;
-          }
-          // Both alert paths below require the CURRENT observation to be a
-          // fail: while close_after hysteresis rides out the first ok
-          // observations of a recovery, announcing (or re-announcing) a fail
-          // during those ok runs would be wrong — the incident may be over.
-          if (!$snoozed && !$notified && $obsStatus === 'fail') {
-            // The fail was suppressed by a snooze that has since lapsed —
-            // announce it now (delayed first alert).
-            $notified = TRUE;
-            $lastNotified = $now;
-            $publish = ['check' => $name, 'status' => 'fail', 'detail' => $detail, 'renotify' => FALSE];
-          }
-          // @mago-expect lint:no-else-clause
-          elseif (
-            !$snoozed
-            && $notified
-            && $obsStatus === 'fail'
-            && $renotifySeconds > 0
-            && $lastNotified !== NULL
-            && ($now - $lastNotified) >= $renotifySeconds
-          ) {
-            // Stuck failing past the renotify window: re-announce.
-            $lastNotified = $now;
-            $publish = ['check' => $name, 'status' => 'fail', 'detail' => $detail, 'renotify' => TRUE];
-          }
-        }
-      }
-
-      $plans[] = [
-        'check' => $name,
-        'state' => [
-          'status' => $status,
-          'detail' => $detail,
-          'consecutive_fails' => $cf,
-          'consecutive_oks' => $co,
-          'notified' => $notified,
-          'last_notified' => $lastNotified,
-        ],
-        'publish' => $publish,
-      ];
-    }
-
-    return $plans;
-  }
-
-  /**
-   * Coerce an untyped setting / persisted-state value to int. Non-scalars are
-   * config errors, not numbers, so they collapse to the documented default
-   * instead of PHP's cast of an array.
-   */
-  private static function int(mixed $value, int $default = 0): int {
-    return is_scalar($value) ? (int) $value : $default;
-  }
-
-  /**
-   * Coerce an untyped setting value to string. See self::int().
-   */
-  private static function str(mixed $value, string $default = ''): string {
-    return is_scalar($value) ? (string) $value : $default;
-  }
-
-  /**
-   * Is $name snoozed at $now? Snooze map holds ISO datetimes (until when).
-   * Unparseable or past timestamps are treated as not snoozed. Pure.
-   *
-   * @param array<string, string> $snooze
-   */
-  private static function isSnoozed(string $name, array $snooze, int $now): bool {
-    if (!isset($snooze[$name]) || !is_string($snooze[$name])) {
-      return FALSE;
-    }
-    $until = strtotime($snooze[$name]);
-    return $until !== FALSE && $now < $until;
+    return (new TransitionPlanner($config))->plan($prev, $observations);
   }
 
 }
