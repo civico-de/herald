@@ -74,8 +74,11 @@ class ExtraSections {
       return [];
     }
     $keys = [];
-    foreach ($raw as $key) {
-      $key = trim((string) $key);
+    foreach ($raw as $rawKey) {
+      if (!is_scalar($rawKey)) {
+        continue;
+      }
+      $key = trim((string) $rawKey);
       if ($key !== '' && !in_array($key, $keys, TRUE)) {
         $keys[] = $key;
       }
@@ -93,7 +96,8 @@ class ExtraSections {
   public static function order(array $sections, array $keys): array {
     $ordered = [];
     foreach ($keys as $key) {
-      $body = trim((string) ($sections[$key] ?? ''));
+      $section = $sections[$key] ?? '';
+      $body = is_scalar($section) ? trim((string) $section) : '';
       if ($body !== '') {
         $ordered[] = $body;
       }

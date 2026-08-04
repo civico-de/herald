@@ -42,12 +42,13 @@ abstract class CRM_Herald_CivirulesActions_AbstractSend extends CRM_Civirules_Ac
    * asInt() / asFloat() coercers below.
    *
    * @return array<string, mixed>
-   *
-   * Not redundant: the override carries the @return shape above.
-   * @mago-expect lint:no-redundant-method-override
    */
   protected function getActionParameters() {
-    return parent::getActionParameters();
+    $params = [];
+    foreach (parent::getActionParameters() as $key => $value) {
+      $params[(string) $key] = $value;
+    }
+    return $params;
   }
 
   /**

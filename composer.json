@@ -11,9 +11,11 @@
     ],
     "require": {
         "php": ">=8.3",
+        "ext-mbstring": "*",
         "guzzlehttp/guzzle": "^7.0"
     },
     "require-dev": {
+        "guzzlehttp/psr7": "^2.0",
         "phpunit/phpunit": "^9.6"
     },
     "autoload": {

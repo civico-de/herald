@@ -25,6 +25,14 @@ class ExtraSectionsTest extends TestCase {
     $this->assertSame([], ExtraSections::parseKeys(NULL));
   }
 
+  public function testParseKeysSkipsNonScalarEntries(): void {
+    $this->assertSame(['a.b'], ExtraSections::parseKeys(['a.b', ['nested'], NULL]));
+  }
+
+  public function testOrderIgnoresNonScalarSectionBodies(): void {
+    $this->assertSame([], ExtraSections::order(['wanted' => ['not', 'scalar']], ['wanted']));
+  }
+
   public function testOrderFollowsRequestedKeysNotContributionOrder(): void {
     $sections = ['second' => 'B', 'first' => 'A'];
     $this->assertSame(['A', 'B'], ExtraSections::order($sections, ['first', 'second']));

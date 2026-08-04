@@ -299,4 +299,85 @@ class ContributionStatsServiceTest extends TestCase implements
     $this->assertSame(300.0, $all[0]['amount']);
   }
 
+  public function testGetPendingSnapshotCountsOnlyPendingInsideThePeriod(): void {
+    $yesterday = date('Y-m-d 12:00:00', strtotime('yesterday'));
+    $this->seedContributions([
+      ['amount' => 10.0, 'status' => 'Pending', 'receive_date' => $yesterday],
+      ['amount' => 25.0, 'status' => 'Pending', 'receive_date' => $yesterday],
+      // Outside the window, and a completed one inside it.
+      ['amount' => 99.0, 'status' => 'Pending', 'receive_date' => date('Y-m-d 12:00:00', strtotime('-9 days'))],
+      ['amount' => 77.0, 'status' => 'Completed', 'receive_date' => $yesterday],
+    ]);
+
+    $snapshot = $this->service->getPendingSnapshot([], DateRange::yesterday());
+    $this->assertSame(35.0, $snapshot['total']);
+    $this->assertSame(2, $snapshot['count']);
+  }
+
+  public function testGetStatusTransitionsInPeriodCanIncludeFreshlyReceived(): void {
+    $yesterday = date('Y-m-d 12:00:00', strtotime('yesterday'));
+    $this->seedContributions([
+      // Received before the window, flipped to Completed inside it: a real
+      // transition, counted either way.
+      [
+        'amount' => 40.0,
+        'status' => 'Completed',
+        'receive_date' => date('Y-m-d 12:00:00', strtotime('-9 days')),
+        'modified_date' => $yesterday,
+      ],
+      // Received AND modified inside the window: excluded by default.
+      ['amount' => 60.0, 'status' => 'Completed', 'receive_date' => $yesterday, 'modified_date' => $yesterday],
+    ]);
+
+    $period = DateRange::yesterday();
+    $transitions = $this->service->getStatusTransitionsInPeriod([], $period, 'Completed');
+    $this->assertSame(40.0, $transitions['total']);
+    $this->assertSame(1, $transitions['count']);
+
+    $withFresh = $this->service->getStatusTransitionsInPeriod(
+      [],
+      $period,
+      'Completed',
+      excludeAlsoReceivedInPeriod: FALSE,
+    );
+    $this->assertSame(100.0, $withFresh['total']);
+    $this->assertSame(2, $withFresh['count']);
+  }
+
+  public function testGetItemSummaryGroupsLineItemsByLabelAndPrice(): void {
+    $yesterday = date('Y-m-d 12:00:00', strtotime('yesterday'));
+    $this->seedContributions([
+      ['amount' => 10.0, 'receive_date' => $yesterday],
+      ['amount' => 10.0, 'receive_date' => $yesterday],
+      ['amount' => 25.0, 'receive_date' => $yesterday],
+      // Pending: not in the Completed summary.
+      ['amount' => 99.0, 'status' => 'Pending', 'receive_date' => $yesterday],
+    ]);
+
+    $items = $this->service->getItemSummary([], DateRange::yesterday());
+
+    $byTotal = [];
+    foreach ($items as $item) {
+      $byTotal[(string) $item['unit_price']] = $item;
+      // Whole quantities stay integers so the renderer prints "2x", not "2.00x".
+      $this->assertIsInt($item['qty']);
+    }
+    $this->assertSame(20.0, $byTotal['10']['total']);
+    $this->assertSame(2, $byTotal['10']['qty']);
+    $this->assertSame(25.0, $byTotal['25']['total']);
+    $this->assertArrayNotHasKey('99', $byTotal);
+  }
+
+  public function testGetItemSummaryFiltersBySourcePattern(): void {
+    $yesterday = date('Y-m-d 12:00:00', strtotime('yesterday'));
+    $this->seedContributions([
+      ['amount' => 10.0, 'source' => 'Stripe', 'receive_date' => $yesterday],
+      ['amount' => 30.0, 'source' => 'Bank', 'receive_date' => $yesterday],
+    ]);
+
+    $items = $this->service->getItemSummary(['source_pattern' => 'Stripe%'], DateRange::yesterday());
+    $this->assertCount(1, $items);
+    $this->assertSame(10.0, $items[0]['total']);
+  }
+
 }

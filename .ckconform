@@ -9,10 +9,10 @@ copyright=civico GmbH
 # ckconform cannot know it — declared here so the dispatch is not read as a typo.
 known_hooks=heraldChecks
 
-# Measured 2026-07-31 after covering the claimDue() and Monitor::run() DB
-# paths: 62.62% (1109/1771 statements), up from 54.21% (960/1771).
+# Measured 2026-08-04 after covering RuleHealth and the digest stats service's
+# snapshot/item-summary queries: 64.40% (1279/1986 statements).
 # Raise it as coverage grows — never lower it to make a build green.
-min_coverage=62
+min_coverage=64
 
 template_custom=.docker/docker-compose.ci.yml -- CiviRules is a hard dependency of herald, so the CI stack downloads it (CIVIKITCHEN_EXTRA_EXTENSIONS) before enabling the extension
 

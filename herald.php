@@ -65,7 +65,9 @@ function herald_civicrm_check(&$messages): void {
     . $items
     . '</ul>',
     E::ts('Herald: unloadable rule handler class'),
-    \Psr\Log\LogLevel::CRITICAL,
+    // PSR-3 level string. Spelled out rather than referencing Psr\Log\LogLevel,
+    // which is only a transitive dependency of guzzle here.
+    'critical',
     'fa-bolt',
   );
 }
