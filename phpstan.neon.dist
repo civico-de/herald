@@ -7,6 +7,9 @@ parameters:
 	# reported as redundant because of them. Also: PEAR-era signatures lie in
 	# their PHPDocs (a documented "array" can be a PEAR_Error).
 	treatPhpDocTypesAsCertain: false
+	# A typed property with no default is a runtime Error waiting for the one
+	# path that reads it before writing it; APIv4 action parameters are exempt.
+	checkUninitializedProperties: true
 	paths:
 		- Civi
 		- CRM
