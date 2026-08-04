@@ -73,7 +73,7 @@ final class ContextVars {
       ];
     }
     catch (\Throwable $e) {
-      \Civi::log()->warning('herald: could not resolve trigger contact', [
+      \Civi::log()->error('herald: could not resolve trigger contact', [
         'contact_id' => $contactId,
         'error' => $e->getMessage(),
       ]);
@@ -97,7 +97,7 @@ final class ContextVars {
       $vars['group'] = ['id' => $groupId, 'title' => (string) $title];
     }
     catch (\Throwable $e) {
-      \Civi::log()->warning('herald: could not resolve trigger group', [
+      \Civi::log()->error('herald: could not resolve trigger group', [
         'group_id' => $groupId,
         'error' => $e->getMessage(),
       ]);
@@ -123,7 +123,7 @@ final class ContextVars {
       ];
     }
     catch (\Throwable $e) {
-      \Civi::log()->warning('herald: could not resolve trigger membership', ['error' => $e->getMessage()]);
+      \Civi::log()->error('herald: could not resolve trigger membership', ['error' => $e->getMessage()]);
     }
   }
 
@@ -154,7 +154,7 @@ final class ContextVars {
       $vars['participant'] = ['role' => $role];
     }
     catch (\Throwable $e) {
-      \Civi::log()->warning('herald: could not resolve trigger participant', ['error' => $e->getMessage()]);
+      \Civi::log()->error('herald: could not resolve trigger participant', ['error' => $e->getMessage()]);
     }
   }
 
@@ -195,7 +195,7 @@ final class ContextVars {
       ];
     }
     catch (\Throwable $e) {
-      \Civi::log()->warning('herald: could not resolve trigger event', ['error' => $e->getMessage()]);
+      \Civi::log()->error('herald: could not resolve trigger event', ['error' => $e->getMessage()]);
     }
   }
 
