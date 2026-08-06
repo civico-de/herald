@@ -91,6 +91,9 @@ function herald_civicrm_pre($op, $objectName, $id, &$params): void {
   if ($op !== 'edit' || !$id) {
     return;
   }
+  // Generic field-transition conditions: snapshot every watched field of this
+  // entity. Watch list is empty unless such a condition is configured.
+  \Civi\Herald\Condition\FieldTransitionSnapshotter::capture($objectName, (int) $id);
   if ($objectName === 'Contribution') {
     $contributionId = (int) $id;
     $previousStatusId = \CRM_Core_DAO::singleValueQuery(

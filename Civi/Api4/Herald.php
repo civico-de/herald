@@ -16,7 +16,8 @@ namespace Civi\Api4;
  * The pipeline entry points the CiviRules adapters call — render a herald
  * template and deliver it, or answer a condition question:
  *   cv api4 Herald.notify / notifyContribution / notifyDigest
- *   cv api4 Herald.checkContributionTransition / checkEventDeactivated
+ *   cv api4 Herald.checkContributionTransition / checkEventDeactivated /
+ *   checkFieldTransition
  *
  * Diagnostics:
  *   cv api4 Herald.testTelegram   — send a test message via the channel
@@ -62,6 +63,13 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
     bool $checkPermissions = TRUE,
   ): \Civi\Herald\Api4\Action\CheckContributionTransition {
     return (new \Civi\Herald\Api4\Action\CheckContributionTransition(__CLASS__, 'checkContributionTransition'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function checkFieldTransition(
+    bool $checkPermissions = TRUE,
+  ): \Civi\Herald\Api4\Action\CheckFieldTransition {
+    return (new \Civi\Herald\Api4\Action\CheckFieldTransition(__CLASS__, 'checkFieldTransition'))
       ->setCheckPermissions($checkPermissions);
   }
 

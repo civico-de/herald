@@ -19,6 +19,12 @@
     <access_arguments>administer CiviCRM</access_arguments>
   </item>
   <item>
+    <path>civicrm/herald/form/civirulescondition/fieldtransition</path>
+    <page_callback>CRM_Herald_CivirulesAdapter_Form_FieldTransition</page_callback>
+    <title>herald: Field Transition</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+  </item>
+  <item>
     <path>civicrm/herald/form/civirulescondition/previouscontributionstatus</path>
     <page_callback>CRM_Herald_CivirulesAdapter_Form_PreviousContributionStatus</page_callback>
     <title>herald: Previous Contribution Status</title>

@@ -5,6 +5,11 @@
     "class_name": "CRM_Herald_CivirulesAdapter_Condition_PreviousContributionStatus"
   },
   {
+    "name": "herald_field_transition",
+    "label": "Herald: Field transition (entity field changed from/to value)",
+    "class_name": "CRM_Herald_CivirulesAdapter_Condition_FieldTransition"
+  },
+  {
     "name": "herald_event_became_inactive",
     "label": "Herald: Event was deactivated (is_active 1 → 0)",
     "class_name": "CRM_Herald_CivirulesAdapter_Condition_EventBecameInactive"
