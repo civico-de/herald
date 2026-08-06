@@ -27,7 +27,9 @@ actions (no bespoke cron for alerts). Live in production on production.
   `hook_civicrm_pre` snapshot (`PreEditSnapshot`), not CiviRules change data.
   The generic `Field transition` condition uses the same model; the fields it
   watches are read from active rule configs (`FieldTransitionWatchList`,
-  request-cached) and snapshotted in `hook_civicrm_pre`.
+  request-cached) and snapshotted in `hook_civicrm_pre`. The request cache
+  means long-running queue/CLI workers keep a stale watch list until restart —
+  accepted limitation.
 - CiviRules integration is an adapter layer: everything inheriting from a
   CiviRules base class lives in `CRM/Herald/CivirulesAdapter/` and does nothing
   but unpack `TriggerData` and call `Herald.notify*` / `Herald.check*` via

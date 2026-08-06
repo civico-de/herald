@@ -210,6 +210,50 @@ class SubscriberLookupTest extends TestCase {
     $this->assertSame('primary2@example.org', $mapped[1]['config']['email_to']);
   }
 
+  public function testOnHoldLocationAddressFallsBackToPrimary(): void {
+    $rows = [
+      $this->row([
+        'id' => 26,
+        'herald_preferences.preferred_channel' => 'email',
+        'email_primary.email' => 'primary@example.org',
+        'herald_loc_email.email' => 'work@example.org',
+        'herald_loc_email.on_hold' => 1,
+      ]),
+    ];
+    $mapped = SubscriberLookup::mapRowsDetailed($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $this->assertSame('primary@example.org', $mapped['recipients'][0]['config']['email_to']);
+    $this->assertSame([], $mapped['skipped']);
+  }
+
+  public function testAllAddressesOnHoldSuspends(): void {
+    $rows = [
+      $this->row([
+        'id' => 27,
+        'herald_preferences.preferred_channel' => 'email',
+        'email_primary.email' => 'primary@example.org',
+        'email_primary.on_hold' => 1,
+        'herald_loc_email.email' => 'work@example.org',
+        'herald_loc_email.on_hold' => 1,
+      ]),
+    ];
+    $mapped = SubscriberLookup::mapRowsDetailed($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $this->assertSame([], $mapped['recipients']);
+    $this->assertSame(['suspended' => 1], $mapped['skipped']);
+  }
+
+  public function testDuplicateJoinRowsProduceOneSendPerContact(): void {
+    $row = $this->row([
+      'id' => 28,
+      'herald_preferences.preferred_channel' => 'email',
+      'email_primary.email' => 'primary@example.org',
+      'herald_loc_email.email' => 'work-a@example.org',
+    ]);
+    $dup = ['herald_loc_email.email' => 'work-b@example.org'] + $row;
+    $mapped = SubscriberLookup::mapRowsDetailed([$row, $dup], ['location_type_id' => 3]);
+    $this->assertCount(1, $mapped['recipients']);
+    $this->assertSame('work-a@example.org', $mapped['recipients'][0]['config']['email_to']);
+  }
+
   public function testScopedSubscriptionOnlyMatchesItsEntity(): void {
     $scoped = $this->row([
       'id' => 30,

@@ -160,10 +160,14 @@ class Dispatcher {
       return;
     }
     if ($mode === 'group') {
+      $groupId = Cast::toInt($params['group_id'] ?? 0);
+      if ($groupId <= 0) {
+        throw new \CRM_Core_Exception('herald: group mode requires action parameter "group_id".');
+      }
       self::deliverToRecipients(
         $body,
         $params,
-        (new GroupRecipients())->findByGroup(Cast::toInt($params['group_id'] ?? 0), self::deliveryOptions($params)),
+        (new GroupRecipients())->findByGroup($groupId, self::deliveryOptions($params)),
       );
       return;
     }

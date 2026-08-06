@@ -152,6 +152,12 @@ class DispatcherTest extends TestCase {
     );
   }
 
+  public function testGroupModeWithoutGroupIdThrows(): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessageMatches('/group_id/');
+    Dispatcher::deliver('body', ['delivery_mode' => 'group']);
+  }
+
   public function testInvalidChannelConfigJsonIsIgnored(): void {
     $config = Dispatcher::buildChannelConfig([
       'channel' => 'telegram',

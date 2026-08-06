@@ -69,7 +69,10 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransitionConditionTest extends
     return $data;
   }
 
-  private function triggerDataWithOriginal(int $contributionId, array $original): CRM_Civirules_TriggerData_TriggerData {
+  private function triggerDataWithOriginal(
+    int $contributionId,
+    array $original,
+  ): CRM_Civirules_TriggerData_TriggerData {
     $data = new class() extends CRM_Civirules_TriggerData_TriggerData implements
       CRM_Civirules_TriggerData_Interface_OriginalData {
 
@@ -148,6 +151,65 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransitionConditionTest extends
     $this->assertTrue(
       $this->condition($params)->isConditionValid($this->triggerData($id)),
     );
+  }
+
+  /**
+   * Contact edits fire hook_civicrm_pre with objectName Individual/…, while
+   * conditions are configured against the APIv4 entity "Contact" — the watch
+   * list must fold the subtype names so the snapshot is still captured.
+   */
+  public function testSnapshotCapturedOnIndividualEditForContactCondition(): void {
+    $conditionId = (int) \CRM_Core_DAO::singleValueQuery(
+      'SELECT id FROM civirule_condition WHERE class_name = %1',
+      [1 => [\Civi\Herald\Condition\FieldTransitionWatchList::ADAPTER_CLASS, 'String']],
+    );
+    $this->assertGreaterThan(0, $conditionId, 'herald_field_transition not registered');
+    $triggerId = (int) \CRM_Core_DAO::singleValueQuery('SELECT MIN(id) FROM civirule_trigger');
+    \CRM_Core_DAO::executeQuery(
+      "INSERT INTO civirule_rule (name, label, trigger_id, is_active, created_date)
+       VALUES ('herald_test_contact_rule', 'Herald test contact rule', %1, 1, NOW())",
+      [1 => [$triggerId, 'Integer']],
+    );
+    $ruleId = (int) \CRM_Core_DAO::singleValueQuery('SELECT LAST_INSERT_ID()');
+    \CRM_Core_DAO::executeQuery(
+      'INSERT INTO civirule_rule_condition (rule_id, condition_id, condition_params)
+       VALUES (%1, %2, %3)',
+      [
+        1 => [$ruleId, 'Integer'],
+        2 => [$conditionId, 'Integer'],
+        3 => [
+          serialize([
+            'entity' => 'Contact',
+            'field' => 'do_not_email',
+            'from_operator' => '=',
+            'from_value' => '0',
+            'to_operator' => '=',
+            'to_value' => '1',
+          ]),
+          'String',
+        ],
+      ],
+    );
+    \Civi\Herald\Condition\FieldTransitionWatchList::reset();
+
+    $contactId = (int) \Civi\Api4\Contact::create(FALSE)
+      ->addValue('contact_type', 'Individual')
+      ->addValue('first_name', 'Herald')
+      ->addValue('last_name', 'WatchFixture')
+      ->addValue('do_not_email', FALSE)
+      ->execute()
+      ->first()['id'];
+    // The edit fires hook_civicrm_pre with objectName "Individual".
+    \Civi\Api4\Contact::update(FALSE)
+      ->addWhere('id', '=', $contactId)
+      ->addValue('do_not_email', TRUE)
+      ->execute();
+
+    $snapshot = PreEditSnapshot::get('Contact', $contactId, 'do_not_email');
+    $this->assertNotNull($snapshot, 'no pre-edit snapshot captured for the Individual edit');
+    $this->assertEquals(0, (int) (is_scalar($snapshot) ? $snapshot : -1));
+
+    \Civi\Herald\Condition\FieldTransitionWatchList::reset();
   }
 
   public function testUnconfiguredConditionIsFalse(): void {

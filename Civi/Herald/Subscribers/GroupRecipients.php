@@ -68,28 +68,40 @@ class GroupRecipients {
   public static function mapGroupRows(array $rows, array $options = []): array {
     $out = [];
     $skipped = [];
+    $seen = [];
     $bump = static function (string $reason) use (&$skipped): void {
       $skipped[$reason] = ($skipped[$reason] ?? 0) + 1;
     };
     foreach ($rows as $row) {
+      // The location-email join can duplicate a contact (several addresses of
+      // that location type) — one send per contact, first row wins.
+      $contactId = is_scalar($row['id'] ?? NULL) ? (int) $row['id'] : 0;
+      if ($contactId > 0 && isset($seen[$contactId])) {
+        continue;
+      }
+      $seen[$contactId] = TRUE;
       $channel = is_scalar($row['herald_preferences.preferred_channel'] ?? NULL)
         ? (string) $row['herald_preferences.preferred_channel']
         : '';
-      $config = $channel !== '' ? SubscriberLookup::buildConfigForChannel($channel, $row) : NULL;
+      $config =
+        $channel !== '' && $channel !== 'email'
+          ? SubscriberLookup::buildConfigForChannel($channel, $row)
+          : NULL;
       if ($config === NULL) {
-        // Fallback: the contact's own email address.
+        // Email path: preferred channel email, or the fallback for contacts
+        // without (usable) preferences — their own resolved address.
         $channel = 'email';
-        if (SubscriberLookup::resolveEmailAddress($row) === '') {
+        $delivery = SubscriberLookup::resolveEmailDelivery($row, $options);
+        if ($delivery['suspended']) {
+          $bump('suspended');
+          continue;
+        }
+        if ($delivery['address'] === '') {
           $bump('no_recipient');
           continue;
         }
-        $config = ['email_to' => SubscriberLookup::resolveEmailAddress($row)];
+        $config = ['email_to' => $delivery['address']];
       }
-      if ($channel === 'email' && SubscriberLookup::isEmailSuspended($row, $options)) {
-        $bump('suspended');
-        continue;
-      }
-      $contactId = is_scalar($row['id'] ?? NULL) ? (int) $row['id'] : 0;
       $out[] = ['contact_id' => $contactId, 'channel' => $channel, 'config' => $config];
     }
     return ['recipients' => $out, 'skipped' => $skipped];

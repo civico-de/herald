@@ -109,8 +109,7 @@ class GroupRecipientsTest extends TestCase {
     $this->assertSame('only-primary@example.org', $mapped['recipients'][1]['config']['email_to']);
   }
 
-  public function testOnHoldCheckedOnTheResolvedAddress(): void {
-    // Location address on hold → suspended even though primary is fine.
+  public function testOnHoldLocationAddressFallsBackToUsablePrimary(): void {
     $rows = [
       $this->row([
         'id' => 11,
@@ -120,8 +119,42 @@ class GroupRecipientsTest extends TestCase {
       ]),
     ];
     $mapped = GroupRecipients::mapGroupRows($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $this->assertSame('primary@example.org', $mapped['recipients'][0]['config']['email_to']);
+    $this->assertSame([], $mapped['skipped']);
+  }
+
+  public function testAllAddressesOnHoldSuspendsTheContact(): void {
+    $rows = [
+      $this->row([
+        'id' => 12,
+        'email_primary.email' => 'primary@example.org',
+        'email_primary.on_hold' => 1,
+        'herald_loc_email.email' => 'work@example.org',
+        'herald_loc_email.on_hold' => 1,
+      ]),
+    ];
+    $mapped = GroupRecipients::mapGroupRows($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
     $this->assertSame([], $mapped['recipients']);
     $this->assertSame(['suspended' => 1], $mapped['skipped']);
+  }
+
+  public function testDuplicateJoinRowsProduceOneSendPerContact(): void {
+    // Two rows for the same contact (multiple location-type emails).
+    $rows = [
+      $this->row([
+        'id' => 13,
+        'email_primary.email' => 'primary@example.org',
+        'herald_loc_email.email' => 'work-a@example.org',
+      ]),
+      $this->row([
+        'id' => 13,
+        'email_primary.email' => 'primary@example.org',
+        'herald_loc_email.email' => 'work-b@example.org',
+      ]),
+    ];
+    $mapped = GroupRecipients::mapGroupRows($rows, ['location_type_id' => 3]);
+    $this->assertCount(1, $mapped['recipients']);
+    $this->assertSame('work-a@example.org', $mapped['recipients'][0]['config']['email_to']);
   }
 
 }

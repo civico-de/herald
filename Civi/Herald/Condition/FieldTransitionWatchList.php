@@ -11,23 +11,45 @@ namespace Civi\Herald\Condition;
  * The pairs are read from the ACTIVE rules' condition params in the CiviRules
  * tables, cached per request: the pre hook fires on every write and must stay
  * cheap, and rule edits take effect on the next request, which is fine.
+ * Long-running workers (queue consumers, CLI loops) keep the stale list until
+ * restart — accepted limitation.
+ * @mago-expect lint:cyclomatic-complexity
  */
 final class FieldTransitionWatchList {
 
   public const ADAPTER_CLASS = 'CRM_Herald_CivirulesAdapter_Condition_FieldTransition';
 
   /**
-   * @var array<string, string[]>|null entity => list of field names */
+   * hook_civicrm_pre objectNames that mean a Contact row: conditions are
+   * configured against the APIv4 entity "Contact".
+   */
+  private const CONTACT_OBJECT_NAMES = ['individual', 'organization', 'household', 'contact'];
+
+  /**
+   * @var array<string, array<int, array{entity: string, field: string}>>|null
+   *   normalized entity key => watched pairs (entity spelled as configured) */
   private static ?array $cache = NULL;
 
   /**
-   * Field names the condition watches on $entity; [] when none.
+   * Watched (entity, field) pairs for a hook objectName; entity comes back as
+   * configured on the condition, because the snapshot key must match what the
+   * condition later reads. Matching is case-insensitive (the form takes free
+   * text) and folds contact subtypes to Contact.
    *
-   * @return string[]
+   * @return array<int, array{entity: string, field: string}>
    */
-  public static function fieldsFor(string $entity): array {
+  public static function watchesFor(string $objectName): array {
     self::$cache ??= self::load();
-    return self::$cache[$entity] ?? [];
+    return self::$cache[self::normalizeEntity($objectName)] ?? [];
+  }
+
+  /**
+   * Fold a hook objectName / free-text entity to its match key: lowercase,
+   * contact subtypes (Individual/Organization/Household) become "contact".
+   */
+  public static function normalizeEntity(string $entity): string {
+    $key = strtolower(trim($entity));
+    return in_array($key, self::CONTACT_OBJECT_NAMES, TRUE) ? 'contact' : $key;
   }
 
   /**
@@ -38,7 +60,7 @@ final class FieldTransitionWatchList {
   }
 
   /**
-   * @return array<string, string[]>
+   * @return array<string, array<int, array{entity: string, field: string}>>
    */
   private static function load(): array {
     if (
@@ -60,11 +82,13 @@ final class FieldTransitionWatchList {
       $params = self::decode($dao->condition_params);
       $entity = $params['entity'] ?? NULL;
       $field = $params['field'] ?? NULL;
-      if (!is_string($entity) || !is_string($field) || $entity === '' || $field === '') {
+      if (!is_string($entity) || !is_string($field) || trim($entity) === '' || $field === '') {
         continue;
       }
-      if (!in_array($field, $list[$entity] ?? [], TRUE)) {
-        $list[$entity][] = $field;
+      $key = self::normalizeEntity($entity);
+      $pair = ['entity' => trim($entity), 'field' => $field];
+      if (!in_array($pair, $list[$key] ?? [], TRUE)) {
+        $list[$key][] = $pair;
       }
     }
     return $list;

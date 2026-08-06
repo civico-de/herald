@@ -17,10 +17,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @group headless
  */
-class RecipientQueryTest extends TestCase implements
-  HeadlessInterface,
-  HookInterface,
-  TransactionalInterface {
+class RecipientQueryTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 
   // phpcs:enable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 
@@ -107,6 +104,19 @@ class RecipientQueryTest extends TestCase implements
     $this->assertCount(1, $recipients);
     $this->assertSame($workContact, $recipients[0]['contact_id']);
     $this->assertSame(['email_to' => 'work@example.org'], $recipients[0]['config']);
+  }
+
+  public function testContactWithTwoLocationEmailsGetsExactlyOneSend(): void {
+    $contact = $this->createContact();
+    $this->addEmail($contact, 'home@example.org');
+    $this->addEmail($contact, 'work-a@example.org', 2);
+    $this->addEmail($contact, 'work-b@example.org', 2);
+    $groupId = $this->createGroupWith($contact);
+
+    $recipients = (new GroupRecipients())->findByGroup($groupId, ['location_type_id' => 2]);
+    $this->assertCount(1, $recipients);
+    $this->assertSame($contact, $recipients[0]['contact_id']);
+    $this->assertContains($recipients[0]['config']['email_to'], ['work-a@example.org', 'work-b@example.org']);
   }
 
   public function testScopedSubscriberLookupFiltersByEntityInstance(): void {

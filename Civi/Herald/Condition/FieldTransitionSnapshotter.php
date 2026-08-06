@@ -16,11 +16,26 @@ use Civi\Herald\PreEditSnapshot;
  */
 final class FieldTransitionSnapshotter {
 
-  public static function capture(string $entity, int $id): void {
-    $fields = FieldTransitionWatchList::fieldsFor($entity);
-    if ($fields === [] || $id <= 0) {
+  public static function capture(string $objectName, int $id): void {
+    $watches = FieldTransitionWatchList::watchesFor($objectName);
+    if ($watches === [] || $id <= 0) {
       return;
     }
+    // Group by configured entity spelling: it is both the APIv4 entity to
+    // read and the snapshot key the condition later looks up.
+    $byEntity = [];
+    foreach ($watches as $watch) {
+      $byEntity[$watch['entity']][] = $watch['field'];
+    }
+    foreach ($byEntity as $entity => $fields) {
+      self::snapshotEntityFields((string) $entity, $id, $fields);
+    }
+  }
+
+  /**
+   * @param string[] $fields
+   */
+  private static function snapshotEntityFields(string $entity, int $id, array $fields): void {
     try {
       $row = civicrm_api4($entity, 'get', [
         'checkPermissions' => FALSE,

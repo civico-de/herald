@@ -12,6 +12,8 @@ namespace Civi\Herald\Subscribers;
  * the result-mapping (apv4 result rows → dispatch dicts) without spinning up
  * Civi for every test.
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:kan-defect
+ * @mago-expect lint:too-many-methods
  */
 class SubscriberLookup {
 
@@ -113,10 +115,18 @@ class SubscriberLookup {
     $scope = is_array($scope) ? $scope : NULL;
     $out = [];
     $skipped = [];
+    $seen = [];
     $bump = static function (string $reason) use (&$skipped): void {
       $skipped[$reason] = ($skipped[$reason] ?? 0) + 1;
     };
     foreach ($rows as $row) {
+      // The location-email join can duplicate a contact (several addresses of
+      // that location type) — one send per contact, first row wins.
+      $contactId = self::int($row['id'] ?? 0);
+      if ($contactId > 0 && isset($seen[$contactId])) {
+        continue;
+      }
+      $seen[$contactId] = TRUE;
       if (!SubscriptionScope::rowMatches($row, $scope)) {
         $bump('scope_mismatch');
         continue;
@@ -125,16 +135,14 @@ class SubscriberLookup {
       if ($channel === '') {
         continue;
       }
-      if ($channel === 'email' && self::isEmailSuspended($row, $options)) {
-        $bump('suspended');
-        continue;
-      }
-      $config = self::buildConfigForChannel($channel, $row);
+      $config = $channel === 'email'
+        ? self::emailConfig($row, $options, $bump)
+        : self::buildConfigForChannel($channel, $row);
       if ($config === NULL) {
         continue;
       }
       $out[] = [
-        'contact_id' => self::int($row['id'] ?? 0),
+        'contact_id' => $contactId,
         'channel' => $channel,
         'config' => $config,
       ];
@@ -143,31 +151,67 @@ class SubscriberLookup {
   }
 
   /**
-   * Suspension check for email delivery. do_not_email is always a hard block
-   * (privacy flag); is_opt_out and on-hold of the resolved address only count
-   * when the caller opted into respect_suspension.
+   * Email channel config for one row, or NULL when undeliverable; a
+   * suspension is counted via $bump before the NULL.
    *
    * @param array<string, mixed> $row
    * @param array<string, mixed> $options
+   * @param callable(string): void $bump
+   * @return array<string, mixed>|null
    */
-  public static function isEmailSuspended(array $row, array $options): bool {
-    if (!empty($row['do_not_email'])) {
-      return TRUE;
+  private static function emailConfig(array $row, array $options, callable $bump): ?array {
+    $delivery = self::resolveEmailDelivery($row, $options);
+    if ($delivery['suspended']) {
+      $bump('suspended');
+      return NULL;
     }
-    if (empty($options['respect_suspension'])) {
-      return FALSE;
-    }
-    if (!empty($row['is_opt_out'])) {
-      return TRUE;
-    }
-    $usesLocationEmail = !empty($row['herald_loc_email.email']);
-    $onHold = $usesLocationEmail ? $row['herald_loc_email.on_hold'] ?? NULL : $row['email_primary.on_hold'] ?? NULL;
-    return !empty($onHold);
+    return $delivery['address'] !== '' ? ['email_to' => $delivery['address']] : NULL;
   }
 
   /**
-   * Recipient address for email delivery: the preferred-location-type address
-   * when the query joined one and the contact has it, else primary.
+   * Resolve the deliverable email address for one contact row, honouring the
+   * suspension option. do_not_email is always a hard block (privacy flag);
+   * is_opt_out only counts under respect_suspension. Address pick: the
+   * preferred-location-type address, falling back to primary — under
+   * respect_suspension an on-hold candidate is passed over in favour of the
+   * next usable one, and suspended is only reported when every existing
+   * address is on hold.
+   *
+   * @param array<string, mixed> $row
+   * @param array<string, mixed> $options
+   * @return array{address: string, suspended: bool}
+   *   address '' + suspended FALSE means "no address at all".
+   */
+  public static function resolveEmailDelivery(array $row, array $options): array {
+    if (!empty($row['do_not_email'])) {
+      return ['address' => '', 'suspended' => TRUE];
+    }
+    $respect = !empty($options['respect_suspension']);
+    if ($respect && !empty($row['is_opt_out'])) {
+      return ['address' => '', 'suspended' => TRUE];
+    }
+    $candidates = [
+      [self::str($row['herald_loc_email.email'] ?? ''), !empty($row['herald_loc_email.on_hold'])],
+      [self::str($row['email_primary.email'] ?? ''), !empty($row['email_primary.on_hold'])],
+    ];
+    $sawAddress = FALSE;
+    foreach ($candidates as [$address, $onHold]) {
+      if ($address === '') {
+        continue;
+      }
+      $sawAddress = TRUE;
+      if ($respect && $onHold) {
+        continue;
+      }
+      return ['address' => $address, 'suspended' => FALSE];
+    }
+    return ['address' => '', 'suspended' => $sawAddress];
+  }
+
+  /**
+   * Recipient address for email delivery ignoring hold states: the
+   * preferred-location-type address when the query joined one and the contact
+   * has it, else primary.
    *
    * @param array<string, mixed> $row
    */
