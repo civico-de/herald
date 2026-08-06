@@ -1,6 +1,6 @@
-{* herald: SendNotification action form *}
+{* herald: Field transition condition form *}
 {crmScope extensionKey='herald'}
-<h3>{ts}herald: Send Notification{/ts}</h3>
+<h3>{ts}herald: Field transition{/ts}</h3>
 
 <div class="crm-block crm-form-block">
   <table class="form-layout">
