@@ -143,12 +143,31 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransitionConditionTest extends
     );
   }
 
-  public function testAfterOnlySideMatchesRegardlessOfPreviousValue(): void {
+  public function testAfterOnlySideRequiresAnActualChange(): void {
+    // One-sided conditions must see a changed value, or every unrelated edit
+    // of a row already in the target state would re-fire them.
     $id = $this->createContribution(1);
     $params = $this->pendingToCompletedParams();
     $params['from_operator'] = '';
     $params['from_value'] = '';
+    // Unknown previous value: the change cannot be verified — no match.
+    $this->assertFalse(
+      $this->condition($params)->isConditionValid($this->triggerData($id)),
+    );
+    // Known and different previous value: match.
+    PreEditSnapshot::remember('Contribution', $id, 'contribution_status_id', 2);
     $this->assertTrue(
+      $this->condition($params)->isConditionValid($this->triggerData($id)),
+    );
+  }
+
+  public function testAfterOnlySideDoesNotFireWithoutAChange(): void {
+    $id = $this->createContribution(1);
+    $params = $this->pendingToCompletedParams();
+    $params['from_operator'] = '';
+    $params['from_value'] = '';
+    PreEditSnapshot::remember('Contribution', $id, 'contribution_status_id', 1);
+    $this->assertFalse(
       $this->condition($params)->isConditionValid($this->triggerData($id)),
     );
   }

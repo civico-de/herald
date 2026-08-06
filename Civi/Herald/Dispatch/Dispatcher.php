@@ -200,19 +200,32 @@ class Dispatcher {
 
   /**
    * Send one rendered body to a resolved recipient list, one channel call per
-   * recipient, per-recipient errors logged instead of aborting the loop.
+   * recipient. Per-recipient errors are logged instead of aborting the loop —
+   * but when EVERY send fails, the whole delivery throws, so a buffered flush
+   * keeps its rows and retries (a fully down transport must not count as
+   * sent). Partial failure counts as delivered: retrying would double-send to
+   * the recipients that already got the message.
    *
    * @param array<string, mixed> $params
    * @param array<int, array{contact_id: int, channel: string, config: array<string, mixed>}> $recipients
    */
-  private static function deliverToRecipients(string $body, array $params, array $recipients): void {
-    $registry = ChannelRegistry::default();
+  public static function deliverToRecipients(
+    string $body,
+    array $params,
+    array $recipients,
+    ?ChannelRegistry $registry = NULL,
+  ): void {
+    $registry ??= ChannelRegistry::default();
     $extras = self::filterSubscriberSafe(self::buildChannelConfig($params));
+    $failed = 0;
+    $lastError = NULL;
     foreach ($recipients as $recipient) {
       try {
         $registry->get($recipient['channel'])->send($body, array_merge($extras, $recipient['config']));
       }
       catch (\Throwable $e) {
+        $failed++;
+        $lastError = $e;
         \Civi::log()->warning('herald: recipient dispatch failed', [
           'contact_id' => $recipient['contact_id'],
           'channel' => $recipient['channel'],
@@ -220,32 +233,48 @@ class Dispatcher {
         ]);
       }
     }
+    if ($failed > 0 && $failed === count($recipients)) {
+      throw new \CRM_Core_Exception(
+        sprintf('herald: all %d recipient sends failed (last error: %s)', $failed, $lastError?->getMessage() ?? ''),
+      );
+    }
   }
 
   /**
    * Ops-style delivery to a raw address list (no contact linkage): one email
-   * per address through the email channel.
+   * per address through the email channel. Same failure semantics as
+   * deliverToRecipients(): per-address errors are logged, but a total failure
+   * throws so buffered flushes retry instead of counting the send as done.
    *
    * @param array<string, mixed> $params
    */
-  private static function deliverToAddresses(string $body, array $params): void {
+  public static function deliverToAddresses(string $body, array $params, ?ChannelRegistry $registry = NULL): void {
     $addresses = self::parseAddressList($params['email_addresses'] ?? '');
     if ($addresses === []) {
       throw new \CRM_Core_Exception('herald: address-list mode requires action parameter "email_addresses".');
     }
-    $channel = ChannelRegistry::default()->get('email');
+    $channel = ($registry ?? ChannelRegistry::default())->get('email');
     $config = self::buildChannelConfig($params);
     unset($config['email_addresses']);
+    $failed = 0;
+    $lastError = NULL;
     foreach ($addresses as $address) {
       try {
         $channel->send($body, ['email_to' => $address] + $config);
       }
       catch (\Throwable $e) {
+        $failed++;
+        $lastError = $e;
         \Civi::log()->warning('herald: address dispatch failed', [
           'email_to' => $address,
           'error' => $e->getMessage(),
         ]);
       }
+    }
+    if ($failed > 0 && $failed === count($addresses)) {
+      throw new \CRM_Core_Exception(
+        sprintf('herald: all %d address sends failed (last error: %s)', $failed, $lastError?->getMessage() ?? ''),
+      );
     }
   }
 

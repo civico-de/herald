@@ -115,18 +115,14 @@ class SubscriberLookup {
     $scope = is_array($scope) ? $scope : NULL;
     $out = [];
     $skipped = [];
-    $seen = [];
     $bump = static function (string $reason) use (&$skipped): void {
       $skipped[$reason] = ($skipped[$reason] ?? 0) + 1;
     };
-    foreach ($rows as $row) {
-      // The location-email join can duplicate a contact (several addresses of
-      // that location type) — one send per contact, first row wins.
+    foreach (self::groupRowsByContact($rows) as $contactRows) {
+      // Preference and scope fields are per contact, so the first row speaks
+      // for all of them; only the joined email columns vary per row.
+      $row = $contactRows[0];
       $contactId = self::int($row['id'] ?? 0);
-      if ($contactId > 0 && isset($seen[$contactId])) {
-        continue;
-      }
-      $seen[$contactId] = TRUE;
       if (!SubscriptionScope::rowMatches($row, $scope)) {
         $bump('scope_mismatch');
         continue;
@@ -136,7 +132,7 @@ class SubscriberLookup {
         continue;
       }
       $config = $channel === 'email'
-        ? self::emailConfig($row, $options, $bump)
+        ? self::emailConfig($contactRows, $options, $bump)
         : self::buildConfigForChannel($channel, $row);
       if ($config === NULL) {
         continue;
@@ -151,21 +147,81 @@ class SubscriberLookup {
   }
 
   /**
-   * Email channel config for one row, or NULL when undeliverable; a
-   * suspension is counted via $bump before the NULL.
+   * Bucket join-duplicated result rows per contact, preserving row order.
+   * Rows without a contact id each form their own bucket.
    *
-   * @param array<string, mixed> $row
+   * @param array<int, array<string, mixed>> $rows
+   * @return array<int, non-empty-array<int, array<string, mixed>>>
+   */
+  public static function groupRowsByContact(array $rows): array {
+    $grouped = [];
+    $anonymous = [];
+    foreach ($rows as $row) {
+      $contactId = self::int($row['id'] ?? 0);
+      if ($contactId <= 0) {
+        $anonymous[] = [$row];
+        continue;
+      }
+      $grouped[$contactId][] = $row;
+    }
+    return array_merge(array_values($grouped), $anonymous);
+  }
+
+  /**
+   * Email channel config for one contact's rows, or NULL when undeliverable;
+   * a suspension is counted via $bump before the NULL.
+   *
+   * @param non-empty-array<int, array<string, mixed>> $contactRows
    * @param array<string, mixed> $options
    * @param callable(string): void $bump
    * @return array<string, mixed>|null
    */
-  private static function emailConfig(array $row, array $options, callable $bump): ?array {
-    $delivery = self::resolveEmailDelivery($row, $options);
+  private static function emailConfig(array $contactRows, array $options, callable $bump): ?array {
+    $delivery = self::resolveEmailDeliveryRows($contactRows, $options);
     if ($delivery['suspended']) {
       $bump('suspended');
       return NULL;
     }
     return $delivery['address'] !== '' ? ['email_to' => $delivery['address']] : NULL;
+  }
+
+  /**
+   * resolveEmailDelivery() across all join-duplicated rows of one contact:
+   * the join yields one row per address of the requested location type, and
+   * a deliverable one may sit behind an on-hold one — a contact must not be
+   * written off on the strength of the first row alone. All location-type
+   * addresses are tried before the primary fallback.
+   *
+   * @param non-empty-array<int, array<string, mixed>> $contactRows
+   * @param array<string, mixed> $options
+   * @return array{address: string, suspended: bool}
+   */
+  public static function resolveEmailDeliveryRows(array $contactRows, array $options): array {
+    $first = $contactRows[0];
+    if (!empty($first['do_not_email'])) {
+      return ['address' => '', 'suspended' => TRUE];
+    }
+    $respect = !empty($options['respect_suspension']);
+    if ($respect && !empty($first['is_opt_out'])) {
+      return ['address' => '', 'suspended' => TRUE];
+    }
+    $candidates = [];
+    foreach ($contactRows as $row) {
+      $candidates[] = [self::str($row['herald_loc_email.email'] ?? ''), !empty($row['herald_loc_email.on_hold'])];
+    }
+    $candidates[] = [self::str($first['email_primary.email'] ?? ''), !empty($first['email_primary.on_hold'])];
+    $sawAddress = FALSE;
+    foreach ($candidates as [$address, $onHold]) {
+      if ($address === '') {
+        continue;
+      }
+      $sawAddress = TRUE;
+      if ($respect && $onHold) {
+        continue;
+      }
+      return ['address' => $address, 'suspended' => FALSE];
+    }
+    return ['address' => '', 'suspended' => $sawAddress];
   }
 
   /**
@@ -183,29 +239,7 @@ class SubscriberLookup {
    *   address '' + suspended FALSE means "no address at all".
    */
   public static function resolveEmailDelivery(array $row, array $options): array {
-    if (!empty($row['do_not_email'])) {
-      return ['address' => '', 'suspended' => TRUE];
-    }
-    $respect = !empty($options['respect_suspension']);
-    if ($respect && !empty($row['is_opt_out'])) {
-      return ['address' => '', 'suspended' => TRUE];
-    }
-    $candidates = [
-      [self::str($row['herald_loc_email.email'] ?? ''), !empty($row['herald_loc_email.on_hold'])],
-      [self::str($row['email_primary.email'] ?? ''), !empty($row['email_primary.on_hold'])],
-    ];
-    $sawAddress = FALSE;
-    foreach ($candidates as [$address, $onHold]) {
-      if ($address === '') {
-        continue;
-      }
-      $sawAddress = TRUE;
-      if ($respect && $onHold) {
-        continue;
-      }
-      return ['address' => $address, 'suspended' => FALSE];
-    }
-    return ['address' => '', 'suspended' => $sawAddress];
+    return self::resolveEmailDeliveryRows([$row], $options);
   }
 
   /**

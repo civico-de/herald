@@ -157,4 +157,27 @@ class GroupRecipientsTest extends TestCase {
     $this->assertSame('work-a@example.org', $mapped['recipients'][0]['config']['email_to']);
   }
 
+  public function testDeliverableSecondJoinRowRescuesTheContact(): void {
+    // First work address on hold, second fine: the contact must still get the
+    // mail — dedup may only strike once a deliverable address was picked.
+    $rows = [
+      $this->row([
+        'id' => 14,
+        'herald_loc_email.email' => 'hold@example.org',
+        'herald_loc_email.on_hold' => 1,
+      ]),
+      $this->row([
+        'id' => 14,
+        'herald_loc_email.email' => 'ok@example.org',
+        'herald_loc_email.on_hold' => 0,
+      ]),
+    ];
+    $mapped = GroupRecipients::mapGroupRows($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $this->assertSame(
+      [['contact_id' => 14, 'channel' => 'email', 'config' => ['email_to' => 'ok@example.org']]],
+      $mapped['recipients'],
+    );
+    $this->assertSame([], $mapped['skipped']);
+  }
+
 }

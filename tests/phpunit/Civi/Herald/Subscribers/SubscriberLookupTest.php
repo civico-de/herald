@@ -304,4 +304,69 @@ class SubscriberLookupTest extends TestCase {
     $this->assertSame([1, 2], array_column($mapped, 'contact_id'));
   }
 
+  public function testDeliverableSecondJoinRowRescuesTheContact(): void {
+    // Two work addresses, first on hold: dedup must not write the contact off
+    // on the strength of the first join row.
+    $rows = [
+      $this->row([
+        'id' => 21,
+        'herald_preferences.preferred_channel' => 'email',
+        'herald_loc_email.email' => 'hold@example.org',
+        'herald_loc_email.on_hold' => 1,
+      ]),
+      $this->row([
+        'id' => 21,
+        'herald_preferences.preferred_channel' => 'email',
+        'herald_loc_email.email' => 'ok@example.org',
+        'herald_loc_email.on_hold' => 0,
+      ]),
+    ];
+    $mapped = SubscriberLookup::mapRowsDetailed($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $this->assertSame(
+      [['contact_id' => 21, 'channel' => 'email', 'config' => ['email_to' => 'ok@example.org']]],
+      $mapped['recipients'],
+    );
+    $this->assertSame([], $mapped['skipped']);
+  }
+
+  public function testLocationAddressOfLaterRowBeatsThePrimaryFallback(): void {
+    $rows = [
+      $this->row([
+        'id' => 22,
+        'herald_preferences.preferred_channel' => 'email',
+        'email_primary.email' => 'primary@example.org',
+        'herald_loc_email.email' => 'hold@example.org',
+        'herald_loc_email.on_hold' => 1,
+      ]),
+      $this->row([
+        'id' => 22,
+        'herald_preferences.preferred_channel' => 'email',
+        'email_primary.email' => 'primary@example.org',
+        'herald_loc_email.email' => 'ok@example.org',
+      ]),
+    ];
+    $mapped = SubscriberLookup::mapRows($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $this->assertSame('ok@example.org', $mapped[0]['config']['email_to']);
+  }
+
+  public function testContactWithAllAddressesOnHoldCountsAsSuspendedOnce(): void {
+    $rows = [
+      $this->row([
+        'id' => 23,
+        'herald_preferences.preferred_channel' => 'email',
+        'herald_loc_email.email' => 'a@example.org',
+        'herald_loc_email.on_hold' => 1,
+      ]),
+      $this->row([
+        'id' => 23,
+        'herald_preferences.preferred_channel' => 'email',
+        'herald_loc_email.email' => 'b@example.org',
+        'herald_loc_email.on_hold' => 1,
+      ]),
+    ];
+    $mapped = SubscriberLookup::mapRowsDetailed($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $this->assertSame([], $mapped['recipients']);
+    $this->assertSame(['suspended' => 1], $mapped['skipped']);
+  }
+
 }

@@ -29,9 +29,29 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
     return TRUE;
   }
 
-  public function enable(): void {
-    CRM_Herald_CivirulesAdapter_Registrar::register($this->extensionDir);
+  /**
+   * 0.7.0 added the herald_field_transition condition to the CiviRules
+   * manifest and the scope fields to the managed custom group; both are only
+   * (re)registered on install/enable, so existing installs need a reconcile.
+   */
+  public function upgrade_1003(): bool {
+    $this->ctx->log->info('herald: re-registering CiviRules manifests and reconciling managed entities');
+    self::reconcile($this->extensionDir);
+    return TRUE;
+  }
+
+  /**
+   * Bring CiviRules manifests, renamed handler classes and managed entities
+   * in line with the shipped code. Shared by enable() and upgrade steps.
+   */
+  public static function reconcile(string $extensionDir): void {
+    CRM_Herald_CivirulesAdapter_Registrar::register($extensionDir);
     CRM_Herald_CivirulesAdapter_Registrar::migrateRenamedClasses();
+    CRM_Core_ManagedEntities::singleton(TRUE)->reconcile(['herald']);
+  }
+
+  public function enable(): void {
+    self::reconcile($this->extensionDir);
   }
 
 }

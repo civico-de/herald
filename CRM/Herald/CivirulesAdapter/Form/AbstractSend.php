@@ -95,20 +95,22 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
       ['' => E::ts('- primary -')] + $this->getLocationTypeOptions(),
       FALSE,
     );
-    $this->add(
-      'select',
-      'scope_entity',
-      E::ts(
-        'Subscription scope entity (subscriber mode: only reach subscriptions scoped to the trigger\'s entity instance, plus unscoped ones)',
-      ),
-      [
-        '' => E::ts('- none (all subscriptions) -'),
-        'Event' => E::ts('Event'),
-        'Membership' => E::ts('Membership'),
-        'Participant' => E::ts('Participant'),
-      ],
-      FALSE,
-    );
+    if ($this->supportsScopeEntity()) {
+      $this->add(
+        'select',
+        'scope_entity',
+        E::ts(
+          'Subscription scope entity (subscriber mode: only reach subscriptions scoped to the trigger\'s entity instance, plus unscoped ones)',
+        ),
+        [
+          '' => E::ts('- none (all subscriptions) -'),
+          'Event' => E::ts('Event'),
+          'Membership' => E::ts('Membership'),
+          'Participant' => E::ts('Participant'),
+        ],
+        FALSE,
+      );
+    }
     $this->add(
       'select',
       'channel',
@@ -211,7 +213,7 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
       'email_addresses' => self::toStringValue($values['email_addresses'] ?? ''),
       'respect_suspension' => !empty($values['respect_suspension']),
       'email_location_type' => (int) self::toStringValue($values['email_location_type'] ?? ''),
-      'scope_entity' => self::toStringValue($values['scope_entity'] ?? ''),
+      'scope_entity' => $this->supportsScopeEntity() ? self::toStringValue($values['scope_entity'] ?? '') : '',
       'channel' => $values['channel'] ?? 'telegram',
       'template' => $values['template'] ?? '',
       'chat_id' => $values['chat_id'] ?? '',
@@ -357,6 +359,16 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
       ]));
     }
     return $decoded;
+  }
+
+  /**
+   * Whether this action offers the scope_entity field. Only Herald.notify
+   * resolves scope_entity against a trigger context (Event/Membership/
+   * Participant payloads); the contribution alert/digest actions have no such
+   * context, so offering the field there would save a dead parameter.
+   */
+  protected function supportsScopeEntity(): bool {
+    return FALSE;
   }
 
   /**

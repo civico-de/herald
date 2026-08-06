@@ -86,6 +86,46 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
     self::assertSame(self::NEW_CLASS, $this->classNameOf($actionId));
   }
 
+  /**
+   * 0.7.0 regression: manifests and managed entities added in a release must
+   * reach EXISTING installs via the upgrader, not only via install/enable.
+   * upgrade_1003 delegates to reconcile(); this exercises that path against a
+   * DB missing the 0.7.0 additions.
+   */
+  public function testReconcileRegistersManifestAdditionsOnExistingInstalls(): void {
+    \CRM_Core_DAO::executeQuery(
+      "DELETE FROM civirule_condition WHERE name = 'herald_field_transition'",
+    );
+    \CRM_Core_DAO::executeQuery(
+      "DELETE FROM civicrm_managed WHERE module = 'herald'
+       AND name = 'OptionValue_herald_subscription_type_weekly_digest'",
+    );
+    \CRM_Core_DAO::executeQuery(
+      "DELETE ov FROM civicrm_option_value ov
+       JOIN civicrm_option_group og ON og.id = ov.option_group_id
+       WHERE og.name = 'herald_subscription_type' AND ov.name = 'weekly_digest'",
+    );
+
+    CRM_Herald_Upgrader::reconcile(dirname(__DIR__, 5));
+
+    self::assertSame(
+      'CRM_Herald_CivirulesAdapter_Condition_FieldTransition',
+      (string) \CRM_Core_DAO::singleValueQuery(
+        "SELECT class_name FROM civirule_condition WHERE name = 'herald_field_transition'",
+      ),
+      'upgrade reconcile did not (re)register the field-transition condition',
+    );
+    self::assertSame(
+      1,
+      (int) \CRM_Core_DAO::singleValueQuery(
+        "SELECT COUNT(*) FROM civicrm_option_value ov
+         JOIN civicrm_option_group og ON og.id = ov.option_group_id
+         WHERE og.name = 'herald_subscription_type' AND ov.name = 'weekly_digest'",
+      ),
+      'upgrade reconcile did not restore the managed option value',
+    );
+  }
+
   private function actionIdByName(string $name): int {
     return (int) \CRM_Core_DAO::singleValueQuery(
       'SELECT id FROM civirule_action WHERE name = %1',

@@ -23,6 +23,13 @@ final class FieldTransition {
    * TRUE iff both configured sides match. A side with an empty operator is
    * unconfigured and matches anything; at least one side must be configured.
    *
+   * A one-sided condition ("became X" / "was Y before") additionally requires
+   * that the value actually changed — the predicate alone would re-fire on
+   * every unrelated edit of a row already in the target state. That check
+   * needs the pre-edit value, so an unknown before-value fails one-sided
+   * conditions too (a missed alert beats a false one). Two-sided conditions
+   * state their own transition explicitly and are left alone.
+   *
    * @param array{operator: string, value: string} $before
    * @param array{operator: string, value: string} $after
    * @param array{known: bool, value: mixed} $beforeState Resolved pre-edit
@@ -37,10 +44,25 @@ final class FieldTransition {
     if ($before['operator'] === '' && $after['operator'] === '') {
       return FALSE;
     }
-    if ($before['operator'] !== '' && !$beforeState['known']) {
+    $oneSided = $before['operator'] === '' || $after['operator'] === '';
+    if (($before['operator'] !== '' || $oneSided) && !$beforeState['known']) {
+      return FALSE;
+    }
+    if ($oneSided && self::sameValue($beforeState['value'], $afterValue)) {
       return FALSE;
     }
     return self::sideMatches($before, $beforeState['value']) && self::sideMatches($after, $afterValue);
+  }
+
+  /**
+   * Are two field values the same, using the equality semantics of compare()?
+   * Non-scalar values (arrays, objects) fall back to strict comparison.
+   */
+  public static function sameValue(mixed $a, mixed $b): bool {
+    if (is_scalar($a) && is_scalar($b)) {
+      return self::equals($a, (string) $b);
+    }
+    return $a === $b;
   }
 
   /**
@@ -88,13 +110,16 @@ final class FieldTransition {
     if (!is_numeric($expected) || !is_scalar($actual) || !is_numeric((string) $actual)) {
       return FALSE;
     }
-    $a = (float) $actual;
-    $b = (float) $expected;
+    $a = trim((string) $actual);
+    $b = trim($expected);
+    $cmp = self::floatSafe($a) && self::floatSafe($b)
+      ? (float) $a <=> (float) $b
+      : self::compareIntStrings($a, $b);
     return match ($operator) {
-      '>' => $a > $b,
-      '<' => $a < $b,
-      '>=' => $a >= $b,
-      '<=' => $a <= $b,
+      '>' => $cmp > 0,
+      '<' => $cmp < 0,
+      '>=' => $cmp >= 0,
+      '<=' => $cmp <= 0,
       default => FALSE,
     };
   }
@@ -106,9 +131,53 @@ final class FieldTransition {
     $actualStr = trim((string) $actual);
     $expectedStr = trim($expected);
     if (is_numeric($actualStr) && is_numeric($expectedStr)) {
-      return (float) $actualStr === (float) $expectedStr;
+      // Numeric compare only while the float cast is lossless for both sides;
+      // beyond 2^53 (or exotic numeric spellings) fall back to string compare
+      // rather than collapsing distinct values.
+      if (self::floatSafe($actualStr) && self::floatSafe($expectedStr)) {
+        return (float) $actualStr === (float) $expectedStr;
+      }
+      return self::isIntString($actualStr) && self::isIntString($expectedStr)
+        ? self::compareIntStrings($actualStr, $expectedStr) === 0
+        : $actualStr === $expectedStr;
     }
     return $actualStr === $expectedStr;
+  }
+
+  /**
+   * Can this numeric string round-trip through float without precision loss?
+   * Conservative: at most 15 significant digits keeps every value exact.
+   */
+  private static function floatSafe(string $value): bool {
+    $digits = preg_replace('/^0+(?=\d)|[^0-9]/', '', $value) ?? '';
+    return strlen(ltrim($digits, '0') ?: '0') <= 15;
+  }
+
+  private static function isIntString(string $value): bool {
+    return preg_match('/^[+-]?\d+$/', $value) === 1;
+  }
+
+  /**
+   * Arbitrary-precision integer-string comparison (spaceship semantics).
+   * Non-integer spellings compare as plain strings — deterministic, and only
+   * reachable for numeric values too large for a safe float compare anyway.
+   */
+  private static function compareIntStrings(string $a, string $b): int {
+    if (!self::isIntString($a) || !self::isIntString($b)) {
+      return strcmp($a, $b) <=> 0;
+    }
+    $normalize = static function (string $v): array {
+      $negative = $v[0] === '-';
+      $digits = ltrim(ltrim($v, '+-'), '0') ?: '0';
+      return [$digits === '0' ? FALSE : $negative, $digits];
+    };
+    [$aNeg, $aDigits] = $normalize($a);
+    [$bNeg, $bDigits] = $normalize($b);
+    if ($aNeg !== $bNeg) {
+      return $aNeg ? -1 : 1;
+    }
+    $cmp = strlen($aDigits) <=> strlen($bDigits) ?: strcmp($aDigits, $bDigits) <=> 0;
+    return $aNeg ? -$cmp : $cmp;
   }
 
   /**

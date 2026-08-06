@@ -38,6 +38,16 @@ class FieldTransitionTest extends TestCase {
       'not_empty on null' => ['not_empty', NULL, '', FALSE],
       'equals on array is false' => ['=', ['x'], 'x', FALSE],
       'unknown operator' => ['~', '1', '1', FALSE],
+      // Numeric equality only while float is lossless; huge integers must not
+      // collapse (9007199254740992.0 === 9007199254740993.0 as floats).
+      'huge ints not equal' => ['=', '9007199254740993', '9007199254740992', FALSE],
+      'huge ints equal' => ['=', '9007199254740993', '9007199254740993', TRUE],
+      'huge ints equal with leading zero' => ['=', '09007199254740993', '9007199254740993', TRUE],
+      'huge int ordering' => ['>', '9007199254740993', '9007199254740992', TRUE],
+      'huge int ordering reverse' => ['<', '9007199254740992', '9007199254740993', TRUE],
+      'huge negative int ordering' => ['<', '-9007199254740993', '-9007199254740992', TRUE],
+      'ordering with different lengths' => ['>', '10000000000000000', '999999999999999', TRUE],
+      'leading zeros numeric compare' => ['=', '00123', '123', TRUE],
     ];
   }
 
@@ -61,14 +71,55 @@ class FieldTransitionTest extends TestCase {
     $before = FieldTransition::side('', '');
     $after = FieldTransition::side('=', '1');
     $this->assertTrue(FieldTransition::matches($before, $after, ['known' => TRUE, 'value' => 'whatever'], '1'));
-    // Even an unknown previous value is fine when the before side is open.
-    $this->assertTrue(FieldTransition::matches($before, $after, ['known' => FALSE, 'value' => NULL], '1'));
+    // One-sided conditions require a verifiable change, so an unknown
+    // previous value fails them (a missed alert beats a false one).
+    $this->assertFalse(FieldTransition::matches($before, $after, ['known' => FALSE, 'value' => NULL], '1'));
   }
 
   public function testUnconfiguredAfterSideMatchesAnyCurrentValue(): void {
     $before = FieldTransition::side('=', '2');
     $after = FieldTransition::side('', '');
     $this->assertTrue(FieldTransition::matches($before, $after, ['known' => TRUE, 'value' => '2'], 'anything'));
+  }
+
+  public function testOneSidedConditionRequiresAnActualChange(): void {
+    // "after = 0", row already at 0, unrelated edit: must NOT fire.
+    $before = FieldTransition::side('', '');
+    $after = FieldTransition::side('=', '0');
+    $this->assertFalse(FieldTransition::matches($before, $after, ['known' => TRUE, 'value' => '0'], '0'));
+    $this->assertFalse(FieldTransition::matches($before, $after, ['known' => TRUE, 'value' => 0], '0'));
+    $this->assertTrue(FieldTransition::matches($before, $after, ['known' => TRUE, 'value' => '1'], '0'));
+    // Before-only conditions get the same guard.
+    $beforeOnly = FieldTransition::side('=', 'Pending');
+    $open = FieldTransition::side('', '');
+    $this->assertFalse(FieldTransition::matches(
+      $beforeOnly,
+      $open,
+      ['known' => TRUE, 'value' => 'Pending'],
+      'Pending',
+    ));
+    $this->assertTrue(FieldTransition::matches(
+      $beforeOnly,
+      $open,
+      ['known' => TRUE, 'value' => 'Pending'],
+      'Completed',
+    ));
+  }
+
+  public function testTwoSidedConditionDoesNotRequireAChange(): void {
+    // Both sides explicit: the admin stated the exact transition, including a
+    // degenerate same-value one — keep that semantics untouched.
+    $before = FieldTransition::side('>=', '0');
+    $after = FieldTransition::side('=', '5');
+    $this->assertTrue(FieldTransition::matches($before, $after, ['known' => TRUE, 'value' => '5'], '5'));
+  }
+
+  public function testSameValueUsesEqualitySemantics(): void {
+    $this->assertTrue(FieldTransition::sameValue('0', 0));
+    $this->assertTrue(FieldTransition::sameValue(' 2 ', '2.0'));
+    $this->assertFalse(FieldTransition::sameValue(NULL, '0'));
+    $this->assertTrue(FieldTransition::sameValue(NULL, NULL));
+    $this->assertFalse(FieldTransition::sameValue('9007199254740993', '9007199254740992'));
   }
 
   public function testNoSideConfiguredNeverMatches(): void {

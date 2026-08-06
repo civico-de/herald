@@ -10,6 +10,10 @@ class CRM_Herald_CivirulesAdapter_Form_SendNotification extends CRM_Herald_Civir
     return $this->lookupHeraldTemplates();
   }
 
+  protected function supportsScopeEntity(): bool {
+    return TRUE;
+  }
+
   protected function addExtraFields(): void {
     $this->add('textarea', 'vars', E::ts('Variables (JSON object passed to the template)'), [
       'rows' => 6,

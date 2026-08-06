@@ -68,18 +68,16 @@ class GroupRecipients {
   public static function mapGroupRows(array $rows, array $options = []): array {
     $out = [];
     $skipped = [];
-    $seen = [];
     $bump = static function (string $reason) use (&$skipped): void {
       $skipped[$reason] = ($skipped[$reason] ?? 0) + 1;
     };
-    foreach ($rows as $row) {
+    foreach (SubscriberLookup::groupRowsByContact($rows) as $contactRows) {
       // The location-email join can duplicate a contact (several addresses of
-      // that location type) — one send per contact, first row wins.
+      // that location type); preference fields are identical on every row, so
+      // the first speaks for the contact — but email deliverability must be
+      // judged across ALL of a contact's rows, not just the first.
+      $row = $contactRows[0];
       $contactId = is_scalar($row['id'] ?? NULL) ? (int) $row['id'] : 0;
-      if ($contactId > 0 && isset($seen[$contactId])) {
-        continue;
-      }
-      $seen[$contactId] = TRUE;
       $channel = is_scalar($row['herald_preferences.preferred_channel'] ?? NULL)
         ? (string) $row['herald_preferences.preferred_channel']
         : '';
@@ -91,7 +89,7 @@ class GroupRecipients {
         // Email path: preferred channel email, or the fallback for contacts
         // without (usable) preferences — their own resolved address.
         $channel = 'email';
-        $delivery = SubscriberLookup::resolveEmailDelivery($row, $options);
+        $delivery = SubscriberLookup::resolveEmailDeliveryRows($contactRows, $options);
         if ($delivery['suspended']) {
           $bump('suspended');
           continue;

@@ -42,6 +42,17 @@ class PreEditSnapshotTest extends TestCase {
 
   public function testUncapturedReadsAsNull(): void {
     $this->assertNull(PreEditSnapshot::get('Event', 99, 'is_active'));
+    $this->assertFalse(PreEditSnapshot::has('Event', 99, 'is_active'));
+  }
+
+  /**
+   * A snapshotted NULL is a KNOWN before-value — has() must distinguish it
+   * from "nothing captured", or NULL→x transitions read as before-unknown.
+   */
+  public function testRememberedNullIsKnown(): void {
+    PreEditSnapshot::remember('Contribution', 5, 'custom.approval', NULL);
+    $this->assertTrue(PreEditSnapshot::has('Contribution', 5, 'custom.approval'));
+    $this->assertNull(PreEditSnapshot::get('Contribution', 5, 'custom.approval'));
   }
 
   /**

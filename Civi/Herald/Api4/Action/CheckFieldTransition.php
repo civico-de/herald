@@ -85,13 +85,12 @@ class CheckFieldTransition extends AbstractAction {
       return FALSE;
     }
 
-    $beforeState = ['known' => $this->hasOriginal, 'value' => $this->originalValue];
-    if (!$beforeState['known']) {
-      $snapshot = PreEditSnapshot::get($this->entity, $this->entityId, $this->field);
-      if ($snapshot !== NULL) {
-        $beforeState = ['known' => TRUE, 'value' => $snapshot];
-      }
-    }
+    $beforeState = self::resolveBeforeState(
+      ['known' => $this->hasOriginal, 'value' => $this->originalValue],
+      $this->entity,
+      $this->entityId,
+      $this->field,
+    );
 
     $current = FieldTransitionSnapshotter::currentValue($this->entity, $this->entityId, $this->field);
     if (!$current['known']) {
@@ -104,6 +103,30 @@ class CheckFieldTransition extends AbstractAction {
       $beforeState,
       $current['value'],
     );
+  }
+
+  /**
+   * Original-data first, herald's hook_civicrm_pre snapshot as fallback. A
+   * snapshotted NULL is a *known* before-value (PreEditSnapshot::has()), so
+   * NULL→x transitions match "from is_empty" conditions.
+   *
+   * @param array{known: bool, value: mixed} $original Caller-supplied
+   *   original-data state (known=FALSE when none was available).
+   * @return array{known: bool, value: mixed}
+   */
+  public static function resolveBeforeState(
+    array $original,
+    string $entity,
+    int $entityId,
+    string $field,
+  ): array {
+    if ($original['known']) {
+      return ['known' => TRUE, 'value' => $original['value']];
+    }
+    if (PreEditSnapshot::has($entity, $entityId, $field)) {
+      return ['known' => TRUE, 'value' => PreEditSnapshot::get($entity, $entityId, $field)];
+    }
+    return ['known' => FALSE, 'value' => NULL];
   }
 
 }

@@ -532,14 +532,18 @@ everything short of that.
 | `email_addresses` | string | none | Address-list mode: raw emails (comma/semicolon/newline separated), sent via the email channel with no contact linkage — ops recipients |
 | `respect_suspension` | bool | `false` | Fan-outs: skip email recipients with `is_opt_out` or an on-hold address; skips are logged and counted, never fail the send. `do_not_email` is always skipped regardless |
 | `email_location_type` | int | `0` | Resolve contact emails of this location type, falling back to primary; `0` = primary |
-| `scope_entity` | string | none | Subscriber mode: declare which trigger entity instance this notification concerns (`Event` / `Membership` / `Participant`; `Event` also resolves via a Participant's event_id). Subscriptions scoped to a different instance are skipped; unscoped subscriptions always match |
+| `scope_entity` | string | none | Send-Notification action only: declare which trigger entity instance this notification concerns (`Event` / `Membership` / `Participant`; `Event` also resolves via a Participant's event_id). Subscriptions scoped to a different instance are skipped; unscoped subscriptions always match. The contribution alert/digest actions have no such trigger context and do not offer the field |
 
 ## Condition: Field transition (generic)
 
 "Herald: Field transition" generalises "Previous Contribution status": field X
 of entity E transitioned from (operator, value) to (operator, value). Both
 sides are optional (empty operator = any value); operators are
-`=  !=  >  <  >=  <=  is_empty  not_empty`. The pre-edit value comes from
+`=  !=  >  <  >=  <=  is_empty  not_empty`. A one-sided condition (only
+before or only after configured) additionally requires that the value
+actually changed, so unrelated edits of a row already in the target state
+do not re-fire it — which also means it needs a known pre-edit value.
+The pre-edit value comes from
 herald's own `hook_civicrm_pre` snapshot (fields in use are auto-watched),
 with CiviRules' original data taking per-edit precedence — same reliability
 model as the contribution condition. Example: entity `Membership`, field

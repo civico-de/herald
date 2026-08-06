@@ -37,7 +37,16 @@ class PreEditSnapshot {
   }
 
   /**
-   * @return mixed NULL when nothing was captured this request.
+   * Was a pre-edit value captured for this field this request? A snapshotted
+   * NULL counts — callers must use this instead of null-testing get(), or a
+   * genuine NULL→x transition reads as "before unknown".
+   */
+  public static function has(string $entity, int $id, string $field): bool {
+    return array_key_exists(self::key($entity, $id, $field), self::$store);
+  }
+
+  /**
+   * @return mixed NULL when nothing was captured this request (see has()).
    */
   public static function get(string $entity, int $id, string $field): mixed {
     return self::$store[self::key($entity, $id, $field)] ?? NULL;
