@@ -92,6 +92,24 @@ $preferenceFields = [
     'weight' => 60,
     'help_pre' => E::ts('Tick the kinds of notifications you want to receive on your preferred channel.'),
   ],
+  [
+    'name' => 'source_entity_type',
+    'label' => E::ts('Scope: entity type'),
+    'data_type' => 'String',
+    'html_type' => 'Text',
+    'weight' => 70,
+    'help_pre' => E::ts(
+      'Optional: limit these subscriptions to one source entity (e.g. Event). Leave empty for global subscriptions.',
+    ),
+  ],
+  [
+    'name' => 'source_entity_id',
+    'label' => E::ts('Scope: entity ID'),
+    'data_type' => 'Int',
+    'html_type' => 'Text',
+    'weight' => 80,
+    'help_pre' => E::ts('Optional: the ID of the source entity the scope refers to.'),
+  ],
 ];
 
 $managed = [];

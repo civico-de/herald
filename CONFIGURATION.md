@@ -521,3 +521,34 @@ everything short of that.
 |---|---|---|
 | `channel`, `template`, `chat_id`, `parse_mode` | — | (same) |
 | `vars` | JSON | Variable bag passed verbatim to the template |
+
+### Delivery parameters (all send actions)
+
+| Param | Type | Default | Meaning |
+|---|---|---|---|
+| `delivery_mode` | string | `direct` | `direct` / `subscribers` / `group` / `addresses` |
+| `subscription_type` | string | none | Subscriber mode: which opt-in kind to fan out to |
+| `group_id` | int | none | Group mode: all contacts of this CiviCRM group, each via their own preferred channel; contacts without preferences fall back to email to their own address |
+| `email_addresses` | string | none | Address-list mode: raw emails (comma/semicolon/newline separated), sent via the email channel with no contact linkage — ops recipients |
+| `respect_suspension` | bool | `false` | Fan-outs: skip email recipients with `is_opt_out` or an on-hold address; skips are logged and counted, never fail the send. `do_not_email` is always skipped regardless |
+| `email_location_type` | int | `0` | Resolve contact emails of this location type, falling back to primary; `0` = primary |
+| `scope_entity` | string | none | Subscriber mode: declare which trigger entity instance this notification concerns (`Event` / `Membership` / `Participant`; `Event` also resolves via a Participant's event_id). Subscriptions scoped to a different instance are skipped; unscoped subscriptions always match |
+
+## Condition: Field transition (generic)
+
+"Herald: Field transition" generalises "Previous Contribution status": field X
+of entity E transitioned from (operator, value) to (operator, value). Both
+sides are optional (empty operator = any value); operators are
+`=  !=  >  <  >=  <=  is_empty  not_empty`. The pre-edit value comes from
+herald's own `hook_civicrm_pre` snapshot (fields in use are auto-watched),
+with CiviRules' original data taking per-edit precedence — same reliability
+model as the contribution condition. Example: entity `Membership`, field
+`status_id`, before `= 2`, after `= 3`.
+
+## Scoped subscriptions (source entity)
+
+The `herald_preferences` custom group carries optional `source_entity_type` +
+`source_entity_id` fields. When set (e.g. `Event` / `42`), the contact's
+subscriptions only fire for notifications whose action declares a matching
+`scope_entity` resolving to that instance; empty fields mean global
+subscriptions (the previous behaviour, and the default).

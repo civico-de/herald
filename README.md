@@ -11,8 +11,9 @@ Status: **alpha (v0.1)** — feature-complete for the migration. Ships:
 - Channels: Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover, Email (via CiviCRM’s outbound mailer)
 - Three CiviRules actions: `Send Notification`, `Send Contribution Digest`, `Send Contribution Alert` (each with its own parameter form)
 - Contribution digest engine (period filters, source/financial-type filters, adaptive histogram, campaign progress, pending pool)
-- Custom CiviRules condition `Previous Contribution status` (uses a `hook_civicrm_pre` snapshot, independent of CiviRules core change-tracking)
-- Per-contact notification preferences + subscriber-mode delivery (one rule fans out to all opted-in contacts via *their own* preferred channel)
+- Custom CiviRules conditions: `Previous Contribution status` and the generic `Field transition` (any entity/field, before/after operator pairs — both use a `hook_civicrm_pre` snapshot, independent of CiviRules core change-tracking)
+- Per-contact notification preferences + subscriber-mode delivery (one rule fans out to all opted-in contacts via *their own* preferred channel); subscriptions optionally scoped to a source entity (e.g. one Event)
+- Delivery modes beyond subscribers: whole CiviCRM group (each member via their own channel, email fallback) or a raw email address list; optional communication-suspension respect and per-rule email location type
 - Workflow `MessageTemplate` fixtures shipped via mgd-php (admin-editable, user edits preserved on re-enable)
 
 ## Install

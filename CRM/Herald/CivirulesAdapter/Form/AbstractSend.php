@@ -56,6 +56,8 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
       [
         'direct' => E::ts('Direct — send to one recipient configured below'),
         'subscribers' => E::ts('Subscribers — fan out to all contacts opted into a subscription type'),
+        'group' => E::ts('Group — fan out to all contacts of a CiviCRM group'),
+        'addresses' => E::ts('Address list — send to raw email addresses (no contact linkage)'),
       ],
       TRUE,
     );
@@ -64,6 +66,47 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
       'subscription_type',
       E::ts('Subscription type (only used in subscriber mode)'),
       $this->getSubscriptionTypeOptions(),
+      FALSE,
+    );
+    $this->add(
+      'select',
+      'group_id',
+      E::ts('Group (only used in group mode)'),
+      ['' => E::ts('- select group -')] + $this->getGroupOptions(),
+      FALSE,
+    );
+    $this->add(
+      'textarea',
+      'email_addresses',
+      E::ts('Email addresses (address-list mode; comma or newline separated)'),
+      [
+        'rows' => 3,
+        'cols' => 60,
+      ],
+    );
+    $this->heraldCheckbox(
+      'respect_suspension',
+      E::ts('Respect communication suspension (skip opted-out / on-hold email recipients in fan-outs)'),
+    );
+    $this->add(
+      'select',
+      'email_location_type',
+      E::ts('Preferred location type for email recipients (fallback: primary address)'),
+      ['' => E::ts('- primary -')] + $this->getLocationTypeOptions(),
+      FALSE,
+    );
+    $this->add(
+      'select',
+      'scope_entity',
+      E::ts(
+        'Subscription scope entity (subscriber mode: only reach subscriptions scoped to the trigger\'s entity instance, plus unscoped ones)',
+      ),
+      [
+        '' => E::ts('- none (all subscriptions) -'),
+        'Event' => E::ts('Event'),
+        'Membership' => E::ts('Membership'),
+        'Participant' => E::ts('Participant'),
+      ],
       FALSE,
     );
     $this->add(
@@ -126,6 +169,11 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
       'disable_web_page_preview',
       'delivery_mode',
       'subscription_type',
+      'group_id',
+      'email_addresses',
+      'respect_suspension',
+      'email_location_type',
+      'scope_entity',
       'aggregate_minutes',
     ] as $field) {
       if (!array_key_exists($field, $params)) {
@@ -159,6 +207,11 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
     $params = [
       'delivery_mode' => $values['delivery_mode'] ?? 'direct',
       'subscription_type' => $values['subscription_type'] ?? '',
+      'group_id' => (int) self::toStringValue($values['group_id'] ?? ''),
+      'email_addresses' => self::toStringValue($values['email_addresses'] ?? ''),
+      'respect_suspension' => !empty($values['respect_suspension']),
+      'email_location_type' => (int) self::toStringValue($values['email_location_type'] ?? ''),
+      'scope_entity' => self::toStringValue($values['scope_entity'] ?? ''),
       'channel' => $values['channel'] ?? 'telegram',
       'template' => $values['template'] ?? '',
       'chat_id' => $values['chat_id'] ?? '',
@@ -222,6 +275,66 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
       }
       $label = $row['label'] ?? NULL;
       $opts[(string) $value] = is_string($label) ? $label : (string) $value;
+    }
+    return $opts;
+  }
+
+  /**
+   * Group dropdown for group-mode delivery (active, non-hidden groups).
+   *
+   * @return array<int|string, string>
+   */
+  protected function getGroupOptions(): array {
+    try {
+      $rows = \Civi\Api4\Group::get(FALSE)
+        ->addSelect('id', 'title')
+        ->addWhere('is_active', '=', TRUE)
+        ->addWhere('is_hidden', '=', FALSE)
+        ->addOrderBy('title', 'ASC')
+        ->execute()
+        ->getArrayCopy();
+    }
+    catch (\Throwable $e) {
+      return [];
+    }
+    return self::idLabelOptions($rows, 'title');
+  }
+
+  /**
+   * Location-type dropdown for email recipient resolution.
+   *
+   * @return array<int|string, string>
+   */
+  protected function getLocationTypeOptions(): array {
+    try {
+      $rows = \Civi\Api4\LocationType::get(FALSE)
+        ->addSelect('id', 'display_name')
+        ->addWhere('is_active', '=', TRUE)
+        ->addOrderBy('display_name', 'ASC')
+        ->execute()
+        ->getArrayCopy();
+    }
+    catch (\Throwable $e) {
+      return [];
+    }
+    return self::idLabelOptions($rows, 'display_name');
+  }
+
+  /**
+   * Map APIv4 rows to an id => label dropdown option list. PHP folds the
+   * numeric-string keys to int, hence the int|string key type.
+   *
+   * @param array<array-key, mixed> $rows
+   * @return array<int|string, string>
+   */
+  private static function idLabelOptions(array $rows, string $labelKey): array {
+    $opts = [];
+    foreach ($rows as $row) {
+      if (!is_array($row) || !is_numeric($row['id'] ?? NULL)) {
+        continue;
+      }
+      $label = $row[$labelKey] ?? NULL;
+      $opts[(string) (int) $row['id']] = is_string($label) ? $label : (string) (int) $row['id'];
     }
     return $opts;
   }

@@ -11,20 +11,23 @@ namespace Civi\Herald\Subscribers;
  * Why a separate service: keeps the API4 query in one place, lets us unit-test
  * the result-mapping (apv4 result rows → dispatch dicts) without spinning up
  * Civi for every test.
+ * @mago-expect lint:cyclomatic-complexity
  */
 class SubscriberLookup {
 
   /**
    * @param string $subscriptionType One of the values from the
    *   `herald_subscription_type` option group (e.g. "completed_alert").
+   * @param array<string, mixed> $options Delivery options: respect_suspension
+   *   (bool), location_type_id (int, 0 = primary), scope (see SubscriptionScope).
    * @return array<int, array{contact_id: int, channel: string, config: array<string, mixed>}>
    */
-  public function findBySubscriptionType(string $subscriptionType): array {
+  public function findBySubscriptionType(string $subscriptionType, array $options = []): array {
     if ($subscriptionType === '') {
       return [];
     }
 
-    $rows = \Civi\Api4\Contact::get(FALSE)
+    $query = \Civi\Api4\Contact::get(FALSE)
       ->addSelect(
         'id',
         'herald_preferences.preferred_channel',
@@ -33,17 +36,49 @@ class SubscriberLookup {
         'herald_preferences.ntfy_topic',
         'herald_preferences.webhook_url',
         'herald_preferences.subscriptions',
+        'herald_preferences.source_entity_type',
+        'herald_preferences.source_entity_id',
         'email_primary.email',
+        'email_primary.on_hold',
         'do_not_email',
+        'is_opt_out',
       )
       ->addWhere('is_deleted', '=', FALSE)
       ->addWhere('is_deceased', '=', FALSE)
-      ->addWhere('herald_preferences.subscriptions', 'CONTAINS', $subscriptionType)
-      ->execute()
-      ->getArrayCopy();
-
+      ->addWhere('herald_preferences.subscriptions', 'CONTAINS', $subscriptionType);
+    self::addLocationEmailJoin($query, $options);
     /** @var array<int, array<string, mixed>> $rows */
-    return self::mapRows($rows);
+    $rows = $query->execute()->getArrayCopy();
+
+    $mapped = self::mapRowsDetailed($rows, $options);
+    if ($mapped['skipped'] !== []) {
+      \Civi::log()->info('herald: subscriber fan-out skipped recipients', [
+        'subscription_type' => $subscriptionType,
+        'skipped' => $mapped['skipped'],
+      ]);
+    }
+    return $mapped['recipients'];
+  }
+
+  /**
+   * Join the preferred-location-type email when the option asks for one.
+   *
+   * @param \Civi\Api4\Generic\DAOGetAction $query
+   * @param array<string, mixed> $options
+   */
+  public static function addLocationEmailJoin($query, array $options): void {
+    $locationTypeId = self::int($options['location_type_id'] ?? 0);
+    if ($locationTypeId <= 0) {
+      return;
+    }
+    $query->addJoin(
+      'Email AS herald_loc_email',
+      'LEFT',
+      NULL,
+      ['herald_loc_email.contact_id', '=', 'id'],
+      ['herald_loc_email.location_type_id', '=', $locationTypeId],
+    );
+    $query->addSelect('herald_loc_email.email', 'herald_loc_email.on_hold');
   }
 
   /**
@@ -54,13 +89,44 @@ class SubscriberLookup {
    * just no-op the send).
    *
    * @param array<int, array<string, mixed>> $rows
+   * @param array<string, mixed> $options
    * @return array<int, array{contact_id: int, channel: string, config: array<string, mixed>}>
    */
-  public static function mapRows(array $rows): array {
+  public static function mapRows(array $rows, array $options = []): array {
+    return self::mapRowsDetailed($rows, $options)['recipients'];
+  }
+
+  /**
+   * Like mapRows(), but also counts why rows were dropped, so fan-out callers
+   * can log suspension/scope skips instead of silently shrinking the list.
+   *
+   * @param array<int, array<string, mixed>> $rows
+   * @param array<string, mixed> $options
+   * @return array{
+   *   recipients: array<int, array{contact_id: int, channel: string, config: array<string, mixed>}>,
+   *   skipped: array<string, int>,
+   * }
+   */
+  public static function mapRowsDetailed(array $rows, array $options = []): array {
+    $scope = $options['scope'] ?? NULL;
+    /** @var array{entity_type: string, entity_id: int}|null $scope */
+    $scope = is_array($scope) ? $scope : NULL;
     $out = [];
+    $skipped = [];
+    $bump = static function (string $reason) use (&$skipped): void {
+      $skipped[$reason] = ($skipped[$reason] ?? 0) + 1;
+    };
     foreach ($rows as $row) {
+      if (!SubscriptionScope::rowMatches($row, $scope)) {
+        $bump('scope_mismatch');
+        continue;
+      }
       $channel = self::str($row['herald_preferences.preferred_channel'] ?? '');
       if ($channel === '') {
+        continue;
+      }
+      if ($channel === 'email' && self::isEmailSuspended($row, $options)) {
+        $bump('suspended');
         continue;
       }
       $config = self::buildConfigForChannel($channel, $row);
@@ -73,7 +139,41 @@ class SubscriberLookup {
         'config' => $config,
       ];
     }
-    return $out;
+    return ['recipients' => $out, 'skipped' => $skipped];
+  }
+
+  /**
+   * Suspension check for email delivery. do_not_email is always a hard block
+   * (privacy flag); is_opt_out and on-hold of the resolved address only count
+   * when the caller opted into respect_suspension.
+   *
+   * @param array<string, mixed> $row
+   * @param array<string, mixed> $options
+   */
+  public static function isEmailSuspended(array $row, array $options): bool {
+    if (!empty($row['do_not_email'])) {
+      return TRUE;
+    }
+    if (empty($options['respect_suspension'])) {
+      return FALSE;
+    }
+    if (!empty($row['is_opt_out'])) {
+      return TRUE;
+    }
+    $usesLocationEmail = !empty($row['herald_loc_email.email']);
+    $onHold = $usesLocationEmail ? $row['herald_loc_email.on_hold'] ?? NULL : $row['email_primary.on_hold'] ?? NULL;
+    return !empty($onHold);
+  }
+
+  /**
+   * Recipient address for email delivery: the preferred-location-type address
+   * when the query joined one and the contact has it, else primary.
+   *
+   * @param array<string, mixed> $row
+   */
+  public static function resolveEmailAddress(array $row): string {
+    $loc = self::str($row['herald_loc_email.email'] ?? '');
+    return $loc !== '' ? $loc : self::str($row['email_primary.email'] ?? '');
   }
 
   /**
@@ -97,10 +197,11 @@ class SubscriberLookup {
       'webhook' => self::nonEmpty($row, 'herald_preferences.webhook_url', [
         'webhook_url' => $row['herald_preferences.webhook_url'] ?? '',
       ]),
-      // Email needs no preference field — the contact's primary address is the
-      // recipient. do_not_email is a hard privacy flag and trumps the opt-in.
-      'email' => !empty($row['email_primary.email']) && empty($row['do_not_email'])
-        ? ['email_to' => $row['email_primary.email']]
+      // Email needs no preference field — the preferred-location address (when
+      // requested and present) or the primary address is the recipient.
+      // do_not_email is a hard privacy flag and trumps the opt-in.
+      'email' => self::resolveEmailAddress($row) !== '' && empty($row['do_not_email'])
+        ? ['email_to' => self::resolveEmailAddress($row)]
         : NULL,
       default => NULL,
     };

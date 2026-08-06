@@ -144,6 +144,106 @@ class SubscriberLookupTest extends TestCase {
     $this->assertSame([], SubscriberLookup::mapRows($rows));
   }
 
+  public function testSuspensionSkippedAndCountedWhenOptionSet(): void {
+    $rows = [
+      $this->row([
+        'id' => 20,
+        'herald_preferences.preferred_channel' => 'email',
+        'email_primary.email' => 'opted-out@example.org',
+        'is_opt_out' => TRUE,
+      ]),
+      $this->row([
+        'id' => 21,
+        'herald_preferences.preferred_channel' => 'email',
+        'email_primary.email' => 'on-hold@example.org',
+        'email_primary.on_hold' => 1,
+      ]),
+      $this->row([
+        'id' => 22,
+        'herald_preferences.preferred_channel' => 'email',
+        'email_primary.email' => 'fine@example.org',
+      ]),
+    ];
+    $mapped = SubscriberLookup::mapRowsDetailed($rows, ['respect_suspension' => TRUE]);
+    $this->assertSame([22], array_column($mapped['recipients'], 'contact_id'));
+    $this->assertSame(['suspended' => 2], $mapped['skipped']);
+  }
+
+  public function testOptOutStillDeliveredWithoutRespectSuspension(): void {
+    $rows = [
+      $this->row([
+        'id' => 20,
+        'herald_preferences.preferred_channel' => 'email',
+        'email_primary.email' => 'opted-out@example.org',
+        'is_opt_out' => TRUE,
+      ]),
+    ];
+    $this->assertCount(1, SubscriberLookup::mapRows($rows));
+  }
+
+  public function testSuspensionOnlyAppliesToEmailChannel(): void {
+    $rows = [
+      $this->row([
+        'id' => 23,
+        'herald_preferences.preferred_channel' => 'telegram',
+        'herald_preferences.telegram_chat_id' => '5',
+        'is_opt_out' => TRUE,
+      ]),
+    ];
+    $this->assertCount(1, SubscriberLookup::mapRows($rows, ['respect_suspension' => TRUE]));
+  }
+
+  public function testLocationTypeAddressPreferredWithPrimaryFallback(): void {
+    $withLoc = $this->row([
+      'id' => 24,
+      'herald_preferences.preferred_channel' => 'email',
+      'email_primary.email' => 'primary@example.org',
+      'herald_loc_email.email' => 'work@example.org',
+    ]);
+    $withoutLoc = $this->row([
+      'id' => 25,
+      'herald_preferences.preferred_channel' => 'email',
+      'email_primary.email' => 'primary2@example.org',
+    ]);
+    $mapped = SubscriberLookup::mapRows([$withLoc, $withoutLoc], ['location_type_id' => 3]);
+    $this->assertSame('work@example.org', $mapped[0]['config']['email_to']);
+    $this->assertSame('primary2@example.org', $mapped[1]['config']['email_to']);
+  }
+
+  public function testScopedSubscriptionOnlyMatchesItsEntity(): void {
+    $scoped = $this->row([
+      'id' => 30,
+      'herald_preferences.preferred_channel' => 'telegram',
+      'herald_preferences.telegram_chat_id' => 'A',
+      'herald_preferences.source_entity_type' => 'Event',
+      'herald_preferences.source_entity_id' => 5,
+    ]);
+    $global = $this->row([
+      'id' => 31,
+      'herald_preferences.preferred_channel' => 'telegram',
+      'herald_preferences.telegram_chat_id' => 'B',
+    ]);
+
+    // Matching scope: both reached.
+    $match = SubscriberLookup::mapRowsDetailed(
+      [$scoped, $global],
+      ['scope' => ['entity_type' => 'Event', 'entity_id' => 5]],
+    );
+    $this->assertSame([30, 31], array_column($match['recipients'], 'contact_id'));
+
+    // Different instance: only the global subscription.
+    $other = SubscriberLookup::mapRowsDetailed(
+      [$scoped, $global],
+      ['scope' => ['entity_type' => 'Event', 'entity_id' => 6]],
+    );
+    $this->assertSame([31], array_column($other['recipients'], 'contact_id'));
+    $this->assertSame(['scope_mismatch' => 1], $other['skipped']);
+
+    // Unscoped notification: scoped subscriptions stay silent.
+    $unscoped = SubscriberLookup::mapRowsDetailed([$scoped, $global], []);
+    $this->assertSame([31], array_column($unscoped['recipients'], 'contact_id'));
+  }
+
   public function testMixedSubscribersAcrossChannels(): void {
     $rows = [
       $this->row([

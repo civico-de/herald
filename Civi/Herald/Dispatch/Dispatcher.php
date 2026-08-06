@@ -7,6 +7,7 @@ namespace Civi\Herald\Dispatch;
 use Civi\Herald\Buffer\AlertBuffer;
 use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Renderer\TemplateRenderer;
+use Civi\Herald\Subscribers\GroupRecipients;
 use Civi\Herald\Subscribers\SubscriberLookup;
 use Civi\Herald\Util\Cast;
 
@@ -25,9 +26,19 @@ use Civi\Herald\Util\Cast;
  * Parameters (the flat "params" bag; historically CiviRules action params):
  *   channel             — channel key (default "telegram"); used for direct delivery
  *   template            — MessageTemplate workflow_name to render (required)
- *   delivery_mode       — "direct" (default) or "subscribers"
+ *   delivery_mode       — "direct" (default), "subscribers", "group" or "addresses"
  *   subscription_type   — required when delivery_mode=subscribers; one of the
  *                         herald_subscription_type option-group values
+ *   group_id            — required when delivery_mode=group; recipients are the
+ *                         group's contacts (own preferred channel, email fallback)
+ *   email_addresses     — required when delivery_mode=addresses; raw address
+ *                         list (comma/semicolon/newline separated), no contacts
+ *   respect_suspension  — bool; skip is_opt_out / on-hold email recipients in
+ *                         contact fan-outs (do_not_email is always skipped)
+ *   email_location_type — int location_type_id for contact email resolution;
+ *                         0/absent = primary address
+ *   scope_entity_type / scope_entity_id — source-entity scope of this
+ *                         notification; scoped subscriptions must match it
  *   aggregate_minutes   — int (default 0 = send immediately). When > 0, the
  *                         rendered body is parked in the alert buffer and
  *                         Job.herald_buffer_flush sends everything collected
@@ -35,6 +46,8 @@ use Civi\Herald\Util\Cast;
  *   chat_id, parse_mode, disable_notification, … — channel-specific keys
  *                         (read by the channel implementations)
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:kan-defect
+ * @mago-expect lint:too-many-methods
  */
 class Dispatcher {
 
@@ -115,11 +128,7 @@ class Dispatcher {
       return ['mode' => 'buffered', 'template' => $workflowName];
     }
 
-    if (($params['delivery_mode'] ?? 'direct') === 'subscribers') {
-      self::deliver($body, ['delivery_mode' => 'subscribers'] + $params, $this->lookup);
-      return ['mode' => 'sent', 'template' => $workflowName];
-    }
-    self::deliver($body, ['delivery_mode' => 'direct'] + $params);
+    self::deliver($body, $params, $this->lookup);
     return ['mode' => 'sent', 'template' => $workflowName];
   }
 
@@ -145,12 +154,118 @@ class Dispatcher {
    * @param array<string, mixed> $params
    */
   public static function deliver(string $body, array $params, ?SubscriberLookup $lookup = NULL): void {
-    if (($params['delivery_mode'] ?? 'direct') === 'subscribers') {
+    $mode = $params['delivery_mode'] ?? 'direct';
+    if ($mode === 'subscribers') {
       self::deliverToSubscribers($body, $params, $lookup);
+      return;
+    }
+    if ($mode === 'group') {
+      self::deliverToRecipients(
+        $body,
+        $params,
+        (new GroupRecipients())->findByGroup(Cast::toInt($params['group_id'] ?? 0), self::deliveryOptions($params)),
+      );
+      return;
+    }
+    if ($mode === 'addresses') {
+      self::deliverToAddresses($body, $params);
       return;
     }
     $channel = ChannelRegistry::default()->get(Cast::toString($params['channel'] ?? 'telegram'));
     $channel->send($body, self::buildChannelConfig($params));
+  }
+
+  /**
+   * Fan-out delivery options derived from the caller's params.
+   *
+   * @param array<string, mixed> $params
+   * @return array<string, mixed>
+   */
+  public static function deliveryOptions(array $params): array {
+    $options = [
+      'respect_suspension' => !empty($params['respect_suspension']),
+      'location_type_id' => Cast::toInt($params['email_location_type'] ?? 0),
+    ];
+    $scopeType = Cast::toString($params['scope_entity_type'] ?? '');
+    $scopeId = Cast::toInt($params['scope_entity_id'] ?? 0);
+    if ($scopeType !== '' && $scopeId > 0) {
+      $options['scope'] = ['entity_type' => $scopeType, 'entity_id' => $scopeId];
+    }
+    return $options;
+  }
+
+  /**
+   * Send one rendered body to a resolved recipient list, one channel call per
+   * recipient, per-recipient errors logged instead of aborting the loop.
+   *
+   * @param array<string, mixed> $params
+   * @param array<int, array{contact_id: int, channel: string, config: array<string, mixed>}> $recipients
+   */
+  private static function deliverToRecipients(string $body, array $params, array $recipients): void {
+    $registry = ChannelRegistry::default();
+    $extras = self::filterSubscriberSafe(self::buildChannelConfig($params));
+    foreach ($recipients as $recipient) {
+      try {
+        $registry->get($recipient['channel'])->send($body, array_merge($extras, $recipient['config']));
+      }
+      catch (\Throwable $e) {
+        \Civi::log()->warning('herald: recipient dispatch failed', [
+          'contact_id' => $recipient['contact_id'],
+          'channel' => $recipient['channel'],
+          'error' => $e->getMessage(),
+        ]);
+      }
+    }
+  }
+
+  /**
+   * Ops-style delivery to a raw address list (no contact linkage): one email
+   * per address through the email channel.
+   *
+   * @param array<string, mixed> $params
+   */
+  private static function deliverToAddresses(string $body, array $params): void {
+    $addresses = self::parseAddressList($params['email_addresses'] ?? '');
+    if ($addresses === []) {
+      throw new \CRM_Core_Exception('herald: address-list mode requires action parameter "email_addresses".');
+    }
+    $channel = ChannelRegistry::default()->get('email');
+    $config = self::buildChannelConfig($params);
+    unset($config['email_addresses']);
+    foreach ($addresses as $address) {
+      try {
+        $channel->send($body, ['email_to' => $address] + $config);
+      }
+      catch (\Throwable $e) {
+        \Civi::log()->warning('herald: address dispatch failed', [
+          'email_to' => $address,
+          'error' => $e->getMessage(),
+        ]);
+      }
+    }
+  }
+
+  /**
+   * Split a comma/semicolon/newline-separated address list. Pure — test-seam.
+   *
+   * @return string[]
+   */
+  public static function parseAddressList(mixed $raw): array {
+    if (is_array($raw)) {
+      $raw = implode("\n", array_filter($raw, 'is_scalar'));
+    }
+    if (!is_scalar($raw)) {
+      return [];
+    }
+    $parts = preg_split('/[,;\n\r]+/', (string) $raw) ?: [];
+    $out = [];
+    foreach ($parts as $part) {
+      $part = trim($part);
+      if ($part !== '' && !in_array($part, $out, TRUE)) {
+        $out[] = $part;
+      }
+    }
+    return $out;
   }
 
   /**
@@ -166,21 +281,12 @@ class Dispatcher {
     if ($subscriptionType === '') {
       throw new \CRM_Core_Exception('herald: subscriber-mode requires action parameter "subscription_type".');
     }
-    $registry = ChannelRegistry::default();
-    $extras = self::filterSubscriberSafe(self::buildChannelConfig($params));
     $lookup ??= new SubscriberLookup();
-    foreach ($lookup->findBySubscriptionType($subscriptionType) as $sub) {
-      try {
-        $registry->get($sub['channel'])->send($body, array_merge($extras, $sub['config']));
-      }
-      catch (\Throwable $e) {
-        \Civi::log()->warning('herald: subscriber dispatch failed', [
-          'contact_id' => $sub['contact_id'] ?? NULL,
-          'channel' => $sub['channel'] ?? NULL,
-          'error' => $e->getMessage(),
-        ]);
-      }
-    }
+    self::deliverToRecipients(
+      $body,
+      $params,
+      $lookup->findBySubscriptionType($subscriptionType, self::deliveryOptions($params)),
+    );
   }
 
   /**

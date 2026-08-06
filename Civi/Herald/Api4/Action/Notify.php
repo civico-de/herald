@@ -7,6 +7,7 @@ namespace Civi\Herald\Api4\Action;
 use Civi\Api4\Generic\AbstractAction;
 use Civi\Api4\Generic\Result;
 use Civi\Herald\Dispatch\Dispatcher;
+use Civi\Herald\Subscribers\SubscriptionScope;
 use Civi\Herald\Trigger\ContextVars;
 
 /**
@@ -46,8 +47,16 @@ class Notify extends AbstractAction {
   protected array $triggerContext = [];
 
   public function _run(Result $result): void {
-    $vars = ContextVars::decodeVars($this->actionParams) + ContextVars::build($this->triggerContext);
-    $result[] = (new Dispatcher())->dispatch($this->actionParams, $vars);
+    $params = $this->actionParams;
+    // Resolve the declared source-entity scope (actionParams.scope_entity)
+    // into concrete params here, so buffered sends carry it through the flush.
+    $scope = SubscriptionScope::fromContext($params, $this->triggerContext);
+    if ($scope !== NULL) {
+      $params['scope_entity_type'] = $scope['entity_type'];
+      $params['scope_entity_id'] = $scope['entity_id'];
+    }
+    $vars = ContextVars::decodeVars($params) + ContextVars::build($this->triggerContext);
+    $result[] = (new Dispatcher())->dispatch($params, $vars);
   }
 
 }

@@ -113,6 +113,45 @@ class DispatcherTest extends TestCase {
     }
   }
 
+  public function testParseAddressListSplitsAndDeduplicates(): void {
+    $this->assertSame(
+      ['ops@example.org', 'oncall@example.org', 'third@example.org'],
+      Dispatcher::parseAddressList("ops@example.org, oncall@example.org;\nops@example.org\nthird@example.org"),
+    );
+  }
+
+  public function testParseAddressListHandlesEmptyAndNonScalar(): void {
+    $this->assertSame([], Dispatcher::parseAddressList(''));
+    $this->assertSame([], Dispatcher::parseAddressList(NULL));
+    $this->assertSame(['a@example.org'], Dispatcher::parseAddressList(['a@example.org', '']));
+  }
+
+  public function testDeliveryOptionsDefaultsKeepCurrentBehavior(): void {
+    $this->assertSame(
+      ['respect_suspension' => FALSE, 'location_type_id' => 0],
+      Dispatcher::deliveryOptions([]),
+    );
+  }
+
+  public function testDeliveryOptionsPicksUpSuspensionLocationAndScope(): void {
+    $options = Dispatcher::deliveryOptions([
+      'respect_suspension' => TRUE,
+      'email_location_type' => '3',
+      'scope_entity_type' => 'Event',
+      'scope_entity_id' => 5,
+    ]);
+    $this->assertTrue($options['respect_suspension']);
+    $this->assertSame(3, $options['location_type_id']);
+    $this->assertSame(['entity_type' => 'Event', 'entity_id' => 5], $options['scope']);
+  }
+
+  public function testDeliveryOptionsIgnoresIncompleteScope(): void {
+    $this->assertArrayNotHasKey(
+      'scope',
+      Dispatcher::deliveryOptions(['scope_entity_type' => 'Event']),
+    );
+  }
+
   public function testInvalidChannelConfigJsonIsIgnored(): void {
     $config = Dispatcher::buildChannelConfig([
       'channel' => 'telegram',
