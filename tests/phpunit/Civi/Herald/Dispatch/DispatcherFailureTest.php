@@ -119,8 +119,9 @@ class DispatcherFailureTest extends TestCase implements HeadlessInterface, HookI
    * completely keeps its rows and reports failed, not sent.
    */
   public function testBufferFlushRetainsRowsOnTotalFailure(): void {
+    // No DDL here: the install step (CRM_Herald_Upgrader::install) already
+    // created the table, and a CREATE TABLE would implicitly commit.
     $buffer = new \Civi\Herald\Buffer\AlertBuffer();
-    \Civi\Herald\Buffer\AlertBuffer::createTable();
     // group mode without a group_id makes deliver() throw deterministically —
     // the flush must treat that like any transport failure and keep the rows.
     $buffer->add('grp', 1, 'body', ['delivery_mode' => 'group', 'group_id' => 0], NULL);

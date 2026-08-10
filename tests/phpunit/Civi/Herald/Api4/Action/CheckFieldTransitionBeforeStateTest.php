@@ -23,13 +23,23 @@ class CheckFieldTransitionBeforeStateTest extends TestCase {
 
   public function testOriginalDataWinsOverSnapshot(): void {
     PreEditSnapshot::remember('Contribution', 3, 'status', 'snapshot');
-    $state = CheckFieldTransition::resolveBeforeState(['known' => TRUE, 'value' => 'original'], 'Contribution', 3, 'status');
+    $state = CheckFieldTransition::resolveBeforeState(
+      ['known' => TRUE, 'value' => 'original'],
+      'Contribution',
+      3,
+      'status',
+    );
     $this->assertSame(['known' => TRUE, 'value' => 'original'], $state);
   }
 
   public function testSnapshottedNullCountsAsKnown(): void {
     PreEditSnapshot::remember('Contribution', 3, 'custom.approval', NULL);
-    $state = CheckFieldTransition::resolveBeforeState(['known' => FALSE, 'value' => NULL], 'Contribution', 3, 'custom.approval');
+    $state = CheckFieldTransition::resolveBeforeState(
+      ['known' => FALSE, 'value' => NULL],
+      'Contribution',
+      3,
+      'custom.approval',
+    );
     $this->assertSame(['known' => TRUE, 'value' => NULL], $state);
   }
 
