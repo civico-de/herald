@@ -40,8 +40,16 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     return new Client(['handler' => $stack]);
   }
 
+  /**
+   * Channel wired to the mock client and a stub resolver that maps every host
+   * to a fixed public IP, so send() tests exercise the SSRF guard offline.
+   */
+  private function makeChannel(Response $response): WebhookChannel {
+    return new WebhookChannel($this->makeMockedClient($response), static fn(string $host): array => ['93.184.216.34']);
+  }
+
   public function testTextBodySentRaw(): void {
-    $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel = $this->makeChannel(new Response(200, [], ''));
     $channel->send('hello world', ['webhook_url' => 'https://example.com/hook']);
 
     $req = $this->capturedRequests[0]['request'];
@@ -52,7 +60,7 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
   }
 
   public function testSlackFormatWrapsAsJson(): void {
-    $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel = $this->makeChannel(new Response(200, [], ''));
     $channel->send('hi', [
       'webhook_url' => 'https://hooks.slack.com/services/X',
       'webhook_body_format' => 'slack',
@@ -62,7 +70,7 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
   }
 
   public function testDiscordFormatUsesContentKey(): void {
-    $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel = $this->makeChannel(new Response(200, [], ''));
     $channel->send('hi', [
       'webhook_url' => 'https://discord.com/api/webhooks/X',
       'webhook_body_format' => 'discord',
@@ -72,7 +80,7 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
   }
 
   public function testCustomJsonKey(): void {
-    $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel = $this->makeChannel(new Response(200, [], ''));
     $channel->send('hi', [
       'webhook_url' => 'https://example.com/x',
       'webhook_body_format' => 'json',
@@ -85,7 +93,7 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
   }
 
   public function testBearerTokenFromConfig(): void {
-    $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel = $this->makeChannel(new Response(200, [], ''));
     $channel->send('x', [
       'webhook_url' => 'https://example.com/x',
       // @mago-expect lint:no-literal-password
@@ -98,7 +106,7 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
   public function testDefaultTokenPairsWithDefaultUrl(): void {
     \Civi::settings()->set('herald_webhook_default_url', 'https://example.com/default');
     \Civi::settings()->set('herald_webhook_default_auth_token', 'from-setting');
-    $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel = $this->makeChannel(new Response(200, [], ''));
     $channel->send('x', []);
     $this->assertSame('Bearer from-setting', $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
   }
@@ -107,20 +115,20 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     // The default token belongs to the default endpoint. A caller-supplied
     // URL (e.g. a subscriber's personal webhook) must not receive it.
     \Civi::settings()->set('herald_webhook_default_auth_token', 'from-setting');
-    $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel = $this->makeChannel(new Response(200, [], ''));
     $channel->send('x', ['webhook_url' => 'https://attacker.example/collect']);
     $this->assertSame('', $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
   }
 
   public function testEmptyConfigUrlFallsBackToDefault(): void {
     \Civi::settings()->set('herald_webhook_default_url', 'https://example.com/default');
-    $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel = $this->makeChannel(new Response(200, [], ''));
     $channel->send('x', ['webhook_url' => '']);
     $this->assertSame('https://example.com/default', (string) $this->capturedRequests[0]['request']->getUri());
   }
 
   public function testExplicitAuthorizationHeaderNotOverwritten(): void {
-    $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel = $this->makeChannel(new Response(200, [], ''));
     $channel->send('x', [
       'webhook_url' => 'https://example.com/x',
       // @mago-expect lint:no-literal-password
@@ -133,20 +141,20 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
 
   public function testFallsBackToDefaultUrl(): void {
     \Civi::settings()->set('herald_webhook_default_url', 'https://example.com/default');
-    $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel = $this->makeChannel(new Response(200, [], ''));
     $channel->send('x', []);
     $this->assertSame('https://example.com/default', (string) $this->capturedRequests[0]['request']->getUri());
   }
 
   public function testThrowsWhenUrlMissing(): void {
-    $channel = new WebhookChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel = $this->makeChannel(new Response(200, [], ''));
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/webhook_url/');
     $channel->send('x', []);
   }
 
   public function testThrowsOnHttpError(): void {
-    $channel = new WebhookChannel($this->makeMockedClient(new Response(500, [], 'boom')));
+    $channel = $this->makeChannel(new Response(500, [], 'boom'));
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/HTTP 500/');
     $channel->send('x', ['webhook_url' => 'https://example.com/x']);
@@ -166,6 +174,71 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
       WebhookChannel::buildPayload('hi', 'json', 'msg'),
     );
     $this->assertSame(['type' => 'raw', 'data' => 'hi'], WebhookChannel::buildPayload('hi', 'text'));
+  }
+
+  /**
+   * @return array<string, array{0: string}> */
+  public static function blockedUrlProvider(): array {
+    return [
+      'loopback ipv4' => ['http://127.0.0.1/x'],
+      'cloud metadata' => ['http://169.254.169.254/latest/meta-data'],
+      'private 10/8' => ['http://10.0.0.5/x'],
+      'private 192.168' => ['http://192.168.1.1/x'],
+      'link-local' => ['http://169.254.10.10/x'],
+      'ipv6 loopback' => ['http://[::1]/x'],
+      'zero address' => ['http://0.0.0.0/x'],
+      'ipv4-mapped loopback' => ['http://[::ffff:127.0.0.1]/x'],
+    ];
+  }
+
+  /**
+   * @dataProvider blockedUrlProvider */
+  public function testGuardRejectsLiteralPrivateAndReservedIps(string $url): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    WebhookChannel::assertUrlAllowed($url);
+  }
+
+  public function testGuardRejectsNonHttpScheme(): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessageMatches('/http or https/');
+    WebhookChannel::assertUrlAllowed('gopher://example.com/x');
+  }
+
+  public function testGuardRejectsFileScheme(): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    WebhookChannel::assertUrlAllowed('file:///etc/passwd');
+  }
+
+  public function testGuardRejectsCredentialsInUrl(): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessageMatches('/credentials/');
+    WebhookChannel::assertUrlAllowed('https://user:pass@example.com/x');
+  }
+
+  public function testGuardRejectsDnsNameResolvingToPrivateIp(): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessageMatches('/disallowed address/');
+    WebhookChannel::assertUrlAllowed('https://sneaky.example/x', [
+      'resolver' => static fn(string $host): array => ['10.1.2.3'],
+    ]);
+  }
+
+  public function testGuardAcceptsPublicHost(): void {
+    WebhookChannel::assertUrlAllowed('https://hooks.slack.com/services/X', [
+      'resolver' => static fn(string $host): array => ['93.184.216.34'],
+    ]);
+    $this->addToAssertionCount(1);
+  }
+
+  public function testGuardAllowlistPermitsMatchingHostAndSubdomain(): void {
+    WebhookChannel::assertUrlAllowed('https://hooks.slack.com/x', ['allowed_hosts' => ['slack.com']]);
+    $this->addToAssertionCount(1);
+  }
+
+  public function testGuardAllowlistRejectsUnlistedHost(): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessageMatches('/allowed_hosts/');
+    WebhookChannel::assertUrlAllowed('https://evil.example/x', ['allowed_hosts' => ['slack.com']]);
   }
 
 }

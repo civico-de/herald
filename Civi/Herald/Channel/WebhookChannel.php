@@ -35,13 +35,25 @@ use GuzzleHttp\ClientInterface;
  *     token belongs to the default endpoint — it must never be attached to a
  *     caller-supplied URL (e.g. a subscriber's personal webhook).
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:too-many-methods
+ * @mago-expect lint:kan-defect
  */
 class WebhookChannel implements ChannelInterface {
 
   private ?ClientInterface $httpClient;
 
-  public function __construct(?ClientInterface $httpClient = NULL) {
+  /**
+   * @var null|callable(string): list<string> */
+  private $hostResolver;
+
+  /**
+   * @param null|callable(string): list<string> $hostResolver
+   *   Host-to-IP resolver seam; defaults to system DNS. Injected in tests so
+   *   the SSRF guard is exercised without touching real DNS.
+   */
+  public function __construct(?ClientInterface $httpClient = NULL, ?callable $hostResolver = NULL) {
     $this->httpClient = $httpClient;
+    $this->hostResolver = $hostResolver;
   }
 
   public function getKey(): string {
@@ -61,6 +73,13 @@ class WebhookChannel implements ChannelInterface {
         'herald: webhook channel requires webhook_url (action param or herald_webhook_default_url setting).',
       );
     }
+
+    $effectiveUrl = self::str($url);
+    $allowedHosts = \Civi::settings()->get('herald_webhook_allowed_hosts');
+    self::assertUrlAllowed($effectiveUrl, [
+      'allowed_hosts' => is_array($allowedHosts) ? $allowedHosts : [],
+      'resolver' => $this->hostResolver,
+    ]);
 
     $method = strtoupper(self::str($config['webhook_method'] ?? 'POST'));
     $format = self::str($config['webhook_body_format'] ?? 'text');
@@ -91,7 +110,10 @@ class WebhookChannel implements ChannelInterface {
       }
     }
 
-    $requestOptions = ['http_errors' => FALSE, 'timeout' => 10, 'headers' => $headers];
+    // Redirects disabled: a validated public URL could otherwise 302 to a
+    // private/link-local address (redirect-based SSRF). Endpoints needing a
+    // redirect must be given their final URL.
+    $requestOptions = ['http_errors' => FALSE, 'timeout' => 10, 'headers' => $headers, 'allow_redirects' => FALSE];
     if ($payload['type'] === 'json') {
       $requestOptions['json'] = $payload['data'];
     }
@@ -103,7 +125,7 @@ class WebhookChannel implements ChannelInterface {
 
     $client = $this->httpClient ?? new \GuzzleHttp\Client();
     try {
-      $response = $client->request($method, self::str($url), $requestOptions);
+      $response = $client->request($method, $effectiveUrl, $requestOptions);
     }
     catch (\Throwable $e) {
       throw new \CRM_Core_Exception('herald: webhook request failed: ' . $e->getMessage(), 0, [], $e);
@@ -131,6 +153,110 @@ class WebhookChannel implements ChannelInterface {
       'discord' => ['type' => 'json', 'data' => ['content' => $body]],
       default => ['type' => 'raw', 'data' => $body],
     };
+  }
+
+  /**
+   * SSRF guard. Pure, static, test-seam like buildPayload: rejects a URL whose
+   * scheme is not http/https, carries credentials, or resolves to any
+   * private/reserved/link-local/metadata address. An optional non-empty
+   * allowed_hosts list locks delivery to known endpoints and bypasses the
+   * denylist for a matching host.
+   *
+   * @param array{allowed_hosts?: array<int|string, mixed>, resolver?: null|callable(string): list<string>} $opts
+   */
+  public static function assertUrlAllowed(string $url, array $opts = []): void {
+    $parts = parse_url($url);
+    if (!is_array($parts) || empty($parts['scheme']) || empty($parts['host'])) {
+      throw new \CRM_Core_Exception('herald: webhook URL is not a valid absolute URL.');
+    }
+    $scheme = strtolower((string) $parts['scheme']);
+    if ($scheme !== 'http' && $scheme !== 'https') {
+      throw new \CRM_Core_Exception('herald: webhook URL must use http or https, got ' . $scheme . '.');
+    }
+    if (isset($parts['user']) || isset($parts['pass'])) {
+      throw new \CRM_Core_Exception('herald: webhook URL must not contain credentials.');
+    }
+
+    $host = trim((string) $parts['host'], '[]');
+
+    $allowed = $opts['allowed_hosts'] ?? [];
+    if (is_array($allowed) && $allowed !== []) {
+      $lcHost = strtolower($host);
+      foreach ($allowed as $entry) {
+        $needle = strtolower(trim((string) $entry));
+        if ($needle === '') {
+          continue;
+        }
+        if ($lcHost === $needle || str_ends_with($lcHost, '.' . $needle)) {
+          return;
+        }
+      }
+      throw new \CRM_Core_Exception('herald: webhook host is not in herald_webhook_allowed_hosts.');
+    }
+
+    $resolver = $opts['resolver'] ?? NULL;
+    $ips = self::resolveHost($host, is_callable($resolver) ? $resolver : NULL);
+    if ($ips === []) {
+      throw new \CRM_Core_Exception('herald: could not resolve webhook host ' . $host . '.');
+    }
+    foreach ($ips as $ip) {
+      if (self::ipIsBlocked($ip)) {
+        throw new \CRM_Core_Exception('herald: webhook host resolves to a disallowed address.');
+      }
+    }
+  }
+
+  /**
+   * @param null|callable(string): list<string> $resolver
+   * @return list<string>
+   */
+  private static function resolveHost(string $host, ?callable $resolver): array {
+    if (filter_var($host, FILTER_VALIDATE_IP) !== FALSE) {
+      return [$host];
+    }
+    if ($resolver !== NULL) {
+      return array_values($resolver($host));
+    }
+    $ips = gethostbynamel($host);
+    $out = is_array($ips) ? array_values($ips) : [];
+    $aaaa = @dns_get_record($host, DNS_AAAA);
+    if (is_array($aaaa)) {
+      foreach ($aaaa as $record) {
+        if (!empty($record['ipv6'])) {
+          $out[] = (string) $record['ipv6'];
+        }
+      }
+    }
+    return $out;
+  }
+
+  /**
+   * filter_var's private/reserved flags miss link-local (169.254/16) and
+   * IPv6 ULA/link-local in some PHP builds, so those are checked explicitly.
+   */
+  private static function ipIsBlocked(string $ip): bool {
+    if (stripos($ip, '::ffff:') === 0 && substr_count($ip, '.') === 3) {
+      $ip = substr($ip, (int) strrpos($ip, ':') + 1);
+    }
+    if (filter_var($ip, FILTER_VALIDATE_IP) === FALSE) {
+      return TRUE;
+    }
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === FALSE) {
+      return TRUE;
+    }
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== FALSE) {
+      $long = ip2long($ip);
+      // 169.254/16 link-local (incl. 169.254.169.254 metadata) and 0.0.0.0/8.
+      return $long !== FALSE && (($long & 0xFFFF0000) === (int) ip2long('169.254.0.0') || ($long >> 24) === 0);
+    }
+    $lower = strtolower($ip);
+    if ($lower === '::1' || $lower === '::') {
+      return TRUE;
+    }
+    // fc00::/7 (fc/fd) ULA and fe80::/10 (fe8-feb) link-local.
+    return str_starts_with($lower, 'fc') || str_starts_with($lower, 'fd')
+      || str_starts_with($lower, 'fe8') || str_starts_with($lower, 'fe9')
+      || str_starts_with($lower, 'fea') || str_starts_with($lower, 'feb');
   }
 
   /**
