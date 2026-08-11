@@ -41,6 +41,16 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
   }
 
   /**
+   * The buffer flush claims the rows it delivers; existing buffer tables need
+   * the claim columns to store that mark.
+   */
+  public function upgrade_1004(): bool {
+    $this->ctx->log->info('herald: adding claim columns to civicrm_herald_buffer');
+    \Civi\Herald\Buffer\AlertBuffer::addClaimColumns();
+    return TRUE;
+  }
+
+  /**
    * Bring CiviRules manifests, renamed handler classes and managed entities
    * in line with the shipped code. Shared by enable() and upgrade steps.
    */

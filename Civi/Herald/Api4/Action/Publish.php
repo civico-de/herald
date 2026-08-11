@@ -88,6 +88,10 @@ class Publish extends AbstractAction {
     }
 
     $params = (new Router())->resolve($this->topic);
+    // From the route params alone, before a per-message rendered subject can
+    // enter $params — otherwise every publish forms its own group.
+    $groupHash = Dispatcher::groupHash($params, 'topic:' . $this->topic . ':');
+
     $body = $this->message;
     if ($this->template !== '') {
       $parts = (new TemplateRenderer())->renderParts($this->template, $this->vars);
@@ -99,7 +103,7 @@ class Publish extends AbstractAction {
     $aggregateMinutes = is_scalar($rawMinutes) ? (int) $rawMinutes : 0;
     if ($aggregateMinutes > 0) {
       (new AlertBuffer())->add(
-        md5('topic:' . $this->topic . ':' . json_encode($params)),
+        $groupHash,
         $aggregateMinutes,
         $body,
         $params,

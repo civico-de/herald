@@ -368,6 +368,71 @@ class ContributionStatsServiceTest extends TestCase implements
     $this->assertArrayNotHasKey('99', $byTotal);
   }
 
+  /**
+   * Create one contribution with the given flag set (is_test / is_template).
+   */
+  private function seedFlagged(string $flag, float $amount, string $receiveDate, ?int $campaignId = NULL): void {
+    $create = Contribution::create(FALSE)
+      ->addValue('contact_id', $this->contactId)
+      ->addValue('financial_type_id:name', 'Donation')
+      ->addValue('contribution_status_id:name', 'Completed')
+      ->addValue('total_amount', $amount)
+      ->addValue('source', 'Stripe')
+      ->addValue('receive_date', $receiveDate)
+      ->addValue($flag, TRUE);
+    if ($campaignId !== NULL) {
+      $create->addValue('campaign_id', $campaignId);
+    }
+    $create->execute();
+  }
+
+  /**
+   * APIv4 applies no is_test/is_template default (APIv3 does, via api.default),
+   * so every query here has to say so: a contribution-page test drive and the
+   * template row of a recurring contribution are not income.
+   */
+  public function testTestDrivesAndRecurringTemplatesAreExcluded(): void {
+    $yesterday = date('Y-m-d 12:00:00', strtotime('yesterday'));
+    $this->seedContributions([['amount' => 10.0, 'receive_date' => $yesterday]]);
+    $this->seedFlagged('is_test', 500.0, $yesterday);
+    $this->seedFlagged('is_template', 700.0, $yesterday);
+
+    $summary = $this->service->getPeriodSummary([], DateRange::yesterday());
+    $this->assertSame(10.0, $summary['total']);
+    $this->assertSame(1, $summary['count']);
+    $this->assertSame([10.0], $this->service->getAmountDistribution([]));
+
+    $items = $this->service->getItemSummary([], DateRange::yesterday());
+    $this->assertSame([10.0], array_column($items, 'total'));
+  }
+
+  public function testRecentAndCampaignQueriesAlsoIgnoreTestAndTemplateRows(): void {
+    $now = date('Y-m-d H:i:s');
+    $campaignId = (int) \Civi\Api4\Campaign::create(FALSE)
+      ->addValue('title', 'FlagCampaign')
+      ->addValue('campaign_type_id', 1)
+      ->execute()
+      ->first()['id'];
+
+    Contribution::create(FALSE)
+      ->addValue('contact_id', $this->contactId)
+      ->addValue('financial_type_id:name', 'Donation')
+      ->addValue('contribution_status_id:name', 'Completed')
+      ->addValue('total_amount', 20.0)
+      ->addValue('campaign_id', $campaignId)
+      ->addValue('receive_date', $now)
+      ->execute();
+    $this->seedFlagged('is_test', 500.0, $now, $campaignId);
+    $this->seedFlagged('is_template', 700.0, $now, $campaignId);
+
+    $recent = $this->service->getRecentCompleted([], 10);
+    $this->assertSame([20.0], array_column($recent, 'amount'));
+
+    $total = $this->service->getCampaignTotal($campaignId);
+    $this->assertSame(20.0, $total['total']);
+    $this->assertSame(1, $total['count']);
+  }
+
   public function testGetItemSummaryFiltersBySourcePattern(): void {
     $yesterday = date('Y-m-d 12:00:00', strtotime('yesterday'));
     $this->seedContributions([

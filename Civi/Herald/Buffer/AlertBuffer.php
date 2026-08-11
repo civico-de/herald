@@ -16,11 +16,26 @@ namespace Civi\Herald\Buffer;
  * Grouping — all entries written by the same rule action (identical action
  * params → identical group_hash) aggregate together; two different rules or
  * two differently-configured actions never mix.
+ *
+ * Concurrency — claimDue() stamps the rows it hands out, so two overlapping
+ * cron runs can never compose and deliver the same entries twice.
  * @mago-expect lint:cyclomatic-complexity
+ * @mago-expect lint:too-many-methods
  */
 class AlertBuffer {
 
   public const TABLE = 'civicrm_herald_buffer';
+
+  /**
+   * Lock name for the flush job, mirroring the monitor's worker.herald.monitor.
+   */
+  public const LOCK_NAME = 'worker.herald.buffer';
+
+  /**
+   * A claim older than this belongs to a run that died between claiming and
+   * deleting; its rows are offered again rather than stranded in the buffer.
+   */
+  private const CLAIM_TIMEOUT_MINUTES = 30;
 
   /**
    * Idempotent DDL, used from the Upgrader (install + upgrade step).
@@ -35,10 +50,30 @@ class AlertBuffer {
         `body` longtext NOT NULL,
         `delivery` longtext NOT NULL,
         `created_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        `claimed_by` varchar(64) DEFAULT NULL,
+        `claimed_at` timestamp NULL DEFAULT NULL,
         PRIMARY KEY (`id`),
-        KEY `index_group_hash` (`group_hash`)
+        KEY `index_group_hash` (`group_hash`),
+        KEY `index_claimed_by` (`claimed_by`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ');
+    self::addClaimColumns();
+  }
+
+  /**
+   * Claim columns for a table created before flush claiming existed — CREATE
+   * TABLE IF NOT EXISTS leaves an existing table untouched.
+   */
+  public static function addClaimColumns(): void {
+    if (\CRM_Core_BAO_SchemaHandler::checkIfFieldExists(self::TABLE, 'claimed_by')) {
+      return;
+    }
+    \CRM_Core_DAO::executeQuery(
+      'ALTER TABLE `' . self::TABLE . '`
+        ADD COLUMN `claimed_by` varchar(64) DEFAULT NULL,
+        ADD COLUMN `claimed_at` timestamp NULL DEFAULT NULL,
+        ADD KEY `index_claimed_by` (`claimed_by`)',
+    );
   }
 
   /**
@@ -56,6 +91,9 @@ class AlertBuffer {
     array $delivery,
     ?float $amount = NULL,
   ): void {
+    // Serialise before touching the DB: an alert that cannot carry its
+    // delivery params must not be buffered at all.
+    $deliveryJson = self::encodeDelivery($delivery);
     \CRM_Core_DAO::executeQuery(
       'INSERT INTO `'
       . self::TABLE
@@ -66,21 +104,71 @@ class AlertBuffer {
         1 => [$groupHash, 'String'],
         2 => [max(1, $windowMinutes), 'Integer'],
         3 => [$body, 'String'],
-        4 => [json_encode($delivery, JSON_UNESCAPED_UNICODE) ?: '{}', 'String'],
+        4 => [$deliveryJson, 'String'],
       ] + ($amount === NULL ? [] : [5 => [(string) $amount, 'Money']]),
     );
   }
 
   /**
-   * Groups whose oldest entry has waited at least its window.
+   * Serialise the delivery params. A failure aborts the buffering: empty
+   * params would send the alert to the channel defaults, not its recipient.
    *
-   * Rows are NOT deleted here — the caller deletes via deleteRows() only
-   * after the composed message was sent, so a failed send retries on the
-   * next cron run instead of silently dropping alerts.
+   * @param array<string, mixed> $delivery
+   */
+  private static function encodeDelivery(array $delivery): string {
+    try {
+      return json_encode($delivery, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
+    }
+    catch (\JsonException $e) {
+      throw new \CRM_Core_Exception(
+        'herald: could not serialise the delivery params of a buffered alert: ' . $e->getMessage(),
+        0,
+        [],
+        $e,
+      );
+    }
+  }
+
+  /**
+   * Take ownership of every group whose oldest unclaimed entry has waited at
+   * least its window, and return what was claimed.
+   *
+   * Claiming is an atomic UPDATE stamp per group, so overlapping cron runs
+   * split the buffer instead of both composing — and delivering — the same
+   * entries; the loser of a race simply sees no rows for that group.
+   *
+   * Rows are NOT deleted here: the caller deletes via deleteRows() once the
+   * composed message went out, and hands them back via release() when the send
+   * failed, so a failure retries on the next cron run instead of silently
+   * dropping alerts.
    *
    * @return list<array{group_hash: string, window: int, ids: list<int>, bodies: list<string>, amounts: list<float>, delivery: array<string, mixed>}>
    */
   public function claimDue(): array {
+    $this->releaseAbandonedClaims();
+    $claim = bin2hex(random_bytes(16));
+    $groups = [];
+    foreach ($this->dueGroupHashes() as $groupHash) {
+      \CRM_Core_DAO::executeQuery(
+        'UPDATE `'
+        . self::TABLE
+        . '` SET claimed_by = %2, claimed_at = NOW() WHERE group_hash = %1 AND claimed_by IS NULL',
+        [1 => [$groupHash, 'String'], 2 => [$claim, 'String']],
+      );
+      $group = $this->readClaimed($groupHash, $claim);
+      if ($group !== NULL) {
+        $groups[] = $group;
+      }
+    }
+    return $groups;
+  }
+
+  /**
+   * Group hashes whose oldest UNCLAIMED entry has waited at least its window.
+   *
+   * @return list<string>
+   */
+  private function dueGroupHashes(): array {
     // executeQuery() is documented as CRM_Core_DAO|object — the `object` half of
     // that union exists only so IDEs stop flagging the result-row properties,
     // which the DAO sets dynamically. Spell the SELECT list out instead: the
@@ -89,51 +177,95 @@ class AlertBuffer {
     $due = \CRM_Core_DAO::executeQuery('
       SELECT group_hash
       FROM `' . self::TABLE . '`
+      WHERE claimed_by IS NULL
       GROUP BY group_hash
       HAVING MIN(created_date) <= DATE_SUB(NOW(), INTERVAL MAX(window_minutes) MINUTE)
     ');
-    $groups = [];
+    $hashes = [];
     while ($due->fetch()) {
-      $groupHash = self::str($due->group_hash);
-      /** @var \CRM_Core_DAO&object{id: string, window_minutes: string, body: string, delivery: string, amount: ?string} $rows */
-      $rows = \CRM_Core_DAO::executeQuery(
-        'SELECT id, window_minutes, body, delivery, amount FROM `'
-        . self::TABLE
-        . '` WHERE group_hash = %1 ORDER BY id',
-        [1 => [$groupHash, 'String']],
-      );
-      $ids = [];
-      $bodies = [];
-      $amounts = [];
-      $window = 0;
-      $deliveryParams = [];
-      while ($rows->fetch()) {
-        $ids[] = self::int($rows->id);
-        $bodies[] = self::str($rows->body);
-        if ($rows->amount !== NULL) {
-          $amounts[] = self::flt($rows->amount);
-        }
-        $window = max($window, self::int($rows->window_minutes));
-        $delivery = json_decode(self::str($rows->delivery), TRUE);
-        if (is_array($delivery)) {
-          // Last writer wins — all entries in a group carry the same params.
-          // add() encodes an array<string, mixed>; the keys survive the round trip.
-          /** @var array<string, mixed> $deliveryParams */
-          $deliveryParams = $delivery;
-        }
+      $hashes[] = self::str($due->group_hash);
+    }
+    return $hashes;
+  }
+
+  /**
+   * The rows one claim actually holds for a group, narrowed to the declared
+   * types. NULL when a concurrent run claimed the group first.
+   *
+   * @return array{group_hash: string, window: int, ids: list<int>, bodies: list<string>, amounts: list<float>, delivery: array<string, mixed>}|null
+   */
+  private function readClaimed(string $groupHash, string $claim): ?array {
+    /** @var \CRM_Core_DAO&object{id: string, window_minutes: string, body: string, delivery: string, amount: ?string} $rows */
+    $rows = \CRM_Core_DAO::executeQuery(
+      'SELECT id, window_minutes, body, delivery, amount FROM `'
+      . self::TABLE
+      . '` WHERE group_hash = %1 AND claimed_by = %2 ORDER BY id',
+      [1 => [$groupHash, 'String'], 2 => [$claim, 'String']],
+    );
+    $ids = [];
+    $bodies = [];
+    $amounts = [];
+    $window = 0;
+    $deliveryParams = [];
+    while ($rows->fetch()) {
+      $ids[] = self::int($rows->id);
+      $bodies[] = self::str($rows->body);
+      if ($rows->amount !== NULL) {
+        $amounts[] = self::flt($rows->amount);
       }
-      if ($ids) {
-        $groups[] = [
-          'group_hash' => $groupHash,
-          'window' => $window,
-          'ids' => $ids,
-          'bodies' => $bodies,
-          'amounts' => $amounts,
-          'delivery' => $deliveryParams,
-        ];
+      $window = max($window, self::int($rows->window_minutes));
+      $delivery = json_decode(self::str($rows->delivery), TRUE);
+      if ($deliveryParams === [] && is_array($delivery)) {
+        // First decodable row wins: the group's rows share the rule config, but
+        // each carries the subject ITS OWN event rendered — composeDelivery()
+        // replaces that for an aggregate.
+        /** @var array<string, mixed> $deliveryParams */
+        $deliveryParams = $delivery;
       }
     }
-    return $groups;
+    if (!$ids) {
+      return NULL;
+    }
+    return [
+      'group_hash' => $groupHash,
+      'window' => $window,
+      'ids' => $ids,
+      'bodies' => $bodies,
+      'amounts' => $amounts,
+      'delivery' => $deliveryParams,
+    ];
+  }
+
+  /**
+   * Offer rows again whose claiming run never finished (crash, killed cron);
+   * without this their alerts would sit claimed in the buffer forever.
+   */
+  private function releaseAbandonedClaims(): void {
+    \CRM_Core_DAO::executeQuery(
+      'UPDATE `'
+      . self::TABLE
+      . '` SET claimed_by = NULL, claimed_at = NULL WHERE claimed_at < DATE_SUB(NOW(), INTERVAL %1 MINUTE)',
+      [1 => [self::CLAIM_TIMEOUT_MINUTES, 'Integer']],
+    );
+  }
+
+  /**
+   * Hand claimed rows back to the buffer — used when the composed message
+   * could not be delivered, so the next run retries them.
+   *
+   * @param list<int> $ids
+   */
+  public function release(array $ids): void {
+    if (!$ids) {
+      return;
+    }
+    \CRM_Core_DAO::executeQuery(
+      'UPDATE `'
+      . self::TABLE
+      . '` SET claimed_by = NULL, claimed_at = NULL WHERE id IN ('
+      . implode(',', array_map('intval', $ids))
+      . ')',
+    );
   }
 
   /**
@@ -160,16 +292,36 @@ class AlertBuffer {
    * @param list<float> $amounts
    */
   public static function compose(array $bodies, int $windowMinutes, array $amounts = []): string {
-    $bodies = array_values(array_filter(array_map('trim', $bodies), static fn (string $b) => $b !== ''));
+    $bodies = AggregateSummary::nonBlank($bodies);
     if (count($bodies) <= 1) {
       return $bodies[0] ?? '';
     }
-    $header = '📬 <b>' . self::t('%1 messages', [1 => count($bodies)]) . '</b>';
-    if ($amounts) {
-      $header .= ', ' . self::t('total %1', [1 => '<b>' . self::money(array_sum($amounts)) . '</b>']);
+    return AggregateSummary::line(count($bodies), $windowMinutes, $amounts, 'b') . "\n\n" . implode("\n\n", $bodies);
+  }
+
+  /**
+   * Delivery params for the composed message. Pure — test-seam.
+   *
+   * An aggregate gets a subject describing the aggregate: every buffered row
+   * carries the subject its own event rendered, so keeping one of them would
+   * name a message of N events after a single one.
+   *
+   * @param array<string, mixed> $delivery
+   * @param list<string> $bodies
+   * @param list<float> $amounts
+   * @return array<string, mixed>
+   */
+  public static function composeDelivery(
+    array $delivery,
+    array $bodies,
+    int $windowMinutes,
+    array $amounts = [],
+  ): array {
+    $count = count(AggregateSummary::nonBlank($bodies));
+    if ($count > 1) {
+      $delivery['email_subject'] = AggregateSummary::line($count, $windowMinutes, $amounts);
     }
-    $header .= ' (' . self::t('collected over %1 min', [1 => $windowMinutes]) . ')';
-    return $header . "\n\n" . implode("\n\n", $bodies);
+    return $delivery;
   }
 
   /**
@@ -193,41 +345,6 @@ class AlertBuffer {
    */
   private static function flt(mixed $value): float {
     return is_scalar($value) ? (float) $value : 0.0;
-  }
-
-  /**
-   * Locale- and currency-correct money formatting (default currency of the
-   * instance) when Civi is booted; a fixed EUR/German rendering in pure unit
-   * tests, matching this extension's origin.
-   */
-  private static function money(float $amount): string {
-    if (class_exists('\Civi') && is_callable(['\Civi', 'format'])) {
-      try {
-        return \Civi::format()->money($amount);
-      }
-      // @mago-expect lint:no-empty-catch-clause
-      // Deliberate: Civi\format() is optional here, the static rendering is the fallback.
-      catch (\Throwable $e) {
-        // Fall through to the static rendering.
-      }
-    }
-    return number_format($amount, 2, ',', '.') . ' €';
-  }
-
-  /**
-   * Translate through the civix ExtensionUtil (herald's own domain) when Civi
-   * is booted; plain %N substitution otherwise (pure unit tests, no framework).
-   *
-   * @param array<int, string|int> $params
-   */
-  private static function t(string $text, array $params = []): string {
-    if (function_exists('ts') && class_exists(\CRM_Herald_ExtensionUtil::class)) {
-      return \CRM_Herald_ExtensionUtil::ts($text, $params);
-    }
-    foreach ($params as $key => $value) {
-      $text = str_replace('%' . $key, (string) $value, $text);
-    }
-    return $text;
   }
 
 }

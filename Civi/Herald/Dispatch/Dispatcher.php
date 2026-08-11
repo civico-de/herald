@@ -107,10 +107,9 @@ class Dispatcher {
    *   mode is "buffered" when the send was parked for aggregation, else "sent".
    */
   public function dispatch(array $params, array $vars): array {
-    // Group key for aggregation, taken from the RAW params: stable per caller
-    // configuration. Must be computed before applyDefaultEmailSubject() mixes
-    // a per-event rendered subject into $params.
-    $groupHash = md5(json_encode($params) ?: '');
+    // Must be computed before applyDefaultEmailSubject() mixes a per-event
+    // rendered subject into $params — see groupHash().
+    $groupHash = self::groupHash($params);
     $workflowName = Cast::toString($params['template'] ?? '');
     if ($workflowName === '') {
       throw new \CRM_Core_Exception('herald: action parameter "template" (workflow_name) is required.');
@@ -130,6 +129,31 @@ class Dispatcher {
 
     self::deliver($body, $params, $this->lookup);
     return ['mode' => 'sent', 'template' => $workflowName];
+  }
+
+  /**
+   * Aggregation key for a caller configuration: everything written with the
+   * same key composes into one message. Callers must pass the RAW params — a
+   * per-event rendered subject in there gives every message its own group and
+   * aggregation never happens.
+   *
+   * @param array<string, mixed> $params
+   * @param string $prefix Namespace for keys of a different kind (topics).
+   */
+  public static function groupHash(array $params, string $prefix = ''): string {
+    try {
+      return md5($prefix . json_encode($params, JSON_THROW_ON_ERROR));
+    }
+    catch (\JsonException $e) {
+      // An empty replacement would collapse unrelated configurations onto one
+      // hash and mix their alerts into a single message.
+      throw new \CRM_Core_Exception(
+        'herald: could not compute the aggregation group key: ' . $e->getMessage(),
+        0,
+        [],
+        $e,
+      );
+    }
   }
 
   /**
@@ -206,6 +230,11 @@ class Dispatcher {
    * sent). Partial failure counts as delivered: retrying would double-send to
    * the recipients that already got the message.
    *
+   * An EMPTY list throws for the same reason: nobody was notified, so the
+   * caller must not record a delivery — a fan-out that resolves to nobody is a
+   * configuration fault (deactivated subscription type, emptied group), not a
+   * successful send.
+   *
    * @param array<string, mixed> $params
    * @param array<int, array{contact_id: int, channel: string, config: array<string, mixed>}> $recipients
    */
@@ -215,6 +244,12 @@ class Dispatcher {
     array $recipients,
     ?ChannelRegistry $registry = NULL,
   ): void {
+    if ($recipients === []) {
+      throw new \CRM_Core_Exception(sprintf(
+        'herald: no recipients resolved for delivery_mode "%s" — nothing was sent.',
+        Cast::toString($params['delivery_mode'] ?? 'direct'),
+      ));
+    }
     $registry ??= ChannelRegistry::default();
     $extras = self::filterSubscriberSafe(self::buildChannelConfig($params));
     $failed = 0;

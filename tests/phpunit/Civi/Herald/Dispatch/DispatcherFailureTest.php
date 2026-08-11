@@ -93,10 +93,56 @@ class DispatcherFailureTest extends TestCase implements HeadlessInterface, HookI
     $this->assertCount(2, $sent);
   }
 
-  public function testEmptyRecipientListIsANoOp(): void {
+  /**
+   * Nobody was notified, so nothing may be recorded as delivered: a fan-out
+   * that resolves to no recipient (deactivated subscription type, emptied
+   * group) is a config fault, and a buffered flush must keep its rows for it.
+   */
+  public function testEmptyRecipientListThrows(): void {
     $sent = [];
-    Dispatcher::deliverToRecipients('body', [], [], $this->registry('telegram', [], $sent));
+    $registry = $this->registry('telegram', [], $sent);
+    try {
+      Dispatcher::deliverToRecipients('body', ['delivery_mode' => 'subscribers'], [], $registry);
+      $this->fail('an empty recipient list must not count as a successful send');
+    }
+    catch (\CRM_Core_Exception $e) {
+      $this->assertStringContainsString('no recipients resolved', $e->getMessage());
+      $this->assertStringContainsString('subscribers', $e->getMessage());
+    }
     $this->assertSame([], $sent);
+  }
+
+  /**
+   * The end-to-end consequence of the above: an aggregated subscriber alert
+   * whose subscription resolves to nobody keeps its buffer rows instead of
+   * being deleted as sent.
+   */
+  public function testBufferFlushRetainsRowsWhenNoSubscriberResolves(): void {
+    $buffer = new \Civi\Herald\Buffer\AlertBuffer();
+    $buffer->add(
+      'grp-no-subscribers',
+      1,
+      'body',
+      ['delivery_mode' => 'subscribers', 'subscription_type' => 'herald_test_unused_type'],
+      NULL,
+    );
+    \CRM_Core_DAO::executeQuery(
+      "UPDATE civicrm_herald_buffer SET created_date = DATE_SUB(NOW(), INTERVAL 10 MINUTE)
+       WHERE group_hash = 'grp-no-subscribers'",
+    );
+
+    $result = civicrm_api3('Job', 'herald_buffer_flush', []);
+    $counts = (array) reset($result['values']);
+
+    $this->assertSame(0, (int) $counts['sent']);
+    $this->assertSame(1, (int) $counts['failed']);
+    $this->assertSame(
+      1,
+      (int) \CRM_Core_DAO::singleValueQuery(
+        "SELECT COUNT(*) FROM civicrm_herald_buffer WHERE group_hash = 'grp-no-subscribers'",
+      ),
+      'an alert nobody received must stay in the buffer',
+    );
   }
 
   public function testTotalAddressFailureThrows(): void {

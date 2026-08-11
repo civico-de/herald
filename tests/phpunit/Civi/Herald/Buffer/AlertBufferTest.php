@@ -47,6 +47,62 @@ class AlertBufferTest extends TestCase {
     $this->assertStringStartsWith('📬 <b>2 messages</b>', $msg);
   }
 
+  // --- delivery params of the composed message ------------------------------
+
+  /**
+   * Every buffered row carries the subject its own event rendered, so an
+   * aggregate that kept one of them would be titled after a single donation.
+   */
+  public function testAggregateGetsASubjectDescribingTheAggregate(): void {
+    $delivery = AlertBuffer::composeDelivery(
+      ['channel' => 'email', 'email_to' => 'ops@example.org', 'email_subject' => '✅ Donation #5'],
+      ['🎟 one', '🎟 two', '🎟 three'],
+      15,
+      [60.0, 35.0, 200.0],
+    );
+
+    $this->assertStringStartsWith('📬 3 messages, total ', $delivery['email_subject']);
+    $this->assertStringContainsString('(collected over 15 min)', $delivery['email_subject']);
+    // A subject is not markup.
+    $this->assertStringNotContainsString('<b>', $delivery['email_subject']);
+    // Everything that routes the message stays untouched.
+    $this->assertSame('ops@example.org', $delivery['email_to']);
+    $this->assertSame('email', $delivery['channel']);
+  }
+
+  /**
+   * A single buffered alert goes out unchanged — including the subject its own
+   * event rendered.
+   */
+  public function testSingleBodyKeepsItsOwnSubject(): void {
+    $delivery = AlertBuffer::composeDelivery(
+      ['email_subject' => '✅ Donation #5'],
+      ['🎟 one', '  '],
+      15,
+      [60.0],
+    );
+    $this->assertSame('✅ Donation #5', $delivery['email_subject']);
+  }
+
+  public function testAggregateSubjectOmitsTheSumWithoutAmounts(): void {
+    $delivery = AlertBuffer::composeDelivery([], ['a', 'b'], 5);
+    $this->assertSame('📬 2 messages (collected over 5 min)', $delivery['email_subject']);
+  }
+
+  // --- serialisation of the delivery params ---------------------------------
+
+  /**
+   * A delivery blob that cannot be serialised must abort the buffering: an
+   * empty replacement would flush the alert to the channel defaults — another
+   * chat, another inbox — instead of to its configured recipient.
+   */
+  public function testUnserialisableDeliveryParamsAreRefused(): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessageMatches('/could not serialise/');
+    // INF has no JSON representation; the encode fails before any INSERT.
+    (new AlertBuffer())->add('herald-test-encode', 5, 'body', ['chat_id' => '-100', 'retry_after' => INF]);
+  }
+
   // --- narrowing helpers ----------------------------------------------------
 
   /**

@@ -173,6 +173,56 @@ class AlertBufferClaimDueTest extends TestCase implements HeadlessInterface, Hoo
     $this->assertSame(1, $this->countRows($other));
   }
 
+  /**
+   * The overlapping-cron case: cron holds no lock of its own, so two flushes
+   * can run at once. Whoever claims a group owns it — the other run must see
+   * nothing, or the same alerts go out twice.
+   */
+  public function testAClaimedGroupIsInvisibleToTheNextClaim(): void {
+    $hash = 'herald-test-claim-once';
+    $this->buffer->add($hash, 5, 'only once', self::DELIVERY, 10.0);
+    $this->backdate($hash, 10);
+
+    $first = $this->claim($hash);
+    $second = $this->claim($hash);
+
+    $this->assertNotNull($first);
+    $this->assertNull($second, 'a second flush must not pick up rows the first one is delivering');
+    $this->assertSame(1, $this->countRows($hash), 'claiming must not consume the row');
+  }
+
+  public function testReleasedRowsAreClaimableAgain(): void {
+    $hash = 'herald-test-claim-release';
+    $this->buffer->add($hash, 5, 'retry me', self::DELIVERY);
+    $this->backdate($hash, 10);
+
+    $first = $this->claim($hash);
+    $this->assertNotNull($first);
+    $this->buffer->release($first['ids']);
+
+    $again = $this->claim($hash);
+    $this->assertNotNull($again, 'a failed send hands its rows back to the next run');
+    $this->assertSame($first['ids'], $again['ids']);
+  }
+
+  /**
+   * A run that dies between claiming and deleting must not strand its rows:
+   * once the claim is older than the timeout, the buffer offers them again.
+   */
+  public function testAbandonedClaimsAreOfferedAgain(): void {
+    $hash = 'herald-test-claim-abandoned';
+    $this->buffer->add($hash, 5, 'claimed by a dead run', self::DELIVERY);
+    $this->backdate($hash, 10);
+    $this->assertNotNull($this->claim($hash));
+
+    \CRM_Core_DAO::executeQuery(
+      'UPDATE `' . AlertBuffer::TABLE . '` SET claimed_at = DATE_SUB(NOW(), INTERVAL 120 MINUTE) WHERE group_hash = %1',
+      [1 => [$hash, 'String']],
+    );
+
+    $this->assertNotNull($this->claim($hash), 'an abandoned claim must not keep its alerts hostage');
+  }
+
   public function testDeleteRowsWithoutIdsIsANoop(): void {
     $hash = 'herald-test-delete-none';
     $this->buffer->add($hash, 5, 'untouched', self::DELIVERY);

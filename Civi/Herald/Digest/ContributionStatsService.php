@@ -44,9 +44,8 @@ class ContributionStatsService {
 
     /** @var array<int, array{total: float|int|numeric-string|null, cnt: int|numeric-string|null, source: string|null}> $rows */
     $rows = $this
-      ->contributionGet()
+      ->contributionGet($where)
       ->addSelect('SUM(total_amount) AS total', 'COUNT(*) AS cnt', 'source')
-      ->setWhere($where)
       ->addGroupBy('source')
       ->execute()
       ->getArrayCopy();
@@ -149,9 +148,8 @@ class ContributionStatsService {
 
     /** @var array<int, array{total_amount: float|int|numeric-string|null, source: string|null, receive_date: string|null, modified_date: string|null}> $rows */
     $rows = $this
-      ->contributionGet()
+      ->contributionGet($where)
       ->addSelect('total_amount', 'source', 'receive_date', 'modified_date')
-      ->setWhere($where)
       ->addOrderBy('modified_date', 'DESC')
       ->execute()
       ->getArrayCopy();
@@ -249,9 +247,8 @@ class ContributionStatsService {
 
     /** @var array<int, array{total_amount: float|int|numeric-string|null}> $rows */
     $rows = $this
-      ->contributionGet()
+      ->contributionGet($where)
       ->addSelect('total_amount')
-      ->setWhere($where)
       ->setLimit(0)
       ->execute()
       ->getArrayCopy();
@@ -277,6 +274,10 @@ class ContributionStatsService {
     $where = [
       ['contribution_id.contribution_status_id:name', '=', $status ?? $this->statusOf($filters, 'Completed')],
       ['line_total', '>', 0],
+      // Same restriction as contributionGet(), expressed on the joined
+      // contribution: test drives and recurring templates are not sales.
+      ['contribution_id.is_test', '=', FALSE],
+      ['contribution_id.is_template', '=', FALSE],
     ];
     if (!empty($filters['campaign_id'])) {
       $where[] = ['contribution_id.campaign_id', '=', (int) self::asScalar($filters['campaign_id'])];
@@ -372,9 +373,8 @@ class ContributionStatsService {
   private function fetchTotalAndCount(array $where): array {
     /** @var array<int, array{total: float|int|numeric-string|null, cnt: int|numeric-string|null}> $rows */
     $rows = $this
-      ->contributionGet()
+      ->contributionGet($where)
       ->addSelect('SUM(total_amount) AS total', 'COUNT(*) AS cnt')
-      ->setWhere($where)
       ->execute()
       ->getArrayCopy();
 
@@ -397,9 +397,8 @@ class ContributionStatsService {
 
     /** @var array<int, array{total_amount: float|int|numeric-string|null, source: string|null, receive_date: string|null}> $rows */
     $rows = $this
-      ->contributionGet()
+      ->contributionGet($where)
       ->addSelect('total_amount', 'source', 'receive_date')
-      ->setWhere($where)
       ->addOrderBy('receive_date', 'DESC')
       ->execute()
       ->getArrayCopy();
@@ -415,14 +414,26 @@ class ContributionStatsService {
   }
 
   /**
-   * APIv4 `Contribution.get` with permission checks disabled.
+   * APIv4 `Contribution.get` with permission checks disabled, restricted to
+   * real contributions.
+   *
+   * The restriction lives here rather than in buildWhere() because APIv4 — no
+   * `api.default` like APIv3 — applies neither filter on its own: a forgotten
+   * one would count contribution-page test drives and the is_template row of
+   * every recurring contribution as income. The where-clauses go in through
+   * this method for the same reason (setWhere() would drop them).
    *
    * `Civi\Api4\Contribution` is shipped by core's bundled `civi_contribute`
    * extension rather than by Civi/Api4 proper; phpstan.neon.dist scans
    * core/ext so it resolves like any other entity.
+   *
+   * @param HeraldWhere $where
    */
-  private function contributionGet(): \Civi\Api4\Generic\DAOGetAction {
-    return \Civi\Api4\Contribution::get(FALSE);
+  private function contributionGet(array $where = []): \Civi\Api4\Generic\DAOGetAction {
+    return \Civi\Api4\Contribution::get(FALSE)
+      ->setWhere($where)
+      ->addWhere('is_test', '=', FALSE)
+      ->addWhere('is_template', '=', FALSE);
   }
 
 }
