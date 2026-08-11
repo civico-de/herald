@@ -313,6 +313,21 @@ return [
     ),
     'title' => E::ts('Monitor Expected Checks'),
   ],
+  'herald_buffer_max_attempts' => [
+    'group_name' => 'Herald Settings',
+    'group' => 'herald',
+    'name' => 'herald_buffer_max_attempts',
+    'type' => 'Integer',
+    'html_type' => 'text',
+    'default' => 5,
+    'add' => '5.81',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => E::ts(
+      'How often Job.herald_buffer_flush retries a failing buffer group before parking it in the dead letter (visible via Herald.getParkedAlerts, reactivated via Herald.reactivateParkedAlerts). A fan-out that resolves to no recipients is parked immediately regardless of this value.',
+    ),
+    'title' => E::ts('Buffer Flush Max Attempts'),
+  ],
   'herald_rule_health' => [
     'group_name' => 'Herald Settings',
     'group' => 'herald',

@@ -19,6 +19,10 @@ namespace Civi\Herald\Buffer;
  *
  * Concurrency — claimDue() stamps the rows it hands out, so two overlapping
  * cron runs can never compose and deliver the same entries twice.
+ *
+ * Dead letter — rows that cannot be delivered are parked rather than retried
+ * forever or dropped; claimDue() skips parked rows, the rest lives in
+ * DeadLetter.
  * @mago-expect lint:cyclomatic-complexity
  * @mago-expect lint:too-many-methods
  */
@@ -52,12 +56,18 @@ class AlertBuffer {
         `created_date` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
         `claimed_by` varchar(64) DEFAULT NULL,
         `claimed_at` timestamp NULL DEFAULT NULL,
+        `attempts` int unsigned NOT NULL DEFAULT 0,
+        `parked_at` timestamp NULL DEFAULT NULL,
+        `park_reason` varchar(64) DEFAULT NULL,
+        `last_error` text DEFAULT NULL,
         PRIMARY KEY (`id`),
         KEY `index_group_hash` (`group_hash`),
-        KEY `index_claimed_by` (`claimed_by`)
+        KEY `index_claimed_by` (`claimed_by`),
+        KEY `index_parked_at` (`parked_at`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ');
     self::addClaimColumns();
+    self::addDeadLetterColumns();
   }
 
   /**
@@ -73,6 +83,24 @@ class AlertBuffer {
         ADD COLUMN `claimed_by` varchar(64) DEFAULT NULL,
         ADD COLUMN `claimed_at` timestamp NULL DEFAULT NULL,
         ADD KEY `index_claimed_by` (`claimed_by`)',
+    );
+  }
+
+  /**
+   * Dead-letter columns for a table created before parking existed — CREATE
+   * TABLE IF NOT EXISTS leaves an existing table untouched.
+   */
+  public static function addDeadLetterColumns(): void {
+    if (\CRM_Core_BAO_SchemaHandler::checkIfFieldExists(self::TABLE, 'parked_at')) {
+      return;
+    }
+    \CRM_Core_DAO::executeQuery(
+      'ALTER TABLE `' . self::TABLE . '`
+        ADD COLUMN `attempts` int unsigned NOT NULL DEFAULT 0,
+        ADD COLUMN `parked_at` timestamp NULL DEFAULT NULL,
+        ADD COLUMN `park_reason` varchar(64) DEFAULT NULL,
+        ADD COLUMN `last_error` text DEFAULT NULL,
+        ADD KEY `index_parked_at` (`parked_at`)',
     );
   }
 
@@ -150,9 +178,8 @@ class AlertBuffer {
     $groups = [];
     foreach ($this->dueGroupHashes() as $groupHash) {
       \CRM_Core_DAO::executeQuery(
-        'UPDATE `'
-        . self::TABLE
-        . '` SET claimed_by = %2, claimed_at = NOW() WHERE group_hash = %1 AND claimed_by IS NULL',
+        'UPDATE `' . self::TABLE . '` SET claimed_by = %2, claimed_at = NOW()
+           WHERE group_hash = %1 AND claimed_by IS NULL AND parked_at IS NULL',
         [1 => [$groupHash, 'String'], 2 => [$claim, 'String']],
       );
       $group = $this->readClaimed($groupHash, $claim);
@@ -177,7 +204,7 @@ class AlertBuffer {
     $due = \CRM_Core_DAO::executeQuery('
       SELECT group_hash
       FROM `' . self::TABLE . '`
-      WHERE claimed_by IS NULL
+      WHERE claimed_by IS NULL AND parked_at IS NULL
       GROUP BY group_hash
       HAVING MIN(created_date) <= DATE_SUB(NOW(), INTERVAL MAX(window_minutes) MINUTE)
     ');
@@ -242,9 +269,8 @@ class AlertBuffer {
    */
   private function releaseAbandonedClaims(): void {
     \CRM_Core_DAO::executeQuery(
-      'UPDATE `'
-      . self::TABLE
-      . '` SET claimed_by = NULL, claimed_at = NULL WHERE claimed_at < DATE_SUB(NOW(), INTERVAL %1 MINUTE)',
+      'UPDATE `' . self::TABLE . '` SET claimed_by = NULL, claimed_at = NULL
+         WHERE claimed_at < DATE_SUB(NOW(), INTERVAL %1 MINUTE) AND parked_at IS NULL',
       [1 => [self::CLAIM_TIMEOUT_MINUTES, 'Integer']],
     );
   }

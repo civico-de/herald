@@ -51,6 +51,16 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
   }
 
   /**
+   * The buffer flush parks items it can never deliver; existing buffer tables
+   * need the dead-letter columns to hold that state.
+   */
+  public function upgrade_1005(): bool {
+    $this->ctx->log->info('herald: adding dead-letter columns to civicrm_herald_buffer');
+    \Civi\Herald\Buffer\AlertBuffer::addDeadLetterColumns();
+    return TRUE;
+  }
+
+  /**
    * Bring CiviRules manifests, renamed handler classes and managed entities
    * in line with the shipped code. Shared by enable() and upgrade steps.
    */

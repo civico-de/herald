@@ -3,6 +3,7 @@
 declare(strict_types = 1);
 
 use Civi\Herald\Buffer\AlertBuffer;
+use Civi\Herald\Buffer\DeadLetter;
 use Civi\Herald\Dispatch\Dispatcher;
 
 /**
@@ -14,6 +15,11 @@ use Civi\Herald\Dispatch\Dispatcher;
  * run_frequency "Always" via managed/Job.mgd.php so flushes happen on every
  * cron run; rows are only deleted after a successful send and handed back to
  * the buffer after a failure, so a channel failure retries on the next run.
+ *
+ * Dead letter: a group that resolves to no recipients can never succeed, so it
+ * is parked at once; other failures are parked after herald_buffer_max_attempts
+ * tries. Parked rows stay in the table (Herald.getParkedAlerts) and only a
+ * deliberate Herald.reactivateParkedAlerts puts them back in circulation.
  *
  * Concurrency: cron gives long jobs no lock of its own, so overlapping runs
  * are this job's problem. Two layers handle it — a named lock skips a run
@@ -41,8 +47,11 @@ function civicrm_api3_job_herald_buffer_flush($params) {
   }
 
   $buffer = new AlertBuffer();
+  $deadLetter = new DeadLetter($buffer);
   $sent = 0;
   $failed = 0;
+  $parked = 0;
+  $maxAttempts = (int) \Civi::settings()->get('herald_buffer_max_attempts');
   try {
     foreach ($buffer->claimDue() as $group) {
       try {
@@ -58,13 +67,20 @@ function civicrm_api3_job_herald_buffer_flush($params) {
       }
       catch (\Throwable $e) {
         $failed++;
-        // Unclaim first: the rows must be visible again to the next run.
-        $buffer->release($group['ids']);
-        \Civi::log()->warning('herald: buffer flush failed for group, will retry next run', [
-          'group_hash' => $group['group_hash'],
-          'count' => count($group['ids']),
-          'error' => $e->getMessage(),
-        ]);
+        // Park-or-retry policy lives in DeadLetter: an unresolvable fan-out
+        // never becomes deliverable by trying again.
+        $wasParked = $deadLetter->handleFailure($group['ids'], $e, $maxAttempts);
+        $parked += $wasParked ? 1 : 0;
+        \Civi::log()->warning(
+          $wasParked
+            ? 'herald: buffer flush parked a group in the dead letter'
+            : 'herald: buffer flush failed for group, will retry next run',
+          [
+            'group_hash' => $group['group_hash'],
+            'count' => count($group['ids']),
+            'error' => $e->getMessage(),
+          ],
+        );
       }
     }
   }
@@ -73,7 +89,7 @@ function civicrm_api3_job_herald_buffer_flush($params) {
   }
 
   return civicrm_api3_create_success(
-    [['sent' => $sent, 'failed' => $failed]],
+    [['sent' => $sent, 'failed' => $failed, 'parked' => $parked]],
     $params,
     'Job',
     'herald_buffer_flush',

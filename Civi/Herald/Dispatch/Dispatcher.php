@@ -186,7 +186,7 @@ class Dispatcher {
     if ($mode === 'group') {
       $groupId = Cast::toInt($params['group_id'] ?? 0);
       if ($groupId <= 0) {
-        throw new \CRM_Core_Exception('herald: group mode requires action parameter "group_id".');
+        throw new NoRecipientsException('herald: group mode requires action parameter "group_id".');
       }
       self::deliverToRecipients(
         $body,
@@ -233,7 +233,8 @@ class Dispatcher {
    * An EMPTY list throws for the same reason: nobody was notified, so the
    * caller must not record a delivery — a fan-out that resolves to nobody is a
    * configuration fault (deactivated subscription type, emptied group), not a
-   * successful send.
+   * successful send. It throws NoRecipientsException, which the buffer flush
+   * treats as permanent and parks instead of retrying forever.
    *
    * @param array<string, mixed> $params
    * @param array<int, array{contact_id: int, channel: string, config: array<string, mixed>}> $recipients
@@ -245,7 +246,7 @@ class Dispatcher {
     ?ChannelRegistry $registry = NULL,
   ): void {
     if ($recipients === []) {
-      throw new \CRM_Core_Exception(sprintf(
+      throw new NoRecipientsException(sprintf(
         'herald: no recipients resolved for delivery_mode "%s" — nothing was sent.',
         Cast::toString($params['delivery_mode'] ?? 'direct'),
       ));
@@ -286,7 +287,7 @@ class Dispatcher {
   public static function deliverToAddresses(string $body, array $params, ?ChannelRegistry $registry = NULL): void {
     $addresses = self::parseAddressList($params['email_addresses'] ?? '');
     if ($addresses === []) {
-      throw new \CRM_Core_Exception('herald: address-list mode requires action parameter "email_addresses".');
+      throw new NoRecipientsException('herald: address-list mode requires action parameter "email_addresses".');
     }
     $channel = ($registry ?? ChannelRegistry::default())->get('email');
     $config = self::buildChannelConfig($params);
@@ -347,7 +348,7 @@ class Dispatcher {
   private static function deliverToSubscribers(string $body, array $params, ?SubscriberLookup $lookup): void {
     $subscriptionType = Cast::toString($params['subscription_type'] ?? '');
     if ($subscriptionType === '') {
-      throw new \CRM_Core_Exception('herald: subscriber-mode requires action parameter "subscription_type".');
+      throw new NoRecipientsException('herald: subscriber-mode requires action parameter "subscription_type".');
     }
     $lookup ??= new SubscriberLookup();
     self::deliverToRecipients(

@@ -17,6 +17,11 @@ actions (no bespoke cron for alerts). Live in production on production.
 - Aggregation (`aggregate_minutes`) parks alerts in `civicrm_herald_buffer`;
   `Job.herald_buffer_flush` drains a rule's alerts only once its oldest
   buffered alert exceeds the window. A single buffered alert is sent unchanged.
+- Buffered alerts are never dropped and never retried forever: a flush that
+  resolves to no recipient parks the group immediately, other failures after
+  `herald_buffer_max_attempts` tries (`Civi\Herald\Buffer\DeadLetter`). Parked
+  rows stay in the table, are listed by `Herald.getParkedAlerts` and only
+  `Herald.reactivateParkedAlerts` puts them back in circulation.
 - The monitor publishes only ok→fail / fail→ok transitions to the
   `herald_monitor_topic` topic; steady states never alert. Topic routing:
   publishers name a topic, `herald_topics` decides delivery (topic entry

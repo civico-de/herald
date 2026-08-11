@@ -19,6 +19,9 @@ namespace Civi\Api4;
  *   cv api4 Herald.checkContributionTransition / checkEventDeactivated /
  *   checkFieldTransition
  *
+ * Buffer dead letter — buffered alerts the flush job could not deliver:
+ *   cv api4 Herald.getParkedAlerts / Herald.reactivateParkedAlerts
+ *
  * Diagnostics:
  *   cv api4 Herald.testTelegram   — send a test message via the channel
  *   cv api4 Herald.renderTemplate — render a workflow template with sample vars
@@ -75,6 +78,18 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
 
   public static function checkEventDeactivated(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\CheckEventDeactivated {
     return (new \Civi\Herald\Api4\Action\CheckEventDeactivated(__CLASS__, 'checkEventDeactivated'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function getParkedAlerts(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\GetParkedAlerts {
+    return (new \Civi\Herald\Api4\Action\GetParkedAlerts(__CLASS__, 'getParkedAlerts'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function reactivateParkedAlerts(
+    bool $checkPermissions = TRUE,
+  ): \Civi\Herald\Api4\Action\ReactivateParkedAlerts {
+    return (new \Civi\Herald\Api4\Action\ReactivateParkedAlerts(__CLASS__, 'reactivateParkedAlerts'))
       ->setCheckPermissions($checkPermissions);
   }
 
