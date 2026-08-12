@@ -60,6 +60,21 @@ return [
     'title' => E::ts('Default Webhook Bearer Token'),
     'settings_pages' => ['herald' => ['weight' => 31]],
   ],
+  'herald_webhook_allowed_hosts' => [
+    'group_name' => 'Herald Settings',
+    'group' => 'herald',
+    'name' => 'herald_webhook_allowed_hosts',
+    'type' => 'Array',
+    'default' => [],
+    'add' => '5.81',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => E::ts(
+      'Optional allowlist of webhook hostnames (e.g. hooks.slack.com, discord.com). When non-empty, only URLs whose host matches an entry (or a subdomain of it) are sent. Empty falls back to the private/reserved-address denylist.',
+    ),
+    'help_text' => E::ts('Subdomains match: an entry of example.org also allows hooks.example.org.'),
+    'title' => E::ts('Webhook Allowed Hosts'),
+  ],
   'herald_ntfy_server' => [
     'group_name' => 'Herald Settings',
     'group' => 'herald',
