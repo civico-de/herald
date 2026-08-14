@@ -183,7 +183,7 @@ class WebhookChannel implements ChannelInterface {
     if (is_array($allowed) && $allowed !== []) {
       $lcHost = strtolower($host);
       foreach ($allowed as $entry) {
-        $needle = strtolower(trim((string) $entry));
+        $needle = strtolower(trim(self::str($entry)));
         if ($needle === '') {
           continue;
         }
@@ -214,20 +214,58 @@ class WebhookChannel implements ChannelInterface {
     if (filter_var($host, FILTER_VALIDATE_IP) !== FALSE) {
       return [$host];
     }
-    if ($resolver !== NULL) {
-      return array_values($resolver($host));
+
+    try {
+      return $resolver !== NULL ? $resolver($host) : self::resolveHostUsingDns($host);
     }
-    $ips = gethostbynamel($host);
-    $out = is_array($ips) ? array_values($ips) : [];
-    $aaaa = @dns_get_record($host, DNS_AAAA);
-    if (is_array($aaaa)) {
-      foreach ($aaaa as $record) {
-        if (!empty($record['ipv6'])) {
-          $out[] = (string) $record['ipv6'];
+    catch (\Throwable $e) {
+      throw new \CRM_Core_Exception(
+        'herald: DNS lookup failed for webhook host ' . $host . '.',
+        0,
+        [],
+        $e,
+      );
+    }
+  }
+
+  /**
+   * Resolve both address families in one DNS query.
+   *
+   * PHP reports resolver failures as warnings and FALSE. Convert only warnings
+   * raised during this one DNS call into an exception so the SSRF guard fails
+   * closed, then immediately restore the previous application error handler.
+   *
+   * @return list<string>
+   */
+  private static function resolveHostUsingDns(string $host): array {
+    set_error_handler(
+      static function (int $severity, string $message, string $file, int $line): never {
+        throw new \ErrorException($message, 0, $severity, $file, $line);
+      },
+      E_WARNING,
+    );
+    try {
+      $records = dns_get_record($host, DNS_A | DNS_AAAA);
+    }
+    finally {
+      restore_error_handler();
+    }
+
+    if ($records === FALSE) {
+      throw new \RuntimeException('DNS lookup returned false.');
+    }
+
+    $ips = [];
+    foreach ($records as $record) {
+      foreach (['ip', 'ipv6'] as $field) {
+        $ip = $record[$field] ?? NULL;
+        if (is_string($ip) && $ip !== '') {
+          $ips[] = $ip;
         }
       }
     }
-    return $out;
+
+    return array_values(array_unique($ips));
   }
 
   /**
@@ -247,16 +285,21 @@ class WebhookChannel implements ChannelInterface {
     if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== FALSE) {
       $long = ip2long($ip);
       // 169.254/16 link-local (incl. 169.254.169.254 metadata) and 0.0.0.0/8.
-      return $long !== FALSE && (($long & 0xFFFF0000) === (int) ip2long('169.254.0.0') || ($long >> 24) === 0);
+      return $long !== FALSE && (($long & 0xFFFF_0000) === (int) ip2long('169.254.0.0') || ($long >> 24) === 0);
     }
     $lower = strtolower($ip);
     if ($lower === '::1' || $lower === '::') {
       return TRUE;
     }
     // fc00::/7 (fc/fd) ULA and fe80::/10 (fe8-feb) link-local.
-    return str_starts_with($lower, 'fc') || str_starts_with($lower, 'fd')
-      || str_starts_with($lower, 'fe8') || str_starts_with($lower, 'fe9')
-      || str_starts_with($lower, 'fea') || str_starts_with($lower, 'feb');
+    return (
+      str_starts_with($lower, 'fc')
+      || str_starts_with($lower, 'fd')
+      || str_starts_with($lower, 'fe8')
+      || str_starts_with($lower, 'fe9')
+      || str_starts_with($lower, 'fea')
+      || str_starts_with($lower, 'feb')
+    );
   }
 
   /**

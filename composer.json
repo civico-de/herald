@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": ">=8.3",
+        "ext-filter": "*",
         "ext-mbstring": "*",
         "guzzlehttp/guzzle": "^7.0"
     },

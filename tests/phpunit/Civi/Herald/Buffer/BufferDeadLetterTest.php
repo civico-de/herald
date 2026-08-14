@@ -138,10 +138,13 @@ class BufferDeadLetterTest extends TestCase implements HeadlessInterface, HookIn
     $this->assertSame(1, $this->parkedCount());
 
     $parkedId = $this->deadLetter->getParked()[0]['id'];
-    $this->assertSame(1, \Civi\Api4\Herald::reactivateParkedAlerts(FALSE)
-      ->setIds([$parkedId])
-      ->execute()
-      ->first()['reactivated']);
+    $this->assertSame(
+      1,
+      \Civi\Api4\Herald::reactivateParkedAlerts(FALSE)
+        ->setIds([$parkedId])
+        ->execute()
+        ->first()['reactivated'],
+    );
 
     $this->assertSame(0, $this->parkedCount());
     $this->assertSame([], $this->deadLetter->getParked());

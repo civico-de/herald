@@ -12,6 +12,4 @@ namespace Civi\Herald\Dispatch;
  * same empty list forever, so the buffer flush parks such an item on the first
  * occurrence instead of counting attempts.
  */
-class NoRecipientsException extends \CRM_Core_Exception {
-
-}
+class NoRecipientsException extends \CRM_Core_Exception {}

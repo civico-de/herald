@@ -81,12 +81,8 @@ class DeadLetter {
       return;
     }
     \CRM_Core_DAO::executeQuery(
-      'UPDATE `'
-      . AlertBuffer::TABLE
-      . '` SET claimed_by = NULL, claimed_at = NULL, parked_at = NOW(), park_reason = %1, last_error = %2
-         WHERE id IN ('
-      . implode(',', array_map('intval', $ids))
-      . ')',
+      'UPDATE `' . AlertBuffer::TABLE . '` SET claimed_by = NULL, claimed_at = NULL, parked_at = NOW(), park_reason = %1, last_error = %2
+         WHERE id IN (' . implode(',', array_map('intval', $ids)) . ')',
       [1 => [substr($reason, 0, 64), 'String'], 2 => [self::truncateError($error), 'String']],
     );
   }
@@ -106,9 +102,7 @@ class DeadLetter {
       'SELECT COUNT(*) FROM `' . AlertBuffer::TABLE . '` WHERE parked_at IS NOT NULL' . $where,
     );
     \CRM_Core_DAO::executeQuery(
-      'UPDATE `'
-      . AlertBuffer::TABLE
-      . '` SET parked_at = NULL, park_reason = NULL, attempts = 0, claimed_by = NULL, claimed_at = NULL
+      'UPDATE `' . AlertBuffer::TABLE . '` SET parked_at = NULL, park_reason = NULL, attempts = 0, claimed_by = NULL, claimed_at = NULL
          WHERE parked_at IS NOT NULL' . $where,
     );
     return $count;
