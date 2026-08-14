@@ -29,7 +29,8 @@ $ckTestDsns = [];
 $ckHome = getenv('HOME') ?: '';
 $ckRaw = $ckHome !== '' ? (string) @file_get_contents($ckHome . '/.cv.json') : '';
 $ckConfig = $ckRaw !== '' ? json_decode($ckRaw, TRUE) : NULL;
-foreach ((array) ($ckConfig['sites'] ?? []) as $ckSite) {
+$ckSites = is_array($ckConfig) && is_array($ckConfig['sites'] ?? NULL) ? $ckConfig['sites'] : [];
+foreach ($ckSites as $ckSite) {
   $ckDsn = is_array($ckSite) ? $ckSite['TEST_DB_DSN'] ?? NULL : NULL;
   if (is_string($ckDsn) && $ckDsn !== '') {
     $ckTestDsns[] = $ckDsn;
@@ -96,9 +97,14 @@ function cv(string $cmd, string $decode = 'json') {
 
   // Execute `cv` in the original folder. This is a work-around for
   // phpunit/codeception, which seem to manipulate PWD.
-  $cmd = sprintf('cd %s; %s', escapeshellarg(getenv('PWD')), $cmd);
+  $pwd = getenv('PWD');
+  $cwd = getcwd();
+  $cmd = sprintf('cd %s; %s', escapeshellarg(is_string($pwd) ? $pwd : (is_string($cwd) ? $cwd : __DIR__)), $cmd);
 
   $process = proc_open($cmd, $descriptorSpec, $pipes, __DIR__);
+  if (!is_resource($process)) {
+    throw new RuntimeException("Could not start command: $cmd");
+  }
   putenv("CV_OUTPUT=$oldOutput");
   fclose($pipes[0]);
   $result = stream_get_contents($pipes[1]);
@@ -118,7 +124,7 @@ function cv(string $cmd, string $decode = 'json') {
       return $result;
 
     case 'json':
-      return json_decode($result, 1);
+      return json_decode($result, TRUE);
 
     default:
       throw new RuntimeException("Bad decoder format ($decode)");
