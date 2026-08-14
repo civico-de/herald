@@ -13,11 +13,13 @@ use ShipMonk\ComposerDependencyAnalyser\Config\Configuration;
  *    47 "shadow dependencies" in a stock run are phpunit's and guzzle's, not
  *    herald's.
  *  - core's global `Civi` class (`\Civi::log()`, `\Civi::settings()`) has no
- *    namespace, so the default `Civi\` pattern does not cover it.
+ *    namespace, so the default `Civi\` pattern does not cover it. Civix's
+ *    generated scaffold also calls the CiviCRM-provided CiviMix Schema loader,
+ *    which is intentionally not an extension Composer dependency.
  */
 return (new Configuration())
-  ->ignoreUnknownClassesRegex('~^(CRM_|Civi\\\\|Civi$|CiviCRM)~')
-  ->ignoreUnknownFunctionsRegex('~^(civicrm_|civi)~')
+  ->ignoreUnknownClassesRegex('~^(CRM_|Civi\\\\|Civi$|CiviCRM|CiviMix\\\\)~')
+  ->ignoreUnknownFunctionsRegex('~^(civicrm_|civi|CiviMix\\\\)~')
   ->addPathToExclude(__DIR__ . '/vendor')
   // tests/ is dev code; phpunit there is not a production dependency.
   ->addPathToScan(__DIR__ . '/tests', TRUE)
