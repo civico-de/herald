@@ -45,7 +45,7 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
    * to a fixed public IP, so send() tests exercise the SSRF guard offline.
    */
   private function makeChannel(Response $response): WebhookChannel {
-    return new WebhookChannel($this->makeMockedClient($response), static fn(string $host): array => ['93.184.216.34']);
+    return new WebhookChannel($this->makeMockedClient($response), static fn (string $host): array => ['93.184.216.34']);
   }
 
   public function testTextBodySentRaw(): void {
@@ -219,15 +219,42 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/disallowed address/');
     WebhookChannel::assertUrlAllowed('https://sneaky.example/x', [
-      'resolver' => static fn(string $host): array => ['10.1.2.3'],
+      'resolver' => static fn (string $host): array => ['10.1.2.3'],
     ]);
   }
 
   public function testGuardAcceptsPublicHost(): void {
     WebhookChannel::assertUrlAllowed('https://hooks.slack.com/services/X', [
-      'resolver' => static fn(string $host): array => ['93.184.216.34'],
+      'resolver' => static fn (string $host): array => ['93.184.216.34'],
     ]);
     $this->addToAssertionCount(1);
+  }
+
+  public function testResolverFailureStopsDeliveryBeforeHttpRequest(): void {
+    $channel = new WebhookChannel(
+      $this->makeMockedClient(new Response(200, [], '')),
+      static function (string $host): array {
+        throw new \RuntimeException('Resolver unavailable.');
+      },
+    );
+
+    try {
+      $channel->send('must not be delivered', ['webhook_url' => 'https://example.com/x']);
+      $this->fail('Expected the DNS lookup failure to stop webhook delivery.');
+    }
+    catch (\CRM_Core_Exception $e) {
+      $this->assertStringContainsString('DNS lookup failed for webhook host example.com', $e->getMessage());
+    }
+
+    $this->assertSame([], $this->capturedRequests);
+  }
+
+  public function testGuardRejectsHostWithNoDnsAddresses(): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessageMatches('/could not resolve webhook host/');
+    WebhookChannel::assertUrlAllowed('https://missing.example/x', [
+      'resolver' => static fn (string $host): array => [],
+    ]);
   }
 
   public function testGuardAllowlistPermitsMatchingHostAndSubdomain(): void {
