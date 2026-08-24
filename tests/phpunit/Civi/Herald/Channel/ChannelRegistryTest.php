@@ -86,7 +86,7 @@ class ChannelRegistryTest extends TestCase {
   public function testDefaultRegistersAllShippedChannels(): void {
     $keys = ChannelRegistry::default()->listKeys();
     sort($keys);
-    $this->assertSame(['email', 'ntfy', 'pushover', 'telegram', 'webhook'], $keys);
+    $this->assertSame(['activity', 'email', 'ntfy', 'pushover', 'telegram', 'webhook'], $keys);
   }
 
   public function testDefaultIsMemoized(): void {

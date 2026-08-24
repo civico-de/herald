@@ -2,13 +2,13 @@
 
 Generic notification + digest layer for CiviCRM.
 
-- **Channel-pluggable** — Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover and Email ship in v0.1; others drop in via `Civi\Herald\Channel\ChannelInterface`.
+- **Channel-pluggable** — Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover, Email and internal CiviCRM activities ship in v0.1; others drop in via `Civi\Herald\Channel\ChannelInterface`.
 - **Template-driven** — admin-editable `MessageTemplate` workflows, rendered as Smarty strings via `CRM_Core_Smarty`.
 - **CiviRules-integrated** — exposes Actions ("Send Notification", "Send Contribution Digest", "Send Contribution Alert") that any CiviRules trigger can fire. No bespoke cron.
 
 Status: **alpha (v0.1)** — feature-complete for the migration. Ships:
 
-- Channels: Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover, Email (via CiviCRM’s outbound mailer)
+- Channels: Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover, Email (via CiviCRM’s outbound mailer), internal assigned CiviCRM activities
 - Three CiviRules actions: `Send Notification`, `Send Contribution Digest`, `Send Contribution Alert` (each with its own parameter form)
 - Contribution digest engine (period filters, source/financial-type filters, adaptive histogram, campaign progress, pending pool)
 - Custom CiviRules conditions: `Previous Contribution status` and the generic `Field transition` (any entity/field, before/after operator pairs — both use a `hook_civicrm_pre` snapshot, independent of CiviRules core change-tracking)
@@ -59,6 +59,11 @@ cv api4 Herald.testTelegram message='<b>herald smoke test</b>'
 # Render a workflow template without sending — useful for previewing
 cv api4 Herald.renderTemplate workflow=herald_contribution_alert_completed \
     vars='{"contribution":{"total_amount":42.5,"source":"Stripe"}}'
+
+# Keep an operational notification inside CiviCRM as an assigned task
+cv api4 Herald.send channel=activity message='Three bank transactions need review' \
+    subject='Review bank import' format=text \
+    config='{"activity_assignee_contact_id":42,"activity_target_contact_id":84}'
 ```
 
 Or as a PHP script (no API entity, equivalent functionality):

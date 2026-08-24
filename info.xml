@@ -2,7 +2,7 @@
 <extension key="herald" type="module">
   <file>herald</file>
   <name>Herald</name>
-  <description>Generic notification + digest layer for CiviCRM. Channel-pluggable (Telegram, generic Webhook, ntfy.sh, Pushover, Email), template-driven, CiviRules-integrated.</description>
+  <description>Generic notification + digest layer for CiviCRM. Channel-pluggable (Telegram, Webhook, ntfy.sh, Pushover, Email, CiviCRM activities), template-driven, CiviRules-integrated.</description>
   <license>Proprietary</license>
   <authors>
     <author>
@@ -16,8 +16,8 @@
     <url desc="Documentation">https://github.com/civico-de/herald</url>
     <url desc="Support">https://github.com/civico-de/herald/issues</url>
   </urls>
-  <releaseDate>2026-08-06</releaseDate>
-  <version>0.7.0</version>
+  <releaseDate>2026-08-24</releaseDate>
+  <version>0.8.0</version>
   <develStage>alpha</develStage>
   <compatibility>
     <ver>6.12</ver>

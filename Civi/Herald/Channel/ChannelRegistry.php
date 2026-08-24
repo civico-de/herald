@@ -42,6 +42,7 @@ class ChannelRegistry {
       $instance->register(new NtfyChannel());
       $instance->register(new PushoverChannel());
       $instance->register(new EmailChannel());
+      $instance->register(new ActivityChannel());
     }
     return $instance;
   }

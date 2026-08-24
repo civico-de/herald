@@ -25,6 +25,7 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
     'ntfy' => 'ntfy.sh',
     'pushover' => 'Pushover',
     'email' => 'Email',
+    'activity' => 'CiviCRM activity',
   ];
 
   /**

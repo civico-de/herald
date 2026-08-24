@@ -24,7 +24,7 @@ class GetChannelsTest extends TestCase implements HeadlessInterface, HookInterfa
   public function testListsEveryShippedChannel(): void {
     $keys = (array) civicrm_api4('Herald', 'getChannels', ['checkPermissions' => FALSE])->column('key');
     sort($keys);
-    $this->assertSame(['email', 'ntfy', 'pushover', 'telegram', 'webhook'], $keys);
+    $this->assertSame(['activity', 'email', 'ntfy', 'pushover', 'telegram', 'webhook'], $keys);
   }
 
   public function testExposesTheConfigSchemaOfAChannel(): void {
@@ -44,6 +44,7 @@ class GetChannelsTest extends TestCase implements HeadlessInterface, HookInterfa
 
     $this->assertSame(['subject' => 'email_subject', 'format' => 'email_format'], $rows['email']['semantic_fields']);
     $this->assertSame(['subject' => 'ntfy_title'], $rows['ntfy']['semantic_fields']);
+    $this->assertSame(['subject' => 'activity_subject', 'format' => 'activity_format'], $rows['activity']['semantic_fields']);
     $this->assertSame([], $rows['telegram']['semantic_fields']);
   }
 
