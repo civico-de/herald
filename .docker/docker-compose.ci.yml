@@ -9,14 +9,13 @@
 #
 # Keep image tag and db version in sync with docker-compose.yml.
 #
-# DEVIATION from the civikitchen template (declared in .ckconform as
-# template_custom): CiviRules is a hard dependency of herald, so the stack
-# downloads it before enabling herald. Everything else is the template — keep
-# it that way.
+# :v1 is the released contract image — the same version the CI workflow is
+# pinned to (@v1). Set CIVIKITCHEN_IMAGE to override, either in the environment
+# or via the shared workflow's `image` input.
 
-# Explicit project name: compose otherwise derives it from the parent directory,
-# which is `.docker` in every repo here — so every stack in the estate would share
-# one project called "docker".
+# Explicit project name: compose otherwise derives it from the directory, and
+# every extension keeps its stacks in .docker/ — unnamed, they all become one
+# project called "docker" and share volumes across checkouts.
 name: herald-ci
 
 services:
@@ -33,8 +32,6 @@ services:
       CIVICRM_DB_USER: civicrm
       CIVICRM_DB_PASSWORD: civicrm
       CIVIKITCHEN_SITE_URL: "http://localhost:8080"
-      # CiviRules is a hard dependency of herald — pull it on first install.
-      CIVIKITCHEN_EXTRA_EXTENSIONS: "org.civicoop.civirules"
       CIVIKITCHEN_ENABLE_EXTENSIONS: "herald"
     volumes:
       - ..:/var/www/html/ext/herald

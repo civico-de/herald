@@ -15,8 +15,6 @@ known_hooks=heraldChecks
 # Raise it as coverage grows — never lower it to make a build green.
 min_coverage=68
 
-template_custom=.docker/docker-compose.ci.yml -- CiviRules is a hard dependency of herald, so the CI stack downloads it (CIVIKITCHEN_EXTRA_EXTENSIONS) before enabling the extension
-
 # Business hooks live in scan classes (AutoSubscriber/HookInterface); the
 # classic function form is reserved for pre-boot/lifecycle/return-value hooks.
 hook_style=listener

@@ -39,9 +39,7 @@ services:
       # Enable the mounted extension reproducibly on first boot. Add sibling
       # extensions here (comma-separated) instead of coupling them in info.xml
       # when the integration is optional by design.
-      # CiviRules is a hard dependency of herald — without it `ext:enable herald`
-      # fails and the first boot aborts.
-      CIVIKITCHEN_EXTRA_EXTENSIONS: "org.civicoop.civirules"
+      # CiviRules (info.xml <requires>) is installed by the entrypoint — nothing to add here.
       CIVIKITCHEN_ENABLE_EXTENSIONS: "herald"
     volumes:
       - ..:/var/www/html/ext/herald
