@@ -32,7 +32,6 @@ services:
       CIVICRM_SMTP_HOST: maildev
       CIVICRM_SMTP_PORT: "1025"
       # CiviRules is a hard dependency of herald — pull it on first install.
-      CIVICRM_EXTRA_EXTENSIONS: "org.civicoop.civirules"
     volumes:
       # The extension repo is two levels above this compose file.
       - ../..:/var/www/html/ext/herald
