@@ -13,6 +13,11 @@
 # .docker/docker-compose.ci.yml move as one. Fixes arrive without a PR here;
 # a breaking change has to announce itself as @v2. See civikitchen's
 # docs/releases.md.
+#
+# Everything up to the END marker is template-managed; what this repo needs
+# beyond it — `with:` inputs for the call, further jobs — goes below the
+# marker and survives `ckinit --update`.
+# BEGIN CIVIKITCHEN MANAGED caller
 name: CI
 
 on:
@@ -28,3 +33,4 @@ permissions:
 jobs:
   ci:
     uses: jfilter/civikitchen/.github/workflows/extension-ci.yml@v1
+# END CIVIKITCHEN MANAGED caller

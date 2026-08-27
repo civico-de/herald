@@ -16,6 +16,11 @@
 # Explicit project name: compose otherwise derives it from the directory, and
 # every extension keeps its stacks in .docker/ — unnamed, they all become one
 # project called "docker" and share volumes across checkouts.
+#
+# The two marked blocks are template-managed (ckinit --update refreshes them);
+# between them the repo adds what only it needs, e.g. a sibling mount:
+#       - ../../sibling:/var/www/html/ext/sibling:ro
+# BEGIN CIVIKITCHEN MANAGED app
 name: herald-ci
 
 services:
@@ -33,7 +38,9 @@ services:
       # Mounted under ext/ → enabled on first boot, <requires> resolved.
       - ..:/var/www/html/ext/herald
       - ./init.d:/civikitchen-init.d:ro
+# END CIVIKITCHEN MANAGED app
 
+# BEGIN CIVIKITCHEN MANAGED db
   db:
     image: mariadb:10.11
     environment:
@@ -48,3 +55,4 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+# END CIVIKITCHEN MANAGED db
