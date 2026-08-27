@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types = 1);
+
 /**
  * ck_headless(): \Civi\Test::headless() with this extension AND its info.xml
  * <requires> queued for install, dependencies first.
@@ -26,7 +28,7 @@ function ck_headless(): \Civi\Test\CiviEnvBuilder {
  */
 function ck_extension_key(string $dir): string {
   $file = $dir . '/info.xml';
-  libxml_use_internal_errors(TRUE);
+  libxml_use_internal_errors(use_errors: TRUE);
   $xml = is_file($file) ? simplexml_load_file($file) : FALSE;
   $key = $xml === FALSE ? '' : trim((string) $xml['key']);
   if ($key === '') {

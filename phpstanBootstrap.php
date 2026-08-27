@@ -26,29 +26,31 @@ defined('CIVICRM_UF_BASEURL') || define('CIVICRM_UF_BASEURL', 'http://localhost'
 // noted — analysis of code that never touches it is still complete, and code
 // that does gets phpstan's honest "unknown class".
 $ckExtDir = getenv('CK_EXT_DIR') ?: '/var/www/html/ext';
-libxml_use_internal_errors(TRUE);
+libxml_use_internal_errors(use_errors: TRUE);
 $ckInfo = simplexml_load_file(__DIR__ . '/info.xml');
-foreach ($ckInfo === FALSE ? [] : ($ckInfo->requires->ext ?? []) as $ckRequired) {
+foreach ($ckInfo === FALSE ? [] : $ckInfo->requires->ext ?? [] as $ckRequired) {
   $ckKey = trim((string) $ckRequired);
   $ckDir = $ckExtDir . '/' . $ckKey;
   if ($ckKey === '' || !is_dir($ckDir)) {
-    fwrite(STDERR, "phpstanBootstrap: required extension {$ckKey} is not under {$ckExtDir}; its classes stay unresolved\n");
+    fwrite(
+      STDERR,
+      "phpstanBootstrap: required extension {$ckKey} is not under {$ckExtDir}; its classes stay unresolved\n",
+    );
     continue;
   }
   if (is_file($ckDir . '/vendor/autoload.php')) {
     require_once $ckDir . '/vendor/autoload.php';
   }
   spl_autoload_register(static function (string $class) use ($ckDir): void {
-    if (str_starts_with($class, 'Civi\\')) {
-      $file = $ckDir . '/Civi/' . str_replace('\\', '/', substr($class, 5)) . '.php';
-    }
-    elseif (str_starts_with($class, 'CRM_') || str_starts_with($class, 'api_')) {
-      $file = $ckDir . '/' . str_replace('_', '/', $class) . '.php';
-    }
-    else {
-      return;
-    }
-    if (is_file($file)) {
+    $file = match (TRUE) {
+      str_starts_with($class, 'Civi\\') => $ckDir . '/Civi/' . str_replace('\\', '/', substr($class, 5)) . '.php',
+      str_starts_with($class, 'CRM_'), str_starts_with($class, 'api_') => $ckDir
+        . '/'
+        . str_replace('_', '/', $class)
+        . '.php',
+      default => NULL,
+    };
+    if ($file !== NULL && is_file($file)) {
       require_once $file;
     }
   });
