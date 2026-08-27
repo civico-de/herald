@@ -18,3 +18,4 @@ min_coverage=68
 # Business hooks live in scan classes (AutoSubscriber/HookInterface); the
 # classic function form is reserved for pre-boot/lifecycle/return-value hooks.
 hook_style=listener
+renovate_preset=github>civico-de/renovate

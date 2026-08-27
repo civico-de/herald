@@ -25,15 +25,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    # DB connection = image defaults (db / civicrm), matching the db service.
     environment:
       CIVICRM_AUTO_INSTALL: "1"
-      CIVICRM_DB_HOST: db
-      CIVICRM_DB_NAME: civicrm
-      CIVICRM_DB_USER: civicrm
-      CIVICRM_DB_PASSWORD: civicrm
       CIVIKITCHEN_SITE_URL: "http://localhost:8080"
-      CIVIKITCHEN_ENABLE_EXTENSIONS: "herald"
     volumes:
+      # Mounted under ext/ → enabled on first boot, <requires> resolved.
       - ..:/var/www/html/ext/herald
       - ./init.d:/civikitchen-init.d:ro
 

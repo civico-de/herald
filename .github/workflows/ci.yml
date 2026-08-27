@@ -5,7 +5,8 @@
 # cross-repo token needed.
 #
 # Repo-specific needs (a different compose file, a different image, skipping
-# the drift check) go through the workflow's inputs, not a fork of its steps.
+# the drift check) go through the workflow's inputs (`with:`), not a fork of
+# its steps.
 #
 # The @v1 pin is the versioned contract: workflow, template, ck* tools and
 # images are released together, so this ref and the image tag in
@@ -23,8 +24,7 @@ on:
 permissions:
   contents: read
 
+# No inputs: the workflow reads the extension key from info.xml itself.
 jobs:
   ci:
     uses: jfilter/civikitchen/.github/workflows/extension-ci.yml@v1
-    with:
-      key: herald

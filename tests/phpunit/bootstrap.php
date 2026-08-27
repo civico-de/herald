@@ -76,6 +76,9 @@ $loader->addPsr4('api\\', [__DIR__ . '/../../api', __DIR__ . '/api']);
 
 $loader->register();
 
+// ck_headless(): the headless builder with info.xml <requires> resolved.
+require __DIR__ . '/ckHeadless.php';
+
 /**
  * Call the "cv" command.
  *
