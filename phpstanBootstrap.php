@@ -42,6 +42,12 @@ foreach ($ckInfo === FALSE ? [] : $ckInfo->requires->ext ?? [] as $ckRequired) {
     require_once $ckDir . '/vendor/autoload.php';
   }
   spl_autoload_register(static function (string $class) use ($ckDir): void {
+    // civix DAOs extend CRM_<Prefix>_DAO_Base, which no file defines: the
+    // extension's civix loader aliases it to core's CRM_Core_DAO_Base at runtime.
+    if (preg_match('/^CRM_(\w+)_DAO_Base$/', $class, $m) === 1 && is_dir($ckDir . '/CRM/' . $m[1])) {
+      class_alias('CRM_Core_DAO_Base', $class);
+      return;
+    }
     $file = match (TRUE) {
       str_starts_with($class, 'Civi\\') => $ckDir . '/Civi/' . str_replace('\\', '/', substr($class, 5)) . '.php',
       str_starts_with($class, 'CRM_'), str_starts_with($class, 'api_') => $ckDir
