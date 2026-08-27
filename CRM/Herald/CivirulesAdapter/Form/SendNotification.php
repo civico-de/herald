@@ -54,10 +54,10 @@ class CRM_Herald_CivirulesAdapter_Form_SendNotification extends CRM_Herald_Civir
    * @return array<string, string>
    */
   private function lookupHeraldTemplates(): array {
-    $rows = \Civi\Api4\MessageTemplate::get(FALSE)
+    $rows = \Civi\Api4\MessageTemplate::get(checkPermissions: FALSE)
       ->addSelect('workflow_name', 'msg_title')
       ->addWhere('workflow_name', 'LIKE', 'herald_%')
-      ->addWhere('is_default', '=', TRUE)
+      ->addWhere('is_default', '=', value: TRUE)
       ->execute()
       ->getArrayCopy();
     $opts = [];

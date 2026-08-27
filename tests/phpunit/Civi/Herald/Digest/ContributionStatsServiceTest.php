@@ -44,7 +44,7 @@ class ContributionStatsServiceTest extends TestCase implements
     // see. TransactionalInterface rolls these DELETEs back after each test, so
     // other classes still find the demo data.
     \CRM_Core_DAO::executeQuery('DELETE FROM civicrm_contribution');
-    $this->contactId = (int) Contact::create(FALSE)
+    $this->contactId = (int) Contact::create(checkPermissions: FALSE)
       ->addValue('contact_type', 'Individual')
       ->addValue('first_name', 'Stats')
       ->addValue('last_name', 'Test')
@@ -59,7 +59,7 @@ class ContributionStatsServiceTest extends TestCase implements
   private function seedContributions(array $rows): array {
     $ids = [];
     foreach ($rows as $row) {
-      $id = (int) Contribution::create(FALSE)
+      $id = (int) Contribution::create(checkPermissions: FALSE)
         ->addValue('contact_id', $this->contactId)
         ->addValue('financial_type_id:name', 'Donation')
         ->addValue('contribution_status_id:name', $row['status'] ?? 'Completed')
@@ -157,14 +157,14 @@ class ContributionStatsServiceTest extends TestCase implements
 
   public function testFiltersByCampaignId(): void {
     // Create a campaign first
-    $campaignId = (int) \Civi\Api4\Campaign::create(FALSE)
+    $campaignId = (int) \Civi\Api4\Campaign::create(checkPermissions: FALSE)
       ->addValue('title', 'TestCampaign')
       ->addValue('campaign_type_id', 1)
       ->execute()
       ->first()['id'];
 
     $yesterday = date('Y-m-d 12:00:00', strtotime('yesterday'));
-    Contribution::create(FALSE)
+    Contribution::create(checkPermissions: FALSE)
       ->addValue('contact_id', $this->contactId)
       ->addValue('financial_type_id:name', 'Donation')
       ->addValue('contribution_status_id:name', 'Completed')
@@ -172,7 +172,7 @@ class ContributionStatsServiceTest extends TestCase implements
       ->addValue('campaign_id', $campaignId)
       ->addValue('receive_date', $yesterday)
       ->execute();
-    Contribution::create(FALSE)
+    Contribution::create(checkPermissions: FALSE)
       ->addValue('contact_id', $this->contactId)
       ->addValue('financial_type_id:name', 'Donation')
       ->addValue('contribution_status_id:name', 'Completed')
@@ -236,20 +236,20 @@ class ContributionStatsServiceTest extends TestCase implements
   }
 
   public function testGetCampaignTotalSumsCompletedOnly(): void {
-    $campaignId = (int) \Civi\Api4\Campaign::create(FALSE)
+    $campaignId = (int) \Civi\Api4\Campaign::create(checkPermissions: FALSE)
       ->addValue('title', 'TotalCampaign')
       ->addValue('campaign_type_id', 1)
       ->execute()
       ->first()['id'];
 
-    Contribution::create(FALSE)
+    Contribution::create(checkPermissions: FALSE)
       ->addValue('contact_id', $this->contactId)
       ->addValue('financial_type_id:name', 'Donation')
       ->addValue('contribution_status_id:name', 'Completed')
       ->addValue('total_amount', 1000.0)
       ->addValue('campaign_id', $campaignId)
       ->execute();
-    Contribution::create(FALSE)
+    Contribution::create(checkPermissions: FALSE)
       ->addValue('contact_id', $this->contactId)
       ->addValue('financial_type_id:name', 'Donation')
       ->addValue('contribution_status_id:name', 'Pending')
@@ -294,7 +294,7 @@ class ContributionStatsServiceTest extends TestCase implements
     ]);
     $this->assertCount(0, $this->service->getRecentStatusTransitions([], 10, 'Completed'));
     // Opt-out returns it.
-    $all = $this->service->getRecentStatusTransitions([], 10, 'Completed', FALSE);
+    $all = $this->service->getRecentStatusTransitions([], 10, 'Completed', excludeAlsoReceivedInPeriod: FALSE);
     $this->assertCount(1, $all);
     $this->assertSame(300.0, $all[0]['amount']);
   }
@@ -372,14 +372,14 @@ class ContributionStatsServiceTest extends TestCase implements
    * Create one contribution with the given flag set (is_test / is_template).
    */
   private function seedFlagged(string $flag, float $amount, string $receiveDate, ?int $campaignId = NULL): void {
-    $create = Contribution::create(FALSE)
+    $create = Contribution::create(checkPermissions: FALSE)
       ->addValue('contact_id', $this->contactId)
       ->addValue('financial_type_id:name', 'Donation')
       ->addValue('contribution_status_id:name', 'Completed')
       ->addValue('total_amount', $amount)
       ->addValue('source', 'Stripe')
       ->addValue('receive_date', $receiveDate)
-      ->addValue($flag, TRUE);
+      ->addValue($flag, value: TRUE);
     if ($campaignId !== NULL) {
       $create->addValue('campaign_id', $campaignId);
     }
@@ -408,13 +408,13 @@ class ContributionStatsServiceTest extends TestCase implements
 
   public function testRecentAndCampaignQueriesAlsoIgnoreTestAndTemplateRows(): void {
     $now = date('Y-m-d H:i:s');
-    $campaignId = (int) \Civi\Api4\Campaign::create(FALSE)
+    $campaignId = (int) \Civi\Api4\Campaign::create(checkPermissions: FALSE)
       ->addValue('title', 'FlagCampaign')
       ->addValue('campaign_type_id', 1)
       ->execute()
       ->first()['id'];
 
-    Contribution::create(FALSE)
+    Contribution::create(checkPermissions: FALSE)
       ->addValue('contact_id', $this->contactId)
       ->addValue('financial_type_id:name', 'Donation')
       ->addValue('contribution_status_id:name', 'Completed')

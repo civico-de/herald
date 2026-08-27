@@ -13,12 +13,12 @@ use CRM_Herald_ExtensionUtil as E;
 class CRM_Herald_CivirulesAdapter_Form_FieldTransition extends CRM_CivirulesConditions_Form_Form {
 
   public function buildQuickForm(): void {
-    $this->add('text', 'entity', E::ts('Entity (APIv4 name, e.g. Contribution)'), ['size' => 30], TRUE);
-    $this->add('text', 'field', E::ts('Field (APIv4 field name)'), ['size' => 30], TRUE);
+    $this->add('text', 'entity', E::ts('Entity (APIv4 name, e.g. Contribution)'), ['size' => 30], required: TRUE);
+    $this->add('text', 'field', E::ts('Field (APIv4 field name)'), ['size' => 30], required: TRUE);
     $operators = ['' => E::ts('- any value -')] + array_combine(FieldTransition::OPERATORS, FieldTransition::OPERATORS);
-    $this->add('select', 'from_operator', E::ts('Before: operator'), $operators, FALSE);
+    $this->add('select', 'from_operator', E::ts('Before: operator'), $operators, required: FALSE);
     $this->add('text', 'from_value', E::ts('Before: value'), ['size' => 30]);
-    $this->add('select', 'to_operator', E::ts('After: operator'), $operators, FALSE);
+    $this->add('select', 'to_operator', E::ts('After: operator'), $operators, required: FALSE);
     $this->add('text', 'to_value', E::ts('After: value'), ['size' => 30]);
     $this->addButtons([
       ['type' => 'next', 'name' => E::ts('Save'), 'isDefault' => TRUE],

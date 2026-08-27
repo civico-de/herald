@@ -294,7 +294,7 @@ class ContributionStatsService {
     }
 
     /** @var array<int, array{label: string|null, unit_price: float|int|numeric-string|null, qty: float|int|numeric-string|null, total: float|int|numeric-string|null}> $rows */
-    $rows = \Civi\Api4\LineItem::get(FALSE)
+    $rows = \Civi\Api4\LineItem::get(checkPermissions: FALSE)
       // Alias must differ from the field name (Api4SelectQuery restriction).
       ->addSelect('label', 'unit_price', 'SUM(qty) AS qty_sum', 'SUM(line_total) AS total')
       ->setWhere($where)
@@ -430,10 +430,10 @@ class ContributionStatsService {
    * @param HeraldWhere $where
    */
   private function contributionGet(array $where = []): \Civi\Api4\Generic\DAOGetAction {
-    return \Civi\Api4\Contribution::get(FALSE)
+    return \Civi\Api4\Contribution::get(checkPermissions: FALSE)
       ->setWhere($where)
-      ->addWhere('is_test', '=', FALSE)
-      ->addWhere('is_template', '=', FALSE);
+      ->addWhere('is_test', '=', value: FALSE)
+      ->addWhere('is_template', '=', value: FALSE);
   }
 
 }

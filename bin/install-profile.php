@@ -26,7 +26,7 @@ use Civi\Api4\UFGroup;
 $profileName = 'herald_my_preferences';
 $profileTitle = 'My notification preferences';
 
-$existing = UFGroup::get(FALSE)
+$existing = UFGroup::get(checkPermissions: FALSE)
   ->addSelect('id')
   ->addWhere('name', '=', $profileName)
   ->execute()
@@ -38,12 +38,12 @@ if ($existing) {
 }
 // @mago-expect lint:no-else-clause
 else {
-  $gid = (int) UFGroup::create(FALSE)
+  $gid = (int) UFGroup::create(checkPermissions: FALSE)
     ->addValue('name', $profileName)
     ->addValue('title', $profileTitle)
     ->addValue('group_type', 'Individual,Contact')
-    ->addValue('is_active', TRUE)
-    ->addValue('is_reserved', FALSE)
+    ->addValue('is_active', value: TRUE)
+    ->addValue('is_reserved', value: FALSE)
     ->addValue('help_pre', 'Pick your preferred channel and what kinds of notifications you want to receive.')
     ->execute()
     ->first()['id'];
@@ -60,7 +60,7 @@ $fieldOrder = [
 ];
 
 foreach ($fieldOrder as $f) {
-  $cf = CustomField::get(FALSE)
+  $cf = CustomField::get(checkPermissions: FALSE)
     ->addSelect('id', 'name')
     ->addWhere('custom_group_id:name', '=', 'herald_preferences')
     ->addWhere('name', '=', $f['name'])
@@ -75,7 +75,7 @@ foreach ($fieldOrder as $f) {
   }
   $fieldName = 'custom_' . $cf['id'];
 
-  $existingField = UFField::get(FALSE)
+  $existingField = UFField::get(checkPermissions: FALSE)
     ->addSelect('id')
     ->addWhere('uf_group_id', '=', $gid)
     ->addWhere('field_name', '=', $fieldName)
@@ -87,13 +87,13 @@ foreach ($fieldOrder as $f) {
     continue;
   }
 
-  $newId = UFField::create(FALSE)
+  $newId = UFField::create(checkPermissions: FALSE)
     ->addValue('uf_group_id', $gid)
     ->addValue('field_name', $fieldName)
     ->addValue('label', $f['label'])
     ->addValue('is_required', $f['required'])
     ->addValue('weight', $f['weight'])
-    ->addValue('is_active', TRUE)
+    ->addValue('is_active', value: TRUE)
     ->addValue('visibility', 'User and User Admin Only')
     ->execute()
     ->first()['id'];

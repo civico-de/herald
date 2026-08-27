@@ -82,7 +82,7 @@ class EmailChannelTest extends TestCase implements HeadlessInterface, HookInterf
   }
 
   public function testThrowsWhenMailerReportsFailure(): void {
-    $channel = $this->makeChannel(FALSE);
+    $channel = $this->makeChannel(mailerResult: FALSE);
 
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/delivery failed/');

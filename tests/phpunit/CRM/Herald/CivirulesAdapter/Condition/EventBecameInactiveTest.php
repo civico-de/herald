@@ -43,7 +43,7 @@ class CRM_Herald_CivirulesAdapter_Condition_EventBecameInactiveTest extends Test
   }
 
   private function createEvent(bool $active): int {
-    return (int) \Civi\Api4\Event::create(FALSE)
+    return (int) \Civi\Api4\Event::create(checkPermissions: FALSE)
       ->addValue('title', 'Herald test event')
       ->addValue('start_date', '2026-09-01')
       ->addValue('event_type_id', 1)
@@ -83,14 +83,14 @@ class CRM_Herald_CivirulesAdapter_Condition_EventBecameInactiveTest extends Test
   }
 
   public function testFiresWhenSnapshotSaysItWasActive(): void {
-    $id = $this->createEvent(FALSE);
+    $id = $this->createEvent(active: FALSE);
     PreEditSnapshot::remember('Event', $id, 'is_active', 1);
     $condition = new CRM_Herald_CivirulesAdapter_Condition_EventBecameInactive();
     $this->assertTrue($condition->isConditionValid($this->triggerData($id)));
   }
 
   public function testDoesNotFireWhileStillActive(): void {
-    $id = $this->createEvent(TRUE);
+    $id = $this->createEvent(active: TRUE);
     PreEditSnapshot::remember('Event', $id, 'is_active', 1);
     $condition = new CRM_Herald_CivirulesAdapter_Condition_EventBecameInactive();
     $this->assertFalse($condition->isConditionValid($this->triggerData($id)));
@@ -101,13 +101,13 @@ class CRM_Herald_CivirulesAdapter_Condition_EventBecameInactiveTest extends Test
    * previous state is unknown, and a missed alert beats a false one.
    */
   public function testDoesNotFireOnUnknownPreviousState(): void {
-    $id = $this->createEvent(FALSE);
+    $id = $this->createEvent(active: FALSE);
     $condition = new CRM_Herald_CivirulesAdapter_Condition_EventBecameInactive();
     $this->assertFalse($condition->isConditionValid($this->triggerData($id)));
   }
 
   public function testOriginalDataIsTheFallback(): void {
-    $id = $this->createEvent(FALSE);
+    $id = $this->createEvent(active: FALSE);
     $condition = new CRM_Herald_CivirulesAdapter_Condition_EventBecameInactive();
     $this->assertTrue(
       $condition->isConditionValid($this->triggerDataWithOriginal($id, ['is_active' => 1])),
@@ -118,7 +118,7 @@ class CRM_Herald_CivirulesAdapter_Condition_EventBecameInactiveTest extends Test
   }
 
   public function testSnapshotBeatsOriginalData(): void {
-    $id = $this->createEvent(FALSE);
+    $id = $this->createEvent(active: FALSE);
     PreEditSnapshot::remember('Event', $id, 'is_active', 0);
     $condition = new CRM_Herald_CivirulesAdapter_Condition_EventBecameInactive();
     // Snapshot (was already inactive) wins over a stale original payload.

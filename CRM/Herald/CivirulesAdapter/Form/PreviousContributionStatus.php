@@ -7,7 +7,13 @@ use CRM_Herald_ExtensionUtil as E;
 class CRM_Herald_CivirulesAdapter_Form_PreviousContributionStatus extends CRM_CivirulesConditions_Form_Form {
 
   public function buildQuickForm(): void {
-    $this->add('select', 'previous_status_id', E::ts('Previous Contribution Status'), $this->getStatusOptions(), TRUE);
+    $this->add(
+      'select',
+      'previous_status_id',
+      E::ts('Previous Contribution Status'),
+      $this->getStatusOptions(),
+      required: TRUE,
+    );
     $this->addButtons([
       ['type' => 'next', 'name' => E::ts('Save'), 'isDefault' => TRUE],
       ['type' => 'cancel', 'name' => E::ts('Cancel')],
@@ -41,10 +47,10 @@ class CRM_Herald_CivirulesAdapter_Form_PreviousContributionStatus extends CRM_Ci
    * @return array<int, string>
    */
   private function getStatusOptions(): array {
-    $rows = \Civi\Api4\OptionValue::get(FALSE)
+    $rows = \Civi\Api4\OptionValue::get(checkPermissions: FALSE)
       ->addSelect('value', 'label')
       ->addWhere('option_group_id:name', '=', 'contribution_status')
-      ->addWhere('is_active', '=', TRUE)
+      ->addWhere('is_active', '=', value: TRUE)
       ->execute()
       ->getArrayCopy();
     $opts = [];

@@ -14,11 +14,11 @@ class CRM_Herald_CivirulesAdapter_Form_SendContributionAlert extends CRM_Herald_
    * @return array<string, string>
    */
   protected function getTemplateOptions(): array {
-    $rows = \Civi\Api4\MessageTemplate::get(FALSE)
+    $rows = \Civi\Api4\MessageTemplate::get(checkPermissions: FALSE)
       ->addSelect('workflow_name', 'msg_title')
       ->addWhere('workflow_name', 'LIKE', 'herald_contribution_%')
       ->addWhere('workflow_name', 'NOT LIKE', 'herald_contribution_digest_%')
-      ->addWhere('is_default', '=', TRUE)
+      ->addWhere('is_default', '=', value: TRUE)
       ->execute()
       ->getArrayCopy();
     $opts = [];

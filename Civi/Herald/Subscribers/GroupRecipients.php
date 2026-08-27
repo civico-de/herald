@@ -25,7 +25,7 @@ class GroupRecipients {
     if ($groupId <= 0) {
       return [];
     }
-    $query = \Civi\Api4\Contact::get(FALSE)
+    $query = \Civi\Api4\Contact::get(checkPermissions: FALSE)
       ->addSelect(
         'id',
         'herald_preferences.preferred_channel',
@@ -38,8 +38,8 @@ class GroupRecipients {
         'do_not_email',
         'is_opt_out',
       )
-      ->addWhere('is_deleted', '=', FALSE)
-      ->addWhere('is_deceased', '=', FALSE)
+      ->addWhere('is_deleted', '=', value: FALSE)
+      ->addWhere('is_deceased', '=', value: FALSE)
       ->addWhere('groups', 'IN', [$groupId]);
     SubscriberLookup::addLocationEmailJoin($query, $options);
     /** @var array<int, array<string, mixed>> $rows */

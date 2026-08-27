@@ -39,13 +39,13 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransitionConditionTest extends
   }
 
   private function createContribution(int $statusId): int {
-    $contactId = (int) \Civi\Api4\Contact::create(FALSE)
+    $contactId = (int) \Civi\Api4\Contact::create(checkPermissions: FALSE)
       ->addValue('contact_type', 'Individual')
       ->addValue('first_name', 'Herald')
       ->addValue('last_name', 'Fixture')
       ->execute()
       ->first()['id'];
-    return (int) \Civi\Api4\Contribution::create(FALSE)
+    return (int) \Civi\Api4\Contribution::create(checkPermissions: FALSE)
       ->addValue('contact_id', $contactId)
       ->addValue('financial_type_id', 1)
       ->addValue('total_amount', 10)
@@ -211,17 +211,17 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransitionConditionTest extends
     );
     \Civi\Herald\Condition\FieldTransitionWatchList::reset();
 
-    $contactId = (int) \Civi\Api4\Contact::create(FALSE)
+    $contactId = (int) \Civi\Api4\Contact::create(checkPermissions: FALSE)
       ->addValue('contact_type', 'Individual')
       ->addValue('first_name', 'Herald')
       ->addValue('last_name', 'WatchFixture')
-      ->addValue('do_not_email', FALSE)
+      ->addValue('do_not_email', value: FALSE)
       ->execute()
       ->first()['id'];
     // The edit fires hook_civicrm_pre with objectName "Individual".
-    \Civi\Api4\Contact::update(FALSE)
+    \Civi\Api4\Contact::update(checkPermissions: FALSE)
       ->addWhere('id', '=', $contactId)
-      ->addValue('do_not_email', TRUE)
+      ->addValue('do_not_email', value: TRUE)
       ->execute();
 
     $snapshot = PreEditSnapshot::get('Contact', $contactId, 'do_not_email');

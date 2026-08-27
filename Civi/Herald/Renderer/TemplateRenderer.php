@@ -34,10 +34,10 @@ class TemplateRenderer {
    * @throws \CRM_Core_Exception when the template is missing.
    */
   public function renderParts(string $workflowName, array $vars): array {
-    $template = \Civi\Api4\MessageTemplate::get(FALSE)
+    $template = \Civi\Api4\MessageTemplate::get(checkPermissions: FALSE)
       ->addSelect('msg_html', 'msg_text', 'msg_subject')
       ->addWhere('workflow_name', '=', $workflowName)
-      ->addWhere('is_default', '=', TRUE)
+      ->addWhere('is_default', '=', value: TRUE)
       ->setLimit(1)
       ->execute()
       ->first();

@@ -81,7 +81,7 @@ final class ContributionAlertVars {
     /** @var array<int, string>|null $cache */
     static $cache = NULL;
     if ($cache === NULL) {
-      $rows = \Civi\Api4\OptionValue::get(FALSE)
+      $rows = \Civi\Api4\OptionValue::get(checkPermissions: FALSE)
         ->addSelect('value', 'name')
         ->addWhere('option_group_id:name', '=', 'contribution_status')
         ->execute()

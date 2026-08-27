@@ -16,7 +16,7 @@ $coreDir = getenv('CIVICRM_CORE_DIR') ?: '/var/www/html/core';
 // getPath() on null". The file skips that lookup entirely when a Smarty class is
 // already present, so load the same one the runtime would.
 $smarty = $coreDir . '/packages/smarty5/Smarty.php';
-if (!class_exists('Smarty', FALSE) && is_file($smarty)) {
+if (!class_exists('Smarty', autoload: FALSE) && is_file($smarty)) {
   require_once $smarty;
 }
 
@@ -49,6 +49,6 @@ spl_autoload_register(static function (string $class) use ($extDir): void {
 // CRM_Civirules_DAO_Base onto CRM_Core_DAO_Base from inside an autoload hook
 // (civirules.civix.php), so nothing on disk declares it. Reproduce the alias the
 // runtime would create rather than leaving phpstan to die on the parent lookup.
-if (class_exists('CRM_Core_DAO_Base') && !class_exists('CRM_Civirules_DAO_Base', FALSE)) {
+if (class_exists('CRM_Core_DAO_Base') && !class_exists('CRM_Civirules_DAO_Base', autoload: FALSE)) {
   class_alias('CRM_Core_DAO_Base', 'CRM_Civirules_DAO_Base');
 }

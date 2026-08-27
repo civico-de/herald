@@ -39,14 +39,14 @@ class PublishTest extends TestCase implements HeadlessInterface, HookInterface, 
         'aggregate_minutes' => 15,
       ],
     ]);
-    MessageTemplate::create(FALSE)
+    MessageTemplate::create(checkPermissions: FALSE)
       ->addValue('msg_title', 'Herald test publish')
       ->addValue('workflow_name', self::WORKFLOW)
       // A per-event subject — exactly what must stay out of the group key.
       ->addValue('msg_subject', 'Alert {$serial}')
       ->addValue('msg_html', 'body {$serial}')
-      ->addValue('is_default', TRUE)
-      ->addValue('is_active', TRUE)
+      ->addValue('is_default', value: TRUE)
+      ->addValue('is_active', value: TRUE)
       ->execute();
   }
 

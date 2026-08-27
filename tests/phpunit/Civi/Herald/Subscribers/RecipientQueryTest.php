@@ -32,7 +32,7 @@ class RecipientQueryTest extends TestCase implements HeadlessInterface, HookInte
    * @param array<string, mixed> $values
    */
   private function createContact(array $values = []): int {
-    $create = \Civi\Api4\Contact::create(FALSE)
+    $create = \Civi\Api4\Contact::create(checkPermissions: FALSE)
       ->addValue('contact_type', 'Individual')
       ->addValue('first_name', 'Herald')
       ->addValue('last_name', 'Fixture' . random_int(1000, 9999));
@@ -43,7 +43,7 @@ class RecipientQueryTest extends TestCase implements HeadlessInterface, HookInte
   }
 
   private function addEmail(int $contactId, string $email, ?int $locationTypeId = NULL, bool $onHold = FALSE): void {
-    $create = \Civi\Api4\Email::create(FALSE)
+    $create = \Civi\Api4\Email::create(checkPermissions: FALSE)
       ->addValue('contact_id', $contactId)
       ->addValue('email', $email)
       ->addValue('on_hold', $onHold);
@@ -54,13 +54,13 @@ class RecipientQueryTest extends TestCase implements HeadlessInterface, HookInte
   }
 
   private function createGroupWith(int ...$contactIds): int {
-    $groupId = (int) \Civi\Api4\Group::create(FALSE)
+    $groupId = (int) \Civi\Api4\Group::create(checkPermissions: FALSE)
       ->addValue('name', 'herald_test_group_' . random_int(1000, 9999))
       ->addValue('title', 'Herald test group')
       ->execute()
       ->first()['id'];
     foreach ($contactIds as $contactId) {
-      \Civi\Api4\GroupContact::create(FALSE)
+      \Civi\Api4\GroupContact::create(checkPermissions: FALSE)
         ->addValue('group_id', $groupId)
         ->addValue('contact_id', $contactId)
         ->addValue('status', 'Added')

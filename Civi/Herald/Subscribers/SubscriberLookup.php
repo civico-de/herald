@@ -29,7 +29,7 @@ class SubscriberLookup {
       return [];
     }
 
-    $query = \Civi\Api4\Contact::get(FALSE)
+    $query = \Civi\Api4\Contact::get(checkPermissions: FALSE)
       ->addSelect(
         'id',
         'herald_preferences.preferred_channel',
@@ -45,8 +45,8 @@ class SubscriberLookup {
         'do_not_email',
         'is_opt_out',
       )
-      ->addWhere('is_deleted', '=', FALSE)
-      ->addWhere('is_deceased', '=', FALSE)
+      ->addWhere('is_deleted', '=', value: FALSE)
+      ->addWhere('is_deceased', '=', value: FALSE)
       ->addWhere('herald_preferences.subscriptions', 'CONTAINS', $subscriptionType);
     self::addLocationEmailJoin($query, $options);
     /** @var array<int, array<string, mixed>> $rows */

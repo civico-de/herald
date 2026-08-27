@@ -21,6 +21,8 @@ return (new Configuration())
   ->ignoreUnknownClassesRegex('~^(CRM_|Civi\\\\|Civi$|CiviCRM|CiviMix\\\\)~')
   ->ignoreUnknownFunctionsRegex('~^(civicrm_|civi|CiviMix\\\\)~')
   ->addPathToExclude(__DIR__ . '/vendor')
-  // tests/ is dev code; phpunit there is not a production dependency.
-  ->addPathToScan(__DIR__ . '/tests', TRUE)
+  // tests/ and the phpstan bootstrap are dev code: phpunit and the XML
+  // extensions they use are not production dependencies.
+  ->addPathToScan(__DIR__ . '/tests', isDev: TRUE)
+  ->addPathToScan(__DIR__ . '/phpstanBootstrap.php', isDev: TRUE)
   ->disableReportingUnmatchedIgnores();

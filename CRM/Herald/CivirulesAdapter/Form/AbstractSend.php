@@ -60,21 +60,21 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
         'group' => E::ts('Group — fan out to all contacts of a CiviCRM group'),
         'addresses' => E::ts('Address list — send to raw email addresses (no contact linkage)'),
       ],
-      TRUE,
+      required: TRUE,
     );
     $this->add(
       'select',
       'subscription_type',
       E::ts('Subscription type (only used in subscriber mode)'),
       $this->getSubscriptionTypeOptions(),
-      FALSE,
+      required: FALSE,
     );
     $this->add(
       'select',
       'group_id',
       E::ts('Group (only used in group mode)'),
       ['' => E::ts('- select group -')] + $this->getGroupOptions(),
-      FALSE,
+      required: FALSE,
     );
     $this->add(
       'textarea',
@@ -94,7 +94,7 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
       'email_location_type',
       E::ts('Preferred location type for email recipients (fallback: primary address)'),
       ['' => E::ts('- primary -')] + $this->getLocationTypeOptions(),
-      FALSE,
+      required: FALSE,
     );
     if ($this->supportsScopeEntity()) {
       $this->add(
@@ -109,7 +109,7 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
           'Membership' => E::ts('Membership'),
           'Participant' => E::ts('Participant'),
         ],
-        FALSE,
+        required: FALSE,
       );
     }
     $this->add(
@@ -117,9 +117,9 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
       'channel',
       E::ts('Channel (direct mode only — subscribers use their own preferred channel)'),
       $this->getChannelOptions(),
-      TRUE,
+      required: TRUE,
     );
-    $this->add('select', 'template', E::ts('Message template'), $this->getTemplateOptions(), TRUE);
+    $this->add('select', 'template', E::ts('Message template'), $this->getTemplateOptions(), required: TRUE);
     $this->add('text', 'chat_id', E::ts('Telegram chat ID (optional, falls back to default setting)'), ['size' => 30]);
     $this->add(
       'select',
@@ -130,7 +130,7 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
         'MarkdownV2' => 'MarkdownV2',
         '' => E::ts('Plain text'),
       ],
-      FALSE,
+      required: FALSE,
     );
     $this->heraldCheckbox('disable_notification', E::ts('Silent message (Telegram)'));
     $this->heraldCheckbox('disable_web_page_preview', E::ts('Disable link previews (Telegram)'));
@@ -256,10 +256,10 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
    */
   protected function getSubscriptionTypeOptions(): array {
     try {
-      $rows = \Civi\Api4\OptionValue::get(FALSE)
+      $rows = \Civi\Api4\OptionValue::get(checkPermissions: FALSE)
         ->addSelect('value', 'label')
         ->addWhere('option_group_id:name', '=', 'herald_subscription_type')
-        ->addWhere('is_active', '=', TRUE)
+        ->addWhere('is_active', '=', value: TRUE)
         ->addOrderBy('weight', 'ASC')
         ->execute()
         ->getArrayCopy();
@@ -289,10 +289,10 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
    */
   protected function getGroupOptions(): array {
     try {
-      $rows = \Civi\Api4\Group::get(FALSE)
+      $rows = \Civi\Api4\Group::get(checkPermissions: FALSE)
         ->addSelect('id', 'title')
-        ->addWhere('is_active', '=', TRUE)
-        ->addWhere('is_hidden', '=', FALSE)
+        ->addWhere('is_active', '=', value: TRUE)
+        ->addWhere('is_hidden', '=', value: FALSE)
         ->addOrderBy('title', 'ASC')
         ->execute()
         ->getArrayCopy();
@@ -310,9 +310,9 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
    */
   protected function getLocationTypeOptions(): array {
     try {
-      $rows = \Civi\Api4\LocationType::get(FALSE)
+      $rows = \Civi\Api4\LocationType::get(checkPermissions: FALSE)
         ->addSelect('id', 'display_name')
-        ->addWhere('is_active', '=', TRUE)
+        ->addWhere('is_active', '=', value: TRUE)
         ->addOrderBy('display_name', 'ASC')
         ->execute()
         ->getArrayCopy();

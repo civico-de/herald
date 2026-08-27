@@ -30,8 +30,8 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransition extends CRM_Civirule
 
     // CiviRules evaluates rules in a system context (cron, post-commit
     // queue) — there is no acting user whose ACLs could apply.
-    // phpcs:ignore CiviKitchen.Security.PermissionBypass -- system context, see above
     $result = civicrm_api4('Herald', 'checkFieldTransition', [
+      // phpcs:ignore CiviKitchen.Security.PermissionBypass -- system context, see above
       'checkPermissions' => FALSE,
       'entity' => $entity,
       'entityId' => is_scalar($rawId) ? (int) $rawId : 0,

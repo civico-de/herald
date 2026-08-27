@@ -76,7 +76,7 @@ class BufferDeadLetterTest extends TestCase implements HeadlessInterface, HookIn
    * FIRST failure — retrying re-resolves the same empty list.
    */
   public function testEmptyRecipientListIsParkedImmediately(): void {
-    $groupId = (int) \Civi\Api4\Group::create(FALSE)
+    $groupId = (int) \Civi\Api4\Group::create(checkPermissions: FALSE)
       ->addValue('name', 'herald_test_empty_group')
       ->addValue('title', 'herald test empty group')
       ->execute()
@@ -140,7 +140,7 @@ class BufferDeadLetterTest extends TestCase implements HeadlessInterface, HookIn
     $parkedId = $this->deadLetter->getParked()[0]['id'];
     $this->assertSame(
       1,
-      \Civi\Api4\Herald::reactivateParkedAlerts(FALSE)
+      \Civi\Api4\Herald::reactivateParkedAlerts(checkPermissions: FALSE)
         ->setIds([$parkedId])
         ->execute()
         ->first()['reactivated'],
@@ -181,7 +181,7 @@ class BufferDeadLetterTest extends TestCase implements HeadlessInterface, HookIn
     $this->bufferDue(['channel' => 'no-such-channel']);
     $this->flush();
 
-    $rows = (array) \Civi\Api4\Herald::getParkedAlerts(FALSE)->execute()->getArrayCopy();
+    $rows = (array) \Civi\Api4\Herald::getParkedAlerts(checkPermissions: FALSE)->execute()->getArrayCopy();
     $this->assertCount(1, $rows);
     $this->assertSame(self::GROUP, $rows[0]['group_hash']);
     $this->assertArrayNotHasKey('body', $rows[0], 'the dead-letter view carries no rendered content');

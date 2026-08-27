@@ -46,15 +46,18 @@ class ActivityChannelTest extends TestCase implements HeadlessInterface, HookInt
       'activity_subject' => 'Review bank import',
     ]);
 
-    $this->assertSame([
-      'activity_type_id' => 3,
-      'status_id' => 1,
-      'source_contact_id' => 42,
-      'assignee_contact_id' => [42],
-      'subject' => 'Review bank import',
-      'details' => '<p>Three unmatched bank transactions</p>',
-      'target_contact_id' => [84],
-    ], $this->created);
+    $this->assertSame(
+      [
+        'activity_type_id' => 3,
+        'status_id' => 1,
+        'source_contact_id' => 42,
+        'assignee_contact_id' => [42],
+        'subject' => 'Review bank import',
+        'details' => '<p>Three unmatched bank transactions</p>',
+        'target_contact_id' => [84],
+      ],
+      $this->created,
+    );
   }
 
   public function testDefaultCreatorWritesActivityThroughApi4(): void {
@@ -79,7 +82,14 @@ class ActivityChannelTest extends TestCase implements HeadlessInterface, HookInt
     ]);
 
     $activity = \Civi\Api4\Activity::get(checkPermissions: FALSE)
-      ->addSelect('subject', 'activity_type_id:name', 'status_id:name', 'source_contact_id', 'target_contact_id', 'assignee_contact_id')
+      ->addSelect(
+        'subject',
+        'activity_type_id:name',
+        'status_id:name',
+        'source_contact_id',
+        'target_contact_id',
+        'assignee_contact_id',
+      )
       ->addWhere('subject', '=', 'Review overdue dues')
       ->execute()
       ->single();
@@ -123,19 +133,26 @@ class ActivityChannelTest extends TestCase implements HeadlessInterface, HookInt
 
   public function testDeclaresSemanticFields(): void {
     $channel = new ActivityChannel();
-    $this->assertSame([
-      'subject' => 'activity_subject',
-      'format' => 'activity_format',
-    ], $channel->getSemanticFields());
+    $this->assertSame(
+      [
+        'subject' => 'activity_subject',
+        'format' => 'activity_format',
+      ],
+      $channel->getSemanticFields(),
+    );
     $this->assertArrayHasKey('activity_assignee_contact_id', $channel->getConfigSchema());
   }
 
   public function testExplicitSubjectIsPlainTextAndFitsCoreColumn(): void {
     $subject = '<strong>' . str_repeat('x', 300) . '</strong>';
-    $values = ActivityChannel::buildActivityValues('body', [
-      'activity_assignee_contact_id' => 42,
-      'activity_subject' => $subject,
-    ], static fn (string $group, string $name): int => 1);
+    $values = ActivityChannel::buildActivityValues(
+      'body',
+      [
+        'activity_assignee_contact_id' => 42,
+        'activity_subject' => $subject,
+      ],
+      static fn (string $group, string $name): int => 1,
+    );
 
     $this->assertSame(255, mb_strlen($values['subject']));
     $this->assertStringNotContainsString('<strong>', $values['subject']);

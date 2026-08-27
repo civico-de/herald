@@ -14,10 +14,10 @@ class CRM_Herald_CivirulesAdapter_Form_SendContributionDigest extends CRM_Herald
    * @return array<string, string>
    */
   protected function getTemplateOptions(): array {
-    $rows = \Civi\Api4\MessageTemplate::get(FALSE)
+    $rows = \Civi\Api4\MessageTemplate::get(checkPermissions: FALSE)
       ->addSelect('workflow_name', 'msg_title')
       ->addWhere('workflow_name', 'LIKE', 'herald_contribution_digest_%')
-      ->addWhere('is_default', '=', TRUE)
+      ->addWhere('is_default', '=', value: TRUE)
       ->execute()
       ->getArrayCopy();
     $opts = [];
@@ -44,7 +44,7 @@ class CRM_Herald_CivirulesAdapter_Form_SendContributionDigest extends CRM_Herald
         'last_7_days' => E::ts('Last 7 days'),
         'last_30_days' => E::ts('Last 30 days'),
       ],
-      TRUE,
+      required: TRUE,
     );
     $this->add('text', 'campaign_id', E::ts('Campaign ID (optional)'), ['size' => 10]);
     $this->add('text', 'financial_type_id', E::ts('Financial type ID (optional)'), ['size' => 10]);

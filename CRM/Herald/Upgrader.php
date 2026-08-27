@@ -67,7 +67,7 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
   public static function reconcile(string $extensionDir): void {
     CRM_Herald_CivirulesAdapter_Registrar::register($extensionDir);
     CRM_Herald_CivirulesAdapter_Registrar::migrateRenamedClasses();
-    CRM_Core_ManagedEntities::singleton(TRUE)->reconcile(['herald']);
+    CRM_Core_ManagedEntities::singleton(fresh: TRUE)->reconcile(['herald']);
   }
 
   public function enable(): void {
