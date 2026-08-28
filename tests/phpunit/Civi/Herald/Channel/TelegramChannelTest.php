@@ -58,6 +58,80 @@ class TelegramChannelTest extends TestCase implements HeadlessInterface, HookInt
     $this->assertSame('HTML', $body['parse_mode']);
   }
 
+  /**
+   * sendMessage answers a body over 4096 units with HTTP 400 "text is too
+   * long", and in an aggregated alert that body is composed from whatever a
+   * bulk operation happened to write into one window. The channel therefore
+   * has to fit it before posting rather than learn the limit from the API.
+   */
+  public function testOversizedBodyIsShortenedBeforePosting(): void {
+    $client = $this->makeMockedClient(new Response(200, [], '{"ok":true}'));
+    $channel = new TelegramChannel($client);
+
+    $long = implode("\n\n", array_fill(0, 893, '🎟 <b>Ticket verkauft</b>: 60,00 €'));
+    $channel->send($long, ['chat_id' => '-100']);
+
+    $text = json_decode((string) $this->capturedRequests[0]['request']->getBody(), TRUE)['text'];
+    // Telegram counts its 4096 after parsing entities, so that is the length
+    // the shortened message has to satisfy.
+    $this->assertLessThanOrEqual(TelegramChannel::MAX_TEXT_LENGTH, MessageLimit::htmlTextLength($text));
+    $this->assertStringContainsString('shortened', $text);
+    $this->assertSame(substr_count($text, '<b>'), substr_count($text, '</b>'), 'markup stays parseable');
+  }
+
+  /**
+   * The marker is translated, so its punctuation is whatever a translator
+   * wrote — and in MarkdownV2 an unescaped "." is a syntax error. Without
+   * escaping, shortening would itself become the reason the message bounces.
+   */
+  public function testMarkerIsEscapedForMarkdownV2(): void {
+    $client = $this->makeMockedClient(new Response(200, [], '{"ok":true}'));
+    $channel = new TelegramChannel($client);
+
+    $channel->send(str_repeat("line\n\n", 2000), ['chat_id' => '-100', 'parse_mode' => 'MarkdownV2']);
+
+    $text = json_decode((string) $this->capturedRequests[0]['request']->getBody(), TRUE)['text'];
+    $this->assertLessThanOrEqual(TelegramChannel::MAX_TEXT_LENGTH, MessageLimit::length($text));
+    $marker = mb_substr($text, mb_strrpos($text, "\n\n") + 2);
+    // Escaped, not stripped and not mangled: an "\\$1" replacement would emit
+    // the literal backreference instead of a backslash, which reads as garbage
+    // and leaves the reserved character unescaped all the same.
+    $this->assertStringContainsString('\\.', $marker, 'the full stop is escaped');
+    $this->assertStringNotContainsString('$1', $marker, 'the backreference is not emitted literally');
+    $this->assertSame(
+      substr_count($marker, '.'),
+      substr_count($marker, '\\.'),
+      'every reserved character carries its escape',
+    );
+  }
+
+  /**
+   * Telegram measures its 4096 after parsing entities, so a body whose raw
+   * source is over the limit only because of markup must go out whole.
+   */
+  public function testMarkupHeavyBodyUnderTheParsedLimitIsPostedVerbatim(): void {
+    $client = $this->makeMockedClient(new Response(200, [], '{"ok":true}'));
+    $channel = new TelegramChannel($client);
+
+    // 4000 rendered characters, ~28000 raw once every one carries a <b> pair.
+    $marked = str_repeat('<b>x</b>', 4000);
+    $channel->send($marked, ['chat_id' => '-100']);
+
+    $text = json_decode((string) $this->capturedRequests[0]['request']->getBody(), TRUE)['text'];
+    $this->assertSame($marked, $text, 'markup does not count towards the limit');
+  }
+
+  public function testBodyAtTheLimitIsPostedVerbatim(): void {
+    $client = $this->makeMockedClient(new Response(200, [], '{"ok":true}'));
+    $channel = new TelegramChannel($client);
+
+    $exact = str_repeat('x', TelegramChannel::MAX_TEXT_LENGTH);
+    $channel->send($exact, ['chat_id' => '-100']);
+
+    $text = json_decode((string) $this->capturedRequests[0]['request']->getBody(), TRUE)['text'];
+    $this->assertSame($exact, $text);
+  }
+
   public function testFallsBackToDefaultChatId(): void {
     \Civi::settings()->set('herald_telegram_default_chat_id', '-200');
     $client = $this->makeMockedClient(new Response(200, [], '{"ok":true}'));
