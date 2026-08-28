@@ -22,8 +22,9 @@ use PHPUnit\Framework\TestCase;
  * buffer instead of handing it to a channel — and the buffer rows are what
  * these tests read back.
  *
- * herald contributes a check of its own (`herald.buffer_backlog`), so the
- * assertions name checks explicitly instead of counting them.
+ * herald contributes checks of its own (`herald.buffer_backlog` and
+ * `herald.buffer_dead_letter`), so the assertions name checks explicitly
+ * instead of counting them.
  *
  * @group headless
  */

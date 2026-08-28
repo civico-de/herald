@@ -148,9 +148,11 @@ function herald_civicrm_post($op, $objectName, $objectId, &$objectRef): void {
 /**
  * hook_civicrm_heraldChecks — herald watches its own delivery pipeline.
  *
- * A buffered alert older than 3× its aggregation window means the flush job
- * is not sending (job disabled, channel down, cron stopped mid-way). The
- * monitor cannot see its own broken transport otherwise.
+ * Two distinct states, two checks: a live alert sitting past its window means
+ * the flush job is not sending (job disabled, channel down, cron stopped
+ * mid-way), while a parked one has already been given up on and waits for a
+ * decision. Parked rows stay in the table by design, so counting them as a
+ * backlog would leave the first check failing forever after one bad group.
  *
  * @param array<string, callable> $checks
  */
@@ -160,13 +162,31 @@ function herald_civicrm_heraldChecks(array &$checks): void {
       SELECT COUNT(*) FROM `'
     . \Civi\Herald\Buffer\AlertBuffer::TABLE
     . '`
-      WHERE created_date < DATE_SUB(NOW(), INTERVAL window_minutes * 3 MINUTE)
+      WHERE parked_at IS NULL
+        AND created_date < DATE_SUB(NOW(), INTERVAL window_minutes * 3 MINUTE)
     ');
     return (
       $stuck > 0
         ? [
           'status' => 'fail',
           'detail' => "{$stuck} buffered alert(s) older than 3x their window — flush job not delivering",
+        ]
+        : ['status' => 'ok']
+    );
+  };
+
+  $checks['herald.buffer_dead_letter'] = function (): array {
+    $parked = (int) CRM_Core_DAO::singleValueQuery('
+      SELECT COUNT(*) FROM `'
+    . \Civi\Herald\Buffer\AlertBuffer::TABLE
+    . '`
+      WHERE parked_at IS NOT NULL
+    ');
+    return (
+      $parked > 0
+        ? [
+          'status' => 'fail',
+          'detail' => "{$parked} alert(s) parked in the dead letter — inspect with Herald.getParkedAlerts",
         ]
         : ['status' => 'ok']
     );
