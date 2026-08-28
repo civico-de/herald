@@ -343,6 +343,21 @@ return [
     ),
     'title' => E::ts('Buffer Flush Max Attempts'),
   ],
+  'herald_buffer_max_items' => [
+    'group_name' => 'Herald Settings',
+    'group' => 'herald',
+    'name' => 'herald_buffer_max_items',
+    'type' => 'Integer',
+    'html_type' => 'text',
+    'default' => 25,
+    'add' => '5.81',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => E::ts(
+      'How many individual alerts an aggregated message prints before it ends in "… and N more". The summary header always counts all of them. A bulk operation can fill one aggregation window with thousands of entries; 0 prints every one of them.',
+    ),
+    'title' => E::ts('Buffer Aggregate Max Items'),
+  ],
   'herald_rule_health' => [
     'group_name' => 'Herald Settings',
     'group' => 'herald',

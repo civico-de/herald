@@ -52,10 +52,11 @@ function civicrm_api3_job_herald_buffer_flush($params) {
   $failed = 0;
   $parked = 0;
   $maxAttempts = (int) \Civi::settings()->get('herald_buffer_max_attempts');
+  $maxItems = (int) \Civi::settings()->get('herald_buffer_max_items');
   try {
     foreach ($buffer->claimDue() as $group) {
       try {
-        $body = AlertBuffer::compose($group['bodies'], $group['window'], $group['amounts']);
+        $body = AlertBuffer::compose($group['bodies'], $group['window'], $group['amounts'], $maxItems);
         if ($body !== '') {
           Dispatcher::deliver(
             $body,

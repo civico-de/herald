@@ -47,6 +47,40 @@ class AlertBufferTest extends TestCase {
     $this->assertStringStartsWith('📬 <b>2 messages</b>', $msg);
   }
 
+  // --- capping an oversized aggregate ---------------------------------------
+
+  public function testItemCapPrintsTheFirstNAndNamesTheRest(): void {
+    $msg = AlertBuffer::compose(array_map(static fn (int $i) => "alert {$i}", range(1, 10)), 5, [], 3);
+    $this->assertStringStartsWith('📬 <b>10 messages</b>', $msg, 'the header keeps the true total');
+    $this->assertStringContainsString('alert 3', $msg);
+    $this->assertStringNotContainsString('alert 4', $msg);
+    $this->assertStringEndsWith('… and 7 more', $msg);
+  }
+
+  public function testItemCapIsInactiveBelowTheThreshold(): void {
+    $msg = AlertBuffer::compose(['a', 'b'], 5, [], 25);
+    $this->assertStringEndsWith("a\n\nb", $msg);
+    $this->assertStringNotContainsString('more', $msg);
+  }
+
+  public function testZeroItemCapPrintsEverything(): void {
+    $msg = AlertBuffer::compose(array_map(static fn (int $i) => "alert {$i}", range(1, 40)), 5, [], 0);
+    $this->assertStringContainsString('alert 40', $msg);
+  }
+
+  /**
+   * The production incident this cap exists for: 893 status transitions landed
+   * in one five-minute window and composed a 124 KB message that Telegram
+   * rejected outright, so the alert retried and failed once a minute.
+   */
+  public function testBulkOperationComposesIntoAReadableMessage(): void {
+    $bodies = array_fill(0, 893, '🎟 <b>Ticket verkauft</b>: 60,00 €');
+    $msg = AlertBuffer::compose($bodies, 5, array_fill(0, 893, 60.0), 25);
+    $this->assertStringStartsWith('📬 <b>893 messages</b>', $msg);
+    $this->assertStringEndsWith('… and 868 more', $msg);
+    $this->assertLessThan(4096, \Civi\Herald\Channel\MessageLimit::length($msg));
+  }
+
   // --- delivery params of the composed message ------------------------------
 
   /**

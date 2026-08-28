@@ -42,6 +42,15 @@ final class AggregateSummary {
   }
 
   /**
+   * "… and 873 more" — the tail line of an aggregate that was capped. The
+   * header still names the true total, so this only has to account for what
+   * is not printed.
+   */
+  public static function more(int $omitted): string {
+    return '… ' . self::t('and %1 more', [1 => $omitted]);
+  }
+
+  /**
    * Locale- and currency-correct money formatting (default currency of the
    * instance) when Civi is booted; a fixed EUR/German rendering in pure unit
    * tests, matching this extension's origin.

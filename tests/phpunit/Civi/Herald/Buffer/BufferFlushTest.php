@@ -97,4 +97,35 @@ class BufferFlushTest extends TestCase implements HeadlessInterface, HookInterfa
     );
   }
 
+  /**
+   * The job has to read herald_buffer_max_items and hand it to compose() —
+   * without that wiring the cap exists but never applies, which is how a bulk
+   * operation put 893 positions into a single message in production.
+   */
+  public function testItemCapFromSettingsIsAppliedByTheJob(): void {
+    \Civi::settings()->set('herald_buffer_max_items', 3);
+    for ($i = 1; $i <= 10; $i++) {
+      $this->buffer("Donation #{$i}", "alert {$i}", 10.0);
+    }
+    \CRM_Core_DAO::executeQuery(
+      'UPDATE civicrm_herald_buffer SET created_date = DATE_SUB(NOW(), INTERVAL 10 MINUTE) WHERE group_hash = %1',
+      [1 => [self::GROUP, 'String']],
+    );
+
+    $result = civicrm_api3('Job', 'herald_buffer_flush', []);
+    $this->assertSame(1, (int) ((array) reset($result['values']))['sent']);
+
+    $body = (string) \CRM_Core_DAO::singleValueQuery('SELECT body FROM civicrm_mailing_spool ORDER BY id LIMIT 1');
+    $this->assertStringContainsString('10 messages', $this->spooledSubject(), 'the header keeps the true total');
+    $this->assertStringContainsString('alert 3', $body);
+    $this->assertStringNotContainsString('alert 4', $body);
+    $this->assertStringContainsString('and 7 more', $body);
+
+    $this->assertSame(
+      0,
+      (int) \CRM_Core_DAO::singleValueQuery('SELECT COUNT(*) FROM civicrm_herald_buffer'),
+      'capping the printed positions still clears every buffered row',
+    );
+  }
+
 }

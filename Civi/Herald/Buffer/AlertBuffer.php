@@ -314,15 +314,34 @@ class AlertBuffer {
    * when amounts were recorded, their sum — followed by the individual
    * bodies.
    *
+   * $maxItems caps how many bodies are printed; the header keeps counting all
+   * of them and a tail line names the remainder. A bulk operation can write
+   * thousands of entries into one window, and nobody reads a message with
+   * thousands of positions — nor does every transport accept one.
+   *
    * @param list<string> $bodies
    * @param list<float> $amounts
+   * @param int $maxItems 0 = print every body.
    */
-  public static function compose(array $bodies, int $windowMinutes, array $amounts = []): string {
+  public static function compose(
+    array $bodies,
+    int $windowMinutes,
+    array $amounts = [],
+    int $maxItems = 0,
+  ): string {
     $bodies = AggregateSummary::nonBlank($bodies);
-    if (count($bodies) <= 1) {
+    $total = count($bodies);
+    if ($total <= 1) {
       return $bodies[0] ?? '';
     }
-    return AggregateSummary::line(count($bodies), $windowMinutes, $amounts, 'b') . "\n\n" . implode("\n\n", $bodies);
+    $parts = [AggregateSummary::line($total, $windowMinutes, $amounts, 'b')];
+    if ($maxItems > 0 && $total > $maxItems) {
+      $parts = array_merge($parts, array_slice($bodies, 0, $maxItems), [AggregateSummary::more($total - $maxItems)]);
+    }
+    else {
+      $parts = array_merge($parts, $bodies);
+    }
+    return implode("\n\n", $parts);
   }
 
   /**

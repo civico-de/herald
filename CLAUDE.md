@@ -17,6 +17,11 @@ actions (no bespoke cron for alerts). Live in production on production.
 - Aggregation (`aggregate_minutes`) parks alerts in `civicrm_herald_buffer`;
   `Job.herald_buffer_flush` drains a rule's alerts only once its oldest
   buffered alert exceeds the window. A single buffered alert is sent unchanged.
+- An aggregate prints at most `herald_buffer_max_items` bodies and names the
+  rest; a body still over a channel's hard limit is shortened by the channel
+  (`Civi\Herald\Channel\MessageLimit`, Telegram: 4096). Neither may silently
+  drop an alert — the count in the header and the marker in the message stay
+  truthful.
 - Buffered alerts are never dropped and never retried forever: a flush that
   resolves to no recipient parks the group immediately, other failures after
   `herald_buffer_max_attempts` tries (`Civi\Herald\Buffer\DeadLetter`). Parked

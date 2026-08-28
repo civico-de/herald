@@ -392,6 +392,17 @@ that rule collected so far goes out as ONE message.
 - Delivery failures keep the rows and retry on the next cron run.
 - Maximum latency = `aggregate_minutes` + cron interval. Pick the window per
   rule: e.g. `5` for ticket sales, `60` for pending donations.
+- At most `herald_buffer_max_items` individual bodies are printed (default
+  `25`, `0` = all); the rest becomes `… und 868 weitere`. The header keeps
+  counting every one of them. A bulk operation — an import, a batch status
+  change — can put thousands of alerts into a single window, and that message
+  is neither readable nor accepted by every transport.
+- A message that still exceeds a channel's hard limit is shortened by the
+  channel itself, with the drop stated in the message. Telegram caps
+  `sendMessage` at 4096 characters and rejects anything longer outright, so
+  the alert would otherwise never arrive at all. The cut falls on a paragraph
+  boundary and HTML markup is closed again; a `parse_mode: MarkdownV2` body
+  that has to be shortened can still be cut inside its own formatting.
 
 ---
 
