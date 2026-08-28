@@ -146,6 +146,25 @@ function herald_civicrm_post($op, $objectName, $objectId, &$objectRef): void {
 }
 
 /**
+ * Implements hook_civicrm_alterLogTables().
+ *
+ * The alert buffer is a work queue, not a record: a row exists between the
+ * moment an aggregated alert is rendered and the moment it goes out, then it
+ * is deleted. Its change history answers no question anyone asks — while a
+ * bulk operation can write thousands of rows through it in seconds, each
+ * costing an INSERT and a DELETE in the log.
+ *
+ * Only herald's own transient table is dropped here. Whether anything else is
+ * worth logging is a site decision and belongs in logpolicy's settings, not in
+ * an extension's opinion about tables it does not own.
+ *
+ * @param array<string, mixed> $logTableSpec
+ */
+function herald_civicrm_alterLogTables(array &$logTableSpec): void {
+  unset($logTableSpec[\Civi\Herald\Buffer\AlertBuffer::TABLE]);
+}
+
+/**
  * hook_civicrm_heraldChecks — herald watches its own delivery pipeline.
  *
  * Two distinct states, two checks: a live alert sitting past its window means
