@@ -1,0 +1,26 @@
+$schema: https://raw.githubusercontent.com/jfilter/civikitchen/main/packages/civikitchen-scenario-schema/scenario.schema.json
+version: 1
+policy:
+  # Expected values for ckconform (the checker lives in the public civikitchen
+  # image; these values are ours and stay in this private repo).
+  license: Proprietary
+  npm_license: UNLICENSED
+  copyright: 'civico GmbH'
+
+  # heraldChecks is herald's OWN invented hook: other extensions implement it to
+  # contribute health checks to the transition monitor. It is not a core hook, so
+  # ckconform cannot know it — declared here so the dispatch is not read as a typo.
+  known_hooks:
+    - heraldChecks
+
+  # Measured 2026-08-04 after the CiviRules adapter split moved the domain logic
+  # behind APIv4 (the adapters are now thin enough to be covered end to end):
+  # 68.63% (1433/2088 statements).
+  # Raise it as coverage grows — never lower it to make a build green.
+  coverage:
+    minimum: 68
+
+  # Business hooks live in scan classes (AutoSubscriber/HookInterface); the
+  # classic function form is reserved for pre-boot/lifecycle/return-value hooks.
+  hook_style: listener
+  renovate_preset: github>civico-de/renovate
