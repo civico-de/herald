@@ -1,38 +1,39 @@
 # herald
 
-Generic notification + digest layer for CiviCRM.
+A notification and digest layer for CiviCRM. Other extensions, CiviRules and scripts hand
+herald a message or a template. herald renders it and delivers it through whichever channel
+the site configured.
 
-- **Channel-pluggable** — Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover, Email and internal CiviCRM activities ship in v0.1; others drop in via `Civi\Herald\Channel\ChannelInterface`.
-- **Template-driven** — admin-editable `MessageTemplate` workflows, rendered as Smarty strings via `CRM_Core_Smarty`.
-- **CiviRules-integrated** — exposes Actions ("Send Notification", "Send Contribution Digest", "Send Contribution Alert") that any CiviRules trigger can fire. No bespoke cron.
+- Channels: Telegram, generic webhook (Slack, Discord, Mattermost, custom), ntfy.sh,
+  Pushover, email through CiviCRM's outbound mailer, and internal CiviCRM activities.
+  Others plug in through `Civi\Herald\Channel\ChannelInterface`.
+- Templates: admin-editable `MessageTemplate` workflows, rendered as Smarty strings.
+- CiviRules: three actions (Send notification, Send contribution digest, Send contribution
+  alert) and three conditions (Previous contribution status, Field transition, Event was
+  deactivated) that any CiviRules trigger can use. No bespoke cron.
+- Topics: publishers name a topic, the `herald_topics` setting decides where it lands.
+- Alert aggregation, a check monitor with push alerts for degraded states, and per-contact
+  notification preferences with subscriber fan-out.
 
-Status: **alpha (v0.1)** — feature-complete for the migration. Ships:
-
-- Channels: Telegram, generic Webhook (Slack/Discord/Mattermost/custom), ntfy.sh, Pushover, Email (via CiviCRM’s outbound mailer), internal assigned CiviCRM activities
-- Three CiviRules actions: `Send Notification`, `Send Contribution Digest`, `Send Contribution Alert` (each with its own parameter form)
-- Contribution digest engine (period filters, source/financial-type filters, adaptive histogram, campaign progress, pending pool)
-- Custom CiviRules conditions: `Previous Contribution status` and the generic `Field transition` (any entity/field, before/after operator pairs — both use a `hook_civicrm_pre` snapshot, independent of CiviRules core change-tracking)
-- Per-contact notification preferences + subscriber-mode delivery (one rule fans out to all opted-in contacts via *their own* preferred channel); subscriptions optionally scoped to a source entity (e.g. one Event)
-- Delivery modes beyond subscribers: whole CiviCRM group (each member via their own channel, email fallback) or a raw email address list; optional communication-suspension respect and per-rule email location type
-- Workflow `MessageTemplate` fixtures shipped via mgd-php (admin-editable, user edits preserved on re-enable)
+Requires CiviRules (`org.civicoop.civirules`). Proprietary, © civico GmbH.
 
 ## Install
 
 ```bash
-cv ext:download herald  # once published; for now: clone into /ext/
 cv ext:enable herald
 ```
 
-Configure via settings — only the channels you actually use:
+Configure only the channels you actually use:
 
 ```bash
 # Telegram
 cv setting:set herald_telegram_bot_token=<bot-token>
 cv setting:set herald_telegram_default_chat_id=<chat-id>
 
-# Webhook (Slack/Discord/Mattermost/custom — URL also configurable per-action)
+# Webhook (URL also configurable per action)
 cv setting:set herald_webhook_default_url=<https://hooks.slack.com/...>
 cv setting:set herald_webhook_default_auth_token=<bearer-token>   # optional
+cv setting:set herald_webhook_allowed_hosts='["hooks.slack.com"]'  # optional allowlist, subdomains match
 
 # ntfy.sh (or self-hosted)
 cv setting:set herald_ntfy_server=https://ntfy.sh                  # default
@@ -43,20 +44,21 @@ cv setting:set herald_ntfy_token=<bearer-token>                    # optional, f
 cv setting:set herald_pushover_app_token=<app-token>
 cv setting:set herald_pushover_default_user_key=<user-or-group-key>
 
-# Email (no credentials — uses CiviCRM's outbound mailer; both settings optional)
+# Email (no credentials; both optional)
 cv setting:set herald_email_from='"Herald" <noreply@example.org>'   # empty → site default
 cv setting:set herald_email_default_to=<fallback-recipient>
 ```
 
+When `herald_webhook_allowed_hosts` is empty, webhooks fall back to a denylist of private
+and reserved addresses.
+
 ## Smoke test
 
-Cleanest path uses the bundled APIv4 actions:
-
 ```bash
-# Send a real test message through the configured channel
+# Send a real test message through the configured Telegram channel
 cv api4 Herald.testTelegram message='<b>herald smoke test</b>'
 
-# Render a workflow template without sending — useful for previewing
+# Render a workflow template without sending
 cv api4 Herald.renderTemplate workflow=herald_contribution_alert_completed \
     vars='{"contribution":{"total_amount":42.5,"source":"Stripe"}}'
 
@@ -64,55 +66,88 @@ cv api4 Herald.renderTemplate workflow=herald_contribution_alert_completed \
 cv api4 Herald.send channel=activity message='Three bank transactions need review' \
     subject='Review bank import' format=text \
     config='{"activity_assignee_contact_id":42,"activity_target_contact_id":84}'
+
+# Publish to a topic; the herald_topics setting decides the recipient
+cv api4 Herald.publish +v 'topic=ops' +v 'message=disk almost full'
 ```
 
-Or as a PHP script (no API entity, equivalent functionality):
+`cv scr bin/test-telegram.php` does the same as `Herald.testTelegram` without the API.
+`HERALD_TEST_MESSAGE` and `HERALD_TEST_CHAT_ID` override its defaults.
 
-```bash
-cv scr /var/www/html/ext/herald/bin/test-telegram.php
-# optional overrides via env: HERALD_TEST_MESSAGE, HERALD_TEST_CHAT_ID
-```
+## APIv4
 
-## Deploy to production
+| Action | Does |
+|---|---|
+| `Herald.send` | Send a message or a rendered template through one channel |
+| `Herald.publish` | Publish to a topic, routed by `herald_topics` |
+| `Herald.notify`, `Herald.notifyContribution`, `Herald.notifyDigest` | What the CiviRules actions call |
+| `Herald.checkContributionTransition`, `Herald.checkFieldTransition`, `Herald.checkEventDeactivated` | What the CiviRules conditions call |
+| `Herald.getChannels` | Registered channels and their config schema |
+| `Herald.getParkedAlerts`, `Herald.reactivateParkedAlerts` | Buffered alerts that could not be delivered |
+| `Herald.testTelegram`, `Herald.renderTemplate` | Smoke test and preview |
 
-```bash
-./deploy.sh             # tar repo, ship to production, extract into docker volume, cv ext:enable
-./deploy.sh --reinstall # disable + uninstall first (forces clean install)
-```
+Two scheduled jobs ship managed: "Herald: Flush alert aggregation buffer"
+(`Job.herald_buffer_flush`) and the check monitor (`Job.herald_monitor`).
 
 ## Configuration
 
-See [CONFIGURATION.md](CONFIGURATION.md) for end-to-end CiviRules recipes (migration, generic NGO, major-donor campaign, subscriber-mode self-service).
+[CONFIGURATION.md](CONFIGURATION.md) has the recipes and the reference: CiviRules rule
+sets for donation alerts and digests, event lifecycle notifications, subscriber mode, the
+per-channel parameter tables, alert aggregation, topics, digest sections from other
+extensions, the check monitor, and every action parameter.
 
-## Self-service: per-contact notification preferences
+## Self-service notification preferences
 
-Each contact can pick *their* preferred channel (Telegram / Webhook / ntfy / Pushover / Email) and the kinds of notifications they want, via a CiviCRM custom group `herald_preferences` shipped with the extension. Admins fill these in from the contact view; for self-service, point staff at a CiviCRM profile that exposes the same fields.
+Each contact can pick their preferred channel and the kinds of notifications they want,
+through the custom group `herald_preferences` that ships with the extension. Admins fill
+these in from the contact view. For self-service, point staff at a profile that exposes
+the same fields:
 
 ```bash
-# One-off after enabling the extension: create the user-facing profile
 cv scr /var/www/html/ext/herald/bin/install-profile.php
 # → prints a URL like /civicrm/profile/edit?gid=42&reset=1
 ```
 
-Send users that URL — Civi auto-resolves to the logged-in contact and only allows editing their own record (`access CiviCRM` + standard own-contact ACL). When a CiviRules action's `delivery_mode` is set to `subscribers` and a `subscription_type` is picked, the action queries all contacts subscribed to that type and dispatches via each contact's preferred channel + recipient.
+Send users that URL. CiviCRM resolves it to the logged-in contact and only allows editing
+their own record. When a CiviRules action's `delivery_mode` is `subscribers` and a
+`subscription_type` is picked, the action queries all contacts subscribed to that type and
+delivers through each contact's own channel and recipient.
+
+## Deploy to production
+
+`deploy.sh` tars the repo, ships it over SSH to the host named in the script, extracts it
+into the CiviCRM container's extension volume and enables the extension. `--reinstall`
+disables and uninstalls first. `bin/preflight-rules.php` checks that every stored rule
+handler class still loads. The other `bin/*-rules.php` scripts seed instance-specific rule
+sets and are not general-purpose.
 
 ## Development
 
-The repo ships its own [civikitchen](https://github.com/jfilter/civikitchen)-based stack at `tests/docker/` — no separate clone needed:
+The repo ships its own [civikitchen](https://github.com/jfilter/civikitchen) stack in
+`tests/docker/`:
 
 ```bash
 cd tests/docker && docker compose up -d           # CiviCRM on :8090, phpMyAdmin :8091, Maildev :1090
-docker compose exec app cv ext:enable herald      # once per fresh DB (for manual poking around)
+docker compose exec app cv ext:enable herald      # once per fresh DB, for manual poking around
 docker compose exec -T app \
     bash -c "cd /var/www/html/ext/herald && vendor/bin/phpunit"
 ```
 
-The compose file pulls `ghcr.io/jfilter/civikitchen:standalone` and pre-enables CiviRules via `CIVICRM_EXTRA_EXTENSIONS`, so the first `up` is a one-shot setup. The image runs `composer install` on bind-mounted extensions automatically (`CIVICRM_AUTO_COMPOSER=1` by default), so `vendor/bin/phpunit` is available without a manual composer step.
+The compose file pulls `ghcr.io/jfilter/civikitchen:standalone` and auto-installs CiviCRM,
+so the first `up` is a one-shot setup. The headless suite installs CiviRules itself. The
+image runs `composer install` on bind-mounted extensions automatically, so
+`vendor/bin/phpunit` is available without a manual composer step.
 
-The phpunit run needs no env vars or prior `ext:enable`: the test bootstrap boots `cv php:boot --test`, and the headless suite installs itself into the **isolated `civicrm_test` scratch DB** (created by `tests/docker/initdb/`) — the dev site's data and settings stay untouched. If your `db-data` volume predates the initdb script, recreate it once with `docker compose down -v && docker compose up -d`.
+The phpunit run needs no env vars or prior `ext:enable`. The test bootstrap boots
+`cv php:boot --test`, and the headless suite installs itself into the isolated
+`civicrm_test` scratch DB created by `tests/docker/initdb/`. The dev site's data and
+settings stay untouched. If your `db-data` volume predates the initdb script, recreate it
+once with `docker compose down -v && docker compose up -d`.
 
-Pure unit tests without any CiviCRM checkout: run the `@group unit` files with `--no-configuration` and a bootstrap that stubs the CiviRules base classes (the repo config registers `Civi\Test\CiviTestListener`, which only exists inside a Civi install).
+CI uses the shared civikitchen layer in `.docker/` instead (ports 8080, 8081, 1080). Pure
+unit tests without any CiviCRM checkout run the `@group unit` files with
+`--no-configuration` and a bootstrap that stubs the CiviRules base classes.
 
 ## License
 
-Proprietary — © civico GmbH. All rights reserved.
+Proprietary. © civico GmbH. All rights reserved.
