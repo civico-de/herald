@@ -71,7 +71,22 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
   }
 
   public function enable(): void {
+    // On install, enable() runs inside core's install loop; an extension installed in the
+    // same call (CiviRules, one `Extension.install` for both) has no Api4 entities yet, the
+    // container reloads only after the loop. postInstall() runs after that reload.
+    if (self::installing()) {
+      return;
+    }
     self::reconcile($this->extensionDir);
+  }
+
+  public function postInstall(): void {
+    self::reconcile($this->extensionDir);
+  }
+
+  private static function installing(): bool {
+    $manager = CRM_Extension_System::singleton()->getManager();
+    return in_array('installing', $manager->getActiveProcesses('herald'), TRUE);
   }
 
 }
