@@ -41,20 +41,10 @@ parameters:
 	# carrying a comment that says WHY the report is wrong — never blanket
 	# patterns, never a baseline file.
 	ignoreErrors:
-		# CiviRules registers handlers by inheritance (instanceof check in
-		# CRM_Civirules_BAO_CiviRulesAction::getActionObjectById); no APIv4
-		# registration exists — thin adapters only, domain logic sits behind
-		# APIv4. The path is the whole of the adapter layer and nothing else:
-		# outside it the rule still forbids every CiviRules reference, which is
-		# what keeps the adapters thin.
-		-
-			identifier: phpat.testOnlyCoreAndOwnCivicrmDependencies
-			paths:
-				- CRM/Herald/CivirulesAdapter/*
-		# Same boundary, other half: CiviRules' action/condition parameter
-		# screens ARE QuickForm — CRM_CivirulesActions_Form_Form extends
-		# CRM_Core_Form, and CiviRules opens them by route. There is no
-		# SearchKit/Afform equivalent to migrate to.
+		# CiviRules' action/condition parameter screens ARE QuickForm —
+		# CRM_CivirulesActions_Form_Form extends CRM_Core_Form, and CiviRules
+		# opens them by route. There is no SearchKit/Afform equivalent to
+		# migrate to; the exception is confined to the adapter forms.
 		-
 			identifier: phpat.testNoLegacyUiBases
 			paths:
