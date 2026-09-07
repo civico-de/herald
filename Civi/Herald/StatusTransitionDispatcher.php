@@ -38,14 +38,10 @@ class StatusTransitionDispatcher {
   }
 
   /**
-   * Called from hook_civicrm_post. For now this is a no-op placeholder; the real
-   * dispatch will happen via CiviRules triggers in v0.2. Kept here so CiviRules
-   * conditions can inspect the snapshot via getPreEditStatus().
+   * Called from hook_civicrm_post. Intentionally a no-op: dispatch happens
+   * through CiviRules triggers, which read the snapshot via getPreEditStatus().
    */
   public static function handlePostHook(int $contributionId, mixed &$objectRef): void {
-    // Intentionally minimal in v0.1.
-    // Future: dispatch a Symfony event 'herald.contribution.status_changed'
-    // that interested CiviRules triggers can subscribe to.
   }
 
   public static function getPreEditStatus(int $contributionId): ?int {

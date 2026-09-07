@@ -209,7 +209,7 @@ subscriber fan-out delivery mode on every action.
 One-off setup:
 
 ```bash
-cv ext:enable herald   # creates the option group + custom group + 6 fields
+cv ext:enable herald   # creates the option group + custom group + its fields
 cv scr /var/www/html/ext/herald/bin/install-profile.php
 # → prints the self-service URL: /civicrm/profile/edit?gid=<N>&reset=1
 ```

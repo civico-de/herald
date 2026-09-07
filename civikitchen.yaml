@@ -13,9 +13,7 @@ policy:
   known_hooks:
     - heraldChecks
 
-  # Measured 2026-08-04 after the CiviRules adapter split moved the domain logic
-  # behind APIv4 (the adapters are now thin enough to be covered end to end):
-  # 68.63% (1433/2088 statements).
+  # Measured 2026-08-04: 68.63% (1433/2088 statements).
   # Raise it as coverage grows — never lower it to make a build green.
   coverage:
     minimum: 68

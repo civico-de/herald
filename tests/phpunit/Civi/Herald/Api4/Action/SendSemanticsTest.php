@@ -7,8 +7,8 @@ namespace Civi\Herald\Api4\Action;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The semantic-to-config-key translation, in isolation. This is the piece that
- * used to live as hardcoded key literals in the CALLING extension.
+ * The semantic-to-config-key translation, in isolation: callers pass semantic
+ * keys (subject, format), never channel-specific config keys.
  *
  * @group unit
  */
