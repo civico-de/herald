@@ -96,8 +96,21 @@ class MessageLimitTest extends TestCase {
    */
   public static function supportedTagProvider(): array {
     $tags = [
-      'b', 'strong', 'i', 'em', 'u', 'ins', 's', 'strike', 'del',
-      'code', 'pre', 'a', 'blockquote', 'tg-spoiler', 'tg-emoji',
+      'b',
+      'strong',
+      'i',
+      'em',
+      'u',
+      'ins',
+      's',
+      'strike',
+      'del',
+      'code',
+      'pre',
+      'a',
+      'blockquote',
+      'tg-spoiler',
+      'tg-emoji',
     ];
     $cases = ['span' => ['<span class="tg-spoiler">', 'span']];
     foreach ($tags as $tag) {

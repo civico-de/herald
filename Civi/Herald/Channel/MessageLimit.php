@@ -27,10 +27,23 @@ final class MessageLimit {
    * the shortening exists to avoid.
    */
   private const HTML_TAGS = [
-    'b', 'strong', 'i', 'em', 'u', 'ins', 's', 'strike', 'del',
-    'code', 'pre', 'a', 'blockquote',
+    'b',
+    'strong',
+    'i',
+    'em',
+    'u',
+    'ins',
+    's',
+    'strike',
+    'del',
+    'code',
+    'pre',
+    'a',
+    'blockquote',
     // Spoilers come in both spellings, and a custom emoji wraps its fallback.
-    'tg-spoiler', 'span', 'tg-emoji',
+    'tg-spoiler',
+    'span',
+    'tg-emoji',
   ];
 
   private const MODE_HTML = 'html';
@@ -135,7 +148,7 @@ final class MessageLimit {
         continue;
       }
       if (str_starts_with($part, '&')) {
-        if ($used + 1 > $max) {
+        if (($used + 1) > $max) {
           break;
         }
         $used++;
@@ -162,7 +175,7 @@ final class MessageLimit {
   private static function hardCut(string $text, int $max): string {
     $chars = min(mb_strlen($text), $max);
     while ($chars > 0 && self::length(mb_substr($text, 0, $chars)) > $max) {
-      $chars = (int) ($chars * $max / self::length(mb_substr($text, 0, $chars)));
+      $chars = (int) (($chars * $max) / self::length(mb_substr($text, 0, $chars)));
     }
     return mb_substr($text, 0, $chars);
   }
@@ -187,7 +200,7 @@ final class MessageLimit {
       return $html;
     }
     $semicolon = mb_strrpos($html, ';');
-    return ($semicolon === FALSE || $semicolon < $amp) ? mb_substr($html, 0, $amp) : $html;
+    return $semicolon === FALSE || $semicolon < $amp ? mb_substr($html, 0, $amp) : $html;
   }
 
   /**
