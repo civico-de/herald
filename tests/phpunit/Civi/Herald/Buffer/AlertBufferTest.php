@@ -7,23 +7,23 @@ namespace Civi\Herald\Buffer;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Pure-logic tests for AlertBuffer::compose and the narrowing helpers.
+ * Pure-logic tests for AggregateSummary::compose and AlertBuffer's narrowing helpers.
  * @group unit
  */
 class AlertBufferTest extends TestCase {
 
   public function testSingleBodyPassesThroughUnchanged(): void {
     $body = "🎟 Ticket verkauft: 60,00 €\nQuelle: Warenkorb";
-    $this->assertSame($body, AlertBuffer::compose([$body], 10, [60.0]));
+    $this->assertSame($body, AggregateSummary::compose([$body], 10, [60.0]));
   }
 
   public function testEmptyBufferComposesToEmptyString(): void {
-    $this->assertSame('', AlertBuffer::compose([], 10));
-    $this->assertSame('', AlertBuffer::compose(['', '  '], 10));
+    $this->assertSame('', AggregateSummary::compose([], 10));
+    $this->assertSame('', AggregateSummary::compose(['', '  '], 10));
   }
 
   public function testMultipleBodiesGetCountAndSumHeader(): void {
-    $msg = AlertBuffer::compose(
+    $msg = AggregateSummary::compose(
       ['🎟 Ticket verkauft: 60,00 €', '🎟 Ticket verkauft: 35,00 €', '🎟 Ticket verkauft: 200,00 €'],
       15,
       [60.0, 35.0, 200.0],
@@ -37,20 +37,20 @@ class AlertBufferTest extends TestCase {
   }
 
   public function testSumOmittedWithoutAmounts(): void {
-    $msg = AlertBuffer::compose(['a', 'b'], 5, []);
+    $msg = AggregateSummary::compose(['a', 'b'], 5, []);
     $this->assertStringStartsWith('📬 <b>2 messages</b> (collected over 5 min)', $msg);
     $this->assertStringNotContainsString('total', $msg);
   }
 
   public function testBlankBodiesAreDroppedFromCountAndOutput(): void {
-    $msg = AlertBuffer::compose(['x', '', 'y'], 5);
+    $msg = AggregateSummary::compose(['x', '', 'y'], 5);
     $this->assertStringStartsWith('📬 <b>2 messages</b>', $msg);
   }
 
   // --- capping an oversized aggregate ---------------------------------------
 
   public function testItemCapPrintsTheFirstNAndNamesTheRest(): void {
-    $msg = AlertBuffer::compose(array_map(static fn (int $i) => "alert {$i}", range(1, 10)), 5, [], 3);
+    $msg = AggregateSummary::compose(array_map(static fn (int $i) => "alert {$i}", range(1, 10)), 5, [], 3);
     $this->assertStringStartsWith('📬 <b>10 messages</b>', $msg, 'the header keeps the true total');
     $this->assertStringContainsString('alert 3', $msg);
     $this->assertStringNotContainsString('alert 4', $msg);
@@ -58,13 +58,13 @@ class AlertBufferTest extends TestCase {
   }
 
   public function testItemCapIsInactiveBelowTheThreshold(): void {
-    $msg = AlertBuffer::compose(['a', 'b'], 5, [], 25);
+    $msg = AggregateSummary::compose(['a', 'b'], 5, [], 25);
     $this->assertStringEndsWith("a\n\nb", $msg);
     $this->assertStringNotContainsString('more', $msg);
   }
 
   public function testZeroItemCapPrintsEverything(): void {
-    $msg = AlertBuffer::compose(array_map(static fn (int $i) => "alert {$i}", range(1, 40)), 5, [], 0);
+    $msg = AggregateSummary::compose(array_map(static fn (int $i) => "alert {$i}", range(1, 40)), 5, [], 0);
     $this->assertStringContainsString('alert 40', $msg);
   }
 
@@ -75,7 +75,7 @@ class AlertBufferTest extends TestCase {
    */
   public function testBulkOperationComposesIntoAReadableMessage(): void {
     $bodies = array_fill(0, 893, '🎟 <b>Ticket verkauft</b>: 60,00 €');
-    $msg = AlertBuffer::compose($bodies, 5, array_fill(0, 893, 60.0), 25);
+    $msg = AggregateSummary::compose($bodies, 5, array_fill(0, 893, 60.0), 25);
     $this->assertStringStartsWith('📬 <b>893 messages</b>', $msg);
     $this->assertStringEndsWith('… and 868 more', $msg);
     $this->assertLessThan(4096, \Civi\Herald\Channel\MessageLimit::length($msg));
@@ -88,7 +88,7 @@ class AlertBufferTest extends TestCase {
    * aggregate that kept one of them would be titled after a single donation.
    */
   public function testAggregateGetsASubjectDescribingTheAggregate(): void {
-    $delivery = AlertBuffer::composeDelivery(
+    $delivery = AggregateSummary::composeDelivery(
       ['channel' => 'email', 'email_to' => 'ops@example.org', 'email_subject' => '✅ Donation #5'],
       ['🎟 one', '🎟 two', '🎟 three'],
       15,
@@ -109,7 +109,7 @@ class AlertBufferTest extends TestCase {
    * event rendered.
    */
   public function testSingleBodyKeepsItsOwnSubject(): void {
-    $delivery = AlertBuffer::composeDelivery(
+    $delivery = AggregateSummary::composeDelivery(
       ['email_subject' => '✅ Donation #5'],
       ['🎟 one', '  '],
       15,
@@ -119,7 +119,7 @@ class AlertBufferTest extends TestCase {
   }
 
   public function testAggregateSubjectOmitsTheSumWithoutAmounts(): void {
-    $delivery = AlertBuffer::composeDelivery([], ['a', 'b'], 5);
+    $delivery = AggregateSummary::composeDelivery([], ['a', 'b'], 5);
     $this->assertSame('📬 2 messages (collected over 5 min)', $delivery['email_subject']);
   }
 

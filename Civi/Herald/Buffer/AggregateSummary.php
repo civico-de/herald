@@ -8,9 +8,9 @@ namespace Civi\Herald\Buffer;
  * The wording of an aggregated alert: which buffered bodies count, and the
  * summary line that introduces them.
  *
- * Pure — no database, no buffer state. {@see AlertBuffer::compose()} and
- * {@see AlertBuffer::composeDelivery()} both need the same count and the same
- * figures, so the phrasing lives in one place instead of once per output.
+ * Pure — no database, no buffer state. compose() and composeDelivery() both
+ * need the same count and the same figures, so the phrasing lives in one place
+ * instead of once per output.
  */
 final class AggregateSummary {
 
@@ -48,6 +48,65 @@ final class AggregateSummary {
    */
   public static function more(int $omitted): string {
     return '… ' . self::t('and %1 more', [1 => $omitted]);
+  }
+
+  /**
+   * Compose the outgoing message from buffered bodies. Pure — test-seam.
+   *
+   * A single buffered alert goes out unchanged (aggregation only added
+   * latency, not noise). Multiple alerts get a summary header — count and,
+   * when amounts were recorded, their sum — followed by the individual
+   * bodies.
+   *
+   * $maxItems caps how many bodies are printed; the header keeps counting all
+   * of them and a tail line names the remainder. A bulk operation can write
+   * thousands of entries into one window, and nobody reads a message with
+   * thousands of positions — nor does every transport accept one.
+   *
+   * @param list<string> $bodies
+   * @param list<float> $amounts
+   * @param int $maxItems 0 = print every body.
+   */
+  public static function compose(
+    array $bodies,
+    int $windowMinutes,
+    array $amounts = [],
+    int $maxItems = 0,
+  ): string {
+    $bodies = self::nonBlank($bodies);
+    $total = count($bodies);
+    if ($total <= 1) {
+      return $bodies[0] ?? '';
+    }
+    $parts = [self::line($total, $windowMinutes, $amounts, 'b')];
+    $shown = $maxItems > 0 && $total > $maxItems ? array_slice($bodies, 0, $maxItems) : $bodies;
+    $tail = count($shown) < $total ? [self::more($total - count($shown))] : [];
+    return implode("\n\n", [...$parts, ...$shown, ...$tail]);
+  }
+
+  /**
+   * Delivery params for the composed message. Pure — test-seam.
+   *
+   * An aggregate gets a subject describing the aggregate: every buffered row
+   * carries the subject its own event rendered, so keeping one of them would
+   * name a message of N events after a single one.
+   *
+   * @param array<string, mixed> $delivery
+   * @param list<string> $bodies
+   * @param list<float> $amounts
+   * @return array<string, mixed>
+   */
+  public static function composeDelivery(
+    array $delivery,
+    array $bodies,
+    int $windowMinutes,
+    array $amounts = [],
+  ): array {
+    $count = count(self::nonBlank($bodies));
+    if ($count > 1) {
+      $delivery['email_subject'] = self::line($count, $windowMinutes, $amounts);
+    }
+    return $delivery;
   }
 
   /**

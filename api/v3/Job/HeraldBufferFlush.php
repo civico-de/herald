@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use Civi\Herald\Buffer\AggregateSummary;
 use Civi\Herald\Buffer\AlertBuffer;
 use Civi\Herald\Buffer\DeadLetter;
 use Civi\Herald\Dispatch\Dispatcher;
@@ -56,11 +57,16 @@ function civicrm_api3_job_herald_buffer_flush($params) {
   try {
     foreach ($buffer->claimDue() as $group) {
       try {
-        $body = AlertBuffer::compose($group['bodies'], $group['window'], $group['amounts'], $maxItems);
+        $body = AggregateSummary::compose($group['bodies'], $group['window'], $group['amounts'], $maxItems);
         if ($body !== '') {
           Dispatcher::deliver(
             $body,
-            AlertBuffer::composeDelivery($group['delivery'], $group['bodies'], $group['window'], $group['amounts']),
+            AggregateSummary::composeDelivery(
+              $group['delivery'],
+              $group['bodies'],
+              $group['window'],
+              $group['amounts'],
+            ),
           );
         }
         $buffer->deleteRows($group['ids']);
