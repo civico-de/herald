@@ -24,6 +24,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Manual run: a reusable-workflow rerun reuses the ref it first resolved, so
+  # picking up a moved civikitchen tag needs a fresh event.
+  workflow_dispatch:
 
 # The jobs only read the repo; do not inherit the org default token.
 permissions:
