@@ -36,7 +36,7 @@ final class HtmlPrefix {
         continue;
       }
       $cost = str_starts_with($part, '&') ? 1 : Utf16Text::length($part);
-      if ($used + $cost <= $max) {
+      if (($used + $cost) <= $max) {
         $used += $cost;
         $out .= $part;
         continue;
