@@ -20,11 +20,10 @@ error_reporting(E_ALL);
 // $GLOBALS['_CV'] replaces anything set here. If the config is missing,
 // civicrm.settings.php silently falls back to the MAIN dev DB and
 // Civi\Test wipes all dev data — so fail loudly instead.
-// Parsed, not grepped: the old form looked for the substrings '"TEST_DB_DSN"'
-// and 'civicrm_test' anywhere in the raw file. Two unrelated matches satisfied
-// it — 'civicrm_test' out of a directory *path*, or a TEST_DB_DSN belonging to
-// a different site in a multi-site config — while the site actually booted had
-// none. Decode the JSON and check the database NAME the DSN points at.
+// Decode the JSON and check the database NAME each DSN points at. A substring
+// match on the raw file is not enough: 'civicrm_test' also occurs in directory
+// paths, and a multi-site config can carry a TEST_DB_DSN for another site
+// while the site actually booted has none.
 $ckTestDsns = [];
 $ckHome = getenv('HOME') ?: '';
 $ckRaw = $ckHome !== '' ? (string) @file_get_contents($ckHome . '/.cv.json') : '';
