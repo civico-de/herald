@@ -174,9 +174,7 @@ final class ContextVars {
       $title = Cast::toString($eventData['title'] ?? '');
       $start = Cast::toString($eventData['start_date'] ?? '');
       $isActive = isset($eventData['is_active']) ? Cast::toInt($eventData['is_active']) : NULL;
-      // executeQuery() is documented as CRM_Core_DAO|object — the `object` half
-      // exists only so IDEs stop flagging the result-row properties, which the
-      // DAO sets dynamically. Spell the SELECT list out instead.
+      // The object{} shape narrows executeQuery()'s CRM_Core_DAO|object union.
       /** @var \CRM_Core_DAO&object{title: ?string, start_date: ?string, is_active: ?string} $row */
       $row = \CRM_Core_DAO::executeQuery(
         'SELECT title, start_date, is_active FROM civicrm_event WHERE id = %1',

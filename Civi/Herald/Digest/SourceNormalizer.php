@@ -68,14 +68,8 @@ final class SourceNormalizer {
   /**
    * Read the setting, tolerating a Civi that cannot answer.
    *
-   * Normalization is an optional presentation nicety, so "no Civi to ask" is
-   * the same answer as "nothing configured": no rules. The caller checks the
-   * container first — without that, merely CONSTRUCTING a
-   * ContributionStatsService (whose default collaborator is a
-   * SourceNormalizer) reaches for the database, which took the pure @group
-   * unit tests down with a DB_DataObject error. class_exists('\Civi') is not
-   * enough: the classloader is up long before the container is, and the
-   * settings read then dies inside PEAR rather than throwing.
+   * No booted container means no rules. class_exists('\Civi') is not enough:
+   * the classloader is up long before the container, and the read dies in PEAR.
    *
    * @return array<mixed>
    */

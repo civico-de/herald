@@ -40,17 +40,12 @@ class CRM_Herald_CivirulesAdapter_Condition_PreviousContributionStatus extends C
   /**
    * previous_status_id aus den gespeicherten condition_params.
    *
-   * ACHTUNG: CRM_Civirules_Condition::setRuleConditionData() legt NUR
-   * $this->ruleCondition ab — ein befülltes $this->conditionParams gibt es in
-   * der Basisklasse NICHT. Der frühere Zugriff darauf war deshalb immer NULL
-   * und die Condition damit immer FALSE (gefunden 2026-07-23 auf production: kein
-   * einziger "Ticket verkauft"-Alert). Wir dekodieren selbst.
+   * CRM_Civirules_Condition::setRuleConditionData() befüllt nur
+   * $this->ruleCondition, nie $this->conditionParams — daher selbst dekodieren.
    */
   private function expectedPreviousStatusId(): ?int {
     $raw = $this->ruleCondition['condition_params'] ?? NULL;
-    // allowed_classes=FALSE: condition_params ist ein Array aus Skalaren, wir
-    // lesen daraus genau eine Status-ID. Objekte sind hier nie erwartet, also
-    // gibt es keinen Grund, beim Dekodieren fremder DB-Inhalte welche zu bauen.
+    // allowed_classes=FALSE: condition_params enthält nur Skalare.
     $decoded = is_string($raw) ? (unserialize($raw, ['allowed_classes' => FALSE]) ?: []) : (array) $raw;
     $params = is_array($decoded) ? $decoded : [];
     return isset($params['previous_status_id']) ? self::toInt($params['previous_status_id']) : NULL;

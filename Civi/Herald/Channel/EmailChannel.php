@@ -97,10 +97,7 @@ class EmailChannel implements ChannelInterface {
   }
 
   /**
-   * Narrow a mixed config/setting value to string. Per-call config values
-   * and settings are documented/declared as scalar; this guards the cast
-   * against the theoretical mixed type without changing behaviour for
-   * well-formed input (see phpstan.neon.dist header re: defensive checks).
+   * Non-scalar config values collapse to '' instead of "Array".
    */
   private static function str(mixed $value): string {
     return is_scalar($value) ? (string) $value : '';

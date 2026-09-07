@@ -13,10 +13,8 @@ use Civi\Herald\StatusTransitionDispatcher;
 use Civi\Herald\Util\Cast;
 
 /**
- * Render and deliver a single-contribution alert.
- *
- * Enriches the contribution with campaign progress and the status transition
- * (from_status / to_status), then hands the variable bag to the dispatcher.
+ * Render and deliver a single-contribution alert with campaign progress and
+ * status transition.
  */
 class NotifyContribution extends AbstractAction {
 

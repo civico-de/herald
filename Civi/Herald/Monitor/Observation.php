@@ -5,10 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Monitor;
 
 /**
- * One check's raw result for one run, normalized.
- *
- * Anything that is not an explicit non-failure counts as a fail; the detail is
- * whatever scalar the check offered, or empty.
+ * One check's normalized result: anything but an explicit 'fail' counts as ok here.
  */
 class Observation {
 
@@ -19,11 +16,7 @@ class Observation {
   ) {}
 
   /**
-   * Read a raw observation entry.
-   *
-   * @param string $name The check name.
-   * @param array{status?: string, detail?: mixed} $obs The raw observation.
-   * @return self The normalized observation.
+   * @param array{status?: string, detail?: mixed} $obs
    */
   public static function fromArray(string $name, array $obs): self {
     return new self(

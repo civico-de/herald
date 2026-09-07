@@ -9,12 +9,7 @@ use Civi\Api4\Generic\Result;
 use Civi\Herald\Channel\ChannelRegistry;
 
 /**
- * List the registered channels together with the config contract each one
- * accepts.
- *
- * The counterpart to Herald.send: a caller (or an admin filling in a
- * channel_config JSON field) can discover which keys a channel understands
- * instead of copying key names out of herald's source into its own code.
+ * List the registered channels with the config keys each one accepts.
  *
  * Example:
  *   cv api4 Herald.getChannels
@@ -33,8 +28,7 @@ class GetChannels extends AbstractAction {
 
     $rows = [];
     foreach ($keys as $key) {
-      // Throws for an unknown explicit key — silently returning nothing would
-      // read as "the channel exists but has no config".
+      // Throws for an unknown key: an empty result would read as "no config".
       $channel = $registry->get($key);
       $rows[] = [
         'key' => $channel->getKey(),

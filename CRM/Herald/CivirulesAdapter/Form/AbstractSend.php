@@ -400,11 +400,7 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
   }
 
   /**
-   * Normalise a mixed form/action-param value to a string. QuickForm
-   * text/select fields and previously-saved action params are always
-   * scalar in practice; this documents that assumption with a real check
-   * instead of casting mixed directly (falls back to '' for anything
-   * non-scalar, matching how (string) already treats NULL).
+   * Non-scalar form/action-param values collapse to '' instead of "Array".
    */
   protected static function toStringValue(mixed $value): string {
     return is_scalar($value) ? (string) $value : '';

@@ -5,8 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Monitor;
 
 /**
- * The knobs one monitor run works under, read once and then pure:
- * hysteresis thresholds, the renotify window, the snooze map, and "now".
+ * One run's thresholds, renotify window, snooze map and "now"; pure after construction.
  */
 class MonitorConfig {
 
@@ -35,11 +34,7 @@ class MonitorConfig {
   }
 
   /**
-   * Is $name snoozed right now? The snooze map holds ISO datetimes (until
-   * when). Unparseable or past timestamps are treated as not snoozed. Pure.
-   *
-   * @param string $name The check name.
-   * @return bool TRUE if the check is silenced.
+   * Unparseable or past snooze timestamps count as not snoozed.
    */
   public function isSnoozed(string $name): bool {
     if (!isset($this->snooze[$name]) || !is_string($this->snooze[$name])) {

@@ -41,11 +41,8 @@ final class MessageLimit {
    * Length in the unit transports actually count: UTF-16 code units, so a
    * character outside the BMP — every emoji — counts two.
    *
-   * Deliberately the conservative reading. Should a transport turn out to
-   * count code points instead, this measures long and shortens an emoji-heavy
-   * message earlier than it had to; measuring short would hand the API a
-   * message it rejects, which is the failure this whole class exists to stop.
-   * Settle it with a real send before relaxing it, never from the docs alone.
+   * The conservative reading: measuring long shortens early, measuring short
+   * gets the message rejected. Relax only after a real send proves it.
    */
   public static function length(string $text): int {
     return (int) (strlen(mb_convert_encoding($text, 'UTF-16LE', 'UTF-8')) / 2);

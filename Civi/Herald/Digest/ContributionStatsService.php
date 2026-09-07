@@ -351,11 +351,8 @@ class ContributionStatsService {
   }
 
   /**
-   * Filter values arrive untyped (CiviRules stores action parameters as raw
-   * form input), so phpstan sees `mixed` where the code casts to int/string.
-   * Narrowing to `scalar` keeps PHP's own cast semantics for every value that
-   * can actually occur here (int, float, numeric string, bool) and only
-   * differs for arrays/objects, which are never valid filter values.
+   * Filter values arrive untyped from CiviRules storage; arrays/objects are
+   * never valid filter values.
    *
    * @param mixed $value
    */

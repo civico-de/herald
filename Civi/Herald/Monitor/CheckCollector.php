@@ -8,15 +8,12 @@ use Civi\Core\Event\GenericHookEvent;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
- * Gathers this run's raw observations: asks every extension for its checks,
- * executes them, and turns a check that was expected but never offered into a
- * failure of its own.
+ * Collects hook_civicrm_heraldChecks observations; an expected check that is
+ * not offered becomes a failure of its own.
  */
 class CheckCollector {
 
   /**
-   * Run every contributed check.
-   *
    * @return array<string, array{status: string, detail: string}> Observations by check name.
    */
   public function observe(): array {
@@ -34,12 +31,9 @@ class CheckCollector {
   }
 
   /**
-   * Ask every extension for its checks.
+   * Nothing enforces name => callable on hook implementors, hence the loose type.
    *
-   * Filled BY REFERENCE by the hook listeners — implementors are asked for
-   * name => callable, but nothing enforces that, hence the loose type.
-   *
-   * @return array<array-key, mixed> The contributed checks.
+   * @return array<array-key, mixed>
    */
   private function contributedChecks(): array {
     /** @var array<array-key, mixed> $checks */
@@ -50,15 +44,13 @@ class CheckCollector {
   }
 
   /**
-   * Execute one check callable. A throwing callable counts as a fail.
+   * A throwing callable counts as a fail.
    *
-   * @param callable $callable The check.
-   * @return array{status: string, detail: string} The observation.
+   * @return array{status: string, detail: string}
    */
   private function observeOne(callable $callable): array {
     try {
       $r = $callable();
-      // Anything that is not an explicit non-failure counts as fail;
       // 'skipped' (check disabled by config) is not an outage.
       $status = is_array($r) ? $r['status'] ?? NULL : NULL;
 
@@ -73,12 +65,9 @@ class CheckCollector {
   }
 
   /**
-   * A check we were told to expect but the hook no longer offers is itself a
-   * failure (its extension was probably disabled). Without an expected-entry a
-   * vanished check stays silently dropped.
+   * An expected check the hook does not offer means its extension is probably disabled.
    *
    * @param array<string, array{status: string, detail: string}> $observations
-   *   Observations, updated in place.
    */
   private function addMissingExpected(array &$observations): void {
     $expected = \Civi::settings()->get('herald_monitor_expected');

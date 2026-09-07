@@ -68,9 +68,8 @@ services:
       PMA_HOST: db
 
   maildev:
-    # Pinned: on 2026-07-06 ':latest' moved to 3.0.0-rc.1, whose built-in
-    # healthcheck queries a route its own app answers with 404 — every stack
-    # using it failed to come up. 2.2.1 is the last stable release.
+    # Pinned: 3.0.0-rc.1's built-in healthcheck hits a route its app answers
+    # with 404, so the stack never becomes healthy. 2.2.1 is the last stable.
     image: maildev/maildev:2.2.1
     ports:
       - "1090:1080"

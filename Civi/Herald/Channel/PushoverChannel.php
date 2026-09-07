@@ -135,18 +135,12 @@ class PushoverChannel implements ChannelInterface {
   }
 
   /**
-   * Narrow a mixed config/setting value to string. Per-call config values
-   * and settings are documented/declared as scalar; this guards the cast
-   * against the theoretical mixed type without changing behaviour for
-   * well-formed input.
+   * Non-scalar config values collapse to '' instead of "Array".
    */
   private static function str(mixed $value): string {
     return is_scalar($value) ? (string) $value : '';
   }
 
-  /**
-   * Narrow a mixed config value to int. Same rationale as self::str().
-   */
   private static function int(mixed $value): int {
     return is_scalar($value) ? (int) $value : 0;
   }

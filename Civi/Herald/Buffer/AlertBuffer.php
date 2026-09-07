@@ -196,10 +196,8 @@ class AlertBuffer {
    * @return list<string>
    */
   private function dueGroupHashes(): array {
-    // executeQuery() is documented as CRM_Core_DAO|object — the `object` half of
-    // that union exists only so IDEs stop flagging the result-row properties,
-    // which the DAO sets dynamically. Spell the SELECT list out instead: the
-    // annotation narrows the union AND documents the columns each loop reads.
+    // The object{} shape narrows executeQuery()'s CRM_Core_DAO|object union
+    // to the columns the loop reads.
     /** @var \CRM_Core_DAO&object{group_hash: string} $due */
     $due = \CRM_Core_DAO::executeQuery('
       SELECT group_hash

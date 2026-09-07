@@ -23,7 +23,7 @@ use Civi\Herald\Util\Cast;
  * Callers: the Herald.notify* APIv4 actions (the CiviRules adapters go through
  * those) and Job.herald_buffer_flush, which re-enters at deliver().
  *
- * Parameters (the flat "params" bag; historically CiviRules action params):
+ * Parameters (the flat "params" bag):
  *   channel             — channel key (default "telegram"); used for direct delivery
  *   template            — MessageTemplate workflow_name to render (required)
  *   delivery_mode       — "direct" (default), "subscribers", "group" or "addresses"

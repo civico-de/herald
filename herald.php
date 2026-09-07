@@ -27,21 +27,15 @@ function herald_civicrm_install(): void {
  */
 function herald_civicrm_enable(): void {
   _herald_civix_civicrm_enable();
-  // Refresh the cached handler-class health so hook_civicrm_check (and thus the
-  // pulse endpoint) reflects the freshly-enabled code. Safe here: enable runs
-  // at deploy time, where a broken class failing loudly is the desired outcome.
+  // Enable runs at deploy time, where a broken handler class failing loudly is wanted.
   \Civi\Herald\RuleHealth::refresh();
 }
 
 /**
  * Implements hook_civicrm_check().
  *
- * Surfaces broken herald CiviRules handler classes (a condition/action class
- * that no longer loads or is not instantiable) as a CRITICAL system-status
- * check. It reads the CACHED scan (written by the deploy preflight + the enable
- * hook) and never loads a handler class itself — so this hook, which also runs
- * inside the token-protected pulse health endpoint (System.check), can never be
- * taken down by the very load-fatal it reports.
+ * Reads only the cached RuleHealth scan: loading a handler class here could
+ * take down the very System.check that reports it.
  *
  * @param array<int, CRM_Utils_Check_Message> $messages
  */
@@ -65,8 +59,7 @@ function herald_civicrm_check(&$messages): void {
     . $items
     . '</ul>',
     E::ts('Herald: unloadable rule handler class'),
-    // PSR-3 level string. Spelled out rather than referencing Psr\Log\LogLevel,
-    // which is only a transitive dependency of guzzle here.
+    // PSR-3 level; Psr\Log\LogLevel is only a transitive dependency here.
     'critical',
     'fa-bolt',
   );
@@ -75,12 +68,7 @@ function herald_civicrm_check(&$messages): void {
 /**
  * Implements hook_civicrm_pre().
  *
- * Captures the pre-edit Contribution status so post-hook callers can detect
- * transitions (e.g. Pending → Completed). hook_civicrm_post fires AFTER the
- * row was written so the old value is otherwise unreachable.
- *
- * Signature is dictated by CiviCRM: $id is NULL on create and an int-ish
- * string or int on edit/delete; $params is the (mutable) field bag.
+ * Snapshots pre-edit values that hook_civicrm_post can no longer see.
  *
  * @param string $op
  * @param string $objectName
@@ -91,8 +79,7 @@ function herald_civicrm_pre($op, $objectName, $id, &$params): void {
   if ($op !== 'edit' || !$id) {
     return;
   }
-  // Generic field-transition conditions: snapshot every watched field of this
-  // entity. Watch list is empty unless such a condition is configured.
+  // Watch list is empty unless a field-transition condition is configured.
   \Civi\Herald\Condition\FieldTransitionSnapshotter::capture($objectName, (int) $id);
   if ($objectName === 'Contribution') {
     $contributionId = (int) $id;
@@ -107,8 +94,7 @@ function herald_civicrm_pre($op, $objectName, $id, &$params): void {
     return;
   }
   if ($objectName === 'Event') {
-    // Pre-edit is_active, so the "Event deactivated" condition can tell a
-    // genuine 1 → 0 transition from an unrelated edit while already inactive.
+    // Lets the "Event deactivated" condition tell a 1 → 0 transition from an edit while inactive.
     $eventId = (int) $id;
     $previousActive = \CRM_Core_DAO::singleValueQuery(
       'SELECT is_active FROM civicrm_event WHERE id = %1',
@@ -126,12 +112,7 @@ function herald_civicrm_pre($op, $objectName, $id, &$params): void {
 /**
  * Implements hook_civicrm_post().
  *
- * Detects Contribution status transitions and dispatches an internal event so
- * CiviRules-style triggers / channels can react.
- *
- * Signature is dictated by CiviCRM: $objectRef is the DAO (or, for some
- * entities, an array) that was just written, passed by reference and free to be
- * replaced by any listener — hence `mixed` rather than a narrower union.
+ * $objectRef may be a DAO or an array and any listener may replace it — hence `mixed`.
  *
  * @param string $op
  * @param string $objectName
@@ -148,15 +129,8 @@ function herald_civicrm_post($op, $objectName, $objectId, &$objectRef): void {
 /**
  * Implements hook_civicrm_alterLogTables().
  *
- * The alert buffer is a work queue, not a record: a row exists between the
- * moment an aggregated alert is rendered and the moment it goes out, then it
- * is deleted. Its change history answers no question anyone asks — while a
- * bulk operation can write thousands of rows through it in seconds, each
- * costing an INSERT and a DELETE in the log.
- *
- * Only herald's own transient table is dropped here. Whether anything else is
- * worth logging is a site decision and belongs in logpolicy's settings, not in
- * an extension's opinion about tables it does not own.
+ * The alert buffer is a transient work queue; logging it costs an INSERT and
+ * a DELETE per row during bulk operations for a history nobody reads.
  *
  * @param array<string, mixed> $logTableSpec
  */
@@ -165,13 +139,10 @@ function herald_civicrm_alterLogTables(array &$logTableSpec): void {
 }
 
 /**
- * hook_civicrm_heraldChecks — herald watches its own delivery pipeline.
+ * Implements hook_civicrm_heraldChecks().
  *
- * Two distinct states, two checks: a live alert sitting past its window means
- * the flush job is not sending (job disabled, channel down, cron stopped
- * mid-way), while a parked one has already been given up on and waits for a
- * decision. Parked rows stay in the table by design, so counting them as a
- * backlog would leave the first check failing forever after one bad group.
+ * Parked rows stay in the table by design, so they get their own check
+ * instead of counting as backlog forever.
  *
  * @param array<string, callable> $checks
  */

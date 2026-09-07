@@ -12,16 +12,10 @@ namespace Civi\Herald\Monitor;
  */
 class Coerce {
 
-  /**
-   * Coerce to int.
-   */
   public static function int(mixed $value, int $default = 0): int {
     return is_scalar($value) ? (int) $value : $default;
   }
 
-  /**
-   * Coerce to string.
-   */
   public static function str(mixed $value, string $default = ''): string {
     return is_scalar($value) ? (string) $value : $default;
   }

@@ -297,16 +297,12 @@ class SubscriberLookup {
   }
 
   /**
-   * Narrow a mixed APIv4-row value to string. Guards the cast against the
-   * theoretical mixed type without changing behaviour for well-formed data.
+   * Non-scalar config values collapse to '' instead of "Array".
    */
   private static function str(mixed $value): string {
     return is_scalar($value) ? (string) $value : '';
   }
 
-  /**
-   * Narrow a mixed APIv4-row value to int. Same rationale as self::str().
-   */
   private static function int(mixed $value): int {
     return is_scalar($value) ? (int) $value : 0;
   }

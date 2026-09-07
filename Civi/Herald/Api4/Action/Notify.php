@@ -11,11 +11,8 @@ use Civi\Herald\Subscribers\SubscriptionScope;
 use Civi\Herald\Trigger\ContextVars;
 
 /**
- * Render a herald workflow template and deliver it (generic notification).
- *
- * String-addressed entry point behind which the whole notification pipeline
- * sits: the CiviRules adapter unpacks its trigger and calls this, and so can
- * anything else that has a params bag and a trigger context.
+ * Render a herald workflow template and deliver it; the CiviRules adapter and
+ * any other caller with a params bag and trigger context enter here.
  *
  * Example:
  *   cv api4 Herald.notify +v 'actionParams={"template":"herald_generic","channel":"telegram"}'
@@ -23,13 +20,8 @@ use Civi\Herald\Trigger\ContextVars;
 class Notify extends AbstractAction {
 
   /**
-   * The flat parameter bag: template, channel, delivery_mode, aggregate_minutes,
-   * channel-specific keys, plus `vars` (JSON object or array of static template
-   * variables). See Civi\Herald\Dispatch\Dispatcher.
-   *
-   * Plain `@var array` is deliberate — core parses this annotation at RUNTIME
-   * to type the API parameter and does not understand generics. The generic
-   * lives in @phpstan-var so static analysis loses nothing.
+   * The flat parameter bag (see Dispatcher) plus `vars`. Plain `@var array`:
+   * core parses this at runtime and rejects generics.
    *
    * @var array
    * @phpstan-var array<string, mixed>
@@ -37,9 +29,8 @@ class Notify extends AbstractAction {
   protected array $actionParams = [];
 
   /**
-   * Trigger context: `contact_id` plus raw entity payloads keyed by entity name
-   * (GroupContact, Membership, Participant, Event). Everything present is
-   * turned into template variables; explicit keys in `vars` win.
+   * `contact_id` plus raw entity payloads keyed by entity name; all become
+   * template variables, explicit `vars` win.
    *
    * @var array
    * @phpstan-var array<string, mixed>
@@ -48,8 +39,7 @@ class Notify extends AbstractAction {
 
   public function _run(Result $result): void {
     $params = $this->actionParams;
-    // Resolve the declared source-entity scope (actionParams.scope_entity)
-    // into concrete params here, so buffered sends carry it through the flush.
+    // Resolved here so buffered sends carry the scope through the flush.
     $scope = SubscriptionScope::fromContext($params, $this->triggerContext);
     if ($scope !== NULL) {
       $params['scope_entity_type'] = $scope['entity_type'];

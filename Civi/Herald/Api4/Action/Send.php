@@ -9,25 +9,12 @@ use Civi\Api4\Generic\Result;
 use Civi\Herald\Channel\ChannelRegistry;
 
 /**
- * Deliver an already-rendered message through one of herald's channels.
+ * Deliver an already-rendered message through one channel; the entry point
+ * for other extensions (string-addressed, so the dependency stays optional).
  *
- * This is the supported entry point for OTHER extensions. It is string-
- * addressed on purpose: a caller reaches herald through
- * civicrm_api4('Herald', 'send', ...) and never needs to name a herald class,
- * so neither side has to defeat static analysis to keep the dependency
- * optional. `cv api4 Herald.getActions` then makes the parameter contract
- * machine-readable (getFields describes entity FIELDS, of which this
- * service-style entity has none).
- *
- * Rendering is the caller's job — herald does not own the caller's templates.
- * Use Herald.renderTemplate first if the message comes from a MessageTemplate.
- *
- * The `subject` and `format` params are channel-agnostic: each channel
- * declares (getSemanticFields()) which of its own config keys they correspond
- * to, and a channel without an equivalent silently drops them. Everything in
- * `config` is passed through verbatim; keys the channel does not declare in
- * getConfigSchema() are reported back as `unknown_config_keys` rather than
- * dropped, so a typo is visible without changing delivery behaviour.
+ * `subject`/`format` are mapped via getSemanticFields() and dropped by channels
+ * without an equivalent. Unknown `config` keys are passed through and reported
+ * as `unknown_config_keys`, so a typo is visible without changing delivery.
  *
  * Example:
  *   cv api4 Herald.send +v 'channel=ntfy' +v 'message="disk almost full"' \
@@ -49,12 +36,8 @@ class Send extends AbstractAction {
 
   /**
    * Per-call channel config; keys per the channel's getConfigSchema().
-   *
-   * Plain `@var array` is deliberate: for classes under Civi\Api4 that extend
-   * an *Action, CiviCRM core parses this annotation at RUNTIME to type the API
-   * parameter, and it does not understand generics — `@var array<string, mixed>`
-   * makes the call fail with "Unknown parameter type". The generic lives in a
-   * separate @phpstan-var so static analysis loses nothing.
+   * Plain `@var array`: core parses this at runtime and rejects generics
+   * with "Unknown parameter type".
    *
    * @var array
    * @phpstan-var array<string, mixed>
@@ -62,15 +45,13 @@ class Send extends AbstractAction {
   protected array $config = [];
 
   /**
-   * Channel-agnostic headline. Mapped onto the channel's own subject/title
-   * config key; ignored by channels that have no such concept.
+   * Channel-agnostic headline; ignored by channels without one.
    * @var string
    */
   protected string $subject = '';
 
   /**
-   * Channel-agnostic body format: 'text' or 'html'. Empty = let the channel
-   * apply its own default.
+   * 'text' or 'html'; empty = channel default.
    * @var string
    */
   protected string $format = '';
@@ -86,8 +67,7 @@ class Send extends AbstractAction {
       throw new \CRM_Core_Exception('Herald.send: "format" must be "text" or "html".');
     }
 
-    // Throws CRM_Core_Exception for an unregistered key — an unknown channel is
-    // a configuration error, not a delivery outcome.
+    // Throws for an unregistered key: a config error, not a delivery outcome.
     $channel = ChannelRegistry::default()->get($this->channel);
 
     $schema = $channel->getConfigSchema();
@@ -106,9 +86,7 @@ class Send extends AbstractAction {
   }
 
   /**
-   * Translate the semantic params into the channel's own config keys. Pure —
-   * test-seam. An explicit entry in $config always wins: the caller naming the
-   * channel's real key knows more than the generic semantic did.
+   * An explicit entry in $config wins over the semantic value.
    *
    * @param array<string, mixed> $config
    * @param array<string, string> $semanticFields

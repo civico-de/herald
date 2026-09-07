@@ -9,7 +9,7 @@ namespace Civi\Herald\Digest;
  *
  * Bucket edges are derived from the data, not configured upfront — a small NGO
  * with €1–€50 contributions and a major-donor campaign with €100–€100k both get
- * sensible buckets without admin tuning. See plan §"Adaptive Histogramm-Buckets".
+ * sensible buckets without admin tuning.
  * @mago-expect lint:too-many-methods
  * @mago-expect lint:cyclomatic-complexity
  * @mago-expect lint:kan-defect
@@ -40,11 +40,8 @@ class HistogramFormatter {
       return [];
     }
 
-    // Fewer than two edges defines no bucket at all: distribute() would compute
-    // count($edges) - 1 = -1 buckets and then read $edges[0] and $edges[-1],
-    // which are undefined. Reachable from the form, because the bucket_edges
-    // parameter decodes '[]' to an empty array rather than to NULL. Fall back to
-    // adaptive edges — the same thing an absent override does.
+    // Fewer than two edges defines no bucket; the form decodes '[]' to an
+    // empty array, so treat that like an absent override.
     if ($overrideEdges !== NULL && count($overrideEdges) >= 2) {
       $edges = $overrideEdges;
     }

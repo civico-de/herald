@@ -12,26 +12,16 @@ use Civi\Herald\Renderer\TemplateRenderer;
 use Civi\Herald\Topic\Router;
 
 /**
- * Publish a message to a TOPIC — the recipient-agnostic entry point for
- * other extensions and scripts.
+ * Publish a message to a topic; the `herald_topics` setting maps topics to
+ * channel, recipient and aggregation, so publishers carry no deployment specifics.
  *
- * Where Herald.send addresses a channel directly (caller supplies chat_id
- * etc.), Herald.publish only names a topic; the `herald_topics` setting maps
- * topics to channel + recipient + aggregation. Integrations stay free of
- * deployment specifics, and admins can reroute or batch a whole topic
- * without touching the publisher.
- *
- * Body: either `message` (pre-rendered) or `template` (MessageTemplate
- * workflow_name) plus `vars`. When the topic's route sets
- * aggregate_minutes > 0, the message goes through the same aggregation
- * buffer as the CiviRules alerts.
+ * Body: `message` (pre-rendered) or `template` (workflow_name) plus `vars`.
+ * A route with aggregate_minutes > 0 goes through the alert buffer.
  *
  * Example:
  *   cv api4 Herald.publish +v 'topic=ops' +v 'message="🔴 disk almost full"'
  *
- * The setters/getters below are served by AbstractAction::__call (APIv4's magic
- * accessors for the protected parameter properties); they are declared so the
- * fluent PHP API is part of the contract instead of an undocumented side effect.
+ * Accessors are served by AbstractAction::__call; declared here as part of the contract.
  *
  * @method $this setTopic(string $topic)
  * @method string getTopic()
@@ -65,8 +55,7 @@ class Publish extends AbstractAction {
   protected string $template = '';
 
   /**
-   * Template variables (see Send::$config for why the annotation is plain
-   * `array`).
+   * Template variables; plain `@var array` for the same reason as Send::$config.
    *
    * @var array
    * @phpstan-var array<string, mixed>
@@ -88,8 +77,7 @@ class Publish extends AbstractAction {
     }
 
     $params = (new Router())->resolve($this->topic);
-    // From the route params alone, before a per-message rendered subject can
-    // enter $params — otherwise every publish forms its own group.
+    // Before a rendered subject enters $params, or every publish forms its own group.
     $groupHash = Dispatcher::groupHash($params, 'topic:' . $this->topic . ':');
 
     $body = $this->message;

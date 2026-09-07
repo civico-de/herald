@@ -179,8 +179,7 @@ class HistogramFormatterTest extends TestCase {
   /**
    * The bucket_edges action parameter decodes the string '[]' to an empty array
    * rather than NULL (empty('[]') is false), so an empty override reaches
-   * compute(). Before the guard that produced -1 buckets and undefined-key reads
-   * on $edges[0] and $edges[-1].
+   * compute(); without the guard that is -1 buckets and undefined-key reads.
    */
   public function testAnEmptyEdgeOverrideFallsBackToAdaptiveEdges(): void {
     $amounts = [10.0, 20.0, 30.0, 40.0];

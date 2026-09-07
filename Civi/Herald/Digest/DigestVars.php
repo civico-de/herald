@@ -115,8 +115,7 @@ final class DigestVars {
    * @return array<string, mixed>
    */
   private static function buildFiltersFromParams(array $params): array {
-    // The 0-check also drops legacy params where an empty form field was
-    // stored as '' and would otherwise survive as (int) 0.
+    // The 0-check also drops '' from an empty form field, which would survive as (int) 0.
     return array_filter(
       [
         'campaign_id' => isset($params['campaign_id']) ? Cast::toInt($params['campaign_id']) : NULL,

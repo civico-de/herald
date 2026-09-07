@@ -11,8 +11,7 @@ use Civi\Herald\Condition\ContributionStatusTransition;
 /**
  * Did a contribution transition FROM a specific status?
  *
- * The decision behind the "Previous Contribution status" CiviRules condition,
- * addressable as an API so the adapter carries no logic of its own.
+ * Backs the "Previous Contribution status" CiviRules condition.
  */
 class CheckContributionTransition extends AbstractAction {
 

@@ -5,14 +5,8 @@ declare(strict_types = 1);
 namespace Civi\Herald;
 
 /**
- * Captures Pending → Completed (and other) status transitions on Contribution edits
- * so CiviRules-condition code can ask "what was the previous status?".
- *
- * Civi's hook_civicrm_post fires AFTER the row has been written, so we cannot read
- * the old row from the DB. Instead, we read the pre-edit snapshot inside hook_civicrm_pre
- * (registered separately if needed) or rely on $objectRef having ->_oldStatusId set
- * by upstream code. As a fallback for v0.1, the dispatcher exposes the *current* status
- * and leaves transition-detection to the CiviRules condition layer.
+ * Request-scoped snapshot of the pre-edit Contribution status, taken in
+ * hook_civicrm_pre because hook_civicrm_post only sees the written row.
  */
 class StatusTransitionDispatcher {
 
@@ -21,15 +15,8 @@ class StatusTransitionDispatcher {
   private static array $preEditStatus = [];
 
   /**
-   * Stash the pre-edit status. Call from hook_civicrm_pre.
-   *
-   * FIRST-WINS pro Contribution und Request: Payment.create/completeOrder
-   * editieren die Contribution MEHRFACH (Statuswechsel, dann Custom-Felder/
-   * Quittungsdatum). CiviRules wertet die Regeln erst nach Commit aus — würde
-   * jeder Edit den Snapshot überschreiben, stünde dort am Ende der NEUE
-   * Status (Completed) statt des echten Vorher-Status (Pending), und die
-   * Pending→Completed-Erkennung wäre für alle Zahlungs-Pfade blind
-   * (gefunden 23.07.2026 auf production: PayPal-Verkäufe ohne jede Meldung).
+   * First-wins pro Contribution und Request: Payment.create/completeOrder editieren
+   * mehrfach; ein Überschreiben ließe den Vorher-Status auf "Completed" enden.
    */
   public static function rememberPreEditStatus(int $contributionId, ?int $statusId): void {
     if ($statusId !== NULL && !isset(self::$preEditStatus[$contributionId])) {
@@ -38,8 +25,7 @@ class StatusTransitionDispatcher {
   }
 
   /**
-   * Called from hook_civicrm_post. Intentionally a no-op: dispatch happens
-   * through CiviRules triggers, which read the snapshot via getPreEditStatus().
+   * Intentionally a no-op: CiviRules triggers read the snapshot via getPreEditStatus().
    */
   public static function handlePostHook(int $contributionId, mixed &$objectRef): void {
   }
@@ -49,24 +35,15 @@ class StatusTransitionDispatcher {
   }
 
   /**
-   * Resolve the pre-edit status: in-request snapshot first, then CiviRules'
-   * own original data as fallback.
-   *
-   * The static snapshot only lives for the current PHP request. When a rule
-   * runs delayed (CiviRules queue/cron), the snapshot is gone — but CiviRules
-   * serialises the trigger data including original entity values into the
-   * queue, so getOriginalData() still works there.
+   * CiviRules original data first (per edit, survives delayed queue runs),
+   * the request-wide snapshot as fallback.
    *
    * @param int|null $originalStatusId contribution_status_id from the caller's
    *   own pre-edit record; the CiviRules adapter unpacks it from the trigger.
    */
   public static function resolvePreEditStatus(int $contributionId, ?int $originalStatusId = NULL): ?int {
-    // Original-Daten ZUERST: sie werden PRO EDIT erfasst. Payment.create/
-    // completeOrder editieren mehrfach in einer Transaktion; nur der Edit, der
-    // wirklich Pending→Completed schaltet, hat original=Pending — die
-    // Folge-Edits original=Completed und matchen nicht (kein Doppel-Alert).
-    // Der Request-weite Snapshot (first-wins) kann das nicht unterscheiden
-    // und bleibt Fallback für Pfade ohne Original-Daten.
+    // Original-Daten sind pro Edit erfasst: nur der Edit, der wirklich schaltet,
+    // hat original=Pending — der first-wins-Snapshot kann das nicht unterscheiden.
     return $originalStatusId ?? self::getPreEditStatus($contributionId);
   }
 

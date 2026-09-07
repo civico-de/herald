@@ -26,10 +26,7 @@ namespace Civi\Api4;
  *   cv api4 Herald.testTelegram   — send a test message via the channel
  *   cv api4 Herald.renderTemplate — render a workflow template with sample vars
  *
- * Herald.send exists so other extensions can use herald's channels WITHOUT
- * referencing a herald class: an APIv4 action is addressed by string, which
- * keeps the dependency optional on both sides while leaving static analysis
- * intact — no class_exists() guards, no variable method names.
+ * Herald.send is string-addressed so other extensions can depend on herald optionally.
  *
  * @searchable none
  * @package Civi\Api4

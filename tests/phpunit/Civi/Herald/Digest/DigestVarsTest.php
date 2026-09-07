@@ -196,8 +196,7 @@ class DigestVarsTest extends TestCase {
   }
 
   public function testLegacyEmptyCampaignIdFallsBackToPeriodTotals(): void {
-    // Legacy JSON-era params could store campaign_id as '' — that must behave
-    // like "no campaign", not become getCampaignTotal(0).
+    // campaign_id stored as '' must mean "no campaign", not getCampaignTotal(0).
     $stats = new class extends ContributionStatsService {
 
       public function getPeriodSummary(array $filters, DateRange $period): array {

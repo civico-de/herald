@@ -13,9 +13,7 @@ use Civi\Herald\Dispatch\Dispatcher;
 /**
  * Render and deliver a contribution digest.
  *
- * Needs no trigger entity — the period and filters come entirely from the
- * parameter bag. Job.herald_contribution_digest is the scheduled counterpart
- * and shares the same variable builder.
+ * Needs no trigger entity; Job.herald_contribution_digest is the scheduled counterpart.
  */
 class NotifyDigest extends AbstractAction {
 

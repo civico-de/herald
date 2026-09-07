@@ -8,12 +8,9 @@ use PHPUnit\Framework\TestCase;
 /**
  * Contract test for herald's CiviRules handler classes.
  *
- * The safety net that was missing on 2026-07-24: a condition class that did not
- * implement an abstract method of its CiviRules base class produced a PHP
- * load-time fatal, and — because CiviRules evaluates rules synchronously in the
- * write path — every Event edit 500'd (incl. the public booking cart) until the
- * rule was disabled. `php -l` cannot catch it; only resolving the class against
- * its parent does. This test does exactly that for every registered handler.
+ * A handler missing an abstract method of its CiviRules base is a load-time
+ * fatal that 500s every write; `php -l` cannot catch it, resolving the class
+ * against its parent does.
  *
  * It works as a pure @group unit test because the bootstrap registers the
  * CiviRules base-class autoloader (see tests/phpunit/bootstrap.php).

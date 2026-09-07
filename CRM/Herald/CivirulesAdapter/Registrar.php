@@ -3,19 +3,14 @@
 declare(strict_types = 1);
 
 /**
- * Registers herald's adapters with CiviRules and migrates renamed handlers.
- *
- * CiviRules stores the handler class name in civirule_action.class_name /
- * civirule_condition.class_name and instantiates it by string, so a class
- * rename is a data migration. insertActionsFromJson()/insertConditionsFromJson()
- * match on `name` and rewrite class_name, which covers every installation that
- * runs enable() or an upgrade step; migrateRenamedClasses() is the belt for
- * rows whose `name` an admin has since changed.
+ * CiviRules instantiates handlers from civirule_action/condition.class_name,
+ * so a class rename is a data migration; migrateRenamedClasses() also covers
+ * rows whose `name` an admin has changed and the JSON import cannot match.
  */
 final class CRM_Herald_CivirulesAdapter_Registrar {
 
   /**
-   * Pre-2026-08 handler classes → their CivirulesAdapter successors.
+   * Retired handler class names → their successors.
    */
   private const RENAMED_CLASSES = [
     'CRM_Herald_CivirulesActions_SendNotification' => 'CRM_Herald_CivirulesAdapter_Action_Notification',
@@ -26,23 +21,17 @@ final class CRM_Herald_CivirulesAdapter_Registrar {
   ];
 
   /**
-   * Register (or re-register) both manifests. $extensionDir is herald's root.
+   * $extensionDir is herald's root.
    */
   public static function register(string $extensionDir): void {
-    // phpstan resolves CRM_Civirules_Utils_Upgrader via the scanDirectories
-    // entry for org.civicoop.civirules (needed so the classes are known at
-    // all), which makes this method_exists() look permanently true from a
-    // static-analysis standpoint. At runtime the guard is real: CiviRules may
-    // not be installed/enabled at all, and this call would otherwise fatal
-    // with an undefined-class error before we can raise our own message.
+    // phpstan sees CiviRules via scanDirectories and thinks this is always true;
+    // at runtime CiviRules may be absent and the call would fatal.
     // @phpstan-ignore function.alreadyNarrowedType
     if (!method_exists('CRM_Civirules_Utils_Upgrader', 'insertActionsFromJson')) {
       throw new Exception('CiviRules extension is required by herald but not enabled.');
     }
-    // When herald and CiviRules are installed in the SAME process (fresh
-    // install, headless tests), the entity registry was built before CiviRules
-    // came online and Api4 "CiviRulesAction" is unknown. Flush so it rebuilds
-    // with CiviRules' entities included.
+    // Installed in the same process as CiviRules (fresh install, headless tests),
+    // the entity registry predates CiviRules' entities.
     if (
       class_exists('\Civi\Schema\EntityRepository')
       && !\Civi\Schema\EntityRepository::entityExists('CiviRulesAction')
@@ -52,9 +41,7 @@ final class CRM_Herald_CivirulesAdapter_Registrar {
     CRM_Civirules_Utils_Upgrader::insertActionsFromJson(
       $extensionDir . DIRECTORY_SEPARATOR . 'civirules_actions.json',
     );
-    // Same rationale as the guard above: phpstan sees this as always true
-    // because of scanDirectories, but the method may genuinely be absent on
-    // older CiviRules versions at runtime.
+    // Same phpstan caveat as above; absent on older CiviRules versions.
     // @phpstan-ignore function.alreadyNarrowedType
     if (method_exists('CRM_Civirules_Utils_Upgrader', 'insertConditionsFromJson')) {
       CRM_Civirules_Utils_Upgrader::insertConditionsFromJson(
@@ -64,9 +51,8 @@ final class CRM_Herald_CivirulesAdapter_Registrar {
   }
 
   /**
-   * Point rows still naming a pre-rename handler class at its successor.
-   * Configured rules reference the action/condition ROW, so rewriting the
-   * class name in place keeps every existing rule working.
+   * Rules reference the action/condition row, so rewriting class_name in place
+   * keeps them working.
    *
    * @return int Number of rows rewritten.
    */

@@ -74,12 +74,8 @@ class TemplateRenderer {
     $smarty = \CRM_Core_Smarty::singleton();
     $smarty->pushScope($vars);
     try {
-      // CRM_Core_Smarty (via CRM_Core_SmartyCompatibility) has no fetch()
-      // method of its own — it forwards unknown calls to the wrapped
-      // Smarty\Smarty instance through __call(). phpstan cannot see through
-      // that magic dispatch (and the project may not add a core stub to
-      // teach it), but fetch() genuinely exists on the wrapped object and
-      // returns a string here.
+      // CRM_Core_Smarty forwards fetch() to the wrapped Smarty\Smarty via
+      // __call(), which phpstan cannot see through.
       // @phpstan-ignore method.notFound, return.type
       return $smarty->fetch('string:' . $body);
     }
@@ -89,9 +85,7 @@ class TemplateRenderer {
   }
 
   /**
-   * Narrow a mixed APIv4-row value to string. Message template fields are
-   * declared as string columns; this guards the cast against the
-   * theoretical mixed type without changing behaviour for well-formed data.
+   * Non-scalar config values collapse to '' instead of "Array".
    */
   private static function str(mixed $value): string {
     return is_scalar($value) ? (string) $value : '';

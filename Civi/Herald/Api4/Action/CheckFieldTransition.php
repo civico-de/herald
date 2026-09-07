@@ -13,11 +13,8 @@ use Civi\Herald\PreEditSnapshot;
 /**
  * Did field X of entity E transition from (operator, value) to (operator, value)?
  *
- * The decision behind the "Field transition" CiviRules condition, addressable
- * as an API so the adapter carries no logic of its own. The pre-edit value is
- * resolved original-data first (per-edit, survives delayed execution), then
- * herald's hook_civicrm_pre snapshot; the post-edit value is read from the
- * live row, not the trigger payload (which may omit the field entirely).
+ * Backs the "Field transition" CiviRules condition. The post-edit value comes
+ * from the live row, since the trigger payload may omit the field.
  */
 class CheckFieldTransition extends AbstractAction {
 
@@ -106,12 +103,9 @@ class CheckFieldTransition extends AbstractAction {
   }
 
   /**
-   * Original-data first, herald's hook_civicrm_pre snapshot as fallback. A
-   * snapshotted NULL is a *known* before-value (PreEditSnapshot::has()), so
-   * NULL→x transitions match "from is_empty" conditions.
+   * A snapshotted NULL is a known before-value, so NULL→x matches "from is_empty".
    *
-   * @param array{known: bool, value: mixed} $original Caller-supplied
-   *   original-data state (known=FALSE when none was available).
+   * @param array{known: bool, value: mixed} $original
    * @return array{known: bool, value: mixed}
    */
   public static function resolveBeforeState(

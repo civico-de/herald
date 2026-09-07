@@ -5,22 +5,15 @@ declare(strict_types = 1);
 namespace Civi\Herald\Topic;
 
 /**
- * Maps a logical topic ("ops", "revenue", "mail", …) to delivery parameters.
- *
- * Publishers name a topic; ADMINS decide where topics land — via the
- * `herald_topics` setting, a map of topic name to the same parameter shape
- * the CiviRules actions use (channel, chat_id, aggregate_minutes, parse_mode,
- * webhook_url, …). No integration ever hardcodes a recipient.
+ * Maps a topic to delivery parameters via the `herald_topics` setting, whose
+ * entries use the same parameter shape as the CiviRules actions.
  *
  *   cv api4 Setting.set +v 'herald_topics={
  *     "default": {"channel": "telegram"},
  *     "ops":     {"channel": "telegram", "chat_id": "-100…", "aggregate_minutes": 0}
  *   }'
  *
- * Resolution: the topic's own entry, merged over the "default" entry.
- * A topic without any matching entry falls back to "default" alone; if
- * neither exists the router throws — an unrouted publish is a config error,
- * not something to swallow.
+ * The topic's entry is merged over "default"; neither present throws.
  */
 class Router {
 
@@ -35,7 +28,7 @@ class Router {
   }
 
   /**
-   * Pure resolution against a given map. Test-seam.
+   * Pure resolution against a given map.
    *
    * @param array<array-key, mixed> $map
    * @return array<string, mixed>
@@ -50,9 +43,7 @@ class Router {
         self::SETTING,
       ));
     }
-    // Both halves come out of the herald_topics JSON object, so their keys are
-    // the parameter names AbstractSend::deliver() reads; unknown keys are
-    // ignored there rather than being an error here.
+    // Unknown keys are ignored by the consumer rather than rejected here.
     /** @var array<string, mixed> $params */
     $params = array_merge($default ?? [], $entry ?? []);
     $params += ['channel' => 'telegram'];

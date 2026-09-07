@@ -241,10 +241,10 @@ class MonitorTest extends TestCase {
   // --- migration: old state entries without the new keys --------------------
 
   public function testMigratesLegacyStateEntryFailToOk(): void {
-    // Old format: bare {status, detail}, no counters/notified/last_notified.
+    // Bare {status, detail} entry without counters/notified/last_notified.
     $legacy = ['a' => ['status' => 'fail', 'detail' => 'old']];
     [$state, $pub] = $this->step($legacy, ['a' => $this->obsOk()], []);
-    // Legacy reported-fail is treated as notified-worthy: recovery fires.
+    // A bare reported-fail counts as notified: recovery fires.
     $this->assertSame([['check' => 'a', 'status' => 'ok', 'detail' => '', 'renotify' => FALSE]], $pub);
     $this->assertSame(0, $state['a']['consecutive_fails']);
     $this->assertSame(1, $state['a']['consecutive_oks']);
@@ -253,7 +253,7 @@ class MonitorTest extends TestCase {
   public function testMigratesLegacyStateEntryFailStaysSilentWhenStillFailing(): void {
     $legacy = ['a' => ['status' => 'fail', 'detail' => 'old']];
     [, $pub] = $this->step($legacy, ['a' => $this->obsFail('new')], []);
-    // Already reported-fail in legacy state → no duplicate alert.
+    // Already reported-fail → no duplicate alert.
     $this->assertSame([], $pub);
   }
 
@@ -368,9 +368,8 @@ class MonitorTest extends TestCase {
   }
 
   public function testLegacyFailGetsRenotifyAnchor(): void {
-    // Legacy entry: {status: fail, detail} only. Inferred notified=true had no
-    // last_notified — renotify must anchor to now and fire one window LATER,
-    // not never and not immediately.
+    // Bare {status: fail, detail} entry: inferred notified=true has no
+    // last_notified, so renotify anchors to now and fires one window later.
     $legacy = ['a' => ['status' => 'fail', 'detail' => 'old']];
     [$state, $pub] = $this->step(
       $legacy,

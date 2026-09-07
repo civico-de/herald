@@ -9,11 +9,8 @@ use Civi\Api4\Generic\Result;
 use Civi\Herald\Buffer\DeadLetter;
 
 /**
- * Put parked buffered alerts back into circulation once the fault behind them
- * is fixed — attempt counters reset, so they get a full retry budget again.
- *
- * Deliberate by design: nothing un-parks an item on its own, and nothing
- * deletes it either.
+ * Put parked alerts back into circulation with a fresh retry budget. Nothing
+ * un-parks or deletes an item on its own.
  *
  * Example:
  *   cv api4 Herald.reactivateParkedAlerts '{"ids": [12, 13]}'

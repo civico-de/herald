@@ -11,8 +11,7 @@ use Civi\Herald\Condition\EventDeactivation;
 /**
  * Did this edit flip an Event's is_active from 1 to 0?
  *
- * The decision behind the "Event was deactivated" CiviRules condition,
- * addressable as an API so the adapter carries no logic of its own.
+ * Backs the "Event was deactivated" CiviRules condition.
  */
 class CheckEventDeactivated extends AbstractAction {
 
