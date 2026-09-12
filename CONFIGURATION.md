@@ -266,6 +266,17 @@ Top-level fields, already in the form: `chat_id`, `parse_mode` (`HTML`, `Markdow
 empty), `disable_notification`, `disable_web_page_preview`. Falls back to the
 `herald_telegram_default_chat_id` setting when `chat_id` is empty.
 
+When Telegram upgrades a group to a supergroup, its `chat_id` changes and
+Telegram rejects sends with `400 group chat was upgraded to a supergroup chat`
+(new id in the error body's `parameters.migrate_to_chat_id`) until every copy
+is updated: the `herald_telegram_default_chat_id` setting, `herald_topics`,
+each `civirule_rule_action.action_params` referencing the old id (serialized
+PHP — unserialize, edit, reserialize; a SQL `REPLACE` corrupts it because the
+string length changes), buffered rows in `civicrm_herald_buffer.delivery`
+(JSON), and any `chat_id=…` baked into a scheduled job's parameters (e.g. a
+digest job). The buffer flush only drops a row after a successful send, so
+alerts queued during the outage go out on their own once every copy is fixed.
+
 ### Webhook (`channel: "webhook"`)
 
 A generic POST. Covers Slack, Discord and Mattermost incoming webhooks plus any custom
