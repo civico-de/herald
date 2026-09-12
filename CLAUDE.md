@@ -5,6 +5,10 @@ actions (no bespoke cron for alerts). Live in production on production.
 
 ## Contracts to preserve
 
+- Scope boundary: herald is transport and monitor framework, not a source of
+  health checks. Checks themselves belong in `pulse` (database/cron/system/
+  updates/jobs/disk/queues/payments); herald consumes them via
+  `hook_civicrm_heraldChecks` and only reports ok↔fail transitions.
 - Channels implement `Civi\Herald\Channel\ChannelInterface` and register in
   `ChannelRegistry`. `getConfigSchema()` is the single source of truth for a
   channel's config keys; `getSemanticFields()` maps the channel-agnostic
