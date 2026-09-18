@@ -30,7 +30,11 @@ function ck_headless(): \Civi\Test\CiviEnvBuilder {
   }
   $builder = $builder->install([trim((string) $info['key'])]);
   // Last step, so it drains what every earlier step queued.
-  return $builder->callback('ck_discard_bootstrap_status', 'ck-discard-bootstrap-status');
+  $builder = $builder->callback('ck_discard_bootstrap_status', 'ck-discard-bootstrap-status');
+  if (!$builder instanceof \Civi\Test\CiviEnvBuilder) {
+    throw new RuntimeException('ck_headless: callback() did not return the builder');
+  }
+  return $builder;
 }
 
 /**
@@ -45,8 +49,12 @@ function ck_restore_core_foreign_keys(): void {
   $restored = TRUE;
   \Civi\Test::asPreInstall(static function (): void {
     $sql = (new \Civi\Test\CiviEnvBuilder\CoreSchemaStep())->getSql();
-    $use = 'USE `' . \Civi\Test::dsn('database') . '`;' . "\n";
-    if (\Civi\Test::execute($use . $sql['content']) === FALSE) {
+    $database = \Civi\Test::dsn('database');
+    $content = is_array($sql) ? $sql['content'] ?? NULL : NULL;
+    if (!is_string($database) || !is_string($content)) {
+      throw new RuntimeException('ck_headless: no database name or no core schema SQL');
+    }
+    if (\Civi\Test::execute('USE `' . $database . '`;' . "\n" . $content) === FALSE) {
       throw new RuntimeException('ck_headless: could not restore the core foreign keys');
     }
   });
