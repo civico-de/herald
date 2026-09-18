@@ -19,6 +19,7 @@ declare(strict_types = 1);
  *   ck_headless()->sqlFile(__DIR__ . '/fixtures.sql')->apply();
  */
 function ck_headless(): \Civi\Test\CiviEnvBuilder {
+  ck_restore_core_foreign_keys();
   $info = ck_extension_info(dirname(__DIR__, 2));
   $builder = \Civi\Test::headless();
   // One step per extension, never one install() with the whole list: the
@@ -27,7 +28,36 @@ function ck_headless(): \Civi\Test\CiviEnvBuilder {
   foreach ($info->requires->ext ?? [] as $required) {
     $builder = $builder->install([trim((string) $required)]);
   }
-  return $builder->install([trim((string) $info['key'])]);
+  $builder = $builder->install([trim((string) $info['key'])]);
+  // Last step, so it drains what every earlier step queued.
+  return $builder->callback('ck_discard_bootstrap_status', 'ck-discard-bootstrap-status');
+}
+
+/**
+ * CoreSchemaStep::getSig() drops the core foreign keys (civicrm-core#36980);
+ * re-running its cached SQL once per process puts them back.
+ */
+function ck_restore_core_foreign_keys(): void {
+  static $restored = FALSE;
+  if ($restored) {
+    return;
+  }
+  $restored = TRUE;
+  \Civi\Test::asPreInstall(static function (): void {
+    $sql = (new \Civi\Test\CiviEnvBuilder\CoreSchemaStep())->getSql();
+    $use = 'USE `' . \Civi\Test::dsn('database') . '`;' . "\n";
+    if (\Civi\Test::execute($use . $sql['content']) === FALSE) {
+      throw new RuntimeException('ck_headless: could not restore the core foreign keys');
+    }
+  });
+}
+
+/**
+ * Data::populate() reconciles managed entities before SearchKit's entity types
+ * load, queueing "Unknown entity SearchDisplay" errors in the session.
+ */
+function ck_discard_bootstrap_status(): void {
+  \CRM_Core_Session::singleton()->getStatus(TRUE);
 }
 
 /**
