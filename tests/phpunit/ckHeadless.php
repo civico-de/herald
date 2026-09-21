@@ -40,6 +40,7 @@ function ck_headless(): \Civi\Test\CiviEnvBuilder {
 /**
  * CoreSchemaStep::getSig() drops the core foreign keys (civicrm-core#36980);
  * re-running its cached SQL once per process puts them back.
+ * Drop when the supported floor carries that fix.
  */
 function ck_restore_core_foreign_keys(): void {
   static $restored = FALSE;
@@ -63,6 +64,7 @@ function ck_restore_core_foreign_keys(): void {
 /**
  * Data::populate() reconciles managed entities before SearchKit's entity types
  * load, queueing "Unknown entity SearchDisplay" errors in the session.
+ * Drop when the supported floor carries civicrm-core#36991.
  */
 function ck_discard_bootstrap_status(): void {
   \CRM_Core_Session::singleton()->getStatus(TRUE);
