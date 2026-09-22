@@ -184,6 +184,11 @@ ready-made templates ship with the extension.
 | New event live | `Event is added` | none | `herald_event_created_alert` |
 | Event deactivated | `Event is changed` | `Herald: Event was deactivated (is_active 1 → 0)` | `herald_event_deactivated_alert` |
 | Event deleted | `Event is deleted` | none | `herald_event_deleted_alert` |
+| Registration cancelled | `Participant is changed` | `Participant status changed`: from Registered / Pending from pay later to Cancelled | `herald_event_cancellation_alert` |
+
+The cancellation rule reports self-service and CRM cancellations once each; restricting the
+previous status keeps abandoned checkouts (incomplete transaction → Cancelled) silent. The
+participant triggers expose `$participant.role` and `$participant.status` (labels).
 
 Action params for each, in the same shape as the other realtime alerts:
 

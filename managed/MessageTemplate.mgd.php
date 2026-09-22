@@ -218,6 +218,24 @@ $templates = [
       TPL,
   ],
   [
+    'workflow_name' => 'herald_event_cancellation_alert',
+    'msg_title' => E::ts('Herald: Event registration cancelled'),
+    // Privacy: masked_name only — see herald_group_subscription_alert.
+    'msg_subject' => '❌ {$event.title}: {$contact.masked_name}',
+    'msg_html' => <<<'TPL'
+      {crmScope extensionKey='herald'}❌ <b>{ts}Event registration cancelled{/ts}</b>
+      {$event.title}
+      {ts}Participant{/ts}: {$contact.masked_name}
+      {if $participant.role}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
+      TPL,
+    'msg_text' => <<<'TPL'
+      {crmScope extensionKey='herald'}{ts}Event registration cancelled{/ts}
+      {$event.title}
+      {ts}Participant{/ts}: {$contact.masked_name}
+      {if $participant.role}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
+      TPL,
+  ],
+  [
     'workflow_name' => 'herald_event_created_alert',
     'msg_title' => E::ts('Herald: New event created'),
     'msg_subject' => '{crmScope extensionKey=\'herald\'}🆕 {ts}New event{/ts}: {$event.title}{/crmScope}',

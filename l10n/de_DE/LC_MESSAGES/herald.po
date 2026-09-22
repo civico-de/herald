@@ -414,6 +414,10 @@ msgid "Event deactivated"
 msgstr "Workshop abgeschaltet"
 
 #: managed/MessageTemplate.mgd.php
+msgid "Event registration cancelled"
+msgstr "Storno Event-Anmeldung"
+
+#: managed/MessageTemplate.mgd.php
 msgid "Event deleted"
 msgstr "Workshop gelöscht"
 

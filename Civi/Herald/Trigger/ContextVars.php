@@ -151,7 +151,8 @@ final class ContextVars {
           [1 => [$roleId, 'String']],
         ));
       }
-      $vars['participant'] = ['role' => $role];
+      $status = self::labelOf('civicrm_participant_status_type', 'label', Cast::toInt($participant['status_id'] ?? 0));
+      $vars['participant'] = ['role' => $role, 'status' => $status];
     }
     catch (\Throwable $e) {
       \Civi::log()->error('herald: could not resolve trigger participant', ['error' => $e->getMessage()]);
