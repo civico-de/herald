@@ -84,15 +84,13 @@ $templates = [
   [
     'workflow_name' => 'herald_contribution_alert_completed',
     'msg_title' => E::ts('Herald: New completed contribution'),
-    'msg_subject' => '✅ {$contribution.total_amount|crmMoney} — {$contribution.source}',
+    'msg_subject' => '✅ {$contribution.total_amount|crmMoney}{if !empty($contribution.source)} — {$contribution.source}{/if}',
     'msg_html' => <<<'TPL'
-      {crmScope extensionKey='herald'}✅ <b>{ts}Donation received{/ts}</b>: {$contribution.total_amount|crmMoney}
-      {ts}Source{/ts}: {$contribution.source}
+      {crmScope extensionKey='herald'}✅ <b>{ts}Donation received{/ts}</b>: {$contribution.total_amount|crmMoney}{if !empty($contribution.source)}{"\n"}{ts}Source{/ts}: {$contribution.source}{/if}
       {if $campaign.title}{ts}Campaign{/ts}: {$campaign.title}{if $campaign.goal} ({$campaign.percent}%){/if}{/if}{/crmScope}
       TPL,
     'msg_text' => <<<'TPL'
-      {crmScope extensionKey='herald'}{ts}Donation received{/ts}: {$contribution.total_amount|crmMoney}
-      {ts}Source{/ts}: {$contribution.source}
+      {crmScope extensionKey='herald'}{ts}Donation received{/ts}: {$contribution.total_amount|crmMoney}{if !empty($contribution.source)}{"\n"}{ts}Source{/ts}: {$contribution.source}{/if}
       {if $campaign.title}{ts}Campaign{/ts}: {$campaign.title}{if $campaign.goal} ({$campaign.percent}%){/if}{/if}{/crmScope}
       TPL,
   ],
@@ -101,12 +99,10 @@ $templates = [
     'msg_title' => E::ts('Herald: New pending contribution'),
     'msg_subject' => '{crmScope extensionKey=\'herald\'}🏦 {$contribution.total_amount|crmMoney} {ts}announced{/ts}{/crmScope}',
     'msg_html' => <<<'TPL'
-      {crmScope extensionKey='herald'}🏦 <b>{ts}Donation announced{/ts}</b>: {$contribution.total_amount|crmMoney}
-      {ts}Source{/ts}: {$contribution.source}{/crmScope}
+      {crmScope extensionKey='herald'}🏦 <b>{ts}Donation announced{/ts}</b>: {$contribution.total_amount|crmMoney}{if !empty($contribution.source)}{"\n"}{ts}Source{/ts}: {$contribution.source}{/if}{/crmScope}
       TPL,
     'msg_text' => <<<'TPL'
-      {crmScope extensionKey='herald'}{ts}Donation announced{/ts}: {$contribution.total_amount|crmMoney}
-      {ts}Source{/ts}: {$contribution.source}{/crmScope}
+      {crmScope extensionKey='herald'}{ts}Donation announced{/ts}: {$contribution.total_amount|crmMoney}{if !empty($contribution.source)}{"\n"}{ts}Source{/ts}: {$contribution.source}{/if}{/crmScope}
       TPL,
   ],
   [
@@ -115,19 +111,17 @@ $templates = [
     'msg_subject' => '🔄 {$contribution.total_amount|crmMoney}: {$from_status} → {$to_status}',
     'msg_html' => <<<'TPL'
       {crmScope extensionKey='herald'}🔄 <b>{ts}Status changed{/ts}</b>: {$from_status} → {$to_status}
-      {ts}Amount{/ts}: {$contribution.total_amount|crmMoney}
-      {ts}Source{/ts}: {$contribution.source}{/crmScope}
+      {ts}Amount{/ts}: {$contribution.total_amount|crmMoney}{if !empty($contribution.source)}{"\n"}{ts}Source{/ts}: {$contribution.source}{/if}{/crmScope}
       TPL,
     'msg_text' => <<<'TPL'
       {crmScope extensionKey='herald'}{ts}Status changed{/ts}: {$from_status} → {$to_status}
-      {ts}Amount{/ts}: {$contribution.total_amount|crmMoney}
-      {ts}Source{/ts}: {$contribution.source}{/crmScope}
+      {ts}Amount{/ts}: {$contribution.total_amount|crmMoney}{if !empty($contribution.source)}{"\n"}{ts}Source{/ts}: {$contribution.source}{/if}{/crmScope}
       TPL,
   ],
   [
     'workflow_name' => 'herald_contribution_alert_ticket',
     'msg_title' => E::ts('Herald: New ticket/event contribution'),
-    'msg_subject' => '🎟 {$contribution.total_amount|crmMoney} — {$contribution.source}',
+    'msg_subject' => '🎟 {$contribution.total_amount|crmMoney}{if !empty($contribution.source)} — {$contribution.source}{/if}',
     'msg_html' => <<<'TPL'
       {crmScope extensionKey='herald'}🎟 <b>{ts}Ticket sold{/ts}</b>: {$contribution.total_amount|crmMoney}{/crmScope}
       TPL,
@@ -138,7 +132,7 @@ $templates = [
   [
     'workflow_name' => 'herald_contribution_alert_ticket_pending',
     'msg_title' => E::ts('Herald: Ticket ordered, bank transfer announced'),
-    'msg_subject' => '🎟⏳ {$contribution.total_amount|crmMoney} — {$contribution.source}',
+    'msg_subject' => '🎟⏳ {$contribution.total_amount|crmMoney}{if !empty($contribution.source)} — {$contribution.source}{/if}',
     'msg_html' => <<<'TPL'
       {crmScope extensionKey='herald'}🎟⏳ <b>{ts}Ticket ordered{/ts}</b> ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}{/crmScope}
       TPL,
@@ -149,7 +143,7 @@ $templates = [
   [
     'workflow_name' => 'herald_contribution_alert_ticket_paid',
     'msg_title' => E::ts('Herald: Ticket bank transfer received'),
-    'msg_subject' => '🎟✅ {$contribution.total_amount|crmMoney} — {$contribution.source}',
+    'msg_subject' => '🎟✅ {$contribution.total_amount|crmMoney}{if !empty($contribution.source)} — {$contribution.source}{/if}',
     'msg_html' => <<<'TPL'
       {crmScope extensionKey='herald'}🎟✅ <b>{ts}Ticket paid{/ts}</b> ({ts}bank transfer{/ts}): {$contribution.total_amount|crmMoney}{/crmScope}
       TPL,
@@ -208,13 +202,13 @@ $templates = [
       {crmScope extensionKey='herald'}🎟️ <b>{ts}New event registration{/ts}</b>
       {$event.title}
       {ts}Participant{/ts}: {$contact.masked_name}
-      {if $participant.role}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
+      {if !empty($participant.role)}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
       TPL,
     'msg_text' => <<<'TPL'
       {crmScope extensionKey='herald'}{ts}New event registration{/ts}
       {$event.title}
       {ts}Participant{/ts}: {$contact.masked_name}
-      {if $participant.role}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
+      {if !empty($participant.role)}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
       TPL,
   ],
   [
@@ -226,13 +220,13 @@ $templates = [
       {crmScope extensionKey='herald'}❌ <b>{ts}Event registration cancelled{/ts}</b>
       {$event.title}
       {ts}Participant{/ts}: {$contact.masked_name}
-      {if $participant.role}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
+      {if !empty($participant.role)}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
       TPL,
     'msg_text' => <<<'TPL'
       {crmScope extensionKey='herald'}{ts}Event registration cancelled{/ts}
       {$event.title}
       {ts}Participant{/ts}: {$contact.masked_name}
-      {if $participant.role}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
+      {if !empty($participant.role)}{ts}Role{/ts}: {$participant.role}{/if}{/crmScope}
       TPL,
   ],
   [
@@ -241,10 +235,10 @@ $templates = [
     'msg_subject' => '{crmScope extensionKey=\'herald\'}🆕 {ts}New event{/ts}: {$event.title}{/crmScope}',
     'msg_html' => <<<'TPL'
       {crmScope extensionKey='herald'}🆕 <b>{ts}New event{/ts}</b>
-      {$event.title}{if $event.start_date} — {$event.start_date|crmDate}{/if}{/crmScope}
+      {$event.title}{if !empty($event.start_date)} — {$event.start_date|crmDate}{/if}{/crmScope}
       TPL,
     'msg_text' => <<<'TPL'
-      {crmScope extensionKey='herald'}{ts}New event{/ts}: {$event.title}{if $event.start_date} — {$event.start_date|crmDate}{/if}{/crmScope}
+      {crmScope extensionKey='herald'}{ts}New event{/ts}: {$event.title}{if !empty($event.start_date)} — {$event.start_date|crmDate}{/if}{/crmScope}
       TPL,
   ],
   [

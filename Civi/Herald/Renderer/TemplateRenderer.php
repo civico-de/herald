@@ -49,6 +49,7 @@ class TemplateRenderer {
       ));
     }
 
+    $isHtml = isset($template['msg_html']);
     $body = self::str($template['msg_html'] ?? $template['msg_text'] ?? '');
     if ($body === '') {
       throw new \CRM_Core_Exception(sprintf(
@@ -60,7 +61,7 @@ class TemplateRenderer {
     $subject = trim(self::str($template['msg_subject'] ?? ''));
     return [
       'subject' => $subject !== '' ? $this->renderInline($subject, $vars) : NULL,
-      'body' => $this->renderInline($body, $vars),
+      'body' => $this->renderInline($body, $isHtml ? self::escapeHtml($vars) : $vars),
     ];
   }
 
@@ -82,6 +83,25 @@ class TemplateRenderer {
     finally {
       $smarty->popScope();
     }
+  }
+
+  /**
+   * Vars are plain text; msg_html is HTML (Telegram parse_mode=HTML, email), so
+   * `<`, `>` and `&` in values must not be read as markup.
+   *
+   * @template K of array-key
+   * @param array<K, mixed> $vars
+   * @return array<K, mixed>
+   */
+  public static function escapeHtml(array $vars): array {
+    return array_map(
+      static fn (mixed $v): mixed => match (TRUE) {
+        is_string($v) => htmlspecialchars($v, ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+        is_array($v) => self::escapeHtml($v),
+        default => $v,
+      },
+      $vars,
+    );
   }
 
   /**
