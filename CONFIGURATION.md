@@ -399,7 +399,7 @@ dev redirection all apply. No extra credentials are needed.
 | `email_to` | string | Recipient address (falls back to `herald_email_default_to`) |
 | `email_to_name` | string | Recipient display name |
 | `email_subject` | string | Explicit subject. When unset, the template's `msg_subject` is Smarty-rendered with the same vars as the body. Final fallback is "Notification" |
-| `email_format` | string | `html` (default) or `text`: which MIME part the rendered body becomes. `text` gets the plain text of the body |
+| `email_format` | string | `html` (default) or `text`: which MIME part the rendered body becomes. `text` gets the plain text of the body, `html` the body with its line breaks as `<br>` |
 | `email_cc` | string | Comma-separated CC addresses |
 | `email_bcc` | string | Comma-separated BCC addresses |
 
@@ -457,6 +457,11 @@ Resolution merges the topic entry over the `default` entry. An unrouted topic, w
 entry and no default, throws. A route with `aggregate_minutes > 0` sends through the same
 aggregation buffer as the CiviRules alerts. Instead of `message`, pass `template`
 (a workflow name) plus `vars` to render a MessageTemplate.
+
+A `message` is HTML, like a rendered template. Pass `format=text` (on `Herald.send` and
+`Herald.publish`) for a plain-text message: HTML sinks then show it escaped, and text sinks
+get the text back, with runs of blank lines shortened to one and outer whitespace
+trimmed.
 
 ## Extra digest sections from other extensions
 
@@ -539,6 +544,8 @@ monitor covers everything short of that.
 | `goal` | float | none | Renders campaign progress when set |
 | `campaign_title` | string | none | Free-text title for the campaign block |
 | `sections` | string | none | Extra section keys from other extensions, multi-block mode only |
+| `blocks` | JSON | none | Multi-block mode (`Job.herald_contribution_digest` only): one entry per block with `title`, `template` and the filters above. A block `title` is plain text and is escaped like any template variable |
+| `header` | string | none | Multi-block mode: line above the blocks, inserted as HTML (e.g. `📊 <b>Daily report</b>`) |
 
 ### `Send contribution alert`
 

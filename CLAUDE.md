@@ -40,10 +40,12 @@ actions (no bespoke cron for alerts). Live in production on production.
   shipped template overwrites admin edits to it on the next reconcile. Admin
   edits to unchanged templates survive. Templates render as Smarty strings via
   `CRM_Core_Smarty`.
-- Rendered bodies are HTML: string vars are HTML-escaped into `msg_html`
-  (after undoing core's `&lt;`/`&gt;` input encoding). Sinks that do not
+- Every body a channel gets is HTML: string vars are HTML-escaped into
+  `msg_html` (after undoing core's `&lt;`/`&gt;` input encoding), and plain
+  text (a `msg_text`-only template, `Herald.send`/`publish` with
+  `format=text`) is escaped whole via `PlainText::toHtml()`. Sinks that do not
   render HTML get `Channel\PlainText::fromHtml()` of the body, never the raw
-  markup.
+  markup; email and activity HTML get newlines as `<br>` (`HtmlLineBreaks`).
 - The `Previous Contribution status` condition relies on the
   `hook_civicrm_pre` snapshot (`PreEditSnapshot`), not CiviRules change data.
   The generic `Field transition` condition uses the same model; the fields it

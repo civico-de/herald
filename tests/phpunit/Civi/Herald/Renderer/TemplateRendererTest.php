@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Renderer;
 
+use Civi\Herald\Channel\EmailChannel;
+use Civi\Herald\Channel\PlainText;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
@@ -128,18 +130,49 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
     );
   }
 
-  public function testTextOnlyTemplateIsNotEscaped(): void {
+  /**
+   * Channels take HTML: a msg_text body is escaped whole, and its vars are
+   * shown as typed.
+   */
+  public function testTextOnlyTemplateIsEscapedWhole(): void {
     \Civi\Api4\MessageTemplate::create(checkPermissions: FALSE)
       ->setValues([
         'workflow_name' => 'herald_test_text_only',
         'msg_title' => 'text only',
-        'msg_text' => 'Detail: {$detail}',
+        'msg_text' => 'Detail: {$detail} <i>',
         'is_default' => TRUE,
       ])
       ->execute();
 
-    $body = $this->renderer->render('herald_test_text_only', ['detail' => 'a < b & c']);
-    $this->assertSame('Detail: a < b & c', $body);
+    $body = $this->renderer->render('herald_test_text_only', ['detail' => 'a < b & c &lt;d&gt;']);
+    $this->assertSame('Detail: a &lt; b &amp; c &lt;d&gt; &lt;i&gt;', $body);
+    $this->assertSame('Detail: a < b & c <d> <i>', PlainText::fromHtml($body));
+  }
+
+  /**
+   * Titles saved through a form arrive as `&lt;`/`&gt;`; the subject is an
+   * email header and shows them as typed, the body escapes them once.
+   */
+  public function testSubjectShowsCoreEncodedVarsAsTyped(): void {
+    $parts = $this->renderer->renderParts('herald_event_created_alert', [
+      'event' => ['id' => 3, 'title' => 'Workshop &lt;Einsteiger&gt; & mehr'],
+    ]);
+    $this->assertStringEndsWith('Workshop <Einsteiger> & mehr', (string) $parts['subject']);
+    $this->assertStringContainsString('Workshop &lt;Einsteiger&gt; &amp; mehr', $parts['body']);
+  }
+
+  /**
+   * Line breaks of a shipped template survive the email HTML part.
+   */
+  public function testShippedTemplateKeepsLineBreaksInEmailHtml(): void {
+    $body = $this->renderer->render('herald_event_registration_alert', [
+      'event' => ['id' => 3, 'title' => 'Summer camp'],
+      'contact' => ['masked_name' => 'Jo***'],
+      'participant' => ['role' => 'Attendee'],
+    ]);
+    $this->assertStringNotContainsString('<br', $body);
+    $html = EmailChannel::buildMailParams($body, ['email_to' => 'a@example.org'], 'f@example.org')['html'];
+    $this->assertMatchesRegularExpression('#registration</b><br>\nSummer camp<br>\nParticipant: Jo\*\*\*<br>\nRole: Attendee$#', $html);
   }
 
   /**
@@ -214,6 +247,81 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
       'participant' => [],
     ]);
     $this->assertStringNotContainsString('Role', $body);
+  }
+
+  /**
+   * A contact or membership lookup that fails leaves its variable out.
+   */
+  public function testMembershipTemplateRendersWithoutOptionalVars(): void {
+    [$parts, $warnings] = $this->renderQuietly('herald_membership_signup_alert', []);
+    $this->assertSame([], $warnings);
+    $this->assertSame('🎉 <b>New membership</b>', $parts['body']);
+    $this->assertSame('🎉 New membership', $parts['subject']);
+
+    [$parts, $warnings] = $this->renderQuietly('herald_membership_signup_alert', [
+      'membership' => ['membership_type' => 'General', 'status' => 'New'],
+    ]);
+    $this->assertSame([], $warnings);
+    $this->assertSame("🎉 <b>New membership</b>\nGeneral\nStatus: New", $parts['body']);
+
+    [$parts] = $this->renderQuietly('herald_membership_signup_alert', [
+      'contact' => ['masked_name' => 'Jo***'],
+      'membership' => ['membership_type' => 'General', 'status' => 'New'],
+    ]);
+    $this->assertSame("🎉 <b>New membership</b>\nJo*** — General\nStatus: New", $parts['body']);
+    $this->assertSame('🎉 New membership: Jo***', $parts['subject']);
+  }
+
+  /**
+   * DigestVars always sets every key; a goal without campaign_title and a
+   * digest without histogram leave no empty markup behind.
+   */
+  public function testDigestWithoutCampaignTitleOrHistogramLeavesNoEmptyMarkup(): void {
+    foreach (['herald_contribution_digest_daily', 'herald_contribution_digest_weekly'] as $workflow) {
+      [$parts, $warnings] = $this->renderQuietly($workflow, [
+        'period' => ['label' => '2026-05-06'],
+        'totals' => ['amount' => 100, 'count' => 1],
+        'by_source' => [],
+        'pending' => ['amount' => 0, 'count' => 0],
+        'campaign' => ['title' => '', 'goal' => 1000, 'total' => 100, 'count' => 1, 'percent' => 10],
+        'histogram' => '',
+      ]);
+      $this->assertSame([], $warnings);
+      $this->assertStringNotContainsString('<pre>', $parts['body']);
+      $this->assertStringNotContainsString('<b></b>', $parts['body']);
+      $this->assertStringContainsString('Campaign: 10%', $parts['body']);
+    }
+
+    [$parts, $warnings] = $this->renderQuietly('herald_contribution_digest_block', [
+      'block_title' => '',
+      'totals' => ['amount' => 0, 'count' => 0],
+      'by_item' => [],
+      'by_source' => [],
+      'pending' => ['amount' => 0, 'count' => 0],
+      'pending_items' => [],
+      'campaign' => ['title' => '', 'goal' => 0, 'total' => 0, 'count' => 0, 'percent' => 0],
+      'histogram' => '',
+    ]);
+    $this->assertSame([], $warnings);
+    $this->assertSame('<i>no receipts</i>', trim($parts['body']));
+  }
+
+  /**
+   * @param array<string, mixed> $vars
+   * @return array{array{subject: ?string, body: string}, list<string>}
+   */
+  private function renderQuietly(string $workflow, array $vars): array {
+    $warnings = [];
+    set_error_handler(static function (int $errno, string $errstr) use (&$warnings): bool {
+      $warnings[] = $errstr;
+      return TRUE;
+    }, E_WARNING | E_NOTICE | E_USER_WARNING | E_USER_NOTICE);
+    try {
+      return [$this->renderer->renderParts($workflow, $vars), $warnings];
+    }
+    finally {
+      restore_error_handler();
+    }
   }
 
   public function testThrowsOnMissingTemplate(): void {

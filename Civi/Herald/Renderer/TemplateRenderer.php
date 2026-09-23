@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Renderer;
 
+use Civi\Herald\Channel\PlainText;
 use Civi\Herald\Util\Cast;
 
 /**
@@ -31,8 +32,8 @@ class TemplateRenderer {
    * subject concept ignore it.
    *
    * @param array<string, mixed> $vars
-   * @return array{subject: ?string, body: string} subject is NULL when the
-   *   template has no msg_subject.
+   * @return array{subject: ?string, body: string} body is HTML (a msg_text
+   *   body is escaped into it), subject is text or NULL without msg_subject.
    * @throws \CRM_Core_Exception when the template is missing.
    */
   public function renderParts(string $workflowName, array $vars): array {
@@ -61,9 +62,12 @@ class TemplateRenderer {
     }
 
     $subject = trim(self::str($template['msg_subject'] ?? ''));
+    $textVars = self::mapStrings($vars, self::decode(...));
     return [
-      'subject' => $subject !== '' ? $this->renderInline($subject, $vars) : NULL,
-      'body' => $this->renderInline($body, $isHtml ? self::escapeHtml($vars) : $vars),
+      'subject' => $subject !== '' ? $this->renderInline($subject, $textVars) : NULL,
+      'body' => $isHtml
+        ? $this->renderInline($body, self::escapeHtml($vars))
+        : PlainText::toHtml($this->renderInline($body, $textVars)),
     ];
   }
 
@@ -89,22 +93,34 @@ class TemplateRenderer {
 
   /**
    * Vars are plain text; msg_html is HTML (Telegram parse_mode=HTML, email), so
-   * `<`, `>` and `&` in values must not be read as markup. APIv3 and forms store
-   * `<`/`>` as `&lt;`/`&gt;` (HTMLInputCoder); that encoding is undone first.
+   * `<`, `>` and `&` in values must not be read as markup.
    *
    * @template K of array-key
    * @param array<K, mixed> $vars
    * @return array<K, mixed>
    */
   public static function escapeHtml(array $vars): array {
+    return self::mapStrings($vars, static fn (string $v): string => PlainText::toHtml(self::decode($v)));
+  }
+
+  /**
+   * APIv3 and forms store `<`/`>` as `&lt;`/`&gt;` (HTMLInputCoder).
+   */
+  private static function decode(string $value): string {
+    return Cast::toString(\CRM_Utils_API_HTMLInputCoder::singleton()->decodeValue($value));
+  }
+
+  /**
+   * @template K of array-key
+   * @param array<K, mixed> $vars
+   * @param \Closure(string): string $fn
+   * @return array<K, mixed>
+   */
+  private static function mapStrings(array $vars, \Closure $fn): array {
     return array_map(
       static fn (mixed $v): mixed => match (TRUE) {
-        is_string($v) => htmlspecialchars(
-          Cast::toString(\CRM_Utils_API_HTMLInputCoder::singleton()->decodeValue($v)),
-          ENT_NOQUOTES | ENT_SUBSTITUTE,
-          'UTF-8',
-        ),
-        is_array($v) => self::escapeHtml($v),
+        is_string($v) => $fn($v),
+        is_array($v) => self::mapStrings($v, $fn),
         default => $v,
       },
       $vars,

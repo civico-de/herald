@@ -36,9 +36,9 @@ $templates = [
       {if $pending.count > 0}
       🏦 {ts}Open pending pool{/ts}: <b>{$pending.amount|crmMoney}</b> ({$pending.count})
       {/if}
-      <pre>{$histogram}</pre>
+      {if $histogram}<pre>{$histogram}</pre>{/if}
 
-      {if $campaign.goal}{ts}Campaign{/ts} <b>{$campaign.title}</b>: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
+      {if $campaign.goal}{ts}Campaign{/ts}{if !empty($campaign.title)} <b>{$campaign.title}</b>{/if}: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
       TPL,
     'msg_text' => <<<'TPL'
       {crmScope extensionKey='herald'}{ts 1=$period.label}Daily report %1{/ts}
@@ -50,7 +50,7 @@ $templates = [
 
       {$histogram}
 
-      {if $campaign.goal}{$campaign.title}: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
+      {if $campaign.goal}{ts}Campaign{/ts}{if !empty($campaign.title)} {$campaign.title}{/if}: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
       TPL,
   ],
   [
@@ -66,9 +66,9 @@ $templates = [
       {if $pending.count > 0}
       🏦 {ts}Open pending pool{/ts}: <b>{$pending.amount|crmMoney}</b> ({$pending.count})
       {/if}
-      <pre>{$histogram}</pre>
+      {if $histogram}<pre>{$histogram}</pre>{/if}
 
-      {if $campaign.goal}{ts}Campaign{/ts} <b>{$campaign.title}</b>: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
+      {if $campaign.goal}{ts}Campaign{/ts}{if !empty($campaign.title)} <b>{$campaign.title}</b>{/if}: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
       TPL,
     'msg_text' => <<<'TPL'
       {crmScope extensionKey='herald'}{ts 1=$period.label}Weekly report %1{/ts}
@@ -79,7 +79,7 @@ $templates = [
 
       {$histogram}
 
-      {if $campaign.goal}{$campaign.title}: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
+      {if $campaign.goal}{ts}Campaign{/ts}{if !empty($campaign.title)} {$campaign.title}{/if}: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
       TPL,
   ],
   [
@@ -182,16 +182,12 @@ $templates = [
     'workflow_name' => 'herald_membership_signup_alert',
     'msg_title' => E::ts('Herald: New membership signup'),
     // Privacy: masked_name only — see herald_group_subscription_alert.
-    'msg_subject' => '{crmScope extensionKey=\'herald\'}🎉 {ts}New membership{/ts}: {$contact.masked_name}{/crmScope}',
+    'msg_subject' => '{crmScope extensionKey=\'herald\'}🎉 {ts}New membership{/ts}{if !empty($contact.masked_name)}: {$contact.masked_name}{/if}{/crmScope}',
     'msg_html' => <<<'TPL'
-      {crmScope extensionKey='herald'}🎉 <b>{ts}New membership{/ts}</b>
-      {$contact.masked_name} — {$membership.membership_type}
-      {ts}Status{/ts}: {$membership.status}{/crmScope}
+      {crmScope extensionKey='herald'}🎉 <b>{ts}New membership{/ts}</b>{if !empty($contact.masked_name)}{"\n"}{$contact.masked_name}{/if}{if !empty($membership.membership_type)}{if !empty($contact.masked_name)} — {else}{"\n"}{/if}{$membership.membership_type}{/if}{if !empty($membership.status)}{"\n"}{ts}Status{/ts}: {$membership.status}{/if}{/crmScope}
       TPL,
     'msg_text' => <<<'TPL'
-      {crmScope extensionKey='herald'}{ts}New membership{/ts}
-      {$contact.masked_name} — {$membership.membership_type}
-      {ts}Status{/ts}: {$membership.status}{/crmScope}
+      {crmScope extensionKey='herald'}{ts}New membership{/ts}{if !empty($contact.masked_name)}{"\n"}{$contact.masked_name}{/if}{if !empty($membership.membership_type)}{if !empty($contact.masked_name)} — {else}{"\n"}{/if}{$membership.membership_type}{/if}{if !empty($membership.status)}{"\n"}{ts}Status{/ts}: {$membership.status}{/if}{/crmScope}
       TPL,
   ],
   [
@@ -275,7 +271,7 @@ $templates = [
     'msg_title' => E::ts('Herald: Contribution digest block (composable)'),
     'msg_subject' => '{$block_title}: {$totals.count} · {$totals.amount|crmMoney}',
     'msg_html' => <<<'TPL'
-      {crmScope extensionKey='herald'}<b>{$block_title}</b>{if $totals.count > 0}{"\n"}<b>{$totals.amount|crmMoney}</b> · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{foreach from=$by_item item=it}{"\n"}• {$it.label} ({$it.unit_price|crmMoney}): {$it.qty}× = {$it.total|crmMoney}{/foreach}{foreach from=$by_source item=src}{"\n"}• {$src.source}: {$src.total|crmMoney} ({$src.count}){/foreach}{else}{"\n"}<i>{ts}no receipts{/ts}</i>{/if}{if $pending.count > 0}{"\n"}🏦 {ts}open{/ts}: {$pending.amount|crmMoney} ({$pending.count}){foreach from=$pending_items item=it}{"\n"}• {$it.label} ({$it.unit_price|crmMoney}): {$it.qty}× = {$it.total|crmMoney}{/foreach}{/if}{if $histogram}{"\n"}<pre>{$histogram}</pre>{/if}{/crmScope}
+      {crmScope extensionKey='herald'}{if !empty($block_title)}<b>{$block_title}</b>{/if}{if $totals.count > 0}{"\n"}<b>{$totals.amount|crmMoney}</b> · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{foreach from=$by_item item=it}{"\n"}• {$it.label} ({$it.unit_price|crmMoney}): {$it.qty}× = {$it.total|crmMoney}{/foreach}{foreach from=$by_source item=src}{"\n"}• {$src.source}: {$src.total|crmMoney} ({$src.count}){/foreach}{else}{"\n"}<i>{ts}no receipts{/ts}</i>{/if}{if $pending.count > 0}{"\n"}🏦 {ts}open{/ts}: {$pending.amount|crmMoney} ({$pending.count}){foreach from=$pending_items item=it}{"\n"}• {$it.label} ({$it.unit_price|crmMoney}): {$it.qty}× = {$it.total|crmMoney}{/foreach}{/if}{if $histogram}{"\n"}<pre>{$histogram}</pre>{/if}{/crmScope}
       TPL,
     'msg_text' => <<<'TPL'
       {crmScope extensionKey='herald'}{$block_title}{if $totals.count > 0}{"\n"}{$totals.amount|crmMoney} · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{foreach from=$by_item item=it}{"\n"}- {$it.label} ({$it.unit_price|crmMoney}): {$it.qty}x = {$it.total|crmMoney}{/foreach}{foreach from=$by_source item=src}{"\n"}- {$src.source}: {$src.total|crmMoney} ({$src.count}){/foreach}{else}{"\n"}{ts}no receipts{/ts}{/if}{if $pending.count > 0}{"\n"}{ts}open{/ts}: {$pending.amount|crmMoney} ({$pending.count}){foreach from=$pending_items item=it}{"\n"}- {$it.label} ({$it.unit_price|crmMoney}): {$it.qty}x = {$it.total|crmMoney}{/foreach}{/if}{/crmScope}

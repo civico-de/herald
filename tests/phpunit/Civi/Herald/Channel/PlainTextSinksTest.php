@@ -41,9 +41,48 @@ class PlainTextSinksTest extends TestCase {
     $this->assertSame("Tom & Jerry <x\\>", TelegramText::forParseMode('Tom &amp; Jerry &lt;x&gt;', 'MarkdownV2'));
   }
 
-  public function testEmailTextPartIsPlainAndHtmlPartUnchanged(): void {
+  public function testFromHtmlBreaksBlocksAndKeepsPre(): void {
+    $this->assertSame("a\nb", PlainText::fromHtml('<p>a</p><p>b</p>'));
+    $this->assertSame("a\n\nb", PlainText::fromHtml("<p>a</p>\n\n<p>b</p>"));
+    $this->assertSame("a\nb", PlainText::fromHtml('<div>a</div><div>b</div>'));
+    $this->assertSame("- x\n- y", PlainText::fromHtml("<ul>\n<li>x</li>\n<li>y</li>\n</ul>"));
+    $this->assertSame("T\ncell 1\ncell 2", PlainText::fromHtml('<h2>T</h2><table><tr><td>cell 1</td></tr><tr><td>cell 2</td></tr></table>'));
+    $this->assertSame("a\n\nb", PlainText::fromHtml("\n a\n\n\n\nb\n"));
+    $this->assertSame("x\n1\n\n\n\n2", PlainText::fromHtml("x\n<pre>1\n\n\n\n2</pre>"));
+  }
+
+  /**
+   * A plain-text body travels as its escaped form: text sinks get the text
+   * back, HTML sinks show it instead of parsing it.
+   */
+  public function testTextBodyRoundTripsAndIsShownInHtmlSinks(): void {
+    $text = "Wert <5 erwartet & &amp; <b>kein Tag</b>\nZeile 2";
+    $body = PlainText::toHtml($text);
+    $this->assertSame($text, PlainText::fromHtml($body));
+    $this->assertSame($body, TelegramText::forParseMode($body, 'HTML'));
+    $this->assertSame(
+      "Wert &lt;5 erwartet &amp; &amp;amp; &lt;b&gt;kein Tag&lt;/b&gt;<br>\nZeile 2",
+      EmailChannel::buildMailParams($body, ['email_to' => 'a@example.org'], 'f@example.org')['html'],
+    );
+    $this->assertSame($text, EmailChannel::buildMailParams($body, ['email_to' => 'a@example.org', 'email_format' => 'text'], 'f@example.org')['text']);
+    $this->assertSame($text, WebhookChannel::buildPayload($body, 'text')['data']);
+    $this->assertSame($text, PushoverChannel::buildForm('t', 'u', $body, [])['message']);
+  }
+
+  public function testHtmlLineBreaksLeavePreAndBlockTagsAlone(): void {
+    $this->assertSame(
+      "<b>A</b><br>\n<br>\nB<br>\n<pre>1\n2</pre>\nC",
+      HtmlLineBreaks::apply("<b>A</b>\n\nB\n<pre>1\n2</pre>\nC"),
+    );
+    $this->assertSame("<p>a</p>\n<ul>\n<li>i</li>\n</ul>\nx<br />\ny", HtmlLineBreaks::apply("<p>a</p>\n<ul>\n<li>i</li>\n</ul>\nx<br />\ny"));
+  }
+
+  public function testEmailTextPartIsPlainAndHtmlPartKeepsLineBreaks(): void {
     $to = ['email_to' => 'a@example.org'];
-    $this->assertSame(self::BODY, EmailChannel::buildMailParams(self::BODY, $to, 'f@example.org')['html']);
+    $this->assertSame(
+      "🔴 <b>Check</b>: Tom &amp; Jerry &lt;x&gt;<br>\n<pre>a | b</pre>",
+      EmailChannel::buildMailParams(self::BODY, $to, 'f@example.org')['html'],
+    );
     $text = EmailChannel::buildMailParams(self::BODY, $to + ['email_format' => 'text'], 'f@example.org');
     $this->assertSame(self::TEXT, $text['text']);
   }
@@ -70,7 +109,10 @@ class PlainTextSinksTest extends TestCase {
       "🔴 Check: Tom &amp; Jerry &lt;x&gt;<br />\na | b",
       ActivityText::details(self::BODY, 'text'),
     );
-    $this->assertSame(self::BODY, ActivityText::details(self::BODY, 'html'));
+    $this->assertSame(
+      "🔴 <b>Check</b>: Tom &amp; Jerry &lt;x&gt;<br>\n<pre>a | b</pre>",
+      ActivityText::details(self::BODY, 'html'),
+    );
     $this->assertSame('🔴 Check: Tom & Jerry <x> a | b', ActivityText::subject(self::BODY));
   }
 

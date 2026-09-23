@@ -10,7 +10,7 @@ interface ChannelInterface {
    * Send a rendered message body through this channel.
    *
    * @param string $renderedBody
-   *   The fully-rendered message (HTML, Markdown, or plain — channel decides what it accepts).
+   *   The fully-rendered message as HTML; text sinks send PlainText::fromHtml() of it.
    * @param array<string, mixed> $config
    *   Per-call configuration. Shape depends on the channel; see getConfigSchema().
    *   For Telegram: ['chat_id' => string, 'parse_mode' => 'HTML'|'MarkdownV2'|null].

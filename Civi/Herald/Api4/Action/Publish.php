@@ -7,6 +7,7 @@ namespace Civi\Herald\Api4\Action;
 use Civi\Api4\Generic\AbstractAction;
 use Civi\Api4\Generic\Result;
 use Civi\Herald\Buffer\AlertBuffer;
+use Civi\Herald\Channel\PlainText;
 use Civi\Herald\Dispatch\Dispatcher;
 use Civi\Herald\Renderer\TemplateRenderer;
 use Civi\Herald\Topic\Router;
@@ -15,7 +16,8 @@ use Civi\Herald\Topic\Router;
  * Publish a message to a topic; the `herald_topics` setting maps topics to
  * channel, recipient and aggregation, so publishers carry no deployment specifics.
  *
- * Body: `message` (pre-rendered) or `template` (workflow_name) plus `vars`.
+ * Body: `message` (pre-rendered HTML, or plain text with format=text) or
+ * `template` (workflow_name) plus `vars`.
  * A route with aggregate_minutes > 0 goes through the alert buffer.
  *
  * Example:
@@ -27,6 +29,8 @@ use Civi\Herald\Topic\Router;
  * @method string getTopic()
  * @method $this setMessage(string $message)
  * @method string getMessage()
+ * @method $this setFormat(string $format)
+ * @method string getFormat()
  * @method $this setTemplate(string $template)
  * @method string getTemplate()
  * @method $this setVars(array<string, mixed> $vars)
@@ -47,6 +51,12 @@ class Publish extends AbstractAction {
    * @var string
    */
   protected string $message = '';
+
+  /**
+   * 'text' or 'html' (default): the format of `message`.
+   * @var string
+   */
+  protected string $format = '';
 
   /**
    * MessageTemplate workflow_name to render with vars.
@@ -80,7 +90,11 @@ class Publish extends AbstractAction {
     // Before a rendered subject enters $params, or every publish forms its own group.
     $groupHash = Dispatcher::groupHash($params, 'topic:' . $this->topic . ':');
 
-    $body = $this->message;
+    if ($this->format !== '' && !in_array($this->format, ['text', 'html'], TRUE)) {
+      throw new \CRM_Core_Exception('Herald.publish: "format" must be "text" or "html".');
+    }
+
+    $body = $this->format === 'text' ? PlainText::toHtml($this->message) : $this->message;
     if ($this->template !== '') {
       $parts = (new TemplateRenderer())->renderParts($this->template, $this->vars);
       $body = $parts['body'];

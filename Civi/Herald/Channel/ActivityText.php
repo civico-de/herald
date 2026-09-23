@@ -29,7 +29,7 @@ final class ActivityText {
     }
     return $format === 'text'
       ? nl2br(htmlspecialchars(PlainText::fromHtml($body), ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8'))
-      : $body;
+      : HtmlLineBreaks::apply($body);
   }
 
 }

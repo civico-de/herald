@@ -7,6 +7,7 @@ namespace Civi\Herald\Api4\Action;
 use Civi\Api4\Generic\AbstractAction;
 use Civi\Api4\Generic\Result;
 use Civi\Herald\Channel\ChannelRegistry;
+use Civi\Herald\Channel\PlainText;
 
 /**
  * Deliver an already-rendered message through one channel; the entry point
@@ -15,6 +16,8 @@ use Civi\Herald\Channel\ChannelRegistry;
  * `subject`/`format` are mapped via getSemanticFields() and dropped by channels
  * without an equivalent. Unknown `config` keys are passed through and reported
  * as `unknown_config_keys`, so a typo is visible without changing delivery.
+ * Channels take HTML bodies: a format=text message is escaped, so text sinks
+ * get the text back and HTML sinks show it instead of parsing it.
  *
  * Example:
  *   cv api4 Herald.send +v 'channel=ntfy' +v 'message="disk almost full"' \
@@ -29,7 +32,7 @@ class Send extends AbstractAction {
   protected string $channel = '';
 
   /**
-   * The fully-rendered message body.
+   * The fully-rendered message body: HTML, or plain text with format=text.
    * @var string
    */
   protected string $message = '';
@@ -51,7 +54,8 @@ class Send extends AbstractAction {
   protected string $subject = '';
 
   /**
-   * 'text' or 'html'; empty = channel default.
+   * 'text' or 'html' (default): the format of `message`, and the MIME part or
+   * body format of channels that offer a choice.
    * @var string
    */
   protected string $format = '';
@@ -75,7 +79,7 @@ class Send extends AbstractAction {
 
     $config = self::applySemantics($this->config, $channel->getSemanticFields(), $this->subject, $this->format);
 
-    $channel->send($this->message, $config);
+    $channel->send($this->format === 'text' ? PlainText::toHtml($this->message) : $this->message, $config);
 
     $result[] = [
       'channel' => $this->channel,

@@ -103,9 +103,41 @@ class SendTest extends TestCase implements HeadlessInterface, HookInterface, Tra
       'config' => ['email_to' => 'ops@example.org'],
     ]);
 
-    $headers = $this->spooled()[0]['headers'];
-    $this->assertStringContainsString('text/plain', $headers);
-    $this->assertStringNotContainsString('text/html', $headers);
+    $spooled = $this->spooled()[0];
+    $this->assertStringContainsString('text/plain', $spooled['headers']);
+    $this->assertStringNotContainsString('text/html', $spooled['headers']);
+    $this->assertStringContainsString('plain <not markup>', $spooled['body']);
+  }
+
+  /**
+   * A plain-text message keeps everything after a stray "<" in the text part
+   * and is shown, not parsed, in an HTML part.
+   */
+  public function testTextMessageSurvivesTextPartAndIsEscapedInHtmlPart(): void {
+    $message = 'Wert <5 erwartet, &amp; bleibt';
+    $send = static fn (array $config) => civicrm_api4('Herald', 'send', [
+      'checkPermissions' => FALSE,
+      'channel' => 'email',
+      'message' => $message,
+      'format' => 'text',
+      'config' => ['email_to' => 'ops@example.org'] + $config,
+    ]);
+    $send([]);
+    $send(['email_format' => 'html']);
+
+    [$text, $html] = $this->spooled();
+    $this->assertStringContainsString($message, $text['body']);
+    $this->assertStringContainsString('Wert &lt;5 erwartet, &amp;amp; bleibt', $html['body']);
+  }
+
+  public function testHtmlMessageBecomesPlainTextInTextPart(): void {
+    civicrm_api4('Herald', 'send', [
+      'checkPermissions' => FALSE,
+      'channel' => 'email',
+      'message' => '<b>Tom</b> &amp; Jerry',
+      'config' => ['email_to' => 'ops@example.org', 'email_format' => 'text'],
+    ]);
+    $this->assertStringContainsString('Tom & Jerry', $this->spooled()[0]['body']);
   }
 
   public function testUnknownConfigKeysAreReportedButStillPassedThrough(): void {
