@@ -10,7 +10,7 @@ use GuzzleHttp\ClientInterface;
  * ntfy.sh channel — POSTs the rendered body to a topic.
  *
  * Works against ntfy.sh (default) or any self-hosted ntfy server. The body of
- * the POST is the rendered message; metadata (title, priority, tags, click,
+ * the POST is the rendered message as plain text (PlainText); metadata (title, priority, tags, click,
  * markdown) is passed via `X-*` headers so the body stays human-readable.
  *
  * Per-call config (from action params / channel_config JSON):
@@ -65,7 +65,7 @@ class NtfyChannel implements ChannelInterface {
     $client = $this->httpClient ?? new \GuzzleHttp\Client();
     try {
       $response = $client->request('POST', $url, [
-        'body' => $renderedBody,
+        'body' => PlainText::fromHtml($renderedBody),
         'headers' => $headers,
         'http_errors' => FALSE,
         'timeout' => 10,

@@ -101,7 +101,7 @@ class ActivityChannelTest extends TestCase implements HeadlessInterface, HookInt
   }
 
   public function testSupportsCustomTypeStatusSourceAndTextBody(): void {
-    $values = ActivityChannel::buildActivityValues("First line\nSecond <tag>", [
+    $values = ActivityChannel::buildActivityValues("First line\nSecond &lt;tag&gt;", [
       'activity_assignee_contact_id' => '42',
       'activity_source_contact_id' => 7,
       'activity_type' => 'Follow Up',
@@ -112,7 +112,7 @@ class ActivityChannelTest extends TestCase implements HeadlessInterface, HookInt
     $this->assertIsInt($values['activity_type_id']);
     $this->assertIsInt($values['status_id']);
     $this->assertSame(7, $values['source_contact_id']);
-    $this->assertSame('First line Second', $values['subject']);
+    $this->assertSame('First line Second <tag>', $values['subject']);
     $this->assertSame('First line<br />' . "\n" . 'Second &lt;tag&gt;', $values['details']);
   }
 

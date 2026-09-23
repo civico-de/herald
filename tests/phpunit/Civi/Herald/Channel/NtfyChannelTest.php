@@ -51,6 +51,13 @@ class NtfyChannelTest extends TestCase implements HeadlessInterface, HookInterfa
     $this->assertSame('alarm!', (string) $req->getBody());
   }
 
+  public function testBodyIsTheVisibleTextOfTheHtmlBody(): void {
+    $channel = new NtfyChannel($this->makeMockedClient(new Response(200, [], '')));
+    $channel->send("<b>Tom &amp; Jerry &lt;x&gt;</b>\nline 2", ['ntfy_topic' => 'donations']);
+
+    $this->assertSame("Tom & Jerry <x>\nline 2", (string) $this->capturedRequests[0]['request']->getBody());
+  }
+
   public function testFallsBackToDefaultTopic(): void {
     \Civi::settings()->set('herald_ntfy_default_topic', 'fallback-topic');
     $channel = new NtfyChannel($this->makeMockedClient(new Response(200, [], '')));

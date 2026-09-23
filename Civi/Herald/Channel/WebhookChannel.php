@@ -13,11 +13,11 @@ use GuzzleHttp\ClientInterface;
  * Body shape is selectable so the same channel covers Slack/Discord/
  * Mattermost incoming webhooks plus arbitrary custom endpoints:
  *
- *   body_format = 'text'    → request body is the rendered string verbatim
- *   body_format = 'json'    → {"text": "<rendered>"}                   (default key)
- *   body_format = 'slack'   → {"text": "<rendered>"}                   (Slack-style alias)
- *   body_format = 'discord' → {"content": "<rendered>"}                (Discord webhooks)
- *   body_format = 'json'    + body_key='msg' → {"msg": "<rendered>"}   (custom key)
+ *   body_format = 'text'    → request body is the rendered text (PlainText)
+ *   body_format = 'json'    → {"text": "<rendered HTML>"}              (default key)
+ *   body_format = 'slack'   → {"text": "<text, & < > escaped>"}       (Slack incoming webhook)
+ *   body_format = 'discord' → {"content": "<text>"}                    (Discord webhooks)
+ *   body_format = 'json'    + body_key='msg' → {"msg": "<rendered HTML>"} (custom key)
  *
  * Per-call config (`webhook_*` keys merged from action params /
  * channel_config JSON):
@@ -147,11 +147,16 @@ class WebhookChannel implements ChannelInterface {
    * @return array{type: 'json'|'raw', data: mixed}
    */
   public static function buildPayload(string $body, string $format, string $jsonKey = 'text'): array {
+    // json hands the HTML body to the receiver; the chat formats show text,
+    // and Slack reads `&`, `<`, `>` as control characters.
     return match ($format) {
       'json' => ['type' => 'json', 'data' => [$jsonKey => $body]],
-      'slack' => ['type' => 'json', 'data' => ['text' => $body]],
-      'discord' => ['type' => 'json', 'data' => ['content' => $body]],
-      default => ['type' => 'raw', 'data' => $body],
+      'slack' => [
+        'type' => 'json',
+        'data' => ['text' => htmlspecialchars(PlainText::fromHtml($body), ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8')],
+      ],
+      'discord' => ['type' => 'json', 'data' => ['content' => PlainText::fromHtml($body)]],
+      default => ['type' => 'raw', 'data' => PlainText::fromHtml($body)],
     };
   }
 

@@ -166,6 +166,15 @@ class TelegramChannelTest extends TestCase implements HeadlessInterface, HookInt
     $this->assertArrayNotHasKey('parse_mode', $body);
   }
 
+  public function testPlainTextSendsVisibleTextOfTheHtmlBody(): void {
+    $channel = new TelegramChannel($this->makeMockedClient(new Response(200, [], '{"ok":true}')));
+
+    $channel->send('<b>Tom &amp; Jerry &lt;x&gt;</b>', ['chat_id' => '-1', 'parse_mode' => '']);
+
+    $body = json_decode((string) $this->capturedRequests[0]['request']->getBody(), TRUE);
+    $this->assertSame('Tom & Jerry <x>', $body['text']);
+  }
+
   public function testThrowsWhenTokenMissing(): void {
     \Civi::settings()->set('herald_telegram_bot_token', '');
     $channel = new TelegramChannel($this->makeMockedClient(new Response(200, [], '{"ok":true}')));

@@ -50,7 +50,7 @@ class TelegramChannel implements ChannelInterface {
     $parseMode = self::str($config['parse_mode'] ?? 'HTML');
     $payload = [
       'chat_id' => self::str($chatId),
-      'text' => TelegramText::fit($renderedBody, $parseMode),
+      'text' => TelegramText::fit(TelegramText::forParseMode($renderedBody, $parseMode), $parseMode),
     ];
     if ($parseMode !== '') {
       $payload['parse_mode'] = $parseMode;

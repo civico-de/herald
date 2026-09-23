@@ -16,7 +16,7 @@ namespace Civi\Herald\Channel;
  *                          it to the template's rendered msg_subject; final
  *                          fallback is DEFAULT_SUBJECT
  *   email_format   string  'html' (default) or 'text' — which MIME part the
- *                          rendered body becomes; no auto-conversion between the two
+ *                          rendered body becomes; 'text' gets it as PlainText
  *   email_cc       string  Comma-separated CC addresses
  *   email_bcc      string  Comma-separated BCC addresses
  *
@@ -86,7 +86,8 @@ class EmailChannel implements ChannelInterface {
       'toName' => self::str($config['email_to_name'] ?? ''),
       'subject' => !empty($config['email_subject']) ? self::str($config['email_subject']) : self::DEFAULT_SUBJECT,
     ];
-    $params[($config['email_format'] ?? 'html') === 'text' ? 'text' : 'html'] = $body;
+    $isText = ($config['email_format'] ?? 'html') === 'text';
+    $params[$isText ? 'text' : 'html'] = $isText ? PlainText::fromHtml($body) : $body;
     if (!empty($config['email_cc'])) {
       $params['cc'] = self::str($config['email_cc']);
     }

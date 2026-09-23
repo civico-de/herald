@@ -20,7 +20,7 @@ use GuzzleHttp\ClientInterface;
  *   pushover_sound      string Sound name (see Pushover docs)
  *   pushover_url        string Supplementary URL shown under the body
  *   pushover_url_title  string Label for `pushover_url`
- *   pushover_html       bool   1 = body is HTML (Pushover's limited subset)
+ *   pushover_html       bool   1 = send the HTML body (Pushover subset); else PlainText
  *   pushover_retry      int    Emergency only: seconds between re-alerts (min 30, default 60)
  *   pushover_expire     int    Emergency only: seconds until re-alerting stops (max 10800, default 3600)
  *
@@ -106,7 +106,7 @@ class PushoverChannel implements ChannelInterface {
     $form = [
       'token' => $appToken,
       'user' => $userKey,
-      'message' => $body,
+      'message' => empty($config['pushover_html']) ? PlainText::fromHtml($body) : $body,
     ];
     if (!empty($config['pushover_title'])) {
       $form['title'] = self::str($config['pushover_title']);

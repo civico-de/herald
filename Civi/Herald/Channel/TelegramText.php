@@ -52,6 +52,14 @@ final class TelegramText {
   }
 
   /**
+   * The rendered body is HTML; any other parse mode gets its visible text,
+   * escaped where MarkdownV2 would read it as syntax.
+   */
+  public static function forParseMode(string $body, string $parseMode): string {
+    return $parseMode === 'HTML' ? $body : self::escapeForParseMode(PlainText::fromHtml($body), $parseMode);
+  }
+
+  /**
    * Make the truncation marker safe for the parse mode it is appended to.
    *
    * The marker is a translated string, so its punctuation is not ours to
