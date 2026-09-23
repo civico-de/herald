@@ -7,7 +7,8 @@ the site configured.
 - Channels: Telegram, generic webhook (Slack, Discord, Mattermost, custom), ntfy.sh,
   Pushover, email through CiviCRM's outbound mailer, and internal CiviCRM activities.
   Others plug in through `Civi\Herald\Channel\ChannelInterface`.
-- Templates: admin-editable `MessageTemplate` workflows, rendered as Smarty strings.
+- Templates: `MessageTemplate` workflows, rendered as Smarty strings. Admins can edit
+  them, but a herald release that changes a shipped template overwrites the edits to it.
 - CiviRules: three actions (Send notification, Send contribution digest, Send contribution
   alert) and three conditions (Previous contribution status, Field transition, Event was
   deactivated) that any CiviRules trigger can use. No bespoke cron.

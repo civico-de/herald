@@ -9,11 +9,12 @@ use CRM_Herald_ExtensionUtil as E;
  *
  * Loaded by the mgd-php@1 mixin. Each entry creates a MessageTemplate row on
  * `cv ext:enable herald` and is admin-editable via *Mailings →
- * Message Templates*. The `update => unmodified` flag means re-installs only
- * overwrite templates the admin hasn't customised — user edits are preserved.
+ * Message Templates*. MessageTemplate is not an APIv4 ManagedEntity, so core
+ * treats `update => unmodified` as `always`: whenever a declaration here
+ * changes, the next reconcile overwrites that template, admin edits included.
  *
- * All bodies use Smarty syntax. Channel implementations decide which body to
- * use (Telegram → msg_html with parse_mode=HTML; Email → both).
+ * All bodies use Smarty syntax. The body is msg_html (msg_text only when
+ * msg_html is NULL); string vars are HTML-escaped for it.
  *
  * i18n: source strings are English, wrapped in {crmScope
  * extensionKey='herald'} + {ts} so they render in the instance's locale

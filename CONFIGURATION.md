@@ -268,7 +268,9 @@ action params and from the optional `channel_config` JSON textarea on the form.
 ### Telegram (`channel: "telegram"`)
 
 Top-level fields, already in the form: `chat_id`, `parse_mode` (`HTML`, `MarkdownV2` or
-empty), `disable_notification`, `disable_web_page_preview`. Falls back to the
+empty), `disable_notification`, `disable_web_page_preview`. The rendered body is HTML;
+with empty `parse_mode` Telegram gets its plain text, with `MarkdownV2` that text with
+every reserved character escaped, so no markup of any kind survives outside `HTML`. Falls back to the
 `herald_telegram_default_chat_id` setting when `chat_id` is empty.
 
 When Telegram upgrades a group to a supergroup, its `chat_id` changes and
@@ -302,7 +304,7 @@ endpoint.
 |---|---|---|
 | `webhook_url` | string | Endpoint (required; falls back to `herald_webhook_default_url`) |
 | `webhook_method` | enum | `POST` (default) or `PUT` |
-| `webhook_body_format` | enum | `text` (raw body, default), `json`, `slack` (`{"text":…}`) or `discord` (`{"content":…}`) |
+| `webhook_body_format` | enum | `text` (plain text of the body, default), `json` (`{"text":…}` with the HTML body), `slack` (`{"text":…}`, plain text with `&`, `<`, `>` escaped) or `discord` (`{"content":…}`, plain text) |
 | `webhook_body_key` | string | Custom JSON key when `body_format=json` (default `text`) |
 | `webhook_headers` | object | Extra request headers |
 | `webhook_auth_token` | string | Sent as `Authorization: Bearer …` if no Authorization header is in `webhook_headers` |
@@ -315,7 +317,8 @@ with subdomains matching. When it is empty, private and reserved addresses are d
 
 ### ntfy.sh (`channel: "ntfy"`)
 
-Free, simple, self-hostable. A topic is a push channel. Metadata goes in `X-*` headers.
+Free, simple, self-hostable. A topic is a push channel. Metadata goes in `X-*` headers and the
+body is the plain text of the rendered message.
 
 ```json
 {
@@ -370,7 +373,7 @@ key per recipient.
 | `pushover_sound` | string | Sound name (see [Pushover sounds](https://pushover.net/api#sounds)) |
 | `pushover_url` | string | Supplementary URL shown under the body |
 | `pushover_url_title` | string | Label for `pushover_url` |
-| `pushover_html` | bool | Body is Pushover-flavoured HTML |
+| `pushover_html` | bool | Send the HTML body (Pushover's subset). Otherwise Pushover gets its plain text |
 
 The app token comes from `herald_pushover_app_token` (required). The user key falls back to
 `herald_pushover_default_user_key`.
@@ -396,7 +399,7 @@ dev redirection all apply. No extra credentials are needed.
 | `email_to` | string | Recipient address (falls back to `herald_email_default_to`) |
 | `email_to_name` | string | Recipient display name |
 | `email_subject` | string | Explicit subject. When unset, the template's `msg_subject` is Smarty-rendered with the same vars as the body. Final fallback is "Notification" |
-| `email_format` | string | `html` (default) or `text`: which MIME part the rendered body becomes |
+| `email_format` | string | `html` (default) or `text`: which MIME part the rendered body becomes. `text` gets the plain text of the body |
 | `email_cc` | string | Comma-separated CC addresses |
 | `email_bcc` | string | Comma-separated BCC addresses |
 
@@ -475,8 +478,9 @@ function myext_civicrm_heraldDigestSections(array $keys, array $context, array &
 
 The job parameter is `sections=myext.seats,myext.queue`, or a JSON array. `$context`
 carries the job params under `params` and the resolved `period`, so a listener can match
-the digest's timeframe. Unrequested keys and empty bodies are dropped, so a listener may
-answer unconditionally. This is multi-block mode only. Single-block digests render one
+the digest's timeframe. Section bodies and the digest `header` are inserted as they are:
+they are HTML, so a listener escapes its own data. Unrequested keys and empty bodies are
+dropped, so a listener may answer unconditionally. This is multi-block mode only. Single-block digests render one
 template and have no section concept.
 
 ## Check monitor: push alerts for degraded states
@@ -552,7 +556,7 @@ monitor covers everything short of that.
 | Param | Type | Meaning |
 |---|---|---|
 | `channel`, `template`, `chat_id`, `parse_mode` | | as above |
-| `vars` | JSON | Variable bag passed verbatim to the template |
+| `vars` | JSON | Variable bag for the template. String values are HTML-escaped into the `msg_html` body, and the subject gets them unescaped |
 
 ### Delivery parameters (all send actions)
 

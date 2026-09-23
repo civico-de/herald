@@ -35,8 +35,15 @@ actions (no bespoke cron for alerts). Live in production on production.
   `herald_monitor_topic` topic; steady states never alert. Topic routing:
   publishers name a topic, `herald_topics` decides delivery (topic entry
   merged over `default`) — publishers never carry chat IDs.
-- MessageTemplate fixtures ship via mgd-php; admin edits must survive
-  re-enable. Templates render as Smarty strings via `CRM_Core_Smarty`.
+- MessageTemplate fixtures ship via mgd-php. MessageTemplate is not an APIv4
+  ManagedEntity, so `update => unmodified` falls back to `always`: changing a
+  shipped template overwrites admin edits to it on the next reconcile. Admin
+  edits to unchanged templates survive. Templates render as Smarty strings via
+  `CRM_Core_Smarty`.
+- Rendered bodies are HTML: string vars are HTML-escaped into `msg_html`
+  (after undoing core's `&lt;`/`&gt;` input encoding). Sinks that do not
+  render HTML get `Channel\PlainText::fromHtml()` of the body, never the raw
+  markup.
 - The `Previous Contribution status` condition relies on the
   `hook_civicrm_pre` snapshot (`PreEditSnapshot`), not CiviRules change data.
   The generic `Field transition` condition uses the same model; the fields it
