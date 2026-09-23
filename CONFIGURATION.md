@@ -460,8 +460,7 @@ aggregation buffer as the CiviRules alerts. Instead of `message`, pass `template
 
 A `message` is HTML, like a rendered template. Pass `format=text` (on `Herald.send` and
 `Herald.publish`) for a plain-text message: HTML sinks then show it escaped, and text sinks
-get the text back, with runs of blank lines shortened to one and outer whitespace
-trimmed.
+get the text back exactly. `format` goes with `message` only; a template body is always HTML.
 
 ## Extra digest sections from other extensions
 

@@ -47,8 +47,47 @@ class PlainTextSinksTest extends TestCase {
     $this->assertSame("a\nb", PlainText::fromHtml('<div>a</div><div>b</div>'));
     $this->assertSame("- x\n- y", PlainText::fromHtml("<ul>\n<li>x</li>\n<li>y</li>\n</ul>"));
     $this->assertSame("T\ncell 1\ncell 2", PlainText::fromHtml('<h2>T</h2><table><tr><td>cell 1</td></tr><tr><td>cell 2</td></tr></table>'));
-    $this->assertSame("a\n\nb", PlainText::fromHtml("\n a\n\n\n\nb\n"));
+    $this->assertSame("a\n\nb", PlainText::fromHtml("<div>\n\n\n<p>a</p>\n\n\n\n<p>b</p>\n\n</div>\n"));
     $this->assertSame("x\n1\n\n\n\n2", PlainText::fromHtml("x\n<pre>1\n\n\n\n2</pre>"));
+  }
+
+  /**
+   * Layout whitespace next to tags may be collapsed; the author's own text
+   * must come back exactly.
+   */
+  public function testTextBodyRoundTripsExactly(): void {
+    foreach (["a\n\n\n\nc", "  indented\n\tline\n", "\n\nlead and trail\n\n\n", "Wert <5 & &amp; <pre>x"] as $text) {
+      $this->assertSame($text, PlainText::fromHtml(PlainText::toHtml($text)));
+    }
+  }
+
+  public function testNewlinesInsideTagsAreLeftAlone(): void {
+    $this->assertSame(
+      "<a href=\"x\"\ntitle=\"y\">l</a><br>\nz<b\n>w</b>",
+      HtmlLineBreaks::apply("<a href=\"x\"\ntitle=\"y\">l</a>\nz<b\n>w</b>"),
+    );
+    $this->assertSame("l\nzw", PlainText::fromHtml("<a href=\"x\"\ntitle=\"y\">l</a>\nz<b\n>w</b>"));
+  }
+
+  /**
+   * An unclosed <pre> runs to the end; "<pre>" inside an attribute is no tag.
+   */
+  public function testPreIsFoundByTagsOnly(): void {
+    $this->assertSame("a\n<pre>1\n2", HtmlLineBreaks::apply("a\n<pre>1\n2"));
+    $this->assertSame("x\n1\n\n\n2", PlainText::fromHtml("x<pre>1\n\n\n2"));
+    $this->assertSame("<a title=\"<pre>\">x</a><br>\ny", HtmlLineBreaks::apply("<a title=\"<pre>\">x</a>\ny"));
+  }
+
+  public function testHtmlLineBreaksAddNoBreakAroundBlockTags(): void {
+    foreach ([
+      "<p>a</p>\n\n<p>b</p>",
+      "<table>\n\n<tr>\n  <td>x</td>\n<!-- c -->\n</tr>\n</table>",
+      "<ul>\n  <li>i</li>\n</ul>\n\nafter",
+      "before\n\n<div>b</div>",
+    ] as $html) {
+      $this->assertSame($html, HtmlLineBreaks::apply($html));
+    }
+    $this->assertSame("<p>a<br>\nb</p>", HtmlLineBreaks::apply("<p>a\nb</p>"));
   }
 
   /**
@@ -71,7 +110,7 @@ class PlainTextSinksTest extends TestCase {
 
   public function testHtmlLineBreaksLeavePreAndBlockTagsAlone(): void {
     $this->assertSame(
-      "<b>A</b><br>\n<br>\nB<br>\n<pre>1\n2</pre>\nC",
+      "<b>A</b><br>\n<br>\nB\n<pre>1\n2</pre>\nC",
       HtmlLineBreaks::apply("<b>A</b>\n\nB\n<pre>1\n2</pre>\nC"),
     );
     $this->assertSame("<p>a</p>\n<ul>\n<li>i</li>\n</ul>\nx<br />\ny", HtmlLineBreaks::apply("<p>a</p>\n<ul>\n<li>i</li>\n</ul>\nx<br />\ny"));
@@ -80,7 +119,7 @@ class PlainTextSinksTest extends TestCase {
   public function testEmailTextPartIsPlainAndHtmlPartKeepsLineBreaks(): void {
     $to = ['email_to' => 'a@example.org'];
     $this->assertSame(
-      "🔴 <b>Check</b>: Tom &amp; Jerry &lt;x&gt;<br>\n<pre>a | b</pre>",
+      "🔴 <b>Check</b>: Tom &amp; Jerry &lt;x&gt;\n<pre>a | b</pre>",
       EmailChannel::buildMailParams(self::BODY, $to, 'f@example.org')['html'],
     );
     $text = EmailChannel::buildMailParams(self::BODY, $to + ['email_format' => 'text'], 'f@example.org');
@@ -110,7 +149,7 @@ class PlainTextSinksTest extends TestCase {
       ActivityText::details(self::BODY, 'text'),
     );
     $this->assertSame(
-      "🔴 <b>Check</b>: Tom &amp; Jerry &lt;x&gt;<br>\n<pre>a | b</pre>",
+      "🔴 <b>Check</b>: Tom &amp; Jerry &lt;x&gt;\n<pre>a | b</pre>",
       ActivityText::details(self::BODY, 'html'),
     );
     $this->assertSame('🔴 Check: Tom & Jerry <x> a | b', ActivityText::subject(self::BODY));

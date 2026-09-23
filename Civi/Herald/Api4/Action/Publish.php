@@ -85,14 +85,16 @@ class Publish extends AbstractAction {
     if (($this->message === '') === ($this->template === '')) {
       throw new \CRM_Core_Exception('Herald.publish: pass exactly one of "message" or "template".');
     }
+    if ($this->format !== '' && !in_array($this->format, ['text', 'html'], TRUE)) {
+      throw new \CRM_Core_Exception('Herald.publish: "format" must be "text" or "html".');
+    }
+    if ($this->format !== '' && $this->template !== '') {
+      throw new \CRM_Core_Exception('Herald.publish: "format" applies to "message" only; a template body is HTML.');
+    }
 
     $params = (new Router())->resolve($this->topic);
     // Before a rendered subject enters $params, or every publish forms its own group.
     $groupHash = Dispatcher::groupHash($params, 'topic:' . $this->topic . ':');
-
-    if ($this->format !== '' && !in_array($this->format, ['text', 'html'], TRUE)) {
-      throw new \CRM_Core_Exception('Herald.publish: "format" must be "text" or "html".');
-    }
 
     $body = $this->format === 'text' ? PlainText::toHtml($this->message) : $this->message;
     if ($this->template !== '') {

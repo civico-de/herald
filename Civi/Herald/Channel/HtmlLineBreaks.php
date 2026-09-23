@@ -11,20 +11,35 @@ namespace Civi\Herald\Channel;
 final class HtmlLineBreaks {
 
   public static function apply(string $html): string {
-    // Odd parts are <pre> blocks with the newline closing them; a newline right
-    // after a block tag is not a line break either.
-    $parts = preg_split('#(<pre\b.*?</pre>[ \t]*\r?\n?)#is', $html, -1, PREG_SPLIT_DELIM_CAPTURE) ?: [$html];
-    foreach ($parts as $i => $part) {
+    $tokens = HtmlTokens::split($html);
+    $inPre = FALSE;
+    foreach ($tokens as $i => $token) {
       if ($i % 2 === 1) {
+        $inPre = HtmlTokens::inPreAfter($token, $inPre);
         continue;
       }
-      $parts[$i] = preg_replace_callback(
-        '#(<(?:br|/?(?:p|div|ul|ol|li|table|thead|tbody|tr|td|th|h[1-6]|blockquote))\b[^>]*>)?([ \t]*)\r?\n#i',
-        static fn (array $m): string => $m[1] !== '' ? $m[0] : $m[2] . "<br>\n",
-        $part,
-      ) ?? $part;
+      if (!$inPre) {
+        $tokens[$i] = self::breakText($token, $tokens[$i - 1] ?? NULL, $tokens[$i + 1] ?? NULL);
+      }
     }
-    return implode('', $parts);
+    return implode('', $tokens);
+  }
+
+  /**
+   * Newlines in text become <br>, except the whitespace run bordering a block tag.
+   */
+  private static function breakText(string $text, ?string $prev, ?string $next): string {
+    [$lead, $core, $trail] = HtmlTokens::edges($text);
+    $afterBlock = HtmlTokens::isBlock($prev);
+    $beforeBlock = HtmlTokens::isBlock($next);
+    if ($core === '' && ($afterBlock || $beforeBlock)) {
+      return $text;
+    }
+    return ($afterBlock ? $lead : self::br($lead)) . self::br($core) . ($beforeBlock ? $trail : self::br($trail));
+  }
+
+  private static function br(string $text): string {
+    return preg_replace('#\r?\n#', "<br>\n", $text) ?? $text;
   }
 
 }

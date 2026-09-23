@@ -109,6 +109,17 @@ class PublishTest extends TestCase implements HeadlessInterface, HookInterface, 
     ]);
   }
 
+  public function testFormatWithTemplateThrows(): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessageMatches('/"format" applies to "message" only/');
+    civicrm_api4('Herald', 'publish', [
+      'checkPermissions' => FALSE,
+      'topic' => 'test_topic',
+      'template' => self::WORKFLOW,
+      'format' => 'text',
+    ]);
+  }
+
   public function testMessagesOfOneTopicShareOneGroupDespiteRenderedSubjects(): void {
     $this->publish('one');
     $this->publish('two');
