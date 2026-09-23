@@ -116,6 +116,18 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
     );
   }
 
+  /**
+   * Values written through APIv3 or a form arrive as `&lt;`/`&gt;`; they are
+   * shown as typed. Only that encoding is undone: a literal "&amp;" typed by a
+   * user is not HTMLInputCoder output and stays visible as typed.
+   */
+  public function testCoreEncodedValuesAreNotEscapedTwice(): void {
+    $this->assertSame(
+      ['title' => 'Workshop &lt;Einsteiger&gt; &amp; mehr', 'typed' => 'R&amp;amp;D'],
+      TemplateRenderer::escapeHtml(['title' => 'Workshop &lt;Einsteiger&gt; & mehr', 'typed' => 'R&amp;D']),
+    );
+  }
+
   public function testTextOnlyTemplateIsNotEscaped(): void {
     \Civi\Api4\MessageTemplate::create(checkPermissions: FALSE)
       ->setValues([

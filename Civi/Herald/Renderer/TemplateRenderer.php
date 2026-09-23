@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Renderer;
 
+use Civi\Herald\Util\Cast;
+
 /**
  * Look up a CiviCRM MessageTemplate by workflow_name and render its msg_html
  * with Smarty, exposing caller-supplied variables as `{$name}` in the template.
@@ -87,7 +89,8 @@ class TemplateRenderer {
 
   /**
    * Vars are plain text; msg_html is HTML (Telegram parse_mode=HTML, email), so
-   * `<`, `>` and `&` in values must not be read as markup.
+   * `<`, `>` and `&` in values must not be read as markup. APIv3 and forms store
+   * `<`/`>` as `&lt;`/`&gt;` (HTMLInputCoder); that encoding is undone first.
    *
    * @template K of array-key
    * @param array<K, mixed> $vars
@@ -96,7 +99,11 @@ class TemplateRenderer {
   public static function escapeHtml(array $vars): array {
     return array_map(
       static fn (mixed $v): mixed => match (TRUE) {
-        is_string($v) => htmlspecialchars($v, ENT_NOQUOTES | ENT_SUBSTITUTE, 'UTF-8'),
+        is_string($v) => htmlspecialchars(
+          Cast::toString(\CRM_Utils_API_HTMLInputCoder::singleton()->decodeValue($v)),
+          ENT_NOQUOTES | ENT_SUBSTITUTE,
+          'UTF-8',
+        ),
         is_array($v) => self::escapeHtml($v),
         default => $v,
       },
