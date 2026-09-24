@@ -43,13 +43,14 @@ services:
 # BEGIN CIVIKITCHEN MANAGED db
   db:
     image: mariadb:10.11
+    # Civi\Test's schema rebuild creates triggers as the app user; with binary
+    # logging the server refuses that unless it trusts non-SUPER creators.
+    command: --log-bin-trust-function-creators=1
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: civicrm
       MYSQL_USER: civicrm
       MYSQL_PASSWORD: civicrm
-    volumes:
-      - ./db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
