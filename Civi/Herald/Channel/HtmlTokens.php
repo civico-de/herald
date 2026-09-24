@@ -11,8 +11,36 @@ namespace Civi\Herald\Channel;
 final class HtmlTokens {
 
   private const BLOCK = [
-    'address', 'article', 'blockquote', 'br', 'dd', 'div', 'dl', 'dt', 'footer', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-    'header', 'hr', 'li', 'ol', 'p', 'pre', 'section', 'table', 'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'ul',
+    'address',
+    'article',
+    'blockquote',
+    'br',
+    'dd',
+    'div',
+    'dl',
+    'dt',
+    'footer',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'header',
+    'hr',
+    'li',
+    'ol',
+    'p',
+    'pre',
+    'section',
+    'table',
+    'tbody',
+    'td',
+    'tfoot',
+    'th',
+    'thead',
+    'tr',
+    'ul',
   ];
 
   /**

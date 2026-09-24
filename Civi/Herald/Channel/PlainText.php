@@ -18,7 +18,7 @@ final class PlainText {
     $tokens = HtmlTokens::split($html);
     $inPre = FALSE;
     foreach ($tokens as $i => $token) {
-      if ($i % 2 === 1) {
+      if (($i % 2) === 1) {
         $inPre = HtmlTokens::inPreAfter($token, $inPre);
         $text->tag($token);
         continue;

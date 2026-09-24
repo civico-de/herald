@@ -114,7 +114,11 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
   public function testNestedVarsAreEscapedAndNonStringsKept(): void {
     $this->assertSame(
       ['contribution' => ['source' => 'Tom &amp; Jerry', 'total_amount' => 42.5], 'n' => 3, 'x' => NULL],
-      TemplateRenderer::escapeHtml(['contribution' => ['source' => 'Tom & Jerry', 'total_amount' => 42.5], 'n' => 3, 'x' => NULL]),
+      TemplateRenderer::escapeHtml([
+        'contribution' => ['source' => 'Tom & Jerry', 'total_amount' => 42.5],
+        'n' => 3,
+        'x' => NULL,
+      ]),
     );
   }
 
@@ -172,7 +176,10 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
     ]);
     $this->assertStringNotContainsString('<br', $body);
     $html = EmailChannel::buildMailParams($body, ['email_to' => 'a@example.org'], 'f@example.org')['html'];
-    $this->assertMatchesRegularExpression('#registration</b><br>\nSummer camp<br>\nParticipant: Jo\*\*\*<br>\nRole: Attendee$#', $html);
+    $this->assertMatchesRegularExpression(
+      '#registration</b><br>\nSummer camp<br>\nParticipant: Jo\*\*\*<br>\nRole: Attendee$#',
+      $html,
+    );
   }
 
   /**
@@ -198,10 +205,13 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
    */
   public function testContributionWithoutSourceRendersWithoutWarningOrDanglingSeparator(string $workflow): void {
     $warnings = [];
-    set_error_handler(static function (int $errno, string $errstr) use (&$warnings): bool {
-      $warnings[] = $errstr;
-      return TRUE;
-    }, E_WARNING | E_NOTICE | E_USER_WARNING | E_USER_NOTICE);
+    set_error_handler(
+      static function (int $errno, string $errstr) use (&$warnings): bool {
+        $warnings[] = $errstr;
+        return TRUE;
+      },
+      E_WARNING | E_NOTICE | E_USER_WARNING | E_USER_NOTICE,
+    );
     try {
       $parts = $this->renderer->renderParts($workflow, [
         'contribution' => ['id' => 7, 'total_amount' => 42.5, 'contribution_status_id' => 1],
@@ -312,10 +322,13 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
    */
   private function renderQuietly(string $workflow, array $vars): array {
     $warnings = [];
-    set_error_handler(static function (int $errno, string $errstr) use (&$warnings): bool {
-      $warnings[] = $errstr;
-      return TRUE;
-    }, E_WARNING | E_NOTICE | E_USER_WARNING | E_USER_NOTICE);
+    set_error_handler(
+      static function (int $errno, string $errstr) use (&$warnings): bool {
+        $warnings[] = $errstr;
+        return TRUE;
+      },
+      E_WARNING | E_NOTICE | E_USER_WARNING | E_USER_NOTICE,
+    );
     try {
       return [$this->renderer->renderParts($workflow, $vars), $warnings];
     }

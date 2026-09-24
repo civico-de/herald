@@ -46,7 +46,10 @@ class PlainTextSinksTest extends TestCase {
     $this->assertSame("a\n\nb", PlainText::fromHtml("<p>a</p>\n\n<p>b</p>"));
     $this->assertSame("a\nb", PlainText::fromHtml('<div>a</div><div>b</div>'));
     $this->assertSame("- x\n- y", PlainText::fromHtml("<ul>\n<li>x</li>\n<li>y</li>\n</ul>"));
-    $this->assertSame("T\ncell 1\ncell 2", PlainText::fromHtml('<h2>T</h2><table><tr><td>cell 1</td></tr><tr><td>cell 2</td></tr></table>'));
+    $this->assertSame(
+      "T\ncell 1\ncell 2",
+      PlainText::fromHtml('<h2>T</h2><table><tr><td>cell 1</td></tr><tr><td>cell 2</td></tr></table>'),
+    );
     $this->assertSame("a\n\nb", PlainText::fromHtml("<div>\n\n\n<p>a</p>\n\n\n\n<p>b</p>\n\n</div>\n"));
     $this->assertSame("x\n1\n\n\n\n2", PlainText::fromHtml("x\n<pre>1\n\n\n\n2</pre>"));
   }
@@ -56,7 +59,7 @@ class PlainTextSinksTest extends TestCase {
    * must come back exactly.
    */
   public function testTextBodyRoundTripsExactly(): void {
-    foreach (["a\n\n\n\nc", "  indented\n\tline\n", "\n\nlead and trail\n\n\n", "Wert <5 & &amp; <pre>x"] as $text) {
+    foreach (["a\n\n\n\nc", "  indented\n\tline\n", "\n\nlead and trail\n\n\n", 'Wert <5 & &amp; <pre>x'] as $text) {
       $this->assertSame($text, PlainText::fromHtml(PlainText::toHtml($text)));
     }
   }
@@ -103,7 +106,14 @@ class PlainTextSinksTest extends TestCase {
       "Wert &lt;5 erwartet &amp; &amp;amp; &lt;b&gt;kein Tag&lt;/b&gt;<br>\nZeile 2",
       EmailChannel::buildMailParams($body, ['email_to' => 'a@example.org'], 'f@example.org')['html'],
     );
-    $this->assertSame($text, EmailChannel::buildMailParams($body, ['email_to' => 'a@example.org', 'email_format' => 'text'], 'f@example.org')['text']);
+    $this->assertSame(
+      $text,
+      EmailChannel::buildMailParams(
+        $body,
+        ['email_to' => 'a@example.org', 'email_format' => 'text'],
+        'f@example.org',
+      )['text'],
+    );
     $this->assertSame($text, WebhookChannel::buildPayload($body, 'text')['data']);
     $this->assertSame($text, PushoverChannel::buildForm('t', 'u', $body, [])['message']);
   }
@@ -113,7 +123,10 @@ class PlainTextSinksTest extends TestCase {
       "<b>A</b><br>\n<br>\nB\n<pre>1\n2</pre>\nC",
       HtmlLineBreaks::apply("<b>A</b>\n\nB\n<pre>1\n2</pre>\nC"),
     );
-    $this->assertSame("<p>a</p>\n<ul>\n<li>i</li>\n</ul>\nx<br />\ny", HtmlLineBreaks::apply("<p>a</p>\n<ul>\n<li>i</li>\n</ul>\nx<br />\ny"));
+    $this->assertSame(
+      "<p>a</p>\n<ul>\n<li>i</li>\n</ul>\nx<br />\ny",
+      HtmlLineBreaks::apply("<p>a</p>\n<ul>\n<li>i</li>\n</ul>\nx<br />\ny"),
+    );
   }
 
   public function testEmailTextPartIsPlainAndHtmlPartKeepsLineBreaks(): void {
@@ -140,7 +153,10 @@ class PlainTextSinksTest extends TestCase {
       WebhookChannel::buildPayload(self::BODY, 'slack')['data'],
     );
     $this->assertSame(['text' => self::BODY], WebhookChannel::buildPayload(self::BODY, 'json')['data']);
-    $this->assertSame(['content' => self::HEALTHY_TEXT], WebhookChannel::buildPayload(self::HEALTHY_BODY, 'discord')['data']);
+    $this->assertSame(
+      ['content' => self::HEALTHY_TEXT],
+      WebhookChannel::buildPayload(self::HEALTHY_BODY, 'discord')['data'],
+    );
   }
 
   public function testActivityTextIsEscapedOnceAndHtmlKept(): void {
