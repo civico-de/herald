@@ -16,7 +16,8 @@ use CRM_Herald_ExtensionUtil as E;
 use PHPUnit\Framework\TestCase;
 
 /**
- * {@see DeployGate} in the deploy sequence rules-disable → preflight → rules-reenable,
+ * {@see DeployGate} in the deploy sequence rules-disable → preflight → rules-reenable →
+ * note-foreign-rules,
  * {@see RuleHandlers} trigger resolution and {@see HandlerContract}.
  *
  * @group headless
@@ -120,24 +121,51 @@ class DeployGateTest extends TestCase implements HeadlessInterface, Transactiona
     );
   }
 
-  public function testAForeignBrokenActiveRuleIsANoteThatDoesNotFailTheGate(): void {
+  public function testAForeignBrokenActiveRuleIsANoteAfterHeraldsRulesAreReenabled(): void {
+    $herald = $this->rule($this->triggerId('changed_event'), active: TRUE);
+    $this->addAction($herald, \CRM_Herald_CivirulesAdapter_Action_Notification::class);
     $foreign = $this->rule($this->triggerId('changed_event'), active: TRUE);
     $this->addCondition($foreign, 'CRM_Foreign_NoSuchCondition');
     $inactive = $this->rule($this->triggerId('changed_event'), active: FALSE);
     $this->addCondition($inactive, 'CRM_Foreign_OnlyInAnInactiveRule');
     $this->script('rules-disable.php');
 
-    $notes = fopen('php://memory', 'w+');
-    self::assertIsResource($notes);
-    self::assertGreaterThan(0, DeployGate::run($notes));
-    rewind($notes);
-    $note = (string) stream_get_contents($notes);
+    self::assertSame('', $this->gateNotes());
+    $this->script('rules-reenable.php');
+    self::assertTrue($this->isActive($herald));
+
+    $note = $this->otherNotes();
     self::assertStringContainsString('not gating', $note);
     self::assertStringContainsString(
       "rule {$foreign}: condition CRM_Foreign_NoSuchCondition — class not found (autoload failed)",
       $note,
     );
     self::assertStringNotContainsString('CRM_Foreign_OnlyInAnInactiveRule', $note);
+    self::assertStringContainsString('noted:', $this->script('note-foreign-rules.php'));
+  }
+
+  public function testAForeignClassWithAParseErrorIsANote(): void {
+    $file = tempnam(sys_get_temp_dir(), 'herald');
+    self::assertIsString($file);
+    file_put_contents($file, "<?php\nclass CRM_Foreign_ParseErrorCondition {\n");
+    $autoload = static function (string $class) use ($file): void {
+      if ($class === 'CRM_Foreign_ParseErrorCondition') {
+        require $file;
+      }
+    };
+    spl_autoload_register($autoload);
+    try {
+      $rule = $this->rule($this->triggerId('changed_event'), active: TRUE);
+      $this->addCondition($rule, 'CRM_Foreign_ParseErrorCondition');
+      self::assertStringContainsString(
+        "rule {$rule}: condition CRM_Foreign_ParseErrorCondition — class failed to load: ParseError: ",
+        $this->otherNotes(),
+      );
+    }
+    finally {
+      spl_autoload_unregister($autoload);
+      unlink($file);
+    }
   }
 
   public function testAHealthyInstallWritesNoNote(): void {
@@ -147,6 +175,7 @@ class DeployGateTest extends TestCase implements HeadlessInterface, Transactiona
     $notes = fopen('php://memory', 'w+');
     self::assertIsResource($notes);
     self::assertSame(count(RuleHandlers::registered()), DeployGate::run($notes));
+    DeployGate::noteOthers($notes);
     rewind($notes);
     self::assertSame('', stream_get_contents($notes));
   }
@@ -207,6 +236,14 @@ class DeployGateTest extends TestCase implements HeadlessInterface, Transactiona
     $notes = fopen('php://memory', 'w+');
     self::assertIsResource($notes);
     DeployGate::run($notes);
+    rewind($notes);
+    return (string) stream_get_contents($notes);
+  }
+
+  private function otherNotes(): string {
+    $notes = fopen('php://memory', 'w+');
+    self::assertIsResource($notes);
+    DeployGate::noteOthers($notes);
     rewind($notes);
     return (string) stream_get_contents($notes);
   }

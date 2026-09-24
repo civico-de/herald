@@ -29,16 +29,21 @@ final class HandlerContract {
   ];
 
   /**
-   * Why CiviRules could not use $class as a $kind handler, or NULL. Loads the
-   * class in this process: a class that cannot load is a fatal here too.
+   * Why CiviRules could not use $class as a $kind handler, or NULL. Loads the class in
+   * this process: a parse error is reported, a compile-time fatal ends the process.
    */
   public static function inspect(string $kind, string $class): ?string {
     $base = self::BASES[$kind] ?? NULL;
     if ($base === NULL) {
       return "unknown handler kind '{$kind}'";
     }
-    if (!class_exists($class)) {
-      return 'class not found (autoload failed)';
+    try {
+      if (!class_exists($class)) {
+        return 'class not found (autoload failed)';
+      }
+    }
+    catch (\Throwable $e) {
+      return 'class failed to load: ' . get_class($e) . ': ' . $e->getMessage();
     }
     return self::violation(new \ReflectionClass($class), $base);
   }

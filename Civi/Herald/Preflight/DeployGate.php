@@ -8,8 +8,8 @@ use Civi\Herald\Util\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
- * Deploy gate: herald's registered handlers and the handlers of the rules the
- * deploy disabled must pass {@see HandlerContract}; other active rules are only noted.
+ * Deploy gate: herald's registered handlers and the handlers of the rules the deploy
+ * disabled must pass {@see HandlerContract}; other active rules are only noted, later.
  */
 final class DeployGate {
 
@@ -31,8 +31,8 @@ final class DeployGate {
   }
 
   /**
-   * Checks, writes the failures of other active rules and herald's rules with a
-   * dormant trigger to $notes, and returns how many handlers were checked.
+   * Checks the gating handlers, writes herald's rules with a dormant trigger to
+   * $notes, and returns how many handlers were checked.
    *
    * @param resource $notes
    * @throws \CRM_Core_Exception naming every gating failure and how to re-enable herald's rules
@@ -40,7 +40,6 @@ final class DeployGate {
   public static function run($notes): int {
     $marked = self::markedRuleIds();
     $gating = RuleHandlers::ofRules($marked) + RuleHandlers::registered();
-    $others = array_diff_key(RuleHandlers::active(), $gating);
     $dormant = RuleHandlers::dormant($marked);
     if ($dormant !== []) {
       fwrite(
@@ -50,18 +49,9 @@ final class DeployGate {
         . " have a missing or inactive trigger; CiviRules never fires them\n",
       );
     }
-    $noted = self::broken($others);
-    if ($noted !== []) {
-      fwrite(
-        $notes,
-        "[herald preflight] note, not gating: other active rules have unusable handlers:\n"
-        . self::describe($noted)
-        . "\n",
-      );
-    }
     $failed = self::broken($gating);
     if ($failed === []) {
-      return count($gating) + count($others);
+      return count($gating);
     }
     $message =
       count($failed) . " handler(s) of herald's rules fail the CiviRules contract:\n" . self::describe($failed);
@@ -73,6 +63,25 @@ final class DeployGate {
         . E::path('bin/rules-reenable.php');
     }
     throw new \CRM_Core_Exception($message);
+  }
+
+  /**
+   * Writes the broken handlers of active rules outside herald's registered ones to
+   * $notes and returns how many were checked. Loads foreign classes: run it only
+   * after herald's rules are re-enabled, since a class that cannot load is a fatal.
+   *
+   * @param resource $notes
+   */
+  public static function noteOthers($notes): int {
+    $others = array_diff_key(RuleHandlers::active(), RuleHandlers::registered());
+    $noted = self::broken($others);
+    if ($noted !== []) {
+      fwrite(
+        $notes,
+        "[herald preflight] note, not gating: active rules have unusable handlers:\n" . self::describe($noted) . "\n",
+      );
+    }
+    return count($others);
   }
 
   /**
