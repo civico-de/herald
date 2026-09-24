@@ -116,10 +116,40 @@ delivers through each contact's own channel and recipient.
 
 ## Deploy to production
 
-`deploy.sh` tars the repo, ships it over SSH to the host named in the script, extracts it
-into the CiviCRM container's extension volume and enables the extension. `--reinstall`
-disables and uninstalls first. `bin/preflight-rules.php` checks that every stored rule
-handler class still loads. The other `bin/*-rules.php` scripts seed instance-specific rule
+Deploy with the deploy tooling and three hooks:
+
+```yaml
+hooks:
+  pre_swap:
+    - script: bin/rules-disable.php
+    - cv: flush
+  post:
+    - script: bin/preflight-rules.php
+    - script: bin/rules-reenable.php
+```
+
+`rules-disable.php` writes the ids of every active rule with a herald condition or action
+to `herald_deploy_disabled_rules` in CiviCRM's private directory, then switches those
+rules off. `preflight-rules.php` then resolves handler classes the way CiviRules does
+(class exists, `new $class()` without arguments, right base class, post-trigger default
+only for an object/op trigger without cron):
+
+- It fails, exit code 1, for herald's registered handlers and for every handler of the
+  disabled rules whose trigger is active, whether or not the handlers are active. The
+  message names rule, kind, class and reason, and the command that re-enables herald's
+  rules after the fix. The rules stay disabled until then.
+- It only notes, on stderr, broken handlers of other active rules whose trigger is active,
+  and the ids of disabled rules whose trigger is missing or inactive. CiviRules never fires
+  a rule without an active trigger, so none of its handlers is checked. A foreign broken
+  rule does not keep herald's alerts switched off.
+
+`rules-reenable.php` re-activates the recorded rules and removes the file. A herald class
+that cannot load at all fails earlier: `cv flush` and `cv ext:enable` exit on the PHP
+fatal, naming class and file. Without a marker file the preflight gates only the
+registered handlers. A marker left by a failed deploy re-enables its rules on the next
+successful one, including a rule an admin switched off on purpose in between.
+
+The other `bin/*-rules.php` scripts seed instance-specific rule
 sets and are not general-purpose.
 
 ## Development

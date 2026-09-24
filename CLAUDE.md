@@ -61,6 +61,17 @@ actions (no bespoke cron for alerts). Live in production on production.
 - Handler class names live in `civirule_action.class_name`, so renaming one is
   a data migration — the manifests plus
   `CRM_Herald_CivirulesAdapter_Registrar::migrateRenamedClasses()`.
+- A class that fails to load (e.g. an unimplemented abstract method) is a
+  PHP fatal: the scan-classes mixin loads every `CRM/` and `Civi/` file on a
+  cold cache, so it 500s every web request, `cv flush` and the headless test
+  boot fail on it, and CiviRules fatals the write that fires its rule.
+  `RuleContractTest` checks each registered handler against
+  `HandlerContract`. On deploy, `bin/preflight-rules.php` (`DeployGate`)
+  fails for herald's handlers and those of the rules `bin/rules-disable.php`
+  switched off, and only notes broken handlers of other active rules. Every
+  registered handler needs a contract scenario, with full and partial payloads.
+- Post-hook payloads of partial updates carry only the written fields; code
+  reading an entity payload completes it from the stored row.
 
 ## Verify
 
