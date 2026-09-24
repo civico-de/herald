@@ -84,6 +84,33 @@ class ParticipantVarsTest extends TestCase implements HeadlessInterface, HookInt
     $this->assertSame('Cancelled', $vars['participant']['status']);
   }
 
+  public function testPartialTestParticipantPayloadIsCompletedFromTheStoredRow(): void {
+    $contactId = Contact::create(checkPermissions: FALSE)
+      ->setValues(['contact_type' => 'Individual', 'first_name' => 'Ada', 'last_name' => 'Lovelace'])
+      ->execute()
+      ->single()['id'];
+    $eventId = Event::create(checkPermissions: FALSE)
+      ->setValues(['title' => 'Workshop C', 'event_type_id' => 1, 'start_date' => '2030-01-01 10:00:00'])
+      ->execute()
+      ->single()['id'];
+    $participantId = Participant::create(checkPermissions: FALSE)
+      ->setValues([
+        'contact_id' => $contactId,
+        'event_id' => $eventId,
+        'is_test' => TRUE,
+        'status_id:name' => 'Registered',
+        'role_id:name' => 'Attendee',
+      ])
+      ->execute()
+      ->single()['id'];
+
+    // Fetching by id skips APIv4's is_test = 0 default, so test registrations complete too.
+    $vars = ContextVars::build(['contact_id' => 0, 'Participant' => ['id' => $participantId, 'status_id' => 4]]);
+
+    $this->assertSame($contactId, $vars['contact']['id']);
+    $this->assertSame('Workshop C', $vars['event']['title']);
+  }
+
   public function testPartialMembershipPayloadIsCompletedFromTheStoredRow(): void {
     $contactId = Contact::create(checkPermissions: FALSE)
       ->setValues(['contact_type' => 'Individual', 'first_name' => 'Ada', 'last_name' => 'Lovelace'])
