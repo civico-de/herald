@@ -4,8 +4,11 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Trigger;
 
+use Civi\Api4\Membership;
+use Civi\Api4\Participant;
 use Civi\Herald\Privacy\Mask;
 use Civi\Herald\Util\Cast;
+use Civi\Herald\Util\StoredFields;
 
 /**
  * Template variables derived from a trigger's entity payload.
@@ -22,16 +25,34 @@ use Civi\Herald\Util\Cast;
  */
 final class ContextVars {
 
+  private const MEMBERSHIP_FIELDS = ['contact_id', 'membership_type_id', 'status_id'];
+
+  private const PARTICIPANT_FIELDS = ['contact_id', 'event_id', 'role_id', 'status_id'];
+
   /**
    * @param array<string, mixed> $context
    * @return array<string, mixed>
    */
   public static function build(array $context): array {
+    $membership = StoredFields::complete(
+      Membership::get(checkPermissions: FALSE),
+      self::entity($context, 'Membership'),
+      self::MEMBERSHIP_FIELDS,
+    );
+    $participant = StoredFields::complete(
+      Participant::get(checkPermissions: FALSE),
+      self::entity($context, 'Participant'),
+      self::PARTICIPANT_FIELDS,
+    );
+    $contactId = Cast::toInt($context['contact_id'] ?? 0);
+    if ($contactId <= 0) {
+      $contactId = Cast::toInt($participant['contact_id'] ?? $membership['contact_id'] ?? 0);
+    }
     $vars = [];
-    self::addContact($vars, Cast::toInt($context['contact_id'] ?? 0));
+    self::addContact($vars, $contactId);
     self::addGroup($vars, self::entity($context, 'GroupContact'));
-    self::addMembership($vars, self::entity($context, 'Membership'));
-    self::addParticipant($vars, self::entity($context, 'Participant'));
+    self::addMembership($vars, $membership);
+    self::addParticipant($vars, $participant);
     // A bare Event entity (the "Event is added / changed / deleted" triggers).
     // The participant branch already derives $event from its event_id, so only
     // fill in here when the trigger carries an Event directly.
@@ -140,8 +161,11 @@ final class ContextVars {
         'id' => Cast::toInt($participant['event_id'] ?? 0),
         'title' => self::labelOf('civicrm_event', 'title', Cast::toInt($participant['event_id'] ?? 0)),
       ];
-      $roleId = $participant['role_id'] ?? '';
-      $roleId = is_array($roleId) ? Cast::toString(reset($roleId)) : Cast::toString($roleId);
+      // Stored rows keep multiple roles as one separator-delimited string.
+      $roleIds = $participant['role_id'] ?? '';
+      $roleIds = is_array($roleIds) ? $roleIds : explode(\CRM_Core_DAO::VALUE_SEPARATOR, Cast::toString($roleIds));
+      $roleIds = array_values(array_filter($roleIds, static fn (mixed $v): bool => Cast::toString($v) !== ''));
+      $roleId = Cast::toString($roleIds[0] ?? '');
       $role = '';
       if ($roleId !== '') {
         $role = Cast::toString(\CRM_Core_DAO::singleValueQuery(
