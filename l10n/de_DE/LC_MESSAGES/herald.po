@@ -201,6 +201,14 @@ msgstr "Link-Vorschauen deaktivieren"
 msgid "check missing — extension disabled?"
 msgstr "Check fehlt — Extension deaktiviert?"
 
+#: Civi/Herald/Preflight/DisabledRulesCheck.php
+msgid "A deploy switched off the Herald CiviRules rules %1 and did not switch them back on, so they send no alerts. Fix what failed the deploy gate, then run: %2"
+msgstr "Ein Deploy hat die Herald-CiviRules-Regeln %1 abgeschaltet und nicht wieder eingeschaltet, sie senden daher keine Meldungen. Den Fehler im Deploy-Gate beheben, dann ausführen: %2"
+
+#: Civi/Herald/Preflight/DisabledRulesCheck.php
+msgid "Herald: rules disabled by a deploy"
+msgstr "Herald: Regeln durch einen Deploy abgeschaltet"
+
 #: managed/Job.mgd.php
 msgid "Herald: Flush alert aggregation buffer"
 msgstr "Herald: Sammelpuffer für Meldungen leeren"
