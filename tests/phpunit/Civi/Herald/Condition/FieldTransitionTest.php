@@ -48,6 +48,11 @@ class FieldTransitionTest extends TestCase {
       'huge negative int ordering' => ['<', '-9007199254740993', '-9007199254740992', TRUE],
       'ordering with different lengths' => ['>', '10000000000000000', '999999999999999', TRUE],
       'leading zeros numeric compare' => ['=', '00123', '123', TRUE],
+      'equals bool false vs 0' => ['=', FALSE, '0', TRUE],
+      'equals bool true vs 1' => ['=', TRUE, '1', TRUE],
+      'equals bool false vs 1' => ['=', FALSE, '1', FALSE],
+      'not equals bool false vs 1' => ['!=', FALSE, '1', TRUE],
+      'ordering on bool' => ['<', FALSE, '1', TRUE],
     ];
   }
 
@@ -119,6 +124,8 @@ class FieldTransitionTest extends TestCase {
     $this->assertTrue(FieldTransition::sameValue(' 2 ', '2.0'));
     $this->assertFalse(FieldTransition::sameValue(NULL, '0'));
     $this->assertTrue(FieldTransition::sameValue(NULL, NULL));
+    $this->assertTrue(FieldTransition::sameValue(a: FALSE, b: '0'));
+    $this->assertTrue(FieldTransition::sameValue(a: '1', b: TRUE));
     $this->assertFalse(FieldTransition::sameValue('9007199254740993', '9007199254740992'));
   }
 

@@ -16,6 +16,17 @@ final class Cast {
     return is_scalar($value) ? (string) $value : $default;
   }
 
+  /**
+   * A scalar as the database stores it: booleans become '1'/'0', not ''.
+   */
+  public static function toStoredString(bool|float|int|string $value): string {
+    return match ($value) {
+      TRUE => '1',
+      FALSE => '0',
+      default => (string) $value,
+    };
+  }
+
   public static function toInt(mixed $value, int $default = 0): int {
     return is_scalar($value) ? (int) $value : $default;
   }

@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Condition;
 
+use Civi\Herald\Util\Cast;
+
 /**
  * Did field X of entity E transition from (operator, value) to (operator, value)?
  *
@@ -60,7 +62,7 @@ final class FieldTransition {
    */
   public static function sameValue(mixed $a, mixed $b): bool {
     if (is_scalar($a) && is_scalar($b)) {
-      return self::equals($a, (string) $b);
+      return self::equals($a, Cast::toStoredString($b));
     }
     return $a === $b;
   }
@@ -107,10 +109,10 @@ final class FieldTransition {
   }
 
   private static function ordered(string $operator, mixed $actual, string $expected): bool {
-    if (!is_numeric($expected) || !is_scalar($actual) || !is_numeric((string) $actual)) {
+    if (!is_numeric($expected) || !is_scalar($actual) || !is_numeric(Cast::toStoredString($actual))) {
       return FALSE;
     }
-    $a = trim((string) $actual);
+    $a = trim(Cast::toStoredString($actual));
     $b = trim($expected);
     $cmp = self::floatSafe($a) && self::floatSafe($b)
       ? (float) $a <=> (float) $b
@@ -128,7 +130,7 @@ final class FieldTransition {
     if (!is_scalar($actual)) {
       return FALSE;
     }
-    $actualStr = trim((string) $actual);
+    $actualStr = trim(Cast::toStoredString($actual));
     $expectedStr = trim($expected);
     if (is_numeric($actualStr) && is_numeric($expectedStr)) {
       // Numeric compare only while the float cast is lossless for both sides;
