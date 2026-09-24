@@ -116,7 +116,7 @@ delivers through each contact's own channel and recipient.
 
 ## Deploy to production
 
-Deploy with the deploy tooling and three hooks:
+Deploy with the deploy tooling and these hooks:
 
 ```yaml
 hooks:
@@ -126,28 +126,33 @@ hooks:
   post:
     - script: bin/preflight-rules.php
     - script: bin/rules-reenable.php
+    - script: bin/note-foreign-rules.php
 ```
 
 `rules-disable.php` writes the ids of every active rule with a herald condition or action
 to `herald_deploy_disabled_rules` in CiviCRM's private directory, then switches those
 rules off. `preflight-rules.php` then resolves handler classes the way CiviRules does
 (class exists, `new $class()` without arguments, right base class, post-trigger default
-only for an object/op trigger without cron):
-
-- It fails, exit code 1, for herald's registered handlers and for every handler of the
-  disabled rules whose trigger is active, whether or not the handlers are active. The
-  message names rule, kind, class and reason, and the command that re-enables herald's
-  rules after the fix. The rules stay disabled until then.
-- It only notes, on stderr, broken handlers of other active rules whose trigger is active,
-  and the ids of disabled rules whose trigger is missing or inactive. CiviRules never fires
-  a rule without an active trigger, so none of its handlers is checked. A foreign broken
-  rule does not keep herald's alerts switched off.
+only for an object/op trigger without cron). It fails, exit code 1, for herald's
+registered handlers and for every handler of the disabled rules whose trigger is active,
+whether or not the handlers are active. The message names rule, kind, class and reason,
+and the command that re-enables herald's rules after the fix. The rules stay disabled
+until then. It notes on stderr the ids of disabled rules whose trigger is missing or
+inactive: CiviRules never fires a rule without an active trigger, so none of its
+handlers is checked.
 
 `rules-reenable.php` re-activates the recorded rules and removes the file. A herald class
 that cannot load at all fails earlier: `cv flush` and `cv ext:enable` exit on the PHP
 fatal, naming class and file. Without a marker file the preflight gates only the
 registered handlers. A marker left by a failed deploy re-enables its rules on the next
-successful one, including a rule an admin switched off on purpose in between.
+successful one, including a rule an admin switched off on purpose in between. While the
+marker exists, CiviCRM's system status shows a warning naming the rules and the command.
+
+`note-foreign-rules.php` runs after herald's rules are back on and only notes, on stderr,
+broken handlers of the other active rules. It is the only step that loads their classes,
+so a foreign class that is a PHP fatal on load (an unimplemented abstract method, an
+incompatible signature) fails this last hook and marks the deploy failed, but cannot keep
+herald's alerts off.
 
 The other `bin/*-rules.php` scripts seed instance-specific rule
 sets and are not general-purpose.
