@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 require_once 'herald.civix.php';
 
-use CRM_Herald_ExtensionUtil as E;
-
 /**
  * Implements hook_civicrm_config().
  *
@@ -27,42 +25,6 @@ function herald_civicrm_install(): void {
  */
 function herald_civicrm_enable(): void {
   _herald_civix_civicrm_enable();
-  // Enable runs at deploy time, where a broken handler class failing loudly is wanted.
-  \Civi\Herald\RuleHealth::refresh();
-}
-
-/**
- * Implements hook_civicrm_check().
- *
- * Reads only the cached RuleHealth scan: loading a handler class here could
- * take down the very System.check that reports it.
- *
- * @param array<int, CRM_Utils_Check_Message> $messages
- */
-function herald_civicrm_check(&$messages): void {
-  $broken = \Civi\Herald\RuleHealth::stored();
-  if ($broken === []) {
-    return;
-  }
-  $items = '';
-  foreach ($broken as $class => $reason) {
-    $items .=
-      '<li><code>' . htmlspecialchars((string) $class) . '</code> — ' . htmlspecialchars((string) $reason) . '</li>';
-  }
-  $messages[] = new CRM_Utils_Check_Message(
-    'herald_rule_handler_unloadable',
-    E::ts(
-      '%1 Herald rule handler class(es) cannot be loaded. Any CiviRules rule using them will fail — under CiviRules\' synchronous evaluation that can 500 the triggering write (e.g. event edits, booking cart). Fix the class or disable the rule.',
-      [1 => count($broken)],
-    )
-    . '<ul>'
-    . $items
-    . '</ul>',
-    E::ts('Herald: unloadable rule handler class'),
-    // PSR-3 level; Psr\Log\LogLevel is only a transitive dependency here.
-    'critical',
-    'fa-bolt',
-  );
 }
 
 /**

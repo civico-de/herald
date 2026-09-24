@@ -201,14 +201,6 @@ msgstr "Link-Vorschauen deaktivieren"
 msgid "check missing — extension disabled?"
 msgstr "Check fehlt — Extension deaktiviert?"
 
-#: herald.php
-msgid "%1 Herald rule handler class(es) cannot be loaded. Any CiviRules rule using them will fail — under CiviRules' synchronous evaluation that can 500 the triggering write (e.g. event edits, booking cart). Fix the class or disable the rule."
-msgstr "%1 Herald-Regel-Handler-Klasse(n) lassen sich nicht laden. Jede CiviRules-Regel, die sie verwendet, schlägt fehl — bei der synchronen Auswertung von CiviRules kann das den auslösenden Schreibvorgang mit einem 500er abbrechen (z. B. Event-Bearbeitung, Buchungswarenkorb). Klasse reparieren oder Regel deaktivieren."
-
-#: herald.php
-msgid "Herald: unloadable rule handler class"
-msgstr "Herald: nicht ladbare Regel-Handler-Klasse"
-
 #: managed/Job.mgd.php
 msgid "Herald: Flush alert aggregation buffer"
 msgstr "Herald: Sammelpuffer für Meldungen leeren"
@@ -696,14 +688,6 @@ msgstr "Liste von Check-Namen, die immer vorhanden sein müssen. Ein gelisteter 
 #: settings/herald.setting.php
 msgid "Monitor Expected Checks"
 msgstr "Erwartete Monitor-Checks"
-
-#: settings/herald.setting.php
-msgid "Cached result of the handler-class loadability scan (class => reason for each broken handler). Written by the deploy preflight and the enable hook; read by hook_civicrm_check so the pulse health endpoint never has to load a possibly-broken class. Empty means healthy."
-msgstr "Zwischengespeichertes Ergebnis der Ladbarkeitsprüfung für Handler-Klassen (Klasse => Grund je defektem Handler). Wird vom Deploy-Preflight und vom enable-Hook geschrieben und von hook_civicrm_check gelesen, damit der Pulse-Health-Endpunkt nie eine möglicherweise defekte Klasse laden muss. Leer bedeutet gesund."
-
-#: settings/herald.setting.php
-msgid "Rule Handler Health (cached)"
-msgstr "Zustand der Regel-Handler (zwischengespeichert)"
 
 #: templates/CRM/Herald/Form/CivirulesAction/SendContributionAlert.tpl, templates/CRM/Herald/Form/CivirulesAction/SendContributionDigest.tpl, templates/CRM/Herald/Form/CivirulesAction/SendNotification.tpl, templates/CRM/Herald/Form/CivirulesCondition/PreviousContributionStatus.tpl
 msgid "herald: Send Notification"

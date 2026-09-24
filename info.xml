@@ -28,7 +28,7 @@
   </php_compatibility>
   <comments>Requires CiviRules.</comments>
   <requires>
-    <!-- CivirulesActions/Conditions extend CiviRules base classes; herald_civicrm_enable also guards this at runtime. -->
+    <!-- CivirulesActions/Conditions extend CiviRules base classes; bin/preflight-rules.php checks them on deploy. -->
     <ext>org.civicoop.civirules</ext>
   </requires>
   <classloader>

@@ -61,6 +61,16 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
   }
 
   /**
+   * herald_rule_health is no longer a declared setting; SQL, because the
+   * settings API refuses a name without metadata.
+   */
+  public function upgrade_1006(): bool {
+    $this->ctx->log->info('herald: removing the retired herald_rule_health setting');
+    CRM_Core_DAO::executeQuery("DELETE FROM civicrm_setting WHERE name = 'herald_rule_health'");
+    return TRUE;
+  }
+
+  /**
    * Bring CiviRules manifests, renamed handler classes and managed entities
    * in line with the shipped code. Shared by enable() and upgrade steps.
    */
@@ -74,7 +84,8 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
     // On install, enable() runs inside core's install loop; an extension installed in the
     // same call (CiviRules, one `Extension.install` for both) has no Api4 entities yet, the
     // container reloads only after the loop. postInstall() runs after that reload.
-    if (self::installing()) {
+    $processes = CRM_Extension_System::singleton()->getManager()->getActiveProcesses('herald');
+    if (in_array('installing', $processes, TRUE)) {
       return;
     }
     self::reconcile($this->extensionDir);
@@ -82,11 +93,6 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
 
   public function postInstall(): void {
     self::reconcile($this->extensionDir);
-  }
-
-  private static function installing(): bool {
-    $manager = CRM_Extension_System::singleton()->getManager();
-    return in_array('installing', $manager->getActiveProcesses('herald'), TRUE);
   }
 
 }
