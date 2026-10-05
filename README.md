@@ -116,18 +116,16 @@ delivers through each contact's own channel and recipient.
 
 ## Deploy to production
 
-Deploy with the deploy tooling and these hooks:
+herald's CiviRules actions run in the write path of every entity they fire on, so a
+handler class that cannot load breaks that write. Wrap the code swap in these steps, each
+script run with `cv scr`, and stop at the first non-zero exit:
 
-```yaml
-hooks:
-  pre_swap:
-    - script: bin/rules-disable.php
-    - cv: flush
-  post:
-    - script: bin/preflight-rules.php
-    - script: bin/rules-reenable.php
-    - script: bin/note-foreign-rules.php
-```
+| When | Step |
+|---|---|
+| Before the swap | `bin/rules-disable.php`, then `cv flush` |
+| After the swap | `bin/preflight-rules.php` |
+| After the preflight passed | `bin/rules-reenable.php` |
+| Last | `bin/note-foreign-rules.php` |
 
 `rules-disable.php` writes the ids of every active rule with a herald condition or action
 to `herald_deploy_disabled_rules` in CiviCRM's private directory, then switches those
@@ -151,11 +149,8 @@ marker exists, CiviCRM's system status shows a warning naming the rules and the 
 `note-foreign-rules.php` runs after herald's rules are back on and only notes, on stderr,
 broken handlers of the other active rules. It is the only step that loads their classes,
 so a foreign class that is a PHP fatal on load (an unimplemented abstract method, an
-incompatible signature) fails this last hook and marks the deploy failed, but cannot keep
+incompatible signature) fails this last step and marks the deploy failed, but cannot keep
 herald's alerts off.
-
-The other `bin/*-rules.php` scripts seed instance-specific rule
-sets and are not general-purpose.
 
 ## Development
 

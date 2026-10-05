@@ -3,7 +3,7 @@
 declare(strict_types = 1);
 
 /**
- * Deploy step, run by the deployer after bin/preflight-rules.php passed: re-enables the
+ * Deploy step, run after bin/preflight-rules.php passed: re-enables the
  * rules bin/rules-disable.php switched off and clears the marker.
  */
 

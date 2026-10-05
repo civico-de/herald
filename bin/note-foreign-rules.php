@@ -3,7 +3,7 @@
 declare(strict_types = 1);
 
 /**
- * Deploy step, run by the deployer last, after bin/rules-reenable.php: notes broken handlers
+ * Deploy step, run last, after bin/rules-reenable.php: notes broken handlers
  * of other active rules on stderr. Only a class that fatals on load fails it.
  */
 

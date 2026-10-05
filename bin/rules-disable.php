@@ -3,11 +3,11 @@
 declare(strict_types = 1);
 
 /**
- * Deploy step, run by the deployer via `cv scr` before the swap: records, then disables,
+ * Deploy step, run via `cv scr` before the code swap: records, then disables,
  * the active rules backed by a herald condition or action class for the gate.
  */
 
-// DeployGate::marker(); spelled out because the deploy runs this file against the installed classes.
+// DeployGate::marker(), spelled out: this runs before the swap, against the old classes.
 $marker = Civi::paths()->getPath('[civicrm.private]/herald_deploy_disabled_rules');
 
 $ids = [];

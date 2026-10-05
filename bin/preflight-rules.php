@@ -3,7 +3,7 @@
 declare(strict_types = 1);
 
 /**
- * Deploy gate, run by the deployer as a `hooks.post` script before bin/rules-reenable.php. Loads only
+ * Deploy gate, run after the code swap and before bin/rules-reenable.php. Loads only
  * herald's and the disabled rules' handlers; a failure exits non-zero and keeps them disabled.
  */
 

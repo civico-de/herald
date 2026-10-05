@@ -1,7 +1,7 @@
 # herald
 
 Channel-pluggable notification + digest layer for CiviCRM, fired via CiviRules
-actions (no bespoke cron for alerts). Live in production on production.
+actions (no bespoke cron for alerts). Live in production.
 
 ## Contracts to preserve
 
