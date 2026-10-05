@@ -12,7 +12,7 @@ use Civi\Herald\Channel\ChannelRegistry;
  * Send a test message via the configured channel. Useful smoke check after install.
  *
  * Example:
- *   cv api4 Herald.testTelegram +v 'message="hello from civikitchen"'
+ *   cv api4 Herald.testTelegram 'message="hello from civikitchen"'
  */
 class TestTelegram extends AbstractAction {
 

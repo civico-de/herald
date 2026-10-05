@@ -20,8 +20,8 @@ use Civi\Herald\Channel\PlainText;
  * get the text back and HTML sinks show it instead of parsing it.
  *
  * Example:
- *   cv api4 Herald.send +v 'channel=ntfy' +v 'message="disk almost full"' \
- *       +v 'subject="[ops] storage"' +v 'config={"ntfy_priority":4}'
+ *   cv api4 Herald.send 'channel=ntfy' 'message="disk almost full"' \
+ *       'subject="[ops] storage"' 'config={"ntfy_priority":4}'
  */
 class Send extends AbstractAction {
 

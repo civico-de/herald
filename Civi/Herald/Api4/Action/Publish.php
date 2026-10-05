@@ -21,7 +21,7 @@ use Civi\Herald\Topic\Router;
  * A route with aggregate_minutes > 0 goes through the alert buffer.
  *
  * Example:
- *   cv api4 Herald.publish +v 'topic=ops' +v 'message="🔴 disk almost full"'
+ *   cv api4 Herald.publish 'topic=ops' 'message="🔴 disk almost full"'
  *
  * Accessors are served by AbstractAction::__call; declared here as part of the contract.
  *

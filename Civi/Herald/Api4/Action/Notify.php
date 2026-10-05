@@ -15,7 +15,7 @@ use Civi\Herald\Trigger\ContextVars;
  * any other caller with a params bag and trigger context enter here.
  *
  * Example:
- *   cv api4 Herald.notify +v 'actionParams={"template":"herald_generic","channel":"telegram"}'
+ *   cv api4 Herald.notify 'actionParams={"template":"herald_event_created_alert","channel":"telegram"}'
  */
 class Notify extends AbstractAction {
 

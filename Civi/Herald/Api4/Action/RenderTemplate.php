@@ -13,8 +13,8 @@ use Civi\Herald\Renderer\TemplateRenderer;
  * For previewing template output without sending anything.
  *
  * Example:
- *   cv api4 Herald.renderTemplate +v 'workflow=herald_contribution_alert_completed' \
- *       +v 'vars={"contribution":{"total_amount":42.5,"source":"Stripe"}}'
+ *   cv api4 Herald.renderTemplate 'workflow=herald_contribution_alert_completed' \
+ *       'vars={"contribution":{"total_amount":42.5,"source":"Stripe"}}'
  */
 class RenderTemplate extends AbstractAction {
 
