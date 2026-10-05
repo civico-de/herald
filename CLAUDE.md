@@ -88,5 +88,6 @@ Headless tests self-install into the isolated `civicrm_test` DB — no prior
 `tests/docker/initdb/`, run `docker compose down -v` once. Pure `@group unit`
 tests can run without any Civi checkout (`--no-configuration` plus a stub
 bootstrap). Smoke-test real sends with `cv api4 Herald.testTelegram` /
-`Herald.renderTemplate` (see README). End-to-end CiviRules recipes and
-per-channel field tables live in `CONFIGURATION.md`.
+`Herald.renderTemplate` (see README). User docs live in `docs/`
+(recipes, channels, delivery, digests, monitor, reference, deploy); keep them
+in step with code changes.

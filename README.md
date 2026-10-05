@@ -1,22 +1,29 @@
 # herald
 
-A notification and digest layer for CiviCRM. Other extensions, CiviRules and scripts hand
-herald a message or a template. herald renders it and delivers it through whichever channel
-the site configured.
+A notification and digest layer for CiviCRM. CiviRules rules, scheduled jobs, other
+extensions and scripts hand herald a message or a template; herald renders it and
+delivers it through the channel the site configured.
 
-- Channels: Telegram, generic webhook (Slack, Discord, Mattermost, custom), ntfy.sh,
-  Pushover, email through CiviCRM's outbound mailer, and internal CiviCRM activities.
-  Others plug in through `Civi\Herald\Channel\ChannelInterface`.
-- Templates: `MessageTemplate` workflows, rendered as Smarty strings. Admins can edit
-  them, but a herald release that changes a shipped template overwrites the edits to it.
-- CiviRules: three actions (Send notification, Send contribution digest, Send contribution
-  alert) and three conditions (Previous contribution status, Field transition, Event was
-  deactivated) that any CiviRules trigger can use. No bespoke cron.
-- Topics: publishers name a topic, the `herald_topics` setting decides where it lands.
-- Alert aggregation, a check monitor with push alerts for degraded states, and per-contact
-  notification preferences with subscriber fan-out.
+- **Channels:** Telegram, generic webhook (Slack, Discord, Mattermost, custom), ntfy,
+  Pushover, email through CiviCRM's outbound mailer, and assigned CiviCRM activities.
+  A new channel implements `Civi\Herald\Channel\ChannelInterface`.
+- **Templates:** `MessageTemplate` workflows rendered as Smarty strings. 17 ship with the
+  extension, for contributions, tickets, events, memberships, group signups, digests and
+  the check monitor.
+- **CiviRules:** three actions (send notification, contribution alert, contribution
+  digest) and three conditions (previous contribution status, field transition, event
+  deactivated), fired by CiviRules triggers instead of a bespoke cron. The contribution
+  action and condition need a Contribution trigger.
+- **Delivery:** to one recipient, to every contact subscribed to a notification kind,
+  to the members of a group, or to a list of addresses. Alerts can be aggregated into one
+  message per time window.
+- **Topics:** publishers name a topic such as `ops`; the `herald_topics` setting decides
+  channel and recipient.
+- **Check monitor:** extensions contribute health checks; herald reports the ok → fail and
+  fail → ok transitions and reminds about checks that keep failing.
 
-Requires CiviRules (`org.civicoop.civirules`). Proprietary, © civico GmbH.
+Requires CiviRules (`org.civicoop.civirules`). Supported CiviCRM and PHP versions are
+declared in `info.xml`.
 
 ## Install
 
@@ -24,160 +31,105 @@ Requires CiviRules (`org.civicoop.civirules`). Proprietary, © civico GmbH.
 cv ext:enable herald
 ```
 
-Configure only the channels you actually use:
+Then configure the channels you use. Settings have no admin screen; set them with
+`cv setting:set` or `Setting.set`. The full list is in
+[docs/reference.md](docs/reference.md#settings).
 
 ```bash
 # Telegram
 cv setting:set herald_telegram_bot_token=<bot-token>
 cv setting:set herald_telegram_default_chat_id=<chat-id>
 
-# Webhook (URL also configurable per action)
+# Webhook
 cv setting:set herald_webhook_default_url=<https://hooks.slack.com/...>
-cv setting:set herald_webhook_default_auth_token=<bearer-token>   # optional
-cv setting:set herald_webhook_allowed_hosts='["hooks.slack.com"]'  # optional allowlist, subdomains match
+cv setting:set herald_webhook_default_auth_token=<bearer-token>      # optional
+cv setting:set herald_webhook_allowed_hosts='["hooks.slack.com"]'     # optional allowlist
 
-# ntfy.sh (or self-hosted)
-cv setting:set herald_ntfy_server=https://ntfy.sh                  # default
+# ntfy (public ntfy.sh or self-hosted)
+cv setting:set herald_ntfy_server=https://ntfy.sh                     # default
 cv setting:set herald_ntfy_default_topic=<topic>
-cv setting:set herald_ntfy_token=<bearer-token>                    # optional, for protected topics
+cv setting:set herald_ntfy_token=<bearer-token>                       # protected topics only
 
 # Pushover
 cv setting:set herald_pushover_app_token=<app-token>
 cv setting:set herald_pushover_default_user_key=<user-or-group-key>
 
-# Email (no credentials; both optional)
-cv setting:set herald_email_from='"Herald" <noreply@example.org>'   # empty → site default
+# Email: no credentials, both optional
+cv setting:set herald_email_from='"Herald" <noreply@example.org>'     # empty → site default
 cv setting:set herald_email_default_to=<fallback-recipient>
 ```
 
-When `herald_webhook_allowed_hosts` is empty, webhooks fall back to a denylist of private
-and reserved addresses.
+The activity channel needs no settings.
 
 ## Smoke test
 
 ```bash
-# Send a real test message through the configured Telegram channel
+# A real message through the configured Telegram channel
 cv api4 Herald.testTelegram message='<b>herald smoke test</b>'
 
-# Render a workflow template without sending
+# Render a workflow template without sending it
 cv api4 Herald.renderTemplate workflow=herald_contribution_alert_completed \
     vars='{"contribution":{"total_amount":42.5,"source":"Stripe"}}'
 
-# Keep an operational notification inside CiviCRM as an assigned task
+# A pre-rendered message through one channel
 cv api4 Herald.send channel=activity message='Three bank transactions need review' \
     subject='Review bank import' format=text \
-    config='{"activity_assignee_contact_id":42,"activity_target_contact_id":84}'
+    config='{"activity_assignee_contact_id":42}'
 
-# Publish to a topic; the herald_topics setting decides the recipient
-cv api4 Herald.publish +v 'topic=ops' +v 'message=disk almost full'
+# Publish to a topic; herald_topics decides where it lands
+cv api4 Herald.publish topic=ops message='disk almost full'
 ```
 
-`cv scr bin/test-telegram.php` does the same as `Herald.testTelegram` without the API.
+`cv scr bin/test-telegram.php` does what `Herald.testTelegram` does, without the API;
 `HERALD_TEST_MESSAGE` and `HERALD_TEST_CHAT_ID` override its defaults.
 
-## APIv4
+## First rule
 
-| Action | Does |
+A Telegram message for every completed contribution:
+
+1. Administer → CiviRules → New rule, trigger **Contribution is added**.
+2. Condition **Contribution Status is (not) one of**: Completed.
+3. Action **Herald: Send contribution alert**, template "Herald: New completed
+   contribution", channel Telegram. Leave the chat ID empty to use the default.
+
+[docs/recipes.md](docs/recipes.md) builds on this: bank-transfer matching, ticket sales
+with aggregation, event lifecycle alerts, signups and scheduled digests.
+
+## Documentation
+
+| Document | Covers |
 |---|---|
-| `Herald.send` | Send a message or a rendered template through one channel |
-| `Herald.publish` | Publish to a topic, routed by `herald_topics` |
-| `Herald.notify`, `Herald.notifyContribution`, `Herald.notifyDigest` | What the CiviRules actions call |
-| `Herald.checkContributionTransition`, `Herald.checkFieldTransition`, `Herald.checkEventDeactivated` | What the CiviRules conditions call |
-| `Herald.getChannels` | Registered channels and their config schema |
-| `Herald.getParkedAlerts`, `Herald.reactivateParkedAlerts` | Buffered alerts that could not be delivered |
-| `Herald.testTelegram`, `Herald.renderTemplate` | Smoke test and preview |
-
-Two scheduled jobs ship managed: "Herald: Flush alert aggregation buffer"
-(`Job.herald_buffer_flush`) and the check monitor (`Job.herald_monitor`).
-
-## Configuration
-
-[CONFIGURATION.md](CONFIGURATION.md) has the recipes and the reference: CiviRules rule
-sets for donation alerts and digests, event lifecycle notifications, subscriber mode, the
-per-channel parameter tables, alert aggregation, topics, digest sections from other
-extensions, the check monitor, and every action parameter.
-
-## Self-service notification preferences
-
-Each contact can pick their preferred channel and the kinds of notifications they want,
-through the custom group `herald_preferences` that ships with the extension. Admins fill
-these in from the contact view. For self-service, point staff at a profile that exposes
-the same fields:
-
-```bash
-cv scr /var/www/html/ext/herald/bin/install-profile.php
-# → prints a URL like /civicrm/profile/edit?gid=42&reset=1
-```
-
-Send users that URL. CiviCRM resolves it to the logged-in contact and only allows editing
-their own record. When a CiviRules action's `delivery_mode` is `subscribers` and a
-`subscription_type` is picked, the action queries all contacts subscribed to that type and
-delivers through each contact's own channel and recipient.
-
-## Deploy to production
-
-herald's CiviRules actions run in the write path of every entity they fire on, so a
-handler class that cannot load breaks that write. Wrap the code swap in these steps, each
-script run with `cv scr`, and stop at the first non-zero exit:
-
-| When | Step |
-|---|---|
-| Before the swap | `bin/rules-disable.php`, then `cv flush` |
-| After the swap | `bin/preflight-rules.php` |
-| After the preflight passed | `bin/rules-reenable.php` |
-| Last | `bin/note-foreign-rules.php` |
-
-`rules-disable.php` writes the ids of every active rule with a herald condition or action
-to `herald_deploy_disabled_rules` in CiviCRM's private directory, then switches those
-rules off. `preflight-rules.php` then resolves handler classes the way CiviRules does
-(class exists, `new $class()` without arguments, right base class, post-trigger default
-only for an object/op trigger without cron). It fails, exit code 1, for herald's
-registered handlers and for every handler of the disabled rules whose trigger is active,
-whether or not the handlers are active. The message names rule, kind, class and reason,
-and the command that re-enables herald's rules after the fix. The rules stay disabled
-until then. It notes on stderr the ids of disabled rules whose trigger is missing or
-inactive: CiviRules never fires a rule without an active trigger, so none of its
-handlers is checked.
-
-`rules-reenable.php` re-activates the recorded rules and removes the file. A herald class
-that cannot load at all fails earlier: `cv flush` and `cv ext:enable` exit on the PHP
-fatal, naming class and file. Without a marker file the preflight gates only the
-registered handlers. A marker left by a failed deploy re-enables its rules on the next
-successful one, including a rule an admin switched off on purpose in between. While the
-marker exists, CiviCRM's system status shows a warning naming the rules and the command.
-
-`note-foreign-rules.php` runs after herald's rules are back on and only notes, on stderr,
-broken handlers of the other active rules. It is the only step that loads their classes,
-so a foreign class that is a PHP fatal on load (an unimplemented abstract method, an
-incompatible signature) fails this last step and marks the deploy failed, but cannot keep
-herald's alerts off.
+| [docs/recipes.md](docs/recipes.md) | End-to-end CiviRules setups and scheduled digests |
+| [docs/channels.md](docs/channels.md) | Every channel: settings, per-call keys, limits, troubleshooting |
+| [docs/delivery.md](docs/delivery.md) | Delivery modes, subscriber preferences, topics, aggregation, parked alerts |
+| [docs/digests.md](docs/digests.md) | Contribution digests: parameters, composed digests, extra sections, source normalisation |
+| [docs/monitor.md](docs/monitor.md) | Check monitor: contributing checks, tuning, herald's own checks |
+| [docs/reference.md](docs/reference.md) | CiviRules actions and conditions, APIv4, jobs, templates and their variables, settings, hooks |
+| [docs/deploy.md](docs/deploy.md) | Deploying without breaking writes: the rule gate scripts |
 
 ## Development
 
-The repo ships its own [civikitchen](https://github.com/jfilter/civikitchen) stack in
+The repo ships a [civikitchen](https://github.com/jfilter/civikitchen) stack in
 `tests/docker/`:
 
 ```bash
-cd tests/docker && docker compose up -d           # CiviCRM on :8090, phpMyAdmin :8091, Maildev :1090
-docker compose exec app cv ext:enable herald      # once per fresh DB, for manual poking around
+cd tests/docker && docker compose up -d           # CiviCRM :8090, phpMyAdmin :8091, Maildev :1090
+docker compose exec app cv ext:enable herald      # once per fresh DB, for manual testing
 docker compose exec -T app \
     bash -c "cd /var/www/html/ext/herald && vendor/bin/phpunit"
 ```
 
-The compose file pulls `ghcr.io/jfilter/civikitchen:standalone` and auto-installs CiviCRM,
-so the first `up` is a one-shot setup. The headless suite installs CiviRules itself. The
-image runs `composer install` on bind-mounted extensions automatically, so
-`vendor/bin/phpunit` is available without a manual composer step.
+The first `up` installs CiviCRM and CiviRules and runs `composer install` on the mounted
+extension. The test run needs no `ext:enable` and no environment variables: the headless
+suite installs itself into the separate `civicrm_test` database that
+`tests/docker/initdb/` creates, so the dev site stays untouched. The bootstrap refuses to
+run unless cv's configuration points the tests at a `*_test` database; the civikitchen
+stack provides that. A `db-data` volume older than that init script needs one
+`docker compose down -v`.
 
-The phpunit run needs no env vars or prior `ext:enable`. The test bootstrap boots
-`cv php:boot --test`, and the headless suite installs itself into the isolated
-`civicrm_test` scratch DB created by `tests/docker/initdb/`. The dev site's data and
-settings stay untouched. If your `db-data` volume predates the initdb script, recreate it
-once with `docker compose down -v && docker compose up -d`.
-
-CI uses the shared civikitchen layer in `.docker/` instead (ports 8080, 8081, 1080). Pure
-unit tests without any CiviCRM checkout run the `@group unit` files with
-`--no-configuration` and a bootstrap that stubs the CiviRules base classes.
+CI uses the shared civikitchen layer in `.docker/` (ports 8080, 8081, 1080). The
+`@group unit` tests also run without any CiviCRM checkout, with `--no-configuration` and
+a bootstrap that stubs the CiviRules base classes.
 
 ## License
 
