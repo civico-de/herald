@@ -67,7 +67,7 @@ function ck_restore_core_foreign_keys(): void {
  * Drop when the supported floor carries civicrm-core#36991.
  */
 function ck_discard_bootstrap_status(): void {
-  \CRM_Core_Session::singleton()->getStatus(TRUE);
+  \CRM_Core_Session::singleton()->getStatus(reset: TRUE);
 }
 
 /**
