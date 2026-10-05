@@ -13,7 +13,7 @@ use Civi\Herald\Util\Cast;
  *   period             — "yesterday" | "today" | "last_7_days" | "last_30_days" (default "yesterday")
  *   campaign_id        — optional, narrows all queries
  *   financial_type_id  — optional
- *   source_pattern     — LIKE pattern applied to all queries (e.g. "%BB-TX-%")
+ *   source_pattern     — LIKE pattern applied to all queries (e.g. "%Bank TX%")
  *   group_by           — "line_item" groups by (line-item label, unit price)
  *                        instead of contribution source; totals/pending are
  *                        then derived from the items (mixed carts split)
