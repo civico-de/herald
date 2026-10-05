@@ -55,8 +55,8 @@ Job only:
 | Parameter | Meaning |
 |---|---|
 | `blocks` | JSON array: a [composed digest](#composed-digests) instead of a single template |
-| `header` | Line above the blocks, inserted as HTML, e.g. `📊 <b>Daily report</b>` |
-| `sections` | Keys of [extra sections](#sections-from-other-extensions), comma-separated or a JSON array |
+| `header` | With `blocks`: line above the blocks, inserted as HTML, e.g. `📊 <b>Daily report</b>` |
+| `sections` | With `blocks`: keys of [extra sections](#sections-from-other-extensions), comma-separated or a JSON array |
 | `send_hour` | Send only during this hour (0–23, CiviCRM's timezone); run the job hourly |
 | `force` | `1` ignores `send_hour`, for a manual run |
 
@@ -109,7 +109,7 @@ function myext_civicrm_heraldDigestSections(array $keys, array $context, array &
 }
 ```
 
-With `sections=myext.seats,myext.queue` on the job, herald appends the answers after the
+With `blocks` and `sections=myext.seats,myext.queue` on the job, herald appends the answers after the
 blocks, in the order listed. `$context` holds the job parameters under `params` and the
 period under `period`, so a listener can match the digest's timeframe. Section bodies are
 inserted as HTML, so a listener escapes its own data. Keys nobody asked for and empty

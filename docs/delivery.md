@@ -127,7 +127,8 @@ group goes out as one message.
 
 - A group is one set of parameters: rules whose actions carry identical parameters share
   a message, and changing a rule's parameters starts a new group. Topic routes group
-  separately from actions.
+  separately from actions. With `scope_entity` set, alerts about different events,
+  memberships or participants form separate groups.
 - A single waiting alert goes out unchanged; aggregation only delayed it.
 - Several alerts get a header with the count and, for contribution alerts, the sum, such
   as "📬 7 messages, total 385.00 € (collected over 5 min)", followed by the individual

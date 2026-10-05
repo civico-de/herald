@@ -150,7 +150,7 @@ set.
 Delivers through CiviCRM's outbound mailer, so SMTP settings, mail logging and a
 development redirect all apply.
 
-Settings: `herald_email_from` (`"Name" <address>`; empty uses the site's default From
+Settings: `herald_email_from` (`Name <address>`; empty uses the site's default From
 address), `herald_email_default_to`.
 
 | Key | Meaning |

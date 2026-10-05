@@ -30,9 +30,9 @@ a pending event order is also a pending contribution and would otherwise be anno
 a donation. Tickets get their own rules below.
 
 "Transfer received" relies on herald's **Previous Contribution status** condition, which
-reads the status before the edit from herald's own pre-edit snapshot, and from the
-original data CiviRules stores when a rule runs delayed. Its form offers the statuses by
-name.
+reads the status before the edit from the original data CiviRules records for the edit,
+which also survives delayed execution, and falls back to herald's own pre-edit snapshot.
+Its form offers the statuses by name.
 
 Campaign progress: set `campaign_id` and `goal` on an alert action and the template gets
 the campaign's running total, count and percentage.
@@ -79,7 +79,7 @@ announcement, so aggregate them:
 
 Seven sales inside the window then arrive as one message headed
 "📬 7 messages, total 385.00 € (collected over 5 min)", followed by the individual lines
-([docs/delivery.md](delivery.md#aggregation)).
+([docs/delivery.md](delivery.md#aggregation)). The amount uses the site's money format.
 
 ## Event lifecycle
 

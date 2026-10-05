@@ -61,8 +61,10 @@ of herald's rules is checked by the preflight and blocks re-enabling.
 
 ## Failure cases
 
-- A herald class that cannot load at all fails before the preflight: `cv flush` and
-  `cv ext:enable` exit on the PHP fatal and name class and file.
+- A herald handler class that cannot load at all is a PHP fatal at the latest in the
+  preflight, which then exits non-zero, so herald's rules stay off. With a cold class
+  cache, an earlier step that boots CiviCRM can hit the fatal first. `cv flush` names
+  class and file.
 - While the marker file exists, CiviCRM's system status shows a warning naming the
   disabled rules and the command that re-enables them.
 - A marker left by a failed deploy re-enables its rules on the next successful one,

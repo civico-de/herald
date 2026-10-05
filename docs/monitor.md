@@ -56,7 +56,7 @@ healthy run, and reminds once a day while a check keeps failing.
 | `herald_monitor_close_after` | `1` | Report a recovery only after M consecutive healthy runs |
 | `herald_monitor_renotify_hours` | `24` | Remind about a check still failing after this many hours; `0` turns reminders off |
 | `herald_monitor_snooze` | empty | Map of check name to ISO datetime: no failure or reminder alerts for that check until then. A recovery after a failure announced before the snooze still goes out. Expired entries are removed on the next run |
-| `herald_monitor_expected` | empty | Check names that must be present. A listed check missing from the hook is reported as failing ("check missing, extension disabled?"); without the list a vanished check is silently dropped |
+| `herald_monitor_expected` | empty | Check names that must be present. A listed check missing from the hook is reported as failing ("check missing — extension disabled?"); without the list a vanished check is silently dropped |
 
 ```bash
 cv api4 Setting.set +v 'herald_monitor_snooze={"pulse.disk": "2026-10-12T08:00:00"}'

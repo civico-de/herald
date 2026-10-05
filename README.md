@@ -55,7 +55,7 @@ cv setting:set herald_pushover_app_token=<app-token>
 cv setting:set herald_pushover_default_user_key=<user-or-group-key>
 
 # Email: no credentials, both optional
-cv setting:set herald_email_from='"Herald" <noreply@example.org>'     # empty → site default
+cv setting:set herald_email_from='Herald <noreply@example.org>'       # empty → site default
 cv setting:set herald_email_default_to=<fallback-recipient>
 ```
 
