@@ -49,11 +49,12 @@ class CRM_Herald_CivirulesAdapter_Condition_PreviousContributionStatus extends C
     return isset($params['previous_status_id']) ? self::toInt($params['previous_status_id']) : NULL;
   }
 
+  /**
+   * CiviRules' base form reads rule_condition_id; without it, find() loads the
+   * first rule condition of any rule.
+   */
   public function getExtraDataInputUrl($ruleConditionId) {
-    return CRM_Utils_System::url(
-      'civicrm/herald/form/civirulescondition/previouscontributionstatus',
-      'reset=1&action=update&id=' . $ruleConditionId,
-    );
+    return $this->getFormattedExtraDataInputUrl('civicrm/herald/form/civirulescondition/previouscontributionstatus', (int) $ruleConditionId);
   }
 
   public function userFriendlyConditionParams() {

@@ -17,11 +17,11 @@ declare(strict_types = 1);
 abstract class CRM_Herald_CivirulesAdapter_Action_AbstractSend extends CRM_Civirules_Action {
 
   /**
-   * Return the URL of the per-action parameter form. Subclasses point to their
-   * concrete CRM_Herald_CivirulesAdapter_Form_* route.
+   * Return the URL of the per-action parameter form. CiviRules' base form reads
+   * rule_action_id; without it, find() loads the first rule action of any rule.
    */
   public function getExtraDataInputUrl($ruleActionId) {
-    return \CRM_Utils_System::url($this->getFormPath(), 'reset=1&action=update&id=' . $ruleActionId);
+    return $this->getFormattedExtraDataInputUrl($this->getFormPath(), (int) $ruleActionId);
   }
 
   /**

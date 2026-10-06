@@ -45,11 +45,12 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransition extends CRM_Civirule
     return (bool) ($result->first()['matched'] ?? FALSE);
   }
 
+  /**
+   * CiviRules' base form reads rule_condition_id; without it, find() loads the
+   * first rule condition of any rule.
+   */
   public function getExtraDataInputUrl($ruleConditionId) {
-    return CRM_Utils_System::url(
-      'civicrm/herald/form/civirulescondition/fieldtransition',
-      'reset=1&action=update&id=' . $ruleConditionId,
-    );
+    return $this->getFormattedExtraDataInputUrl('civicrm/herald/form/civirulescondition/fieldtransition', (int) $ruleConditionId);
   }
 
   public function userFriendlyConditionParams() {
