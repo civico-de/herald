@@ -112,7 +112,8 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     $this->assertSame(1, preg_match('#civicrm/[a-z0-9_/]+#', $url, $route), $url);
     $this->assertSame($formClass, CRM_Core_Menu::get($route[0])['page_callback'] ?? NULL, $url);
     parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
-    $_GET = $_REQUEST = $query;
+    $_GET = $query;
+    $_REQUEST = $query;
     try {
       $form = new $formClass();
       $this->assertInstanceOf(CRM_Core_Form::class, $form);
@@ -120,7 +121,8 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
       $form->buildQuickForm();
     }
     finally {
-      $_GET = $_REQUEST = [];
+      $_GET = [];
+      $_REQUEST = [];
     }
     return $form;
   }
