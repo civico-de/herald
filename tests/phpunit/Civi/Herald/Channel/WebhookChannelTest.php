@@ -8,8 +8,10 @@ use Civi\Test\HeadlessInterface;
 use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\ConnectException;
 use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Request;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 
@@ -266,6 +268,76 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/allowed_hosts/');
     WebhookChannel::assertUrlAllowed('https://evil.example/x', ['allowed_hosts' => ['slack.com']]);
+  }
+
+  public function testHeadersFromJsonAndAuthorizationMatchedCaseInsensitively(): void {
+    $channel = $this->makeChannel(new Response(200, [], ''));
+    $channel->send('x', [
+      'webhook_url' => 'https://example.com/x',
+      // @mago-expect lint:no-literal-password
+      // Test fixture, not a real credential.
+      'webhook_auth_token' => 'shorthand',
+      'webhook_headers' => '{"X-Trace": "1", "authorization": "Basic abc=="}',
+    ]);
+    $request = $this->capturedRequests[0]['request'];
+    $this->assertSame('1', $request->getHeaderLine('X-Trace'));
+    $this->assertSame('Basic abc==', $request->getHeaderLine('Authorization'));
+  }
+
+  /**
+   * @return array<string, array{0: mixed, 1: array<string, string>}>
+   */
+  public static function headerInputProvider(): array {
+    return [
+      'invalid json' => ['not json', []],
+      'scalar' => [42, []],
+      'unnamed entries' => [[0 => 'positional', '' => 'unnamed', 'X-Ok' => 7], ['X-Ok' => '7']],
+    ];
+  }
+
+  /**
+   * @dataProvider headerInputProvider
+   * @param array<string, string> $expected
+   */
+  public function testOnlyNamedHeadersAreSent(mixed $headers, array $expected): void {
+    $this->makeChannel(new Response(200, [], ''))->send('x', [
+      'webhook_url' => 'https://example.com/x',
+      'webhook_headers' => $headers,
+    ]);
+    $sent = $this->capturedRequests[0]['request']->getHeaders();
+    $custom = array_diff_key($sent, array_flip(['Host', 'User-Agent', 'Content-Type', 'Content-Length']));
+    $this->assertSame($expected, array_map(static fn (array $v): string => implode(',', $v), $custom));
+  }
+
+  public function testTransportFailureBecomesACoreException(): void {
+    $mock = new MockHandler([new ConnectException('connection refused', new Request('POST', 'https://example.com/x'))]);
+    $channel = new WebhookChannel(
+      new Client(['handler' => HandlerStack::create($mock)]),
+      static fn (string $host): array => ['93.184.216.34'],
+    );
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessage('herald: webhook request failed: connection refused');
+    $channel->send('x', ['webhook_url' => 'https://example.com/x']);
+  }
+
+  public function testGuardAllowlistSkipsBlankEntries(): void {
+    WebhookChannel::assertUrlAllowed('https://hooks.slack.com/x', ['allowed_hosts' => ['  ', 'slack.com']]);
+    $this->addToAssertionCount(1);
+  }
+
+  public function testGuardRejectsAResolverAnswerThatIsNoAddress(): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessage('disallowed address');
+    WebhookChannel::assertUrlAllowed('https://odd.example/x', [
+      'resolver' => static fn (string $host): array => ['not-an-ip'],
+    ]);
+  }
+
+  public function testGuardAcceptsAPublicIpv6Address(): void {
+    WebhookChannel::assertUrlAllowed('https://v6.example/x', [
+      'resolver' => static fn (string $host): array => ['2606:4700:4700::1111'],
+    ]);
+    $this->addToAssertionCount(1);
   }
 
 }

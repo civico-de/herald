@@ -13,6 +13,10 @@ use Civi\Herald\Channel\ChannelRegistry;
  *
  * Example:
  *   cv api4 Herald.testTelegram 'message="hello from civikitchen"'
+ *
+ * @method $this setChannel(string $channel)
+ * @method $this setMessage(string $message)
+ * @method $this setChatId(?string $chatId)
  */
 class TestTelegram extends AbstractAction {
 
