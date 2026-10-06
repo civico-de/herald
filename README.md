@@ -31,9 +31,9 @@ declared in `info.xml`.
 cv ext:enable herald
 ```
 
-Then configure the channels you use. Settings have no admin screen; set them with
-`cv setting:set` or `Setting.set`. The full list is in
-[docs/reference.md](docs/reference.md#settings).
+Then configure the channels you use, on the admin screen `civicrm/admin/setting/herald`
+or with `cv setting:set`. Array settings such as topic routes have no form field. The
+full list is in [docs/reference.md](docs/reference.md#settings).
 
 ```bash
 # Telegram

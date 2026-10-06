@@ -33,8 +33,7 @@ contribution, campaign progress and the status transition
 ### Herald: Send contribution digest
 
 Sends a digest each time the rule fires. Parameters as in
-[docs/digests.md](digests.md#parameters), without the job-only ones and without
-`group_by`, which the form does not offer and drops on save.
+[docs/digests.md](digests.md#parameters), without the job-only ones.
 
 ## CiviRules conditions
 
@@ -168,7 +167,10 @@ Digest variables are listed in [docs/digests.md](digests.md#template-variables).
 ## Settings
 
 Set with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value'`; array
-settings take JSON.
+settings take JSON. The scalar settings are also on the admin screen
+`civicrm/admin/setting/herald` (permission "administer CiviCRM"); the array settings
+(`herald_topics`, `herald_webhook_allowed_hosts`, `herald_source_normalization` and the
+monitor maps) are not.
 
 | Setting | Default | Meaning |
 |---|---|---|

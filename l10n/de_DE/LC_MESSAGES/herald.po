@@ -137,6 +137,18 @@ msgstr "Finanztyp-ID (optional)"
 msgid "Source LIKE pattern (optional, e.g. %Bank TX%)"
 msgstr "LIKE-Muster für die Quelle (optional, z. B. %Bank TX%)"
 
+#: CRM/Herald/CivirulesAdapter/Form/SendContributionDigest.php
+msgid "Break down by"
+msgstr "Aufschlüsseln nach"
+
+#: CRM/Herald/CivirulesAdapter/Form/SendContributionDigest.php
+msgid "Contribution source"
+msgstr "Zuwendungsquelle"
+
+#: CRM/Herald/CivirulesAdapter/Form/SendContributionDigest.php
+msgid "Line item and unit price"
+msgstr "Position und Einzelpreis"
+
 #: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
 msgid "Show pending pool"
 msgstr "Pending-Pool anzeigen"
@@ -712,3 +724,35 @@ msgstr "gesamt %1"
 #: Civi/Herald/Buffer/AlertBuffer.php
 msgid "collected over %1 min"
 msgstr "gesammelt über %1 min"
+
+#: Civi/Herald/Buffer/AggregateSummary.php
+msgid "and %1 more"
+msgstr "und %1 weitere"
+
+#: settings/herald.setting.php
+msgid "Optional allowlist of webhook hostnames (e.g. hooks.slack.com, discord.com). When non-empty, only URLs whose host matches an entry (or a subdomain of it) are sent. Empty falls back to the private/reserved-address denylist."
+msgstr "Optionale Liste erlaubter Webhook-Hostnamen (z. B. hooks.slack.com, discord.com). Ist sie nicht leer, wird nur an URLs gesendet, deren Host einem Eintrag (oder einer Subdomain davon) entspricht. Ist sie leer, greift die Sperrliste für private und reservierte Adressen."
+
+#: settings/herald.setting.php
+msgid "Subdomains match: an entry of example.org also allows hooks.example.org."
+msgstr "Subdomains zählen mit: Ein Eintrag example.org erlaubt auch hooks.example.org."
+
+#: settings/herald.setting.php
+msgid "Webhook Allowed Hosts"
+msgstr "Erlaubte Webhook-Hosts"
+
+#: settings/herald.setting.php
+msgid "How often Job.herald_buffer_flush retries a failing buffer group before parking it in the dead letter (visible via Herald.getParkedAlerts, reactivated via Herald.reactivateParkedAlerts). A fan-out that resolves to no recipients is parked immediately regardless of this value."
+msgstr "Wie oft Job.herald_buffer_flush eine fehlschlagende Puffergruppe erneut versucht, bevor sie geparkt wird (sichtbar über Herald.getParkedAlerts, reaktivierbar über Herald.reactivateParkedAlerts). Ein Fan-out ohne Empfänger wird unabhängig von diesem Wert sofort geparkt."
+
+#: settings/herald.setting.php
+msgid "Buffer Flush Max Attempts"
+msgstr "Maximale Zustellversuche des Sammelpuffers"
+
+#: settings/herald.setting.php
+msgid "How many individual alerts an aggregated message prints before it ends in \"… and N more\". The summary header always counts all of them. A bulk operation can fill one aggregation window with thousands of entries; 0 prints every one of them."
+msgstr "Wie viele einzelne Meldungen eine Sammelnachricht ausgibt, bevor sie mit „… und N weitere“ endet. Die Kopfzeile zählt immer alle. Eine Massenoperation kann ein Sammelfenster mit Tausenden Einträgen füllen; 0 gibt alle aus."
+
+#: settings/herald.setting.php
+msgid "Buffer Aggregate Max Items"
+msgstr "Maximale Einträge pro Sammelnachricht"
