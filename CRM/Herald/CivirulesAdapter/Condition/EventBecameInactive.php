@@ -19,17 +19,15 @@ class CRM_Herald_CivirulesAdapter_Condition_EventBecameInactive extends CRM_Civi
 
     // CiviRules evaluates rules in a system context (cron, post-commit
     // queue) — there is no acting user whose ACLs could apply.
-    $result = civicrm_api4('Herald', 'checkEventDeactivated', [
-      // phpcs:ignore CiviKitchen.Security.PermissionBypass -- system context, see above
-      'checkPermissions' => FALSE,
-      'eventId' => is_scalar($rawId) ? (int) $rawId : 0,
-      'originalIsActive' => CRM_Herald_CivirulesAdapter_OriginalData::intField(
+    $result = \Civi\Api4\Herald::checkEventDeactivated(checkPermissions: FALSE)
+      ->setEventId(is_scalar($rawId) ? (int) $rawId : 0)
+      ->setOriginalIsActive(CRM_Herald_CivirulesAdapter_OriginalData::intField(
         $triggerData,
         'Event',
         'is_active',
         -1,
-      ),
-    ]);
+      ))
+      ->execute();
 
     return (bool) ($result->first()['matched'] ?? FALSE);
   }

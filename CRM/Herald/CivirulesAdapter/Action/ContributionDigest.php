@@ -17,11 +17,9 @@ class CRM_Herald_CivirulesAdapter_Action_ContributionDigest extends CRM_Herald_C
   public function processAction(CRM_Civirules_TriggerData_TriggerData $triggerData): void {
     // CiviRules evaluates rules in a system context (cron, post-commit
     // queue) — there is no acting user whose ACLs could apply.
-    civicrm_api4('Herald', 'notifyDigest', [
-      // phpcs:ignore CiviKitchen.Security.PermissionBypass -- system context, see above
-      'checkPermissions' => FALSE,
-      'actionParams' => $this->getActionParameters(),
-    ]);
+    \Civi\Api4\Herald::notifyDigest(checkPermissions: FALSE)
+      ->setActionParams($this->getActionParameters())
+      ->execute();
   }
 
 }

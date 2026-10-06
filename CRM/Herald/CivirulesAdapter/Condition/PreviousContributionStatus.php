@@ -22,17 +22,15 @@ class CRM_Herald_CivirulesAdapter_Condition_PreviousContributionStatus extends C
 
     // CiviRules evaluates rules in a system context (cron, post-commit
     // queue) — there is no acting user whose ACLs could apply.
-    $result = civicrm_api4('Herald', 'checkContributionTransition', [
-      // phpcs:ignore CiviKitchen.Security.PermissionBypass -- system context, see above
-      'checkPermissions' => FALSE,
-      'contributionId' => self::toInt($contribution['id']),
-      'expectedStatusId' => $this->expectedPreviousStatusId() ?? 0,
-      'originalStatusId' => CRM_Herald_CivirulesAdapter_OriginalData::intField(
+    $result = \Civi\Api4\Herald::checkContributionTransition(checkPermissions: FALSE)
+      ->setContributionId(self::toInt($contribution['id']))
+      ->setExpectedStatusId($this->expectedPreviousStatusId() ?? 0)
+      ->setOriginalStatusId(CRM_Herald_CivirulesAdapter_OriginalData::intField(
         $triggerData,
         'Contribution',
         'contribution_status_id',
-      ),
-    ]);
+      ))
+      ->execute();
 
     return (bool) ($result->first()['matched'] ?? FALSE);
   }

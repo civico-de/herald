@@ -17,18 +17,16 @@ class CRM_Herald_CivirulesAdapter_Action_Notification extends CRM_Herald_Civirul
   public function processAction(CRM_Civirules_TriggerData_TriggerData $triggerData): void {
     // CiviRules evaluates rules in a system context (cron, post-commit
     // queue) — there is no acting user whose ACLs could apply.
-    civicrm_api4('Herald', 'notify', [
-      // phpcs:ignore CiviKitchen.Security.PermissionBypass -- system context, see above
-      'checkPermissions' => FALSE,
-      'actionParams' => $this->getActionParameters(),
-      'triggerContext' => [
+    \Civi\Api4\Herald::notify(checkPermissions: FALSE)
+      ->setActionParams($this->getActionParameters())
+      ->setTriggerContext([
         'contact_id' => (int) $triggerData->getContactId(),
         'GroupContact' => $triggerData->getEntityData('GroupContact'),
         'Membership' => $triggerData->getEntityData('Membership'),
         'Participant' => $triggerData->getEntityData('Participant'),
         'Event' => $triggerData->getEntityData('Event'),
-      ],
-    ]);
+      ])
+      ->execute();
   }
 
 }

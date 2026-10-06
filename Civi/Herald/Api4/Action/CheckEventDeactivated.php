@@ -12,6 +12,9 @@ use Civi\Herald\Condition\EventDeactivation;
  * Did this edit flip an Event's is_active from 1 to 0?
  *
  * Backs the "Event was deactivated" CiviRules condition.
+ *
+ * @method $this setEventId(int $eventId)
+ * @method $this setOriginalIsActive(int $originalIsActive)
  */
 class CheckEventDeactivated extends AbstractAction {
 

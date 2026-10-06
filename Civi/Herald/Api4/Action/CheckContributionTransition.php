@@ -12,6 +12,10 @@ use Civi\Herald\Condition\ContributionStatusTransition;
  * Did a contribution transition FROM a specific status?
  *
  * Backs the "Previous Contribution status" CiviRules condition.
+ *
+ * @method $this setContributionId(int $contributionId)
+ * @method $this setExpectedStatusId(int $expectedStatusId)
+ * @method $this setOriginalStatusId(int $originalStatusId)
  */
 class CheckContributionTransition extends AbstractAction {
 

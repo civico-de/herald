@@ -14,6 +14,8 @@ use Civi\Herald\Dispatch\Dispatcher;
  * Render and deliver a contribution digest.
  *
  * Needs no trigger entity; Job.herald_contribution_digest is the scheduled counterpart.
+ *
+ * @method $this setActionParams(array<string, mixed> $actionParams)
  */
 class NotifyDigest extends AbstractAction {
 

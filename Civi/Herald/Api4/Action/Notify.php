@@ -16,6 +16,9 @@ use Civi\Herald\Trigger\ContextVars;
  *
  * Example:
  *   cv api4 Herald.notify 'actionParams={"template":"herald_event_created_alert","channel":"telegram"}'
+ *
+ * @method $this setActionParams(array<string, mixed> $actionParams)
+ * @method $this setTriggerContext(array<string, mixed> $triggerContext)
  */
 class Notify extends AbstractAction {
 

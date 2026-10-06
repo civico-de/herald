@@ -30,19 +30,17 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransition extends CRM_Civirule
 
     // CiviRules evaluates rules in a system context (cron, post-commit
     // queue) — there is no acting user whose ACLs could apply.
-    $result = civicrm_api4('Herald', 'checkFieldTransition', [
-      // phpcs:ignore CiviKitchen.Security.PermissionBypass -- system context, see above
-      'checkPermissions' => FALSE,
-      'entity' => $entity,
-      'entityId' => is_scalar($rawId) ? (int) $rawId : 0,
-      'field' => $field,
-      'fromOperator' => self::toStr($params['from_operator'] ?? ''),
-      'fromValue' => self::toStr($params['from_value'] ?? ''),
-      'toOperator' => self::toStr($params['to_operator'] ?? ''),
-      'toValue' => self::toStr($params['to_value'] ?? ''),
-      'originalValue' => $original['value'],
-      'hasOriginal' => $original['known'],
-    ]);
+    $result = \Civi\Api4\Herald::checkFieldTransition(checkPermissions: FALSE)
+      ->setEntity($entity)
+      ->setEntityId(is_scalar($rawId) ? (int) $rawId : 0)
+      ->setField($field)
+      ->setFromOperator(self::toStr($params['from_operator'] ?? ''))
+      ->setFromValue(self::toStr($params['from_value'] ?? ''))
+      ->setToOperator(self::toStr($params['to_operator'] ?? ''))
+      ->setToValue(self::toStr($params['to_value'] ?? ''))
+      ->setOriginalValue($original['value'])
+      ->setHasOriginal($original['known'])
+      ->execute();
 
     return (bool) ($result->first()['matched'] ?? FALSE);
   }

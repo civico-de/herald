@@ -17,6 +17,10 @@ use Civi\Herald\Util\StoredFields;
 /**
  * Render and deliver a single-contribution alert with campaign progress and
  * status transition.
+ *
+ * @method $this setActionParams(array<string, mixed> $actionParams)
+ * @method $this setContribution(array<string, mixed> $contribution)
+ * @method $this setOriginalStatusId(int $originalStatusId)
  */
 class NotifyContribution extends AbstractAction {
 

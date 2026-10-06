@@ -15,6 +15,16 @@ use Civi\Herald\PreEditSnapshot;
  *
  * Backs the "Field transition" CiviRules condition. The post-edit value comes
  * from the live row, since the trigger payload may omit the field.
+ *
+ * @method $this setEntity(string $entity)
+ * @method $this setEntityId(int $entityId)
+ * @method $this setField(string $field)
+ * @method $this setFromOperator(string $fromOperator)
+ * @method $this setFromValue(string $fromValue)
+ * @method $this setToOperator(string $toOperator)
+ * @method $this setToValue(string $toValue)
+ * @method $this setOriginalValue(mixed $originalValue)
+ * @method $this setHasOriginal(bool $hasOriginal)
  */
 class CheckFieldTransition extends AbstractAction {
 

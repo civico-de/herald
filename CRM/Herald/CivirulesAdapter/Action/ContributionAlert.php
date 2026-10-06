@@ -21,17 +21,15 @@ class CRM_Herald_CivirulesAdapter_Action_ContributionAlert extends CRM_Herald_Ci
 
     // CiviRules evaluates rules in a system context (cron, post-commit
     // queue) — there is no acting user whose ACLs could apply.
-    civicrm_api4('Herald', 'notifyContribution', [
-      // phpcs:ignore CiviKitchen.Security.PermissionBypass -- system context, see above
-      'checkPermissions' => FALSE,
-      'actionParams' => $this->getActionParameters(),
-      'contribution' => $contribution,
-      'originalStatusId' => CRM_Herald_CivirulesAdapter_OriginalData::intField(
+    \Civi\Api4\Herald::notifyContribution(checkPermissions: FALSE)
+      ->setActionParams($this->getActionParameters())
+      ->setContribution(\Civi\Herald\Util\Cast::namedOnly($contribution))
+      ->setOriginalStatusId(CRM_Herald_CivirulesAdapter_OriginalData::intField(
         $triggerData,
         'Contribution',
         'contribution_status_id',
-      ),
-    ]);
+      ))
+      ->execute();
   }
 
 }
