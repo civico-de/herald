@@ -255,4 +255,34 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
     $this->assertSame([], $this->bufferedBodies());
   }
 
+  /**
+   * A transition whose publish fails keeps the old state, so the next run
+   * retries it, and the scheduled job reports the run as failed.
+   */
+  public function testFailedPublishIsCountedRetriedAndFailsTheJob(): void {
+    \Civi::settings()->set(Monitor::TOPIC_SETTING, 'unrouted');
+    $this->registerChecks([
+      'herald.test.disk' => static fn (): array => ['status' => 'fail', 'detail' => 'disk full'],
+    ]);
+
+    $result = (new Monitor())->run();
+
+    $this->assertSame(0, $result['transitions']);
+    $this->assertSame(1, $result['publish_failures']);
+    $this->assertArrayNotHasKey('herald.test.disk', $this->state());
+
+    try {
+      civicrm_api3('Job', 'herald_monitor', []);
+      $this->fail('a run with a failed publish must not report success');
+    }
+    catch (\CRM_Core_Exception $e) {
+      $this->assertStringContainsString('1 transition(s) could not be published', $e->getMessage());
+    }
+
+    \Civi::settings()->set(Monitor::TOPIC_SETTING, 'ops');
+    $retry = civicrm_api3('Job', 'herald_monitor', []);
+    $this->assertSame(1, $retry['values'][0]['transitions']);
+    $this->assertSame(0, $retry['values'][0]['publish_failures']);
+  }
+
 }

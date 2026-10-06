@@ -74,7 +74,8 @@ meant to be edited.
   through a run does not repeat the alerts before it. Only a crash in the instant between
   a publish and its save can send that one alert twice.
 - A failed publish keeps the check's old state and is retried on the next run. The job
-  still reports success; the failure is a warning in CiviCRM's log. With an aggregating
+  run then reports an error with the number of failed publishes, and each failure is a
+  warning in CiviCRM's log. With an aggregating
   topic route, "published" means buffered, and delivery follows with the flush job.
 
 ## Limits

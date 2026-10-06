@@ -44,7 +44,7 @@ class Monitor {
    * At-least-once by design: state is persisted per check right after its
    * publish, so a crash in between re-sends that one transition next run.
    *
-   * @return array{checks?: int, failing?: int, transitions?: int, skipped_locked?: bool}
+   * @return array{checks?: int, failing?: int, transitions?: int, publish_failures?: int, skipped_locked?: bool}
    */
   public function run(): array {
     // Skip rather than block: a duplicate monitor pass is worthless.
@@ -62,7 +62,7 @@ class Monitor {
   }
 
   /**
-   * @return array{checks: int, failing: int, transitions: int}
+   * @return array{checks: int, failing: int, transitions: int, publish_failures: int}
    */
   private function doRun(): array {
     $observations = (new CheckCollector())->observe();
@@ -77,10 +77,13 @@ class Monitor {
     $state = array_intersect_key($prev, $observations);
     \Civi::settings()->set(self::STATE_SETTING, $state);
 
+    [$published, $failed] = $this->publishPlans($plans, $state);
+
     return [
       'checks' => count($observations),
       'failing' => count(array_filter($observations, static fn (array $c) => $c['status'] === 'fail')),
-      'transitions' => $this->publishPlans($plans, $state),
+      'transitions' => $published,
+      'publish_failures' => $failed,
     ];
   }
 
@@ -119,11 +122,12 @@ class Monitor {
    *
    * @param list<array{check: string, state: array<string, mixed>, publish: ?array<string, mixed>}> $plans
    * @param array<string, array<string, mixed>> $state The state written so far.
-   * @return int The number of transitions actually published.
+   * @return array{int, int} Transitions published, transitions whose publish failed.
    */
-  private function publishPlans(array $plans, array $state): int {
+  private function publishPlans(array $plans, array $state): array {
     $topic = Coerce::str(\Civi::settings()->get(self::TOPIC_SETTING) ?: 'ops', 'ops');
     $transitions = 0;
+    $failures = 0;
 
     foreach ($plans as $plan) {
       $name = $plan['check'];
@@ -144,6 +148,7 @@ class Monitor {
       }
       catch (\Throwable $e) {
         // Old entry stays → retried next run; the batch continues.
+        $failures++;
         \Civi::log()->warning('herald monitor: publish failed for check {check}: {msg}', [
           'check' => $name,
           'msg' => $e->getMessage(),
@@ -151,7 +156,7 @@ class Monitor {
       }
     }
 
-    return $transitions;
+    return [$transitions, $failures];
   }
 
   /**
