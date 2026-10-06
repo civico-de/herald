@@ -154,11 +154,16 @@ cv api4 Herald.getParkedAlerts                          # id, park_reason, attem
 cv api4 Herald.reactivateParkedAlerts '{"ids": [12, 13]}'   # without ids: every parked row
 ```
 
-`getParkedAlerts` does not return message bodies, which can contain contact data.
+The same rows are listed under Administer › System Settings › Herald parked alerts, a
+SearchKit display on the read-only entity `HeraldBufferedAlert`. Neither the list nor
+`getParkedAlerts` shows message bodies or delivery parameters, which can contain contact
+data.
 Reactivated rows start with a fresh retry budget. They keep the parameters stored when
 they were buffered, so fixing the rule or route does not repair a wrong explicit
 recipient in them; subscriber and group recipients are resolved anew on delivery. The check monitor reports parked rows
 and a stuck buffer ([docs/monitor.md](monitor.md#heralds-own-checks)).
+
+Uninstalling herald drops the buffer table, parked rows included; disabling keeps it.
 
 Sends without aggregation are not buffered: a failure there is an exception for the
 caller, the API result or CiviRules, and is not retried.

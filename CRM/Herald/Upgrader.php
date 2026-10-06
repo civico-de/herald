@@ -2,18 +2,24 @@
 
 declare(strict_types = 1);
 
+use CRM_Herald_ExtensionUtil as E;
+
+/**
+ * Install and uninstall of civicrm_herald_buffer run through the
+ * AutomaticUpgrader from schema/; the steps here bring older tables up to it.
+ */
 class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
 
-  public function install(): void {
-    \Civi\Herald\Buffer\AlertBuffer::createTable();
-  }
+  private const BUFFER_SCHEMA = 'schema/HeraldBufferedAlert.entityType.php';
+
+  private const BUFFER_ENTITY = 'HeraldBufferedAlert';
 
   /**
    * Existing installs: add the alert aggregation buffer table.
    */
   public function upgrade_1001(): bool {
     $this->ctx->log->info('herald: creating civicrm_herald_buffer');
-    \Civi\Herald\Buffer\AlertBuffer::createTable();
+    E::schema()->createEntityTable(self::BUFFER_SCHEMA);
     return TRUE;
   }
 
@@ -46,7 +52,7 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
    */
   public function upgrade_1004(): bool {
     $this->ctx->log->info('herald: adding claim columns to civicrm_herald_buffer');
-    \Civi\Herald\Buffer\AlertBuffer::addClaimColumns();
+    $this->addBufferFields(['claimed_by', 'claimed_at'], 'claimed_by');
     return TRUE;
   }
 
@@ -56,7 +62,7 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
    */
   public function upgrade_1005(): bool {
     $this->ctx->log->info('herald: adding dead-letter columns to civicrm_herald_buffer');
-    \Civi\Herald\Buffer\AlertBuffer::addDeadLetterColumns();
+    $this->addBufferFields(['attempts', 'parked_at', 'park_reason', 'last_error'], 'parked_at');
     return TRUE;
   }
 
@@ -68,6 +74,26 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
     $this->ctx->log->info('herald: removing the retired herald_rule_health setting');
     CRM_Core_DAO::executeQuery("DELETE FROM civicrm_setting WHERE name = 'herald_rule_health'");
     return TRUE;
+  }
+
+  /**
+   * Adds the named columns as schema/ declares them, plus the index on
+   * $indexed; a table created from the current schema already has both.
+   *
+   * @param list<string> $fields
+   */
+  private function addBufferFields(array $fields, string $indexed): void {
+    $schema = E::schema();
+    foreach ($fields as $field) {
+      if ($schema->schemaFieldExists(self::BUFFER_ENTITY, $field)) {
+        continue;
+      }
+      $spec = Civi::entity(self::BUFFER_ENTITY)->getField($field) ?? throw new CRM_Core_Exception(
+        "herald: schema/ declares no buffer field {$field}",
+      );
+      $schema->alterSchemaField(self::BUFFER_ENTITY, $field, $spec, NULL);
+    }
+    CRM_Core_BAO_SchemaHandler::createIndexes([\Civi\Herald\Buffer\AlertBuffer::TABLE => [$indexed]]);
   }
 
   /**
@@ -92,6 +118,10 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
   }
 
   public function postInstall(): void {
+    // An uninstall by an older release left the buffer table in place, and
+    // CREATE TABLE IF NOT EXISTS keeps it as it was.
+    $this->addBufferFields(['claimed_by', 'claimed_at'], 'claimed_by');
+    $this->addBufferFields(['attempts', 'parked_at', 'park_reason', 'last_error'], 'parked_at');
     self::reconcile($this->extensionDir);
   }
 

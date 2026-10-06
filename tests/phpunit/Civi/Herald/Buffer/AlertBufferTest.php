@@ -141,7 +141,7 @@ class AlertBufferTest extends TestCase {
 
   /**
    * str()/int()/flt() are private statics used only on the claimDue() DB path,
-   * and every column they touch is declared scalar in createTable() — so the
+   * and every column they touch is declared scalar in schema/ — so the
    * non-scalar branch they exist for cannot be reached from any public call
    * (AlertBufferClaimDueTest covers the reachable half against real rows).
    * Reflection is the proportionate way to pin the documented contract of that

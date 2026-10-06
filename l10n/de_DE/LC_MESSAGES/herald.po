@@ -868,3 +868,91 @@ msgstr "Optional: die ID des Quellobjekts, auf das sich der Bezug richtet."
 #: Civi/Herald/Channel/TelegramText.php
 msgid "… shortened — the full message was %1 characters, Telegram allows %2."
 msgstr "… gekürzt — die vollständige Nachricht hatte %1 Zeichen, Telegram erlaubt %2."
+
+#: schema/HeraldBufferedAlert.entityType.php
+msgid "Herald Buffered Alert"
+msgstr "Herald-Pufferalarm"
+
+#: schema/HeraldBufferedAlert.entityType.php
+msgid "Herald Buffered Alerts"
+msgstr "Herald-Pufferalarme"
+
+#: schema/HeraldBufferedAlert.entityType.php
+msgid "Alerts held for aggregated delivery, and parked alerts that could not be delivered."
+msgstr "Alarme, die auf gebündelte Zustellung warten, und geparkte Alarme, die nicht zugestellt werden konnten."
+
+#: schema/HeraldBufferedAlert.entityType.php, managed/ParkedAlerts.mgd.php
+msgid "ID"
+msgstr "ID"
+
+#: schema/HeraldBufferedAlert.entityType.php, managed/ParkedAlerts.mgd.php
+msgid "Group"
+msgstr "Gruppe"
+
+#: schema/HeraldBufferedAlert.entityType.php
+msgid "Hash of the sending rule action; alerts with the same hash are aggregated together."
+msgstr "Hash der sendenden Regelaktion; Alarme mit demselben Hash werden gebündelt."
+
+#: schema/HeraldBufferedAlert.entityType.php
+msgid "Window (minutes)"
+msgstr "Zeitfenster (Minuten)"
+
+#: schema/HeraldBufferedAlert.entityType.php
+msgid "Monetary value of the underlying event, summed into the aggregate header."
+msgstr "Geldbetrag des auslösenden Ereignisses, summiert in der Kopfzeile der Sammelnachricht."
+
+#: schema/HeraldBufferedAlert.entityType.php
+msgid "Body"
+msgstr "Nachrichtentext"
+
+#: schema/HeraldBufferedAlert.entityType.php
+msgid "Delivery Parameters"
+msgstr "Zustellparameter"
+
+#: schema/HeraldBufferedAlert.entityType.php
+msgid "JSON-encoded action parameters used to send the aggregated message."
+msgstr "JSON-kodierte Aktionsparameter, mit denen die Sammelnachricht gesendet wird."
+
+#: schema/HeraldBufferedAlert.entityType.php, managed/ParkedAlerts.mgd.php
+msgid "Buffered"
+msgstr "Gepuffert"
+
+#: schema/HeraldBufferedAlert.entityType.php
+msgid "Claimed By"
+msgstr "Beansprucht von"
+
+#: schema/HeraldBufferedAlert.entityType.php
+msgid "Token of the flush run currently delivering this alert."
+msgstr "Kennung des Flush-Laufs, der diesen Alarm gerade zustellt."
+
+#: schema/HeraldBufferedAlert.entityType.php
+msgid "Claimed"
+msgstr "Beansprucht"
+
+#: schema/HeraldBufferedAlert.entityType.php, managed/ParkedAlerts.mgd.php
+msgid "Attempts"
+msgstr "Versuche"
+
+#: schema/HeraldBufferedAlert.entityType.php, managed/ParkedAlerts.mgd.php
+msgid "Parked"
+msgstr "Geparkt"
+
+#: schema/HeraldBufferedAlert.entityType.php
+msgid "Set when the alert was moved to the dead letter; parked alerts are never flushed."
+msgstr "Gesetzt, wenn der Alarm geparkt wurde; geparkte Alarme werden nie automatisch zugestellt."
+
+#: schema/HeraldBufferedAlert.entityType.php, managed/ParkedAlerts.mgd.php
+msgid "Park Reason"
+msgstr "Parkgrund"
+
+#: schema/HeraldBufferedAlert.entityType.php, managed/ParkedAlerts.mgd.php
+msgid "Last Error"
+msgstr "Letzter Fehler"
+
+#: managed/ParkedAlerts.mgd.php
+msgid "Herald parked alerts"
+msgstr "Herald: geparkte Alarme"
+
+#: managed/ParkedAlerts.mgd.php
+msgid "No parked alerts."
+msgstr "Keine geparkten Alarme."

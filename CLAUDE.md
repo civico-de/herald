@@ -29,8 +29,12 @@ actions (no bespoke cron for alerts). Live in production.
 - Buffered alerts are never dropped and never retried forever: a flush that
   resolves to no recipient parks the group immediately, other failures after
   `herald_buffer_max_attempts` tries (`Civi\Herald\Buffer\DeadLetter`). Parked
-  rows stay in the table, are listed by `Herald.getParkedAlerts` and only
-  `Herald.reactivateParkedAlerts` puts them back in circulation.
+  rows stay in the table, are listed by `Herald.getParkedAlerts` and the
+  SearchKit display on the read-only `HeraldBufferedAlert` entity (never
+  `body`/`delivery` — contact data), and only
+  `Herald.reactivateParkedAlerts` puts them back in circulation. The table's
+  shape lives in `schema/`; upgrade steps add columns from that spec.
+  Uninstall drops the table (AutomaticUpgrader) — the one sanctioned loss.
 - The monitor publishes only ok→fail / fail→ok transitions to the
   `herald_monitor_topic` topic; steady states never alert. Topic routing:
   publishers name a topic, `herald_topics` decides delivery (topic entry

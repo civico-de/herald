@@ -80,6 +80,10 @@ such as `getFields` need only "access CiviCRM".
 | `renderTemplate` | `workflow`, `vars` | Render a template without sending |
 | `testTelegram` | `message`, `chatId`, `channel` (default `telegram`) | Send a test message |
 
+Entity `HeraldBufferedAlert` is a read-only view (`get`, `getFields`) of the alert buffer
+for SearchKit, restricted to "administer CiviCRM". `body` and `delivery` can carry
+contact data; the shipped [parked-alerts display](delivery.md#parked-alerts) leaves them out.
+
 `send` and `publish` address herald by string, so another extension can use them without
 a hard dependency:
 
