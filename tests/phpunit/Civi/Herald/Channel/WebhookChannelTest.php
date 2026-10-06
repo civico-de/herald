@@ -321,8 +321,12 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
   }
 
   public function testGuardAllowlistSkipsBlankEntries(): void {
-    WebhookChannel::assertUrlAllowed('https://hooks.slack.com/x', ['allowed_hosts' => ['  ', 'slack.com']]);
-    $this->addToAssertionCount(1);
+    $allowed = ['allowed_hosts' => ['  ', 'slack.com']];
+    WebhookChannel::assertUrlAllowed('https://hooks.slack.com/x', $allowed);
+
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessage('not in herald_webhook_allowed_hosts');
+    WebhookChannel::assertUrlAllowed('https://evil.example/x', $allowed);
   }
 
   public function testGuardRejectsAResolverAnswerThatIsNoAddress(): void {

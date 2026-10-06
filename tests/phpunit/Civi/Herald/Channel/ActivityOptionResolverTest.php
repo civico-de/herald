@@ -22,14 +22,15 @@ class ActivityOptionResolverTest extends TestCase implements HeadlessInterface, 
   }
 
   public function testResolvesTheInstallationValue(): void {
-    $expected = OptionValue::get(checkPermissions: FALSE)
-      ->addSelect('value')
-      ->addWhere('option_group_id:name', '=', 'activity_status')
-      ->addWhere('name', '=', 'Completed')
-      ->execute()
-      ->first()['value'] ?? NULL;
-    $this->assertIsNumeric($expected);
-    $this->assertSame((int) $expected, ActivityOptionResolver::resolve('activity_status', 'Completed'));
+    // A value no seeded option has, so a hard-coded mapping cannot pass.
+    OptionValue::create(checkPermissions: FALSE)
+      ->addValue('option_group_id:name', 'activity_status')
+      ->addValue('name', 'herald_test_status')
+      ->addValue('label', 'Herald test status')
+      ->addValue('value', 977)
+      ->execute();
+
+    $this->assertSame(977, ActivityOptionResolver::resolve('activity_status', 'herald_test_status'));
   }
 
   public function testUnknownOptionFails(): void {

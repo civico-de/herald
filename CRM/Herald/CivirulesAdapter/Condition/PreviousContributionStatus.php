@@ -54,7 +54,10 @@ class CRM_Herald_CivirulesAdapter_Condition_PreviousContributionStatus extends C
    * first rule condition of any rule.
    */
   public function getExtraDataInputUrl($ruleConditionId) {
-    return $this->getFormattedExtraDataInputUrl('civicrm/herald/form/civirulescondition/previouscontributionstatus', (int) $ruleConditionId);
+    return $this->getFormattedExtraDataInputUrl(
+      'civicrm/herald/form/civirulescondition/previouscontributionstatus',
+      (int) $ruleConditionId,
+    );
   }
 
   public function userFriendlyConditionParams() {

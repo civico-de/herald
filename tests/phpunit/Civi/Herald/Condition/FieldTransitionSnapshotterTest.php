@@ -40,8 +40,8 @@ class FieldTransitionSnapshotterTest extends TestCase implements HeadlessInterfa
     );
     $this->assertGreaterThan(0, $conditionId);
     \CRM_Core_DAO::executeQuery(
-      "INSERT INTO civirule_rule (name, label, trigger_id, is_active, created_date)
-       VALUES (%1, %1, (SELECT MIN(id) FROM civirule_trigger), 1, NOW())",
+      'INSERT INTO civirule_rule (name, label, trigger_id, is_active, created_date)
+       VALUES (%1, %1, (SELECT MIN(id) FROM civirule_trigger), 1, NOW())',
       [1 => ['herald_test_snapshot_' . $field, 'String']],
     );
     \CRM_Core_DAO::executeQuery(

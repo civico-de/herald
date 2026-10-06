@@ -50,7 +50,10 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransition extends CRM_Civirule
    * first rule condition of any rule.
    */
   public function getExtraDataInputUrl($ruleConditionId) {
-    return $this->getFormattedExtraDataInputUrl('civicrm/herald/form/civirulescondition/fieldtransition', (int) $ruleConditionId);
+    return $this->getFormattedExtraDataInputUrl(
+      'civicrm/herald/form/civirulescondition/fieldtransition',
+      (int) $ruleConditionId,
+    );
   }
 
   public function userFriendlyConditionParams() {

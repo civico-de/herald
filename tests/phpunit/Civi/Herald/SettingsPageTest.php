@@ -39,7 +39,10 @@ class SettingsPageTest extends TestCase implements HeadlessInterface {
   public function testTokenFieldsOptOutOfLoginAutofill(): void {
     $passwords = array_filter(
       \Civi\Core\SettingsMetadata::getMetadata(),
-      static fn (array $spec): bool => ($spec['group'] ?? '') === 'herald' && ($spec['html_type'] ?? '') === self::MASKED_INPUT,
+      static fn (array $spec): bool => (
+        ($spec['group'] ?? '') === 'herald'
+        && ($spec['html_type'] ?? '') === self::MASKED_INPUT
+      ),
     );
     $this->assertNotEmpty($passwords);
     foreach ($passwords as $name => $spec) {

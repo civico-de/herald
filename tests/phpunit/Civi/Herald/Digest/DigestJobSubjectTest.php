@@ -45,12 +45,17 @@ class DigestJobSubjectTest extends TestCase implements HeadlessInterface, HookIn
    * @param array<string, mixed> $extra
    */
   private function runJob(array $extra = []): string {
-    civicrm_api3('Job', 'herald_contribution_digest', $extra + [
-      'template' => self::WORKFLOW,
-      'channel' => 'email',
-      'email_to' => 'ops@example.org',
-      'force' => 1,
-    ]);
+    civicrm_api3(
+      'Job',
+      'herald_contribution_digest',
+      $extra
+      + [
+        'template' => self::WORKFLOW,
+        'channel' => 'email',
+        'email_to' => 'ops@example.org',
+        'force' => 1,
+      ],
+    );
     return (string) \CRM_Core_DAO::singleValueQuery('SELECT headers FROM civicrm_mailing_spool');
   }
 
@@ -59,7 +64,9 @@ class DigestJobSubjectTest extends TestCase implements HeadlessInterface, HookIn
   }
 
   public function testExplicitSubjectWins(): void {
-    $this->assertStringContainsString('Subject: Morning numbers', $this->runJob(['email_subject' => 'Morning numbers']));
+    $this->assertStringContainsString('Subject: Morning numbers', $this->runJob([
+      'email_subject' => 'Morning numbers',
+    ]));
   }
 
 }

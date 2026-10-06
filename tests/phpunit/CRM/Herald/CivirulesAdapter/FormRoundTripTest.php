@@ -13,7 +13,9 @@ use PHPUnit\Framework\TestCase;
  *
  * @group headless
  */
-class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements HeadlessInterface, TransactionalInterface {
+class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
+  HeadlessInterface,
+  TransactionalInterface {
 
   private const UNTOUCHED = 'a:1:{s:6:"marker";s:7:"foreign";}';
 
@@ -30,11 +32,6 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements 
     'handlerTable' => 'civirule_action',
     'handlerColumn' => 'action_id',
     'paramsColumn' => 'action_params',
-    'urlParam' => 'rule_action_id',
-    'record' => CRM_Civirules_BAO_CiviRulesRuleAction::class,
-    'handler' => CRM_Civirules_BAO_CiviRulesAction::class,
-    'recordProperty' => 'ruleAction',
-    'handlerProperty' => 'action',
   ];
 
   /**
@@ -45,11 +42,6 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements 
     'handlerTable' => 'civirule_condition',
     'handlerColumn' => 'condition_id',
     'paramsColumn' => 'condition_params',
-    'urlParam' => 'rule_condition_id',
-    'record' => CRM_Civirules_BAO_CiviRulesRuleCondition::class,
-    'handler' => CRM_Civirules_BAO_CiviRulesCondition::class,
-    'recordProperty' => 'ruleCondition',
-    'handlerProperty' => 'condition',
   ];
 
   /**
@@ -112,31 +104,34 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements 
   }
 
   /**
-   * Builds the form with the records preProcess() loads for this row id.
-   *
-   * @param array<string, string> $spec
+   * Opens an edit link the way a browser request does: the route must lead to
+   * $formClass, and the form's own preProcess() reads the row id from the query.
    */
-  private function open(array $spec, string $formClass, int $id): CRM_Core_Form {
-    $record = $spec['record']::findById($id);
-    $form = new $formClass();
-    $this->assertInstanceOf(CRM_Core_Form::class, $form);
-    $loaded = [
-      $spec['recordProperty'] . 'Id' => $id,
-      $spec['recordProperty'] => $record,
-      $spec['handlerProperty'] => $spec['handler']::findById($record->{$spec['handlerColumn']}),
-      'rule' => CRM_Civirules_BAO_CiviRulesRule::findById($record->rule_id),
-    ];
-    foreach ($loaded as $property => $value) {
-      (new \ReflectionProperty($form, $property))->setValue($form, $value);
+  private function open(string $url, string $formClass): CRM_Core_Form {
+    $url = html_entity_decode($url);
+    $this->assertSame(1, preg_match('#civicrm/[a-z0-9_/]+#', $url, $route), $url);
+    $this->assertSame($formClass, CRM_Core_Menu::get($route[0])['page_callback'] ?? NULL, $url);
+    parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+    $_GET = $_REQUEST = $query;
+    try {
+      $form = new $formClass();
+      $this->assertInstanceOf(CRM_Core_Form::class, $form);
+      $form->preProcess();
+      $form->buildQuickForm();
     }
-    $form->buildQuickForm();
+    finally {
+      $_GET = $_REQUEST = [];
+    }
     return $form;
   }
 
   private function firstOption(CRM_Core_Form $form, string $element): string {
     $select = $form->getElement($element);
     $this->assertInstanceOf(HTML_QuickForm_select::class, $select);
-    $values = array_filter(array_map(static fn (array $o): string => (string) ($o['attr']['value'] ?? ''), $select->_options));
+    $values = array_filter(array_map(
+      static fn (array $o): string => (string) ($o['attr']['value'] ?? ''),
+      $select->_options,
+    ));
     $this->assertNotEmpty($values, "{$element} has no options");
     return (string) reset($values);
   }
@@ -146,7 +141,13 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements 
    * @param array<string, mixed> $submitted
    * @param array<string, mixed> $expected
    */
-  private function assertRoundTrip(array $spec, string $handlerClass, string $formClass, array $submitted, array $expected): void {
+  private function assertRoundTrip(
+    array $spec,
+    string $handlerClass,
+    string $formClass,
+    array $submitted,
+    array $expected,
+  ): void {
     $handlerId = (int) CRM_Core_DAO::singleValueQuery(
       "SELECT id FROM {$spec['handlerTable']} WHERE class_name = %1",
       [1 => [$handlerClass, 'String']],
@@ -154,11 +155,11 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements 
     $id = $this->insert($spec, $handlerId, $this->rule('herald_test_' . $formClass));
 
     $url = (string) (new $handlerClass())->getExtraDataInputUrl($id);
-    parse_str((string) parse_url(html_entity_decode($url), PHP_URL_QUERY), $query);
-    $this->assertSame((string) $id, $query[$spec['urlParam']] ?? NULL, $url);
 
-    $form = $this->open($spec, $formClass, $id);
-    $template = ($submitted['template'] ?? NULL) === self::FIRST_TEMPLATE ? $this->firstOption($form, 'template') : NULL;
+    $form = $this->open($url, $formClass);
+    $template = ($submitted['template'] ?? NULL) === self::FIRST_TEMPLATE
+      ? $this->firstOption($form, 'template')
+      : NULL;
     $form->_submitValues = array_replace($submitted, array_filter(['template' => $template]));
     $expected = array_replace($expected, array_filter(['template' => $template]));
     $form->postProcess();
@@ -170,7 +171,7 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements 
     ksort($expected);
     $this->assertSame($expected, $kept);
 
-    $defaults = $this->open($spec, $formClass, $id)->setDefaultValues();
+    $defaults = $this->open($url, $formClass)->setDefaultValues();
     foreach ($expected as $key => $value) {
       $shown = is_array($value) ? json_decode((string) $defaults[$key], associative: TRUE) : $defaults[$key] ?? NULL;
       $this->assertEquals($value, $shown, "{$formClass}: {$key} not shown again");
@@ -229,7 +230,8 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements 
       CRM_Herald_CivirulesAdapter_Action_ContributionAlert::class,
       CRM_Herald_CivirulesAdapter_Form_SendContributionAlert::class,
       $submitted + ['campaign_id' => '5', 'goal' => '1000', 'campaign_title' => 'Spring'],
-      $expected + ['campaign_id' => 5, 'goal' => 1000.0, 'campaign_title' => 'Spring', 'include_status_transition' => FALSE],
+      $expected
+      + ['campaign_id' => 5, 'goal' => 1000.0, 'campaign_title' => 'Spring', 'include_status_transition' => FALSE],
     );
   }
 
@@ -239,7 +241,8 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements 
       self::ACTION,
       CRM_Herald_CivirulesAdapter_Action_ContributionDigest::class,
       CRM_Herald_CivirulesAdapter_Form_SendContributionDigest::class,
-      $submitted + [
+      $submitted
+      + [
         'period' => 'last_7_days',
         'campaign_id' => '5',
         'financial_type_id' => '2',
@@ -251,7 +254,8 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements 
         'goal' => '1000',
         'campaign_title' => 'Spring',
       ],
-      $expected + [
+      $expected
+      + [
         'period' => 'last_7_days',
         'campaign_id' => 5,
         'financial_type_id' => 2,
