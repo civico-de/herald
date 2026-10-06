@@ -340,4 +340,49 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     $this->addToAssertionCount(1);
   }
 
+  public function testDnsResolverCollectsBothAddressFamiliesOnce(): void {
+    $asked = [];
+    $ips = WebhookChannel::resolveHostUsingDns('hooks.example', static function (string $host, int $type) use (
+      &$asked,
+    ): array {
+      $asked = [$host, $type];
+      return [
+        ['type' => 'A', 'ip' => '93.184.216.34'],
+        ['type' => 'AAAA', 'ipv6' => '2606:4700:4700::1111'],
+        ['type' => 'A', 'ip' => '93.184.216.34'],
+        ['type' => 'A', 'ip' => ''],
+      ];
+    });
+
+    $this->assertSame(['hooks.example', DNS_A | DNS_AAAA], $asked);
+    $this->assertSame(['93.184.216.34', '2606:4700:4700::1111'], $ips);
+  }
+
+  public function testDnsResolverFailsWhenTheLookupReturnsFalse(): void {
+    $this->expectException(\RuntimeException::class);
+    $this->expectExceptionMessage('DNS lookup returned false.');
+    WebhookChannel::resolveHostUsingDns('hooks.example', static fn (string $host, int $type): bool => FALSE);
+  }
+
+  public function testDnsResolverTurnsALookupWarningIntoAnExceptionAndRestoresTheHandler(): void {
+    $outer = static fn (): bool => TRUE;
+    set_error_handler($outer);
+    try {
+      // dns_get_record() reports resolver failures as E_WARNING; hex2bin() raises one offline.
+      WebhookChannel::resolveHostUsingDns('hooks.example', static fn (string $host, int $type): array => [hex2bin(
+        '0',
+      )]);
+      $this->fail('a lookup warning must stop resolution');
+    }
+    catch (\ErrorException $e) {
+      $this->assertSame(E_WARNING, $e->getSeverity());
+    }
+    finally {
+      $current = set_error_handler(static fn (): bool => TRUE);
+      restore_error_handler();
+      restore_error_handler();
+    }
+    $this->assertSame($outer, $current);
+  }
+
 }

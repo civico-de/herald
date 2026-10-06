@@ -240,9 +240,12 @@ class WebhookChannel implements ChannelInterface {
    * raised during this one DNS call into an exception so the SSRF guard fails
    * closed, then immediately restore the previous application error handler.
    *
+   * @param null|callable(string, int): (array<int, array<string, mixed>>|false) $lookup
+   *   dns_get_record() unless given; tests pass a stub instead of real DNS.
    * @return list<string>
    */
-  private static function resolveHostUsingDns(string $host): array {
+  public static function resolveHostUsingDns(string $host, ?callable $lookup = NULL): array {
+    $lookup ??= dns_get_record(...);
     set_error_handler(
       static function (int $severity, string $message, string $file, int $line): never {
         throw new \ErrorException($message, 0, $severity, $file, $line);
@@ -250,7 +253,7 @@ class WebhookChannel implements ChannelInterface {
       E_WARNING,
     );
     try {
-      $records = dns_get_record($host, DNS_A | DNS_AAAA);
+      $records = $lookup($host, DNS_A | DNS_AAAA);
     }
     finally {
       restore_error_handler();
