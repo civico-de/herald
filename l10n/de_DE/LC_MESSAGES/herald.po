@@ -143,7 +143,7 @@ msgstr "Aufschlüsseln nach"
 
 #: CRM/Herald/CivirulesAdapter/Form/SendContributionDigest.php
 msgid "Contribution source"
-msgstr "Zuwendungsquelle"
+msgstr "Beitragsquelle"
 
 #: CRM/Herald/CivirulesAdapter/Form/SendContributionDigest.php
 msgid "Line item and unit price"
@@ -756,3 +756,115 @@ msgstr "Wie viele einzelne Meldungen eine Sammelnachricht ausgibt, bevor sie mit
 #: settings/herald.setting.php
 msgid "Buffer Aggregate Max Items"
 msgstr "Maximale Einträge pro Sammelnachricht"
+
+#: CRM/Herald/CivirulesAdapter/Form/FieldTransition.php
+msgid "Entity (APIv4 name, e.g. Contribution)"
+msgstr "Entität (APIv4-Name, z. B. Contribution)"
+
+#: CRM/Herald/CivirulesAdapter/Form/FieldTransition.php
+msgid "Field (APIv4 field name)"
+msgstr "Feld (APIv4-Feldname)"
+
+#: CRM/Herald/CivirulesAdapter/Form/FieldTransition.php
+msgid "- any value -"
+msgstr "- beliebiger Wert -"
+
+#: CRM/Herald/CivirulesAdapter/Form/FieldTransition.php
+msgid "Before: operator"
+msgstr "Vorher: Operator"
+
+#: CRM/Herald/CivirulesAdapter/Form/FieldTransition.php
+msgid "Before: value"
+msgstr "Vorher: Wert"
+
+#: CRM/Herald/CivirulesAdapter/Form/FieldTransition.php
+msgid "After: operator"
+msgstr "Nachher: Operator"
+
+#: CRM/Herald/CivirulesAdapter/Form/FieldTransition.php
+msgid "After: value"
+msgstr "Nachher: Wert"
+
+#: templates/CRM/Herald/CivirulesAdapter/Form/FieldTransition.tpl
+msgid "herald: Field transition"
+msgstr "herald: Feldwechsel"
+
+#: templates/CRM/Herald/CivirulesAdapter/Form/PreviousContributionStatus.tpl
+msgid "herald: Previous Contribution status"
+msgstr "herald: Vorheriger Beitragsstatus"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Group — fan out to all contacts of a CiviCRM group"
+msgstr "Gruppe — an alle Kontakte einer CiviCRM-Gruppe verteilen"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Address list — send to raw email addresses (no contact linkage)"
+msgstr "Adressliste — an einzelne E-Mail-Adressen senden (ohne Kontaktbezug)"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Group (only used in group mode)"
+msgstr "Gruppe (nur im Gruppenmodus verwendet)"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "- select group -"
+msgstr "- Gruppe wählen -"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Email addresses (address-list mode; comma or newline separated)"
+msgstr "E-Mail-Adressen (Adresslisten-Modus; durch Komma oder Zeilenumbruch getrennt)"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Respect communication suspension (skip opted-out / on-hold email recipients in fan-outs)"
+msgstr "Kommunikationssperren beachten (abgemeldete oder gesperrte E-Mail-Empfänger:innen beim Verteilen überspringen)"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Preferred location type for email recipients (fallback: primary address)"
+msgstr "Bevorzugter Adresstyp für E-Mail-Empfänger:innen (sonst die primäre Adresse)"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "- primary -"
+msgstr "- primär -"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Subscription scope entity (subscriber mode: only reach subscriptions scoped to the trigger's entity instance, plus unscoped ones)"
+msgstr "Abo-Bezug (Abonnent:innen-Modus: nur Abos erreichen, die auf das auslösende Objekt beschränkt sind, plus Abos ohne Bezug)"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "- none (all subscriptions) -"
+msgstr "- keiner (alle Abos) -"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Event"
+msgstr "Event"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Membership"
+msgstr "Mitgliedschaft"
+
+#: managed/ActivityType.mgd.php
+msgid "Herald notification"
+msgstr "Herald-Benachrichtigung"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: Event registration cancelled"
+msgstr "Herald: Event-Registrierung storniert"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Scope: entity type"
+msgstr "Bezug: Objekttyp"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Optional: limit these subscriptions to one source entity (e.g. Event). Leave empty for global subscriptions."
+msgstr "Optional: diese Abos auf ein Quellobjekt beschränken (z. B. ein Event). Leer lassen für allgemeine Abos."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Scope: entity ID"
+msgstr "Bezug: Objekt-ID"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Optional: the ID of the source entity the scope refers to."
+msgstr "Optional: die ID des Quellobjekts, auf das sich der Bezug richtet."
+
+#: Civi/Herald/Channel/TelegramText.php
+msgid "… shortened — the full message was %1 characters, Telegram allows %2."
+msgstr "… gekürzt — die vollständige Nachricht hatte %1 Zeichen, Telegram erlaubt %2."
