@@ -10,11 +10,14 @@ pending amounts, campaign progress and an amount histogram.
 - `yesterday` and `today` are calendar days; `last_7_days` and `last_30_days` are whole
   days ending at midnight before the run, so today is not included.
 - Pending amounts are the whole open pool, whatever its age.
-- The histogram covers every completed contribution matching the filters, not only the
-  period, and ignores amounts of zero or less.
+- The histogram covers the completed contributions of the period that match the filters,
+  and ignores amounts of zero or less. It always shows whole contribution amounts, so
+  with `group_by=line_item` its financial type filter applies to the contribution, not
+  the item.
 - With `campaign_id` and `goal`, the progress line counts every completed contribution of
-  that campaign, regardless of period, financial type or source. Without `campaign_id`,
-  it uses the digest's own period totals.
+  that campaign that matches the financial type and source filters, regardless of period.
+  With `group_by=line_item` it counts the campaign's items instead, like the totals.
+  Without `campaign_id`, it uses the digest's own period totals.
 - Amounts are added up as numbers, without currency conversion; mixed currencies give
   meaningless totals.
 
@@ -28,9 +31,9 @@ pending amounts, campaign progress and an amount histogram.
 
 CiviRules has no plain time-of-day trigger, so regular summaries belong in the job; the
 setup is in [docs/recipes.md](recipes.md#scheduled-digests). The job alone offers
-composed digests, extra sections, `send_hour` and `force`. The job does not use the
-template's subject: for email, set `email_subject` on the job, or the subject is
-"Notification".
+composed digests, extra sections, `send_hour` and `force`. For email, a single-template
+job uses the template's subject unless `email_subject` is set; a composed digest has no
+template subject, so set `email_subject` there, or the subject is "Notification".
 
 ## Parameters
 
@@ -40,9 +43,9 @@ template's subject: for email, set `email_subject` on the job, or the subject is
 | `channel` | `telegram` | Channel key; the channel's own keys go alongside, e.g. `chat_id` |
 | `period` | `yesterday` | `yesterday`, `today`, `last_7_days` or `last_30_days` |
 | `campaign_id` | none | Restricts every query to a campaign |
-| `financial_type_id` | none | Restricts every query to a financial type |
+| `financial_type_id` | none | Restricts every query to a financial type; with `group_by=line_item` the item's own type, except in the histogram |
 | `source_pattern` | none | SQL `LIKE` pattern on the contribution source, e.g. `%Bank TX%` |
-| `group_by` | source | `line_item`: break down by line-item label and unit price instead of source; totals and pending amounts then come from the items, so a mixed cart is split, and the counts are item quantities. Only the block template prints the items. Not offered by the CiviRules form, so use it in the job or `Herald.notifyDigest` |
+| `group_by` | source | `line_item`: break down by line-item label and unit price instead of source; totals and pending amounts then come from the items, so a mixed cart is split, and the counts are item quantities. Only the block template prints the items. The CiviRules form calls it "Break down by" |
 | `show_pending` | `true` | Include the open pending amounts |
 | `show_histogram` | `true` | Include the amount histogram |
 | `bucket_count` | `8` | Target number of histogram buckets |
@@ -147,6 +150,6 @@ Digest templates receive:
 | `by_item` | With `group_by=line_item`: list of `label`, `unit_price`, `qty`, `total` |
 | `pending.amount`, `pending.count` | Open pending contributions |
 | `pending_items` | With `group_by=line_item`: the pending items, like `by_item` |
-| `campaign.title`, `.goal`, `.total`, `.count`, `.percent` | Campaign progress when `goal` is set |
+| `campaign.title`, `.goal`, `.total`, `.count`, `.percent` | Campaign progress when `goal` is set; with `group_by=line_item` `count` is an item quantity |
 | `histogram` | Preformatted histogram text, empty when disabled |
 | `block_title` | Composed digests: the block's title |

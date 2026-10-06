@@ -83,7 +83,7 @@ final class DigestVars {
     }
 
     if ((bool) ($params['show_histogram'] ?? TRUE)) {
-      $amounts = $stats->getAmountDistribution($filters);
+      $amounts = $stats->getAmountDistribution($filters, $period);
       $bucketCount = Cast::toInt($params['bucket_count'] ?? 8, 8);
       $edges = self::decodeEdges($params['bucket_edges'] ?? NULL);
       $buckets = HistogramFormatter::compute($amounts, $bucketCount, $edges);
@@ -93,7 +93,7 @@ final class DigestVars {
     if (!empty($params['goal'])) {
       $goal = Cast::toFloat($params['goal']);
       $campaignTotal = !empty($filters['campaign_id'])
-        ? $stats->getCampaignTotal(Cast::toInt($filters['campaign_id']))
+        ? self::campaignTotal($stats, $filters, $groupBy)
         // Without a campaign filter the digest's own totals ARE the campaign
         // total. Read them back from $vars, which both branches above fill —
         // $summary only exists in the non-line_item one.
@@ -108,6 +108,24 @@ final class DigestVars {
     }
 
     return $vars;
+  }
+
+  /**
+   * Campaign progress at any date, counted on the same level as the totals:
+   * line items in the line-item view, so the financial type filter means the same.
+   *
+   * @param array<string, mixed> $filters
+   * @return array{total: float, count: int}
+   */
+  private static function campaignTotal(ContributionStatsService $stats, array $filters, string $groupBy): array {
+    if ($groupBy !== 'line_item') {
+      return $stats->getCampaignTotal($filters);
+    }
+    $items = $stats->getItemSummary($filters, NULL, 'Completed');
+    return [
+      'total' => (float) array_sum(array_column($items, 'total')),
+      'count' => (int) array_sum(array_column($items, 'qty')),
+    ];
   }
 
   /**

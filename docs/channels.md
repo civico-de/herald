@@ -157,7 +157,7 @@ address), `herald_email_default_to`.
 |---|---|
 | `email_to` | Recipient. Empty falls back to `herald_email_default_to` |
 | `email_to_name` | Recipient display name |
-| `email_subject` | Subject. When empty, actions and topics use the template's rendered subject; the scheduled digest job does not. The last fallback is "Notification" |
+| `email_subject` | Subject. When empty, actions, topics and the single-template digest job use the template's rendered subject. The last fallback is "Notification" |
 | `email_format` | `html` (default): the body with its line breaks as `<br>`. `text`: the plain text |
 | `email_cc`, `email_bcc` | Comma-separated addresses |
 

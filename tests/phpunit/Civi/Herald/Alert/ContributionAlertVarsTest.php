@@ -17,7 +17,7 @@ class ContributionAlertVarsTest extends TestCase {
   private function makeFakeStats(): ContributionStatsService {
     return new class extends ContributionStatsService {
 
-      public function getCampaignTotal(int $campaignId): array {
+      public function getCampaignTotal(array $filters): array {
         return ['total' => 18_000.0, 'count' => 42];
       }
 

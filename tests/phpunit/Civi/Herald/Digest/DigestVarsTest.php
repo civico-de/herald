@@ -28,11 +28,11 @@ class DigestVarsTest extends TestCase {
         return ['total' => 88.0, 'count' => 2];
       }
 
-      public function getAmountDistribution(array $filters): array {
+      public function getAmountDistribution(array $filters, DateRange $period): array {
         return [10.0, 20, 25, 50, 100, 100, 250, 500, 1000, 2000, 25, 30, 45, 80, 60, 90, 5, 15, 200, 300];
       }
 
-      public function getCampaignTotal(int $campaignId): array {
+      public function getCampaignTotal(array $filters): array {
         return ['total' => 25_000.0, 'count' => 50];
       }
 
@@ -168,11 +168,11 @@ class DigestVarsTest extends TestCase {
         throw new \LogicException('contribution-level pending must not run in line_item mode');
       }
 
-      public function getAmountDistribution(array $filters): array {
+      public function getAmountDistribution(array $filters, DateRange $period): array {
         return [];
       }
 
-      public function getCampaignTotal(int $campaignId): array {
+      public function getCampaignTotal(array $filters): array {
         return ['total' => 0.0, 'count' => 0];
       }
 
@@ -187,6 +187,33 @@ class DigestVarsTest extends TestCase {
     $this->assertSame(120.0, $vars['pending']['amount']);
     $this->assertSame(2, $vars['pending']['count']);
     $this->assertCount(1, $vars['pending_items']);
+  }
+
+  public function testLineItemCampaignProgressCountsCompletedItemsAtAnyDate(): void {
+    $stats = new class extends ContributionStatsService {
+
+      public function getItemSummary(array $filters, ?DateRange $period, ?string $status = NULL): array {
+        if ($period === NULL && $status === 'Completed') {
+          return [['label' => 'Pass', 'unit_price' => 100.0, 'qty' => 30, 'total' => 3000.0]];
+        }
+        return [];
+      }
+
+      public function getCampaignTotal(array $filters): array {
+        throw new \LogicException('contribution-level campaign total must not run in line_item mode');
+      }
+
+    };
+    $params = array_merge($this->baseParams(), [
+      'group_by' => 'line_item',
+      'show_histogram' => FALSE,
+      'show_pending' => FALSE,
+      'goal' => 6000,
+    ]);
+    $vars = DigestVars::build($params, $stats);
+    $this->assertSame(3000.0, $vars['campaign']['total']);
+    $this->assertSame(30, $vars['campaign']['count']);
+    $this->assertEqualsWithDelta(50.0, $vars['campaign']['percent'], 0.01);
   }
 
   public function testDefaultModeLeavesItemVarsEmpty(): void {
@@ -207,11 +234,11 @@ class DigestVarsTest extends TestCase {
         return ['total' => 0.0, 'count' => 0];
       }
 
-      public function getAmountDistribution(array $filters): array {
+      public function getAmountDistribution(array $filters, DateRange $period): array {
         return [10.0];
       }
 
-      public function getCampaignTotal(int $campaignId): array {
+      public function getCampaignTotal(array $filters): array {
         throw new \LogicException('getCampaignTotal must not be called for an empty campaign_id');
       }
 

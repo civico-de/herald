@@ -51,6 +51,10 @@ class CRM_Herald_CivirulesAdapter_Form_SendContributionDigest extends CRM_Herald
     $this->add('text', 'source_pattern', E::ts('Source LIKE pattern (optional, e.g. %Bank TX%)'), [
       'size' => 40,
     ]);
+    $this->add('select', 'group_by', E::ts('Break down by'), [
+      '' => E::ts('Contribution source'),
+      'line_item' => E::ts('Line item and unit price'),
+    ]);
     $this->heraldCheckbox('show_pending', E::ts('Show pending pool'));
     $this->heraldCheckbox('show_histogram', E::ts('Show histogram'));
     $this->add('text', 'bucket_count', E::ts('Histogram bucket count'), ['size' => 5]);
@@ -76,6 +80,7 @@ class CRM_Herald_CivirulesAdapter_Form_SendContributionDigest extends CRM_Herald
       'campaign_id' => $campaignId !== '' ? (int) $campaignId : NULL,
       'financial_type_id' => $financialTypeId !== '' ? (int) $financialTypeId : NULL,
       'source_pattern' => $submitted['source_pattern'] ?? '',
+      'group_by' => ($submitted['group_by'] ?? '') === 'line_item' ? 'line_item' : '',
       'show_pending' => !empty($submitted['show_pending']),
       'show_histogram' => !empty($submitted['show_histogram']),
       'bucket_count' => $bucketCount !== '' ? (int) $bucketCount : 8,
@@ -95,6 +100,7 @@ class CRM_Herald_CivirulesAdapter_Form_SendContributionDigest extends CRM_Herald
       'campaign_id' => $params['campaign_id'] ?? '',
       'financial_type_id' => $params['financial_type_id'] ?? '',
       'source_pattern' => $params['source_pattern'] ?? '',
+      'group_by' => $params['group_by'] ?? '',
       'show_pending' => $params['show_pending'] ?? TRUE,
       'show_histogram' => $params['show_histogram'] ?? TRUE,
       'bucket_count' => $params['bucket_count'] ?? 8,

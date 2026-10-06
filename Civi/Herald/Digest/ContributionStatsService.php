@@ -198,15 +198,15 @@ class ContributionStatsService {
   }
 
   /**
-   * Total + count across all completed contributions for a campaign.
+   * Total + count of the completed contributions matching the filters, at any
+   * date: campaign progress counts toward the goal across the whole campaign.
+   *
+   * @param HeraldFilters $filters
    *
    * @return array{total: float, count: int}
    */
-  public function getCampaignTotal(int $campaignId): array {
-    return $this->fetchTotalAndCount([
-      ['contribution_status_id:name', '=', 'Completed'],
-      ['campaign_id', '=', $campaignId],
-    ]);
+  public function getCampaignTotal(array $filters): array {
+    return $this->fetchTotalAndCount($this->buildWhere($filters, 'Completed'));
   }
 
   /**
@@ -236,14 +236,17 @@ class ContributionStatsService {
   }
 
   /**
-   * Raw amounts of all contributions matching the filters, for histogram input.
+   * Raw amounts of the contributions matching the filters in the period, for
+   * histogram input.
    *
    * @param HeraldFilters $filters
    *
    * @return float[]
    */
-  public function getAmountDistribution(array $filters): array {
+  public function getAmountDistribution(array $filters, DateRange $period): array {
     $where = $this->buildWhere($filters, $this->statusOf($filters, 'Completed'));
+    $where[] = ['receive_date', '>=', $period->startSql()];
+    $where[] = ['receive_date', '<', $period->endSql()];
 
     /** @var array<int, array{total_amount: float|int|numeric-string|null}> $rows */
     $rows = $this

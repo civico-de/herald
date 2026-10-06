@@ -182,7 +182,9 @@ function civicrm_api3_job_herald_contribution_digest($params) {
     throw new CRM_Core_Exception('herald: parameter "template" (workflow_name) or "blocks" is required.');
   }
   $vars = DigestVars::build($params, $stats);
-  $channel->send($renderer->renderParts($template, $vars)['body'], $config);
+  $parts = $renderer->renderParts($template, $vars);
+  $config = Dispatcher::buildChannelConfig(Dispatcher::applyDefaultEmailSubject($configParams, $parts['subject']));
+  $channel->send($parts['body'], $config);
 
   return civicrm_api3_create_success(
     [

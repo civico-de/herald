@@ -204,9 +204,17 @@ class ContributionStatsServiceTest extends TestCase implements
       ['amount' => 15.0],
       ['amount' => 100.0],
     ]);
-    $amounts = $this->service->getAmountDistribution([]);
+    $amounts = $this->service->getAmountDistribution([], DateRange::today());
     sort($amounts);
     $this->assertSame([5.0, 15.0, 100.0], $amounts);
+  }
+
+  public function testGetAmountDistributionOnlyCoversThePeriod(): void {
+    $this->seedContributions([
+      ['amount' => 5.0, 'receive_date' => date('Y-m-d 12:00:00', strtotime('yesterday'))],
+      ['amount' => 900.0, 'receive_date' => date('Y-m-d 12:00:00', strtotime('-10 days'))],
+    ]);
+    $this->assertSame([5.0], $this->service->getAmountDistribution([], DateRange::yesterday()));
   }
 
   public function testGetRecentCompletedReturnsRowsInDateOrder(): void {
@@ -257,8 +265,34 @@ class ContributionStatsServiceTest extends TestCase implements
       ->addValue('campaign_id', $campaignId)
       ->execute();
 
-    $total = $this->service->getCampaignTotal($campaignId);
+    $total = $this->service->getCampaignTotal(['campaign_id' => $campaignId]);
     $this->assertSame(1000.0, $total['total']);
+    $this->assertSame(1, $total['count']);
+  }
+
+  public function testGetCampaignTotalAppliesTheDigestFilters(): void {
+    $campaignId = (int) \Civi\Api4\Campaign::create(checkPermissions: FALSE)
+      ->addValue('title', 'FilteredCampaign')
+      ->addValue('campaign_type_id', 1)
+      ->execute()
+      ->first()['id'];
+    foreach (['Donation' => 1000.0, 'Event Fee' => 300.0] as $type => $amount) {
+      Contribution::create(checkPermissions: FALSE)
+        ->addValue('contact_id', $this->contactId)
+        ->addValue('financial_type_id:name', $type)
+        ->addValue('contribution_status_id:name', 'Completed')
+        ->addValue('total_amount', $amount)
+        ->addValue('campaign_id', $campaignId)
+        ->addValue('receive_date', date('Y-m-d H:i:s', strtotime('-40 days')))
+        ->execute();
+    }
+    $eventFeeId = (int) \Civi\Api4\FinancialType::get(checkPermissions: FALSE)
+      ->addWhere('name', '=', 'Event Fee')
+      ->execute()
+      ->first()['id'];
+
+    $total = $this->service->getCampaignTotal(['campaign_id' => $campaignId, 'financial_type_id' => $eventFeeId]);
+    $this->assertSame(300.0, $total['total']);
     $this->assertSame(1, $total['count']);
   }
 
@@ -400,7 +434,7 @@ class ContributionStatsServiceTest extends TestCase implements
     $summary = $this->service->getPeriodSummary([], DateRange::yesterday());
     $this->assertSame(10.0, $summary['total']);
     $this->assertSame(1, $summary['count']);
-    $this->assertSame([10.0], $this->service->getAmountDistribution([]));
+    $this->assertSame([10.0], $this->service->getAmountDistribution([], DateRange::yesterday()));
 
     $items = $this->service->getItemSummary([], DateRange::yesterday());
     $this->assertSame([10.0], array_column($items, 'total'));
@@ -428,7 +462,7 @@ class ContributionStatsServiceTest extends TestCase implements
     $recent = $this->service->getRecentCompleted([], 10);
     $this->assertSame([20.0], array_column($recent, 'amount'));
 
-    $total = $this->service->getCampaignTotal($campaignId);
+    $total = $this->service->getCampaignTotal(['campaign_id' => $campaignId]);
     $this->assertSame(20.0, $total['total']);
     $this->assertSame(1, $total['count']);
   }

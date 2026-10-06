@@ -54,7 +54,7 @@ final class ContributionAlertVars {
     }
 
     if (!empty($params['campaign_id']) && !empty($params['goal'])) {
-      $campaignTotal = $stats->getCampaignTotal(Cast::toInt($params['campaign_id']));
+      $campaignTotal = $stats->getCampaignTotal(['campaign_id' => Cast::toInt($params['campaign_id'])]);
       $goal = Cast::toFloat($params['goal']);
       $vars['campaign'] = [
         'title' => $params['campaign_title'] ?? '',
