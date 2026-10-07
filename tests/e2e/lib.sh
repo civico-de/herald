@@ -31,8 +31,12 @@ finish() { # summary line; exit status = suite verdict
   [ "$FAIL" = 0 ]
 }
 
-cv() {
-  (cd "$COMPOSE_DIR" && docker compose exec -T app cv "$@" 2>/dev/null)
+cv() { # through the dev stack, or directly inside the image (GitLab CI jobs)
+  if [ "${CK_IN_IMAGE:-}" = 1 ]; then
+    command cv "$@" 2>/dev/null
+  else
+    (cd "$COMPOSE_DIR" && docker compose exec -T app cv "$@" 2>/dev/null)
+  fi
 }
 
 mail_count() { # mail_count <recipient> — mails addressed To: the recipient
