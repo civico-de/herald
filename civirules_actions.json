@@ -5,8 +5,8 @@
     "class_name": "CRM_Herald_CivirulesAdapter_Action_Notification"
   },
   {
-    "name": "herald_contribution_digest",
-    "label": "Herald: Send contribution digest",
-    "class_name": "CRM_Herald_CivirulesAdapter_Action_ContributionDigest"
+    "name": "herald_digest",
+    "label": "Herald: Send digest",
+    "class_name": "CRM_Herald_CivirulesAdapter_Action_Digest"
   }
 ]

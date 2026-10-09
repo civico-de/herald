@@ -74,8 +74,8 @@ Administer → Customize Data and Screens → Option Groups, or with
 list. Disabling a value only removes it from that list: actions that already use it keep
 delivering to its subscribers.
 
-The digest types serve rules that send digests through the CiviRules action. The
-scheduled digest job sends to one channel and has no delivery modes.
+The digest types serve digests sent with `delivery_mode=subscribers`, from the CiviRules action or
+a scheduled job.
 
 ### Scoped subscriptions
 

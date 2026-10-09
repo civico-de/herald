@@ -27,7 +27,7 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
   private const SCENARIOS = [
     CRM_Herald_CivirulesAdapter_Condition_FieldTransition::class => 'testFieldTransitionContract',
     CRM_Herald_CivirulesAdapter_Action_Notification::class => 'testNotificationContract',
-    CRM_Herald_CivirulesAdapter_Action_ContributionDigest::class => 'testContributionDigestContract',
+    CRM_Herald_CivirulesAdapter_Action_Digest::class => 'testDigestContract',
   ];
 
   public function setUpHeadless(): \Civi\Test\CiviEnvBuilder {
@@ -186,8 +186,8 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
     self::assertSame(['25.00', '25.00'], $this->bufferedAmounts());
   }
 
-  public function testContributionDigestContract(): void {
-    $action = $this->action(CRM_Herald_CivirulesAdapter_Action_ContributionDigest::class, [
+  public function testDigestContract(): void {
+    $action = $this->action(CRM_Herald_CivirulesAdapter_Action_Digest::class, [
       'channel' => 'telegram',
       'template' => 'herald_contribution_digest_daily',
       'period' => 'yesterday',

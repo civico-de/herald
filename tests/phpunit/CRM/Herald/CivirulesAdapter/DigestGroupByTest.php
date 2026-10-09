@@ -24,7 +24,7 @@ class CRM_Herald_CivirulesAdapter_DigestGroupByTest extends TestCase implements 
    * @return array<string, mixed>
    */
   private function savedValues(array $submitted): array {
-    $form = new CRM_Herald_CivirulesAdapter_Form_SendContributionDigest();
+    $form = new CRM_Herald_CivirulesAdapter_Form_SendDigest();
     (new \ReflectionMethod($form, 'addExtraFields'))->invoke($form);
     $form->_submitValues = $submitted;
     $values = (new \ReflectionMethod($form, 'getExtraValues'))->invoke($form, $form->exportValues());

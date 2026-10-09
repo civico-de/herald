@@ -75,14 +75,16 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
   }
 
   /**
-   * The contribution-alert action and the previous-status and event-deactivated
-   * conditions folded into "Send notification" and "Field transition".
+   * Retired special-case handlers fold into "Send notification", "Send digest"
+   * and "Field transition"; contribution digest jobs become APIv4 jobs of Herald.notifyDigest.
    */
   public function upgrade_1007(): bool {
-    $this->ctx->log->info('herald: moving rules onto the generic notification and field-transition handlers');
+    $this->ctx->log->info('herald: moving rules onto the generic handlers');
     CRM_Herald_CivirulesAdapter_Registrar::register($this->extensionDir);
     $migrated = CRM_Herald_CivirulesAdapter_RetiredHandlers::migrate();
     $this->ctx->log->info("herald: moved {$migrated} rule action(s) and condition(s)");
+    $jobs = CRM_Herald_Upgrader_DigestJobs::migrate();
+    $this->ctx->log->info("herald: moved {$jobs} digest job(s) to Herald.notifyDigest");
     return TRUE;
   }
 

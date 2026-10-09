@@ -58,10 +58,36 @@ final class ContributionVars {
     }
     return [
       'contribution' => $contribution,
-      'campaign' => CampaignProgress::of(Cast::toInt($contribution['campaign_id'] ?? 0), $stats, $campaignResolver),
+      'campaign' => self::campaign(Cast::toInt($contribution['campaign_id'] ?? 0), $stats, $campaignResolver),
       'from_status' => $previousStatusId !== NULL ? Cast::toString($statusNameResolver($previousStatusId)) : '',
       'to_status' => Cast::toString($statusNameResolver($contribution['contribution_status_id'] ?? NULL)),
     ];
+  }
+
+  /**
+   * @param callable(int): ?array{title: string, goal: float} $campaignResolver
+   * @return array<string, mixed>
+   */
+  private static function campaign(
+    int $campaignId,
+    ContributionStatsService $stats,
+    callable $campaignResolver,
+  ): array {
+    try {
+      return CampaignProgress::of(
+        $campaignId,
+        static fn (): array => $stats->getCampaignTotal(['campaign_id' => $campaignId]),
+        $campaignResolver,
+      );
+    }
+    catch (\Throwable $e) {
+      // CiviCampaign disabled or a read failed: the alert goes out without progress.
+      \Civi::log()->error('herald: could not resolve contribution campaign', [
+        'campaign_id' => $campaignId,
+        'error' => $e->getMessage(),
+      ]);
+      return CampaignProgress::EMPTY;
+    }
   }
 
 }

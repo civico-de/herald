@@ -43,8 +43,8 @@ class CRM_Herald_CivirulesAdapter_ActionDelegationTest extends TestCase implemen
     self::assertSame(1, $this->bufferedRows());
   }
 
-  public function testSendContributionDigestReachesTheDispatcher(): void {
-    $action = new CRM_Herald_CivirulesAdapter_Action_ContributionDigest();
+  public function testSendDigestReachesTheDispatcher(): void {
+    $action = new CRM_Herald_CivirulesAdapter_Action_Digest();
     $action->setRuleActionData($this->ruleActionData([
       'channel' => 'telegram',
       'template' => 'herald_contribution_digest_daily',

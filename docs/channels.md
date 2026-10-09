@@ -72,7 +72,7 @@ in the error's `parameters.migrate_to_chat_id`. Replace every copy of the old ID
   parameters are serialised PHP, and a SQL `REPLACE` corrupts them because the string
   length changes;
 - the `delivery` column of waiting rows in `civicrm_herald_buffer` (JSON);
-- a `chat_id=…` line in a scheduled job's parameters, such as a digest job.
+- the `chat_id` in the `actionParams` of a scheduled digest job (JSON).
 
 Buffered alerts stay in the buffer until a send succeeds, so alerts queued during the
 outage go out by themselves once every copy is fixed, unless they were parked in the

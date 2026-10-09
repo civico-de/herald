@@ -7,10 +7,10 @@ delivers it through the channel the site configured.
 - **Channels:** Telegram, generic webhook (Slack, Discord, Mattermost, custom), ntfy,
   Pushover, email through CiviCRM's outbound mailer, and assigned CiviCRM activities.
   A new channel implements `Civi\Herald\Channel\ChannelInterface`.
-- **Templates:** `MessageTemplate` workflows rendered as Smarty strings. 17 ship with the
-  extension, for contributions, tickets, events, memberships, group signups, digests and
-  the check monitor.
-- **CiviRules:** two actions (send notification, send contribution digest) and one
+- **Templates:** `MessageTemplate` workflows rendered as Smarty strings, shipped for
+  contributions, tickets, events, memberships, group signups, digests and the check
+  monitor.
+- **CiviRules:** two actions (send notification, send digest) and one
   condition (field transition: a field's value before and after an edit), fired by
   CiviRules triggers instead of a bespoke cron. On a Contribution trigger the
   notification also carries the contribution, its campaign's progress and the status
@@ -103,7 +103,7 @@ with aggregation, event lifecycle alerts, signups and scheduled digests.
 | [docs/recipes.md](docs/recipes.md) | End-to-end CiviRules setups and scheduled digests |
 | [docs/channels.md](docs/channels.md) | Every channel: settings, per-call keys, limits, troubleshooting |
 | [docs/delivery.md](docs/delivery.md) | Delivery modes, subscriber preferences, topics, aggregation, parked alerts |
-| [docs/digests.md](docs/digests.md) | Contribution digests: parameters, composed digests, extra sections, source normalisation |
+| [docs/digests.md](docs/digests.md) | Digests: contribution, saved-search and section blocks, source normalisation |
 | [docs/monitor.md](docs/monitor.md) | Check monitor: contributing checks, tuning, herald's own checks |
 | [docs/reference.md](docs/reference.md) | CiviRules actions and conditions, APIv4, jobs, templates and their variables, settings, hooks |
 | [docs/deploy.md](docs/deploy.md) | Deploying without breaking writes: the rule gate scripts |

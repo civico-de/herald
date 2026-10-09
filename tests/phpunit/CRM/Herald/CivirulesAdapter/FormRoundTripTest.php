@@ -225,12 +225,15 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     );
   }
 
-  public function testContributionDigestForm(): void {
+  public function testDigestForm(): void {
     [$submitted, $expected] = $this->sendFields();
+    // The first option is "block default" (''), which the shared resolution skips.
+    $submitted['template'] = 'herald_contribution_digest_daily';
+    $expected['template'] = 'herald_contribution_digest_daily';
     $this->assertRoundTrip(
       self::ACTION,
-      CRM_Herald_CivirulesAdapter_Action_ContributionDigest::class,
-      CRM_Herald_CivirulesAdapter_Form_SendContributionDigest::class,
+      CRM_Herald_CivirulesAdapter_Action_Digest::class,
+      CRM_Herald_CivirulesAdapter_Form_SendDigest::class,
       $submitted
       + [
         'period' => 'last_7_days',
@@ -241,8 +244,8 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
         'show_pending' => '1',
         'bucket_count' => '6',
         'bucket_edges' => '[0, 10, 100]',
-        'goal' => '1000',
-        'campaign_title' => 'Spring',
+        'blocks' => ' [{"type": "section", "key": "myext.seats"}] ',
+        'header' => '<b>Daily</b>',
       ],
       $expected
       + [
@@ -255,8 +258,8 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
         'show_histogram' => FALSE,
         'bucket_count' => 6,
         'bucket_edges' => '[0, 10, 100]',
-        'goal' => 1000.0,
-        'campaign_title' => 'Spring',
+        'blocks' => '[{"type": "section", "key": "myext.seats"}]',
+        'header' => '<b>Daily</b>',
       ],
     );
   }

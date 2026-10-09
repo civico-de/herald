@@ -7,16 +7,10 @@ namespace Civi\Herald\Digest;
 use Civi\Core\Event\GenericHookEvent;
 
 /**
- * Opt-in digest sections contributed by other extensions.
- *
- * The composed digest (Job.herald_contribution_digest with `blocks`) can only
- * report what a contribution query can answer. Numbers from a different entity
- * — booked event seats, membership counts, queue depth — belong to whoever owns
- * that domain, not to herald. This is the seam: the job's `sections` parameter
- * names the keys it wants, herald asks around, and the owning extension answers
- * for its own key.
- *
- * Contributing a section (from any extension):
+ * Digest sections contributed by other extensions: numbers no query of
+ * herald's can answer belong to the extension that owns them. A digest block
+ * {"type": "section", "key": "myext.seats"} asks for one; the owning
+ * extension answers for its own key:
  *
  *   function myext_civicrm_heraldDigestSections(array $keys, array $context, array &$sections): void {
  *     if (in_array('myext.seats', $keys, TRUE)) {
@@ -24,39 +18,33 @@ use Civi\Core\Event\GenericHookEvent;
  *     }
  *   }
  *
- * $context carries the job params under 'params' and the resolved 'period', so
- * a listener can match the digest's timeframe.
- *
- * Only requested keys survive, in exactly the order the job listed them —
- * config decides what appears and where, never the order extensions happen to
- * load in.
+ * $context carries the digest params under 'params' and the block's 'period'.
  */
 class ExtraSections {
 
   public const HOOK = 'hook_civicrm_heraldDigestSections';
 
   /**
-   * Ask all extensions for the named sections.
+   * Ask the extensions for one section. An empty answer is a section with
+   * nothing to report; no answer at all is a configuration error.
    *
-   * @param list<string> $keys
    * @param array<string, mixed> $context
-   * @return list<string> Rendered section bodies, in $keys order.
    */
-  public static function collect(array $keys, array $context): array {
-    if (!$keys) {
-      return [];
-    }
+  public static function answer(string $key, array $context): string {
     $sections = [];
     \Civi::dispatcher()->dispatch(self::HOOK, GenericHookEvent::create([
-      'keys' => $keys,
+      'keys' => [$key],
       'context' => $context,
       'sections' => &$sections,
     ]));
-    return self::order($sections, $keys);
+    if (!array_key_exists($key, $sections) || !is_scalar($sections[$key])) {
+      throw new \CRM_Core_Exception("herald: no extension answers the digest section \"{$key}\"");
+    }
+    return trim((string) $sections[$key]);
   }
 
   /**
-   * Parse the `sections` job parameter: "a.b, c.d" or a JSON/PHP array.
+   * Parse a list of section keys: "a.b, c.d" or a JSON/PHP array.
    *
    * @param mixed $raw
    * @return list<string>
@@ -84,25 +72,6 @@ class ExtraSections {
       }
     }
     return $keys;
-  }
-
-  /**
-   * Keep only requested, non-empty sections — in the requested order.
-   *
-   * @param array<string, mixed> $sections
-   * @param list<string> $keys
-   * @return list<string>
-   */
-  public static function order(array $sections, array $keys): array {
-    $ordered = [];
-    foreach ($keys as $key) {
-      $section = $sections[$key] ?? '';
-      $body = is_scalar($section) ? trim((string) $section) : '';
-      if ($body !== '') {
-        $ordered[] = $body;
-      }
-    }
-    return $ordered;
   }
 
 }

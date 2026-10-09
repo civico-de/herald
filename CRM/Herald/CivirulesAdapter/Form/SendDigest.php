@@ -5,10 +5,15 @@ declare(strict_types = 1);
 use CRM_Herald_ExtensionUtil as E;
 
 /**
- * Form for the contribution-digest action.
+ * Form for the digest action: either the fields of one contribution block or
+ * a JSON list of blocks of any type.
  * @mago-expect lint:cyclomatic-complexity
  */
-class CRM_Herald_CivirulesAdapter_Form_SendContributionDigest extends CRM_Herald_CivirulesAdapter_Form_AbstractSend {
+class CRM_Herald_CivirulesAdapter_Form_SendDigest extends CRM_Herald_CivirulesAdapter_Form_AbstractSend {
+
+  protected function templateRequired(): bool {
+    return FALSE;
+  }
 
   /**
    * @return array<string, string>
@@ -20,7 +25,7 @@ class CRM_Herald_CivirulesAdapter_Form_SendContributionDigest extends CRM_Herald
       ->addWhere('is_default', '=', value: TRUE)
       ->execute()
       ->getArrayCopy();
-    $opts = [];
+    $opts = ['' => E::ts('- block default -')];
     foreach ($rows as $row) {
       if (!is_array($row) || !is_string($row['workflow_name'] ?? NULL)) {
         continue;
@@ -34,6 +39,13 @@ class CRM_Herald_CivirulesAdapter_Form_SendContributionDigest extends CRM_Herald
   }
 
   protected function addExtraFields(): void {
+    $this->add('textarea', 'blocks', E::ts('Blocks (JSON array; replaces the contribution fields below)'), [
+      'rows' => 6,
+      'cols' => 70,
+      'placeholder' => '[{"type": "search", "search": "new_memberships_yesterday", "title": "Memberships"}]',
+    ]);
+    $this->add('text', 'header', E::ts('Header line (HTML, optional)'), ['size' => 50]);
+    $this->addFormRule([self::class, 'validateBlocks']);
     $this->add(
       'select',
       'period',
@@ -62,8 +74,6 @@ class CRM_Herald_CivirulesAdapter_Form_SendContributionDigest extends CRM_Herald
       'size' => 50,
       'placeholder' => '[0, 10, 50, 250, 5000]',
     ]);
-    $this->add('text', 'goal', E::ts('Campaign goal (optional, enables progress block)'), ['size' => 15]);
-    $this->add('text', 'campaign_title', E::ts('Campaign title (free text, shown in template)'), ['size' => 40]);
   }
 
   /**
@@ -74,8 +84,9 @@ class CRM_Herald_CivirulesAdapter_Form_SendContributionDigest extends CRM_Herald
     $campaignId = self::toStringValue($submitted['campaign_id'] ?? '');
     $financialTypeId = self::toStringValue($submitted['financial_type_id'] ?? '');
     $bucketCount = self::toStringValue($submitted['bucket_count'] ?? '');
-    $goal = self::toStringValue($submitted['goal'] ?? '');
     return [
+      'blocks' => trim(self::toStringValue($submitted['blocks'] ?? '')),
+      'header' => trim(self::toStringValue($submitted['header'] ?? '')),
       'period' => $submitted['period'] ?? 'yesterday',
       'campaign_id' => $campaignId !== '' ? (int) $campaignId : NULL,
       'financial_type_id' => $financialTypeId !== '' ? (int) $financialTypeId : NULL,
@@ -85,8 +96,6 @@ class CRM_Herald_CivirulesAdapter_Form_SendContributionDigest extends CRM_Herald
       'show_histogram' => !empty($submitted['show_histogram']),
       'bucket_count' => $bucketCount !== '' ? (int) $bucketCount : 8,
       'bucket_edges' => $submitted['bucket_edges'] ?? '',
-      'goal' => $goal !== '' ? (float) $goal : NULL,
-      'campaign_title' => $submitted['campaign_title'] ?? '',
     ];
   }
 
@@ -96,6 +105,8 @@ class CRM_Herald_CivirulesAdapter_Form_SendContributionDigest extends CRM_Herald
   protected function extraDefaults(): array {
     $params = $this->getActionParameters();
     return [
+      'blocks' => $params['blocks'] ?? '',
+      'header' => $params['header'] ?? '',
       'period' => $params['period'] ?? 'yesterday',
       'campaign_id' => $params['campaign_id'] ?? '',
       'financial_type_id' => $params['financial_type_id'] ?? '',
@@ -105,9 +116,16 @@ class CRM_Herald_CivirulesAdapter_Form_SendContributionDigest extends CRM_Herald
       'show_histogram' => $params['show_histogram'] ?? TRUE,
       'bucket_count' => $params['bucket_count'] ?? 8,
       'bucket_edges' => $params['bucket_edges'] ?? '',
-      'goal' => $params['goal'] ?? '',
-      'campaign_title' => $params['campaign_title'] ?? '',
     ];
+  }
+
+  /**
+   * @param array<string, mixed> $values
+   * @return array<string, string>|true
+   */
+  public static function validateBlocks(array $values): array|bool {
+    $problems = \Civi\Herald\Digest\BlockList::problems(['blocks' => $values['blocks'] ?? '']);
+    return $problems === [] ? TRUE : ['blocks' => implode(' ', $problems)];
   }
 
 }

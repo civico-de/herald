@@ -107,28 +107,33 @@ class Dispatcher {
    *   mode is "buffered" when the send was parked for aggregation, else "sent".
    */
   public function dispatch(array $params, array $vars): array {
-    // Must be computed before applyDefaultEmailSubject() mixes a per-event
-    // rendered subject into $params — see groupHash().
-    $groupHash = self::groupHash($params);
     $workflowName = Cast::toString($params['template'] ?? '');
     if ($workflowName === '') {
       throw new \CRM_Core_Exception('herald: action parameter "template" (workflow_name) is required.');
     }
+    $parts = ($this->renderer ?? new TemplateRenderer())->renderParts($workflowName, $vars);
+    $mode = $this->dispatchRendered($params, $parts['body'], $parts['subject'], self::aggregateAmount($vars));
+    return ['mode' => $mode, 'template' => $workflowName];
+  }
 
-    $renderer = $this->renderer ?? new TemplateRenderer();
-    $parts = $renderer->renderParts($workflowName, $vars);
-    $body = $parts['body'];
-    $params = self::applyDefaultEmailSubject($params, $parts['subject']);
-
+  /**
+   * Buffer or deliver a body the caller has already rendered.
+   *
+   * @param array<string, mixed> $params
+   * @return 'buffered'|'sent'
+   */
+  public function dispatchRendered(array $params, string $body, ?string $subject, ?float $amount): string {
+    // Must be computed before applyDefaultEmailSubject() mixes a per-event
+    // rendered subject into $params — see groupHash().
+    $groupHash = self::groupHash($params);
+    $params = self::applyDefaultEmailSubject($params, $subject);
     $aggregateMinutes = Cast::toInt($params['aggregate_minutes'] ?? 0);
     if ($aggregateMinutes > 0) {
-      ($this->buffer ?? new AlertBuffer())
-        ->add($groupHash, $aggregateMinutes, $body, $params, self::aggregateAmount($vars));
-      return ['mode' => 'buffered', 'template' => $workflowName];
+      ($this->buffer ?? new AlertBuffer())->add($groupHash, $aggregateMinutes, $body, $params, $amount);
+      return 'buffered';
     }
-
     self::deliver($body, $params, $this->lookup);
-    return ['mode' => 'sent', 'template' => $workflowName];
+    return 'sent';
   }
 
   /**

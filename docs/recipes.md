@@ -129,28 +129,38 @@ Administer → System Settings → Scheduled Jobs → Add:
 
 | Field | Value |
 |---|---|
-| API entity | `Job` |
-| API action | `herald_contribution_digest` |
+| API entity | `Herald` |
+| API action | `notifyDigest` |
 | Run frequency | Hourly |
 | Parameters | see below |
 
-```text
-template=herald_contribution_digest_daily
-period=yesterday
-send_hour=8
-campaign_id=2
-goal=30000
-campaign_title=Campaign 2026
+```json
+{
+  "version": 4,
+  "checkPermissions": false,
+  "sendHour": 8,
+  "actionParams": {
+    "template": "herald_contribution_digest_daily",
+    "period": "yesterday",
+    "campaign_id": 2,
+    "chat_id": "-1001234567890"
+  }
+}
 ```
 
-`send_hour` makes the hourly job send only during that hour (CiviCRM's timezone). A Daily
-frequency counts a day from the previous run, so its send time drifts; Hourly with
-`send_hour` pins the hour. For a weekly digest use `herald_contribution_digest_weekly`,
-`period=last_7_days` and the Weekly frequency. `force=1` sends immediately regardless of
-`send_hour`, for a manual run.
+`"version": 4` runs the job through APIv4; `"checkPermissions": false` lets it run without
+a logged-in user, as cron does. `sendHour` makes the hourly job send only during that hour
+(CiviCRM's timezone). A Daily frequency counts a day from the previous run, so its send
+time drifts; Hourly with `sendHour` pins the hour. For a weekly digest use
+`herald_contribution_digest_weekly`, `"period": "last_7_days"` and the Weekly frequency.
+For a manual run, use "Execute now" on a copy without `sendHour`, or call
+`Herald.notifyDigest` directly.
 
-All digest parameters, composed multi-block digests and sections contributed by other
-extensions are in [docs/digests.md](digests.md).
+CiviCRM runs scheduled jobs only in the Production environment; on a test site add
+`"runInNonProductionEnvironment": true` next to `"version": 4`.
+
+All digest parameters and the block types (contributions, saved searches, sections from
+other extensions) are in [docs/digests.md](digests.md).
 
 ## Per-person notifications
 

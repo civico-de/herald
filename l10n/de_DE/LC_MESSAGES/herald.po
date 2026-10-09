@@ -97,9 +97,6 @@ msgstr "Die kanalspezifische Konfiguration muss ein JSON-Objekt sein: %1"
 msgid "Campaign ID (optional)"
 msgstr "Kampagnen-ID (optional)"
 
-#: CRM/Herald/Form/CivirulesAction/SendContributionAlert.php
-msgid "Campaign title"
-msgstr "Kampagnentitel"
 
 #: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
 msgid "Period"
@@ -157,13 +154,7 @@ msgstr "Anzahl der Histogramm-Klassen"
 msgid "Histogram bucket edges (JSON array, optional)"
 msgstr "Klassengrenzen des Histogramms (JSON-Array, optional)"
 
-#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
-msgid "Campaign goal (optional, enables progress block)"
-msgstr "Kampagnenziel (optional, aktiviert den Fortschrittsblock)"
 
-#: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
-msgid "Campaign title (free text, shown in template)"
-msgstr "Kampagnentitel (Freitext, wird in der Vorlage angezeigt)"
 
 #: CRM/Herald/Form/CivirulesAction/SendNotification.php
 msgid "Variables (JSON object passed to the template)"
@@ -940,3 +931,47 @@ msgstr "Herald: geparkte Alarme"
 #: managed/ParkedAlerts.mgd.php
 msgid "No parked alerts."
 msgstr "Keine geparkten Alarme."
+
+#: CRM/Herald/CivirulesAdapter/Form/SendDigest.php
+msgid "herald: Send Digest"
+msgstr "herald: Report senden"
+
+#: CRM/Herald/CivirulesAdapter/Form/SendDigest.php
+msgid "- block default -"
+msgstr "- Standard des Blocks -"
+
+#: CRM/Herald/CivirulesAdapter/Form/SendDigest.php
+msgid "Blocks (JSON array; replaces the contribution fields below)"
+msgstr "Blöcke (JSON-Array; ersetzt die Beitragsfelder unten)"
+
+#: CRM/Herald/CivirulesAdapter/Form/SendDigest.php
+msgid "Header line (HTML, optional)"
+msgstr "Kopfzeile (HTML, optional)"
+
+#: Civi/Herald/Digest/BlockList.php
+msgid "Blocks must be a JSON array of objects."
+msgstr "Blöcke müssen ein JSON-Array aus Objekten sein."
+
+#: Civi/Herald/Digest/BlockList.php
+msgid "Block %1: %2"
+msgstr "Block %1: %2"
+
+#: Civi/Herald/Digest/BlockType.php
+msgid "unknown type \"%1\"."
+msgstr "unbekannter Typ „%1“."
+
+#: Civi/Herald/Digest/BlockType.php
+msgid "a %1 block needs \"%2\"."
+msgstr "ein %1-Block braucht „%2“."
+
+#: Civi/Herald/Digest/SearchBlock.php
+msgid "saved search \"%1\" does not exist."
+msgstr "die gespeicherte Suche „%1“ existiert nicht."
+
+#: managed/MessageTemplate.mgd.php
+msgid "Herald: Digest block from a saved search"
+msgstr "Herald: Report-Block aus einer gespeicherten Suche"
+
+#: managed/MessageTemplate.mgd.php
+msgid "nothing found"
+msgstr "nichts gefunden"

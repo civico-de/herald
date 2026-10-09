@@ -53,7 +53,8 @@ actions (no bespoke cron for alerts). Live in production.
 - herald ships one condition, `Field transition`, and one per-event action,
   `Send notification`; entity specifics (contribution, campaign progress,
   status names) are template variables in `Civi\Herald\Trigger\*`, not extra
-  handlers. Retired handlers move onto these two via
+  handlers; the third action, `Send digest`, composes blocks. Retired handlers
+  move onto these via
   `CRM_Herald_CivirulesAdapter_RetiredHandlers::migrate()` (upgrade and
   reconcile). The pre-edit value comes from CiviRules original data, else the
   `hook_civicrm_pre` snapshot (`PreEditSnapshot`); the fields it
@@ -81,6 +82,12 @@ actions (no bespoke cron for alerts). Live in production.
   `bin/rules-reenable.php`, because loading a foreign class can be a fatal.
   `DisabledRulesCheck` warns while the marker exists and reads only that file.
   Every registered handler needs a contract scenario, with full and partial payloads.
+- A digest is a list of blocks (`Civi\Herald\Digest\Composer`): contribution,
+  saved search, hook section. Search blocks run the SavedSearch's `api_params`
+  without permission checks — whoever configures a digest can report any search,
+  the same trust as the contribution queries. Scheduled digests are APIv4 jobs
+  of `Herald.notifyDigest` (`"checkPermissions": false`, `sendHour`); there is
+  no APIv3 job wrapper.
 - Post-hook payloads of partial updates carry only the written fields; code
   reading an entity payload completes it from the stored row.
 

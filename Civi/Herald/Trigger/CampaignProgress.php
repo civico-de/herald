@@ -4,7 +4,6 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Trigger;
 
-use Civi\Herald\Digest\ContributionStatsService;
 use Civi\Herald\Util\Cast;
 
 /**
@@ -19,28 +18,19 @@ final class CampaignProgress {
   public const EMPTY = ['title' => '', 'goal' => 0, 'total' => 0, 'count' => 0, 'percent' => 0];
 
   /**
+   * @param callable(): array{total: float, count: int} $total Running total of the campaign
    * @param callable(int): ?array{title: string, goal: float} $campaignResolver
    * @return array<string, mixed>
    */
-  public static function of(int $campaignId, ContributionStatsService $stats, callable $campaignResolver): array {
+  public static function of(int $campaignId, callable $total, callable $campaignResolver): array {
     if ($campaignId <= 0) {
       return self::EMPTY;
     }
-    try {
-      $campaign = $campaignResolver($campaignId);
-      if ($campaign === NULL) {
-        return self::EMPTY;
-      }
-      $total = $stats->getCampaignTotal(['campaign_id' => $campaignId]);
-    }
-    catch (\Throwable $e) {
-      // CiviCampaign disabled or a read failed: the alert goes out without progress.
-      \Civi::log()->error('herald: could not resolve contribution campaign', [
-        'campaign_id' => $campaignId,
-        'error' => $e->getMessage(),
-      ]);
+    $campaign = $campaignResolver($campaignId);
+    if ($campaign === NULL) {
       return self::EMPTY;
     }
+    $total = $total();
     $goal = $campaign['goal'];
     return [
       'title' => $campaign['title'],

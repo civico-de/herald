@@ -20,10 +20,11 @@ Renders any template with the variables the trigger carries
 On a Contribution trigger the variables also carry the contribution, the progress of
 its campaign and the status transition ([contribution variables](#contribution-variables)).
 
-### Herald: Send contribution digest
+### Herald: Send digest
 
-Sends a digest each time the rule fires. Parameters as in
-[docs/digests.md](digests.md#parameters), without the job-only ones.
+Sends a digest each time the rule fires: contribution, saved-search and section blocks.
+Parameters as in [docs/digests.md](digests.md#parameters); the form checks the blocks
+before saving.
 
 ## CiviRules conditions
 
@@ -63,7 +64,7 @@ such as `getFields` need only "access CiviCRM".
 | `send` | `channel`, `message`, `subject`, `format`, `config` | Deliver a finished message through one channel. The entry point for other extensions; reports `unknown_config_keys` |
 | `publish` | `topic`, `message` or `template` + `vars`, `format`, `amount` | Deliver through the route in `herald_topics` ([topics](delivery.md#topics)) |
 | `notify` | `actionParams`, `triggerContext` | What "Send notification" calls |
-| `notifyDigest` | `actionParams` | What "Send contribution digest" calls |
+| `notifyDigest` | `actionParams`, `sendHour` | What "Send digest" and the [scheduled digest](recipes.md#scheduled-digests) call |
 | `checkFieldTransition` | `entity`, `entityId`, `field`, operators and values, `originalValue`, `hasOriginal` | What "Field transition" asks |
 | `getChannels` | `channel` (optional) | Registered channels and their config keys |
 | `getParkedAlerts` | `ids` (optional) | [Parked alerts](delivery.md#parked-alerts), without bodies |
@@ -90,7 +91,7 @@ if (class_exists(\Civi\Api4\Herald::class)) {
 |---|---|---|---|
 | Herald: Flush alert aggregation buffer (`Job.herald_buffer_flush`) | managed | Always | Sends aggregated groups whose window has passed |
 | Herald: Run check monitor (`Job.herald_monitor`) | managed | Always | Runs the [check monitor](monitor.md) |
-| `Job.herald_contribution_digest` | create it yourself | Hourly with `send_hour` | [Scheduled digest](recipes.md#scheduled-digests) |
+| APIv4 `Herald.notifyDigest` | create it yourself | Hourly with `sendHour` | [Scheduled digest](recipes.md#scheduled-digests) |
 
 ## Templates
 
@@ -107,7 +108,8 @@ System Workflow Messages. They render as Smarty strings.
 | `herald_contribution_alert_ticket_paid` | Ticket transfer received |
 | `herald_contribution_digest_daily` | Daily digest |
 | `herald_contribution_digest_weekly` | Weekly digest |
-| `herald_contribution_digest_block` | One block of a composed digest |
+| `herald_contribution_digest_block` | Contribution block of a digest with `blocks` |
+| `herald_digest_search_block` | Saved-search block of a digest |
 | `herald_event_created_alert` | Event created |
 | `herald_event_deactivated_alert` | Event deactivated |
 | `herald_event_deleted_alert` | Event deleted |
@@ -121,8 +123,8 @@ An admin's edit to a shipped template survives until a herald release changes th
 template; the release then overwrites the edit. To keep a customised version, copy it to
 a workflow name of your own. herald renders only the default version of a workflow
 (`is_default`). The CiviRules forms list workflows by prefix: "Send notification" offers
-`herald_%`, "Send contribution digest" `herald_contribution_digest_%`. The job and the API take any
-workflow name.
+`herald_%`, "Send digest" `herald_contribution_digest_%` (the template of a single
+contribution block; blocks name their own). The job and the API take any workflow name.
 
 ### Escaping
 
@@ -199,7 +201,7 @@ monitor maps) are not.
 | Hook | Signature | Purpose |
 |---|---|---|
 | `hook_civicrm_heraldChecks` | `(array &$checks)` | Contribute [monitor checks](monitor.md#contributing-a-check) |
-| `hook_civicrm_heraldDigestSections` | `(array $keys, array $context, array &$sections)` | Contribute [digest sections](digests.md#sections-from-other-extensions) |
+| `hook_civicrm_heraldDigestSections` | `(array $keys, array $context, array &$sections)` | Answer [section blocks](digests.md#section-blocks) of a digest |
 
 ## System status
 

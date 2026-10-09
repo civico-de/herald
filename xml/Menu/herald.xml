@@ -13,9 +13,9 @@
     <access_arguments>administer CiviCRM</access_arguments>
   </item>
   <item>
-    <path>civicrm/herald/form/civirulesaction/sendcontributiondigest</path>
-    <page_callback>CRM_Herald_CivirulesAdapter_Form_SendContributionDigest</page_callback>
-    <title>herald: Send Contribution Digest</title>
+    <path>civicrm/herald/form/civirulesaction/senddigest</path>
+    <page_callback>CRM_Herald_CivirulesAdapter_Form_SendDigest</page_callback>
+    <title>herald: Send Digest</title>
     <access_arguments>administer CiviCRM</access_arguments>
   </item>
   <item>

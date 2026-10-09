@@ -263,10 +263,8 @@ $templates = [
       TPL,
   ],
   [
-    // Generic, composable digest block. Rendered once per entry in a
-    // multi-block digest (Job.herald_contribution_digest `blocks` param); the
-    // caller injects {$block_title}. One block per revenue stream (donations,
-    // tickets, …) — all filtered/labelled independently, assembled into one message.
+    // Contribution block of a composed digest (`blocks`); the caller injects
+    // {$block_title}. One block per revenue stream, filtered independently.
     'workflow_name' => 'herald_contribution_digest_block',
     'msg_title' => E::ts('Herald: Contribution digest block (composable)'),
     'msg_subject' => '{$block_title}: {$totals.count} · {$totals.amount|crmMoney}',
@@ -275,6 +273,18 @@ $templates = [
       TPL,
     'msg_text' => <<<'TPL'
       {crmScope extensionKey='herald'}{$block_title}{if $totals.count > 0}{"\n"}{$totals.amount|crmMoney} · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{foreach from=$by_item item=it}{"\n"}- {$it.label} ({$it.unit_price|crmMoney}): {$it.qty}x = {$it.total|crmMoney}{/foreach}{foreach from=$by_source item=src}{"\n"}- {$src.source}: {$src.total|crmMoney} ({$src.count}){/foreach}{else}{"\n"}{ts}no receipts{/ts}{/if}{if $pending.count > 0}{"\n"}{ts}open{/ts}: {$pending.amount|crmMoney} ({$pending.count}){foreach from=$pending_items item=it}{"\n"}- {$it.label} ({$it.unit_price|crmMoney}): {$it.qty}x = {$it.total|crmMoney}{/foreach}{/if}{/crmScope}
+      TPL,
+  ],
+  [
+    // Search block of a composed digest: one line per row of a saved search.
+    'workflow_name' => 'herald_digest_search_block',
+    'msg_title' => E::ts('Herald: Digest block from a saved search'),
+    'msg_subject' => '{$block_title}: {$count}',
+    'msg_html' => <<<'TPL'
+      {crmScope extensionKey='herald'}{if !empty($block_title)}<b>{$block_title}</b>{/if}{foreach from=$rows item=row}{"\n"}• {foreach from=$row.cells item=cell name=cells}{$cell}{if !$smarty.foreach.cells.last} · {/if}{/foreach}{foreachelse}{"\n"}<i>{ts}nothing found{/ts}</i>{/foreach}{/crmScope}
+      TPL,
+    'msg_text' => <<<'TPL'
+      {crmScope extensionKey='herald'}{$block_title}{foreach from=$rows item=row}{"\n"}- {foreach from=$row.cells item=cell name=cells}{$cell}{if !$smarty.foreach.cells.last} · {/if}{/foreach}{foreachelse}{"\n"}{ts}nothing found{/ts}{/foreach}{/crmScope}
       TPL,
   ],
 ];

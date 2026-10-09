@@ -119,7 +119,13 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
       $this->getChannelOptions(),
       required: TRUE,
     );
-    $this->add('select', 'template', E::ts('Message template'), $this->getTemplateOptions(), required: TRUE);
+    $this->add(
+      'select',
+      'template',
+      E::ts('Message template'),
+      $this->getTemplateOptions(),
+      required: $this->templateRequired(),
+    );
     $this->add('text', 'chat_id', E::ts('Telegram chat ID (optional, falls back to default setting)'), ['size' => 30]);
     $this->add(
       'select',
@@ -360,6 +366,13 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
       ]));
     }
     return $decoded;
+  }
+
+  /**
+   * Whether the action needs a template of its own; a digest's blocks bring theirs.
+   */
+  protected function templateRequired(): bool {
+    return TRUE;
   }
 
   /**

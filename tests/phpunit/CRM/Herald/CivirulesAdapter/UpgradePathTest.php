@@ -165,6 +165,34 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
     self::assertSame(1, (int) \CRM_Core_DAO::singleValueQuery('SELECT COUNT(*) FROM civicrm_herald_buffer'));
   }
 
+  public function testRetiredContributionDigestMovesOntoTheDigest(): void {
+    $digestId = $this->insertHandler(
+      'civirule_action',
+      'herald_contribution_digest',
+      'CRM_Herald_CivirulesAdapter_Action_ContributionDigest',
+    );
+    $ruleActionId = $this->createRuleAction($digestId, [
+      'channel' => 'telegram',
+      'template' => 'herald_contribution_digest_daily',
+      'campaign_id' => 2,
+      'goal' => 30_000,
+      'campaign_title' => 'Campaign 2026',
+    ]);
+
+    self::assertSame(1, CRM_Herald_CivirulesAdapter_RetiredHandlers::migrate());
+
+    self::assertSame(
+      $this->actionIdByName('herald_digest'),
+      $this->handlerOf('civirule_rule_action', 'action', $ruleActionId),
+    );
+    // campaign_id filters the digest's queries and stays.
+    self::assertSame(
+      ['channel' => 'telegram', 'template' => 'herald_contribution_digest_daily', 'campaign_id' => 2],
+      $this->paramsOf('civirule_rule_action', 'action', $ruleActionId),
+    );
+    self::assertFalse($this->handlerExists('civirule_action', $digestId));
+  }
+
   public function testNothingToMigrateNeedsNoTargetHandler(): void {
     \CRM_Core_DAO::executeQuery("DELETE FROM civirule_condition WHERE name = 'herald_field_transition'");
     self::assertSame(0, CRM_Herald_CivirulesAdapter_RetiredHandlers::migrate());

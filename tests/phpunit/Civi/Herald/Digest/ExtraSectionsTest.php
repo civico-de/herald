@@ -29,24 +29,4 @@ class ExtraSectionsTest extends TestCase {
     $this->assertSame(['a.b'], ExtraSections::parseKeys(['a.b', ['nested'], NULL]));
   }
 
-  public function testOrderIgnoresNonScalarSectionBodies(): void {
-    $this->assertSame([], ExtraSections::order(['wanted' => ['not', 'scalar']], ['wanted']));
-  }
-
-  public function testOrderFollowsRequestedKeysNotContributionOrder(): void {
-    $sections = ['second' => 'B', 'first' => 'A'];
-    $this->assertSame(['A', 'B'], ExtraSections::order($sections, ['first', 'second']));
-  }
-
-  public function testOrderIgnoresUnrequestedAndEmptySections(): void {
-    $sections = ['wanted' => ' A ', 'unwanted' => 'B', 'blank' => "  \n "];
-    $this->assertSame(['A'], ExtraSections::order($sections, ['wanted', 'blank', 'missing']));
-  }
-
-  public function testCollectWithoutKeysNeverDispatches(): void {
-    // No dispatcher available in a unit test — reaching Civi::dispatcher()
-    // would fatal, so an empty key list must short-circuit before that.
-    $this->assertSame([], ExtraSections::collect([], ['period' => 'yesterday']));
-  }
-
 }

@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Digest;
 
+use Civi\Herald\Trigger\CampaignProgress;
 use Civi\Herald\Util\Cast;
 
 /**
@@ -21,8 +22,8 @@ use Civi\Herald\Util\Cast;
  *   show_histogram     — bool, include histogram (default true)
  *   bucket_count       — int, target histogram buckets (default 8)
  *   bucket_edges       — JSON array of edges to override adaptive bucketing
- *   goal               — float, campaign goal (renders progress when set)
- *   campaign_title     — string, free-text title for the campaign block
+ * The campaign block (title, goal_revenue, running total) comes from the
+ * Campaign record named by campaign_id; without one it stays empty.
  * @mago-expect lint:cyclomatic-complexity
  */
 final class DigestVars {
@@ -30,10 +31,15 @@ final class DigestVars {
   /**
    * @param array<string, mixed> $params
    * @param ContributionStatsService $stats Stats source (mockable in tests)
+   * @param (callable(int): ?array{title: string, goal: float})|null $campaignResolver Campaign id → title and goal
    * @return array<string, mixed>
    * @mago-expect lint:halstead
    */
-  public static function build(array $params, ContributionStatsService $stats): array {
+  public static function build(
+    array $params,
+    ContributionStatsService $stats,
+    ?callable $campaignResolver = NULL,
+  ): array {
     $filters = self::buildFiltersFromParams($params);
     $period = self::resolvePeriod(Cast::toString($params['period'] ?? 'yesterday'));
     $groupBy = Cast::toString($params['group_by'] ?? '');
@@ -45,7 +51,6 @@ final class DigestVars {
       'by_item' => [],
       'pending' => ['amount' => 0, 'count' => 0],
       'pending_items' => [],
-      'campaign' => ['title' => '', 'goal' => 0, 'total' => 0, 'count' => 0, 'percent' => 0],
       'histogram' => '',
     ];
 
@@ -90,22 +95,12 @@ final class DigestVars {
       $vars['histogram'] = HistogramFormatter::render($buckets);
     }
 
-    if (!empty($params['goal'])) {
-      $goal = Cast::toFloat($params['goal']);
-      $campaignTotal = !empty($filters['campaign_id'])
-        ? self::campaignTotal($stats, $filters, $groupBy)
-        // Without a campaign filter the digest's own totals ARE the campaign
-        // total. Read them back from $vars, which both branches above fill —
-        // $summary only exists in the non-line_item one.
-        : ['total' => $vars['totals']['amount'], 'count' => $vars['totals']['count']];
-      $vars['campaign'] = [
-        'title' => $params['campaign_title'] ?? '',
-        'goal' => $goal,
-        'total' => $campaignTotal['total'],
-        'count' => $campaignTotal['count'],
-        'percent' => $goal > 0 ? round(($campaignTotal['total'] / $goal) * 100, 1) : 0,
-      ];
-    }
+    $campaignId = Cast::toInt($filters['campaign_id'] ?? 0);
+    $vars['campaign'] = CampaignProgress::of(
+      $campaignId,
+      static fn (): array => self::campaignTotal($stats, $filters, $groupBy),
+      $campaignResolver ?? CampaignProgress::resolveCampaign(...),
+    );
 
     return $vars;
   }
