@@ -21,7 +21,7 @@
   <version>0.8.1</version>
   <develStage>alpha</develStage>
   <compatibility>
-    <ver>6.12</ver>
+    <ver>6.18</ver>
   </compatibility>
   <php_compatibility mode="list">
     <ver>8.3</ver>
