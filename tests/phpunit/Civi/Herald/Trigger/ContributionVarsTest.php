@@ -131,6 +131,27 @@ class ContributionVarsTest extends TestCase {
     $this->assertSame([], $this->statsCalls->getArrayCopy());
   }
 
+  public function testFailingCampaignTotalGivesTheEmptyBlock(): void {
+    $failingStats = new class extends ContributionStatsService {
+
+      public function __construct() {}
+
+      public function getCampaignTotal(array $filters): array {
+        throw new \RuntimeException('read failed');
+      }
+
+    };
+    $vars = ContributionVars::build(
+      ['id' => 5, 'contribution_status_id' => 1, 'campaign_id' => 2],
+      NULL,
+      $failingStats,
+      $this->statusResolver(),
+      $this->campaignResolver([2 => ['title' => 'Campaign 2026', 'goal' => 30_000.0]]),
+    );
+    $this->assertSame(['title' => '', 'goal' => 0, 'total' => 0, 'count' => 0, 'percent' => 0], $vars['campaign']);
+    $this->assertSame('Completed', $vars['to_status']);
+  }
+
   public function testStatusResolverIsCalledForUnknownIds(): void {
     $vars = $this->build(['id' => 1, 'contribution_status_id' => 99]);
     $this->assertSame('', $vars['to_status']);

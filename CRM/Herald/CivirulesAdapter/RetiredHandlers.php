@@ -31,6 +31,14 @@ final class CRM_Herald_CivirulesAdapter_RetiredHandlers {
     'to_value' => '0',
   ];
 
+  /**
+   * APIv4 entities of CiviRules per handler kind; their params fields are PHP-serialized.
+   */
+  private const ENTITIES = [
+    'action' => ['handler' => 'CiviRulesAction', 'rule' => 'CiviRulesRuleAction'],
+    'condition' => ['handler' => 'CiviRulesCondition', 'rule' => 'CiviRulesRuleCondition'],
+  ];
+
   private const RETIRED_ACTION_PARAMS = ['campaign_id', 'goal', 'campaign_title', 'include_status_transition'];
 
   /**
@@ -54,83 +62,72 @@ final class CRM_Herald_CivirulesAdapter_RetiredHandlers {
       return 0;
     }
     $migrated = self::moveRuleRows(
-      'civirule_action',
-      'civirule_rule_action',
       'action',
       array_fill_keys(self::RETIRED_ACTIONS, 'withoutCampaignParams'),
       self::NOTIFICATION_CLASS,
     );
-    $migrated += self::moveRuleRows(
-      'civirule_condition',
-      'civirule_rule_condition',
-      'condition',
-      self::RETIRED_CONDITIONS,
-      self::FIELD_TRANSITION_CLASS,
-    );
+    $migrated += self::moveRuleRows('condition', self::RETIRED_CONDITIONS, self::FIELD_TRANSITION_CLASS);
     \Civi\Herald\Condition\FieldTransitionWatchList::reset();
     return $migrated;
   }
 
   /**
-   * @param 'civirule_action'|'civirule_condition' $handlerTable
-   * @param 'civirule_rule_action'|'civirule_rule_condition' $ruleTable
    * @param 'action'|'condition' $kind
    * @param array<string, string> $retired class name => params transform method
    */
-  private static function moveRuleRows(
-    string $handlerTable,
-    string $ruleTable,
-    string $kind,
-    array $retired,
-    string $targetClass,
-  ): int {
-    $targetId = (int) \CRM_Core_DAO::singleValueQuery(
-      "SELECT id FROM `{$handlerTable}` WHERE class_name = %1",
-      [1 => [$targetClass, 'String']],
-    );
-    if ($targetId <= 0) {
-      throw new \CRM_Core_Exception("herald: {$targetClass} is not registered in {$handlerTable}");
-    }
+  private static function moveRuleRows(string $kind, array $retired, string $targetClass): int {
+    $entities = self::ENTITIES[$kind];
     $moved = 0;
     foreach ($retired as $class => $transform) {
-      $handlerId = (int) \CRM_Core_DAO::singleValueQuery(
-        "SELECT id FROM `{$handlerTable}` WHERE class_name = %1",
-        [1 => [$class, 'String']],
-      );
+      $handlerId = self::handlerId($entities['handler'], $class);
       if ($handlerId <= 0) {
         continue;
       }
-      /** @var \CRM_Core_DAO&object{id: string, params: ?string} $rows */
-      $rows = \CRM_Core_DAO::executeQuery(
-        "SELECT id, {$kind}_params AS params FROM `{$ruleTable}` WHERE {$kind}_id = %1",
-        [1 => [$handlerId, 'Integer']],
-      );
-      while ($rows->fetch()) {
-        \CRM_Core_DAO::executeQuery(
-          "UPDATE `{$ruleTable}` SET {$kind}_id = %1, {$kind}_params = %2 WHERE id = %3",
-          [
-            1 => [$targetId, 'Integer'],
-            2 => [serialize(self::transform($transform, self::decodeParams($rows->params))), 'String'],
-            3 => [(int) $rows->id, 'Integer'],
+      $targetId = self::handlerId($entities['handler'], $targetClass);
+      if ($targetId <= 0) {
+        throw new \CRM_Core_Exception("herald: {$targetClass} is not registered as a CiviRules {$kind}");
+      }
+      $rows = civicrm_api4($entities['rule'], 'get', [
+        'select' => ['id', "{$kind}_params"],
+        'where' => [["{$kind}_id", '=', $handlerId]],
+        'checkPermissions' => FALSE,
+      ]);
+      foreach ($rows as $row) {
+        $params = $row["{$kind}_params"] ?? [];
+        civicrm_api4($entities['rule'], 'update', [
+          'values' => [
+            "{$kind}_id" => $targetId,
+            "{$kind}_params" => self::transform($transform, is_array($params) ? $params : [], (int) $row['id']),
           ],
-        );
+          'where' => [['id', '=', $row['id']]],
+          'checkPermissions' => FALSE,
+        ]);
         $moved++;
       }
-      \CRM_Core_DAO::executeQuery(
-        "DELETE FROM `{$handlerTable}` WHERE id = %1",
-        [1 => [$handlerId, 'Integer']],
-      );
+      civicrm_api4($entities['handler'], 'delete', [
+        'where' => [['id', '=', $handlerId]],
+        'checkPermissions' => FALSE,
+      ]);
     }
     return $moved;
+  }
+
+  private static function handlerId(string $entity, string $class): int {
+    $row = civicrm_api4($entity, 'get', [
+      'select' => ['id'],
+      'where' => [['class_name', '=', $class]],
+      'checkPermissions' => FALSE,
+    ])->first();
+    return (int) ($row['id'] ?? 0);
   }
 
   /**
    * @param array<array-key, mixed> $params
    * @return array<array-key, mixed>
    */
-  private static function transform(string $transform, array $params): array {
+  private static function transform(string $transform, array $params, int $ruleRowId): array {
     return match ($transform) {
-      'withoutCampaignParams' => array_diff_key($params, array_flip(self::RETIRED_ACTION_PARAMS)),
+      'withoutCampaignParams' => self::withoutCampaignParams($params, $ruleRowId),
       'previousContributionStatus' => self::previousContributionStatus($params),
       'eventBecameInactive' => self::EVENT_BECAME_INACTIVE,
       default => throw new \CRM_Core_Exception("herald: unknown rule migration {$transform}"),
@@ -138,7 +135,26 @@ final class CRM_Herald_CivirulesAdapter_RetiredHandlers {
   }
 
   /**
-   * "Previous status was X"; without a configured status the old condition never matched.
+   * Campaign progress now comes from the contribution's campaign; the log keeps
+   * what an admin had configured so a goal missing on the Campaign can be restored.
+   *
+   * @param array<array-key, mixed> $params
+   * @return array<array-key, mixed>
+   */
+  private static function withoutCampaignParams(array $params, int $ruleActionId): array {
+    $dropped = array_intersect_key($params, array_flip(self::RETIRED_ACTION_PARAMS));
+    if ($dropped !== []) {
+      \Civi::log()->warning(
+        'herald: contribution alert migrated, campaign params dropped',
+        ['rule_action_id' => $ruleActionId] + $dropped,
+      );
+    }
+    return array_diff_key($params, $dropped);
+  }
+
+  /**
+   * "Previous status was X", whether or not the edit changed it: the after side
+   * only makes the transition two-sided. Without a configured status the old condition never matched.
    *
    * @param array<array-key, mixed> $params
    * @return array<string, string>
@@ -151,17 +167,9 @@ final class CRM_Herald_CivirulesAdapter_RetiredHandlers {
       'field' => 'contribution_status_id',
       'from_operator' => $configured ? '=' : '',
       'from_value' => $configured ? (string) $previous : '',
-      'to_operator' => '',
+      'to_operator' => $configured ? 'not_empty' : '',
       'to_value' => '',
     ];
-  }
-
-  /**
-   * @return array<array-key, mixed>
-   */
-  private static function decodeParams(?string $raw): array {
-    $decoded = $raw === NULL || $raw === '' ? [] : unserialize($raw, ['allowed_classes' => FALSE]);
-    return is_array($decoded) ? $decoded : [];
   }
 
 }

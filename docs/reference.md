@@ -49,7 +49,8 @@ Examples:
 | Watches | Entity | Field | Before | After |
 |---|---|---|---|---|
 | Membership turns from status 2 to 3 | `Membership` | `status_id` | `= 2` | `= 3` |
-| Bank transfer received | `Contribution` | `contribution_status_id` | `=` Pending's id | `=` Completed's id |
+| Leaves Pending | `Contribution` | `contribution_status_id` | `=` Pending's id | empty |
+| Was Pending before the edit, changed or not | `Contribution` | `contribution_status_id` | `=` Pending's id | `not_empty` |
 | Event unpublished | `Event` | `is_active` | `= 1` | `= 0` |
 
 ## APIv4
@@ -156,7 +157,7 @@ deleted event keeps the values from the trigger's own data.
 | `contribution` | The contribution's fields, e.g. `total_amount`, `source` (after [source normalisation](digests.md#source-normalisation)), `receive_date` |
 | `campaign.title`, `.total`, `.count` | The contribution's own campaign: its title and the running total and count of its contributions |
 | `campaign.goal`, `.percent` | The campaign's revenue goal (`goal_revenue`) and the share reached; `0` when the campaign has no goal |
-| `from_status`, `to_status` | Status names before and after the edit; `from_status` is empty on a new contribution |
+| `from_status`, `to_status` | Status names before and after the edit; `from_status` is empty when the status before the edit is unknown |
 
 Without a campaign, every `campaign` field is empty or `0`, so `{if $campaign.goal}`
 hides the progress line.

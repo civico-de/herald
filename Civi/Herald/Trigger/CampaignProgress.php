@@ -28,19 +28,19 @@ final class CampaignProgress {
     }
     try {
       $campaign = $campaignResolver($campaignId);
+      if ($campaign === NULL) {
+        return self::EMPTY;
+      }
+      $total = $stats->getCampaignTotal(['campaign_id' => $campaignId]);
     }
     catch (\Throwable $e) {
-      // CiviCampaign disabled or the read failed: the alert goes out without progress.
+      // CiviCampaign disabled or a read failed: the alert goes out without progress.
       \Civi::log()->error('herald: could not resolve contribution campaign', [
         'campaign_id' => $campaignId,
         'error' => $e->getMessage(),
       ]);
       return self::EMPTY;
     }
-    if ($campaign === NULL) {
-      return self::EMPTY;
-    }
-    $total = $stats->getCampaignTotal(['campaign_id' => $campaignId]);
     $goal = $campaign['goal'];
     return [
       'title' => $campaign['title'],

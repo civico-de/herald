@@ -87,6 +87,16 @@ class FieldTransitionTest extends TestCase {
     $this->assertTrue(FieldTransition::matches($before, $after, ['known' => TRUE, 'value' => '2'], 'anything'));
   }
 
+  public function testNotEmptyAfterSideMatchesAnUnchangedValue(): void {
+    // "Previous status was Pending", also on edits that keep it Pending.
+    $before = FieldTransition::side('=', '2');
+    $after = FieldTransition::side('not_empty', '');
+    $this->assertTrue(FieldTransition::matches($before, $after, ['known' => TRUE, 'value' => '2'], '2'));
+    $this->assertTrue(FieldTransition::matches($before, $after, ['known' => TRUE, 'value' => '2'], '1'));
+    $this->assertFalse(FieldTransition::matches($before, $after, ['known' => TRUE, 'value' => '1'], '1'));
+    $this->assertFalse(FieldTransition::matches($before, $after, ['known' => FALSE, 'value' => NULL], '2'));
+  }
+
   public function testOneSidedConditionRequiresAnActualChange(): void {
     // "after = 0", row already at 0, unrelated edit: must NOT fire.
     $before = FieldTransition::side('', '');

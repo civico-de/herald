@@ -69,3 +69,6 @@ of herald's rules is checked by the preflight and blocks re-enabling.
   disabled rules and the command that re-enables them.
 - A marker left by a failed deploy re-enables its rules on the next successful one,
   including a rule an admin switched off on purpose in between.
+- A release that retires a handler migrates the rules, but not CiviRules' queue of
+  delayed actions: an action queued before the deploy that names a retired handler is
+  logged as failed when it runs. Deploy when no delayed herald action is pending.

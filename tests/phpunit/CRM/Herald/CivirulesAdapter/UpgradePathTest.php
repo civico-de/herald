@@ -165,6 +165,11 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
     self::assertSame(1, (int) \CRM_Core_DAO::singleValueQuery('SELECT COUNT(*) FROM civicrm_herald_buffer'));
   }
 
+  public function testNothingToMigrateNeedsNoTargetHandler(): void {
+    \CRM_Core_DAO::executeQuery("DELETE FROM civirule_condition WHERE name = 'herald_field_transition'");
+    self::assertSame(0, CRM_Herald_CivirulesAdapter_RetiredHandlers::migrate());
+  }
+
   public function testRetiredConditionsMoveOntoTheFieldTransition(): void {
     $previousId = $this->insertHandler(
       'civirule_condition',
@@ -189,11 +194,11 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
       "SELECT id FROM civirule_condition WHERE name = 'herald_field_transition'",
     );
     $status = ['entity' => 'Contribution', 'field' => 'contribution_status_id'];
-    $anyAfter = ['to_operator' => '', 'to_value' => ''];
     $expected = [
-      $status + ['from_operator' => '=', 'from_value' => '2'] + $anyAfter,
+      // Two-sided: the old condition also matched edits that kept the status.
+      $status + ['from_operator' => '=', 'from_value' => '2', 'to_operator' => 'not_empty', 'to_value' => ''],
       // Without a configured status the old condition never matched; neither does this.
-      $status + ['from_operator' => '', 'from_value' => ''] + $anyAfter,
+      $status + ['from_operator' => '', 'from_value' => '', 'to_operator' => '', 'to_value' => ''],
       [
         'entity' => 'Event',
         'field' => 'is_active',
