@@ -98,16 +98,8 @@ msgid "Campaign ID (optional)"
 msgstr "Kampagnen-ID (optional)"
 
 #: CRM/Herald/Form/CivirulesAction/SendContributionAlert.php
-msgid "Campaign goal (optional, enables progress)"
-msgstr "Kampagnenziel (optional, aktiviert die Fortschrittsanzeige)"
-
-#: CRM/Herald/Form/CivirulesAction/SendContributionAlert.php
 msgid "Campaign title"
 msgstr "Kampagnentitel"
-
-#: CRM/Herald/Form/CivirulesAction/SendContributionAlert.php
-msgid "Include from_status / to_status (uses pre-edit snapshot)"
-msgstr "from_status / to_status einbeziehen (nutzt den Snapshot vor der Änderung)"
 
 #: CRM/Herald/Form/CivirulesAction/SendContributionDigest.php
 msgid "Period"
@@ -180,10 +172,6 @@ msgstr "Variablen (JSON-Objekt, das an die Vorlage übergeben wird)"
 #: CRM/Herald/Form/CivirulesAction/SendNotification.php
 msgid "Variables JSON is invalid: %1"
 msgstr "Das Variablen-JSON ist ungültig: %1"
-
-#: CRM/Herald/Form/CivirulesCondition/PreviousContributionStatus.php
-msgid "Previous Contribution Status"
-msgstr "Vorheriger Beitragsstatus"
 
 #: CRM/Herald/Form/CivirulesCondition/PreviousContributionStatus.php
 msgid "herald condition saved."
@@ -788,10 +776,6 @@ msgstr "Nachher: Wert"
 #: templates/CRM/Herald/CivirulesAdapter/Form/FieldTransition.tpl
 msgid "herald: Field transition"
 msgstr "herald: Feldwechsel"
-
-#: templates/CRM/Herald/CivirulesAdapter/Form/PreviousContributionStatus.tpl
-msgid "herald: Previous Contribution status"
-msgstr "herald: Vorheriger Beitragsstatus"
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "Group — fan out to all contacts of a CiviCRM group"

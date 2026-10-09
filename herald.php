@@ -44,6 +44,7 @@ function herald_civicrm_pre($op, $objectName, $id, &$params): void {
   // Watch list is empty unless a field-transition condition is configured.
   \Civi\Herald\Condition\FieldTransitionSnapshotter::capture($objectName, (int) $id);
   if ($objectName === 'Contribution') {
+    // from_status in contribution alerts when the trigger carries no original data.
     $contributionId = (int) $id;
     $previousStatusId = \CRM_Core_DAO::singleValueQuery(
       'SELECT contribution_status_id FROM civicrm_contribution WHERE id = %1',
@@ -52,21 +53,6 @@ function herald_civicrm_pre($op, $objectName, $id, &$params): void {
     \Civi\Herald\StatusTransitionDispatcher::rememberPreEditStatus(
       $contributionId,
       is_scalar($previousStatusId) ? (int) $previousStatusId : NULL,
-    );
-    return;
-  }
-  if ($objectName === 'Event') {
-    // Lets the "Event deactivated" condition tell a 1 → 0 transition from an edit while inactive.
-    $eventId = (int) $id;
-    $previousActive = \CRM_Core_DAO::singleValueQuery(
-      'SELECT is_active FROM civicrm_event WHERE id = %1',
-      [1 => [$eventId, 'Integer']],
-    );
-    \Civi\Herald\PreEditSnapshot::remember(
-      'Event',
-      $eventId,
-      'is_active',
-      is_scalar($previousActive) ? (int) $previousActive : NULL,
     );
   }
 }

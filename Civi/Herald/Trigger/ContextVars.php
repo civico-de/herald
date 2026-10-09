@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Trigger;
 
+use Civi\Api4\Contribution;
 use Civi\Api4\Membership;
 use Civi\Api4\Participant;
 use Civi\Herald\Privacy\Mask;
@@ -17,13 +18,26 @@ use Civi\Herald\Util\StoredFields;
  * trigger object into it, and nothing here knows CiviRules exists:
  *   contact_id     — int, 0 when the trigger carries no contact
  *   GroupContact   — entity payload of the "added to group" triggers
- *   Membership, Participant, Event — entity payloads, when carried
+ *   Contribution, Membership, Participant, Event — entity payloads, when carried
+ *   original       — pre-edit values keyed by entity name, when the trigger
+ *                    recorded them (["Contribution" => ["contribution_status_id" => 2]])
  *
  * Lookups are defensive: a vanished contact/group just leaves the variable out
  * rather than failing the whole notification.
  * @mago-expect lint:cyclomatic-complexity
  */
 final class ContextVars {
+
+  private const CONTRIBUTION_FIELDS = [
+    'contact_id',
+    'total_amount',
+    'currency',
+    'contribution_status_id',
+    'financial_type_id',
+    'campaign_id',
+    'source',
+    'receive_date',
+  ];
 
   private const MEMBERSHIP_FIELDS = ['contact_id', 'membership_type_id', 'status_id'];
 
@@ -34,6 +48,11 @@ final class ContextVars {
    * @return array<string, mixed>
    */
   public static function build(array $context): array {
+    $contribution = StoredFields::complete(
+      Contribution::get(checkPermissions: FALSE),
+      self::entity($context, 'Contribution'),
+      self::CONTRIBUTION_FIELDS,
+    );
     $membership = StoredFields::complete(
       Membership::get(checkPermissions: FALSE),
       self::entity($context, 'Membership'),
@@ -46,9 +65,14 @@ final class ContextVars {
     );
     $contactId = Cast::toInt($context['contact_id'] ?? 0);
     if ($contactId <= 0) {
-      $contactId = Cast::toInt($participant['contact_id'] ?? $membership['contact_id'] ?? 0);
+      $contactId = Cast::toInt(
+        $participant['contact_id'] ?? $membership['contact_id'] ?? $contribution['contact_id'] ?? 0,
+      );
     }
-    $vars = [];
+    $vars = ContributionVars::forTrigger(
+      $contribution,
+      OriginalValues::field($context, 'Contribution', 'contribution_status_id'),
+    );
     self::addContact($vars, $contactId);
     self::addGroup($vars, self::entity($context, 'GroupContact'));
     self::addMembership($vars, $membership);

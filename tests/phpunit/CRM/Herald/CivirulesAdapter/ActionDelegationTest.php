@@ -58,14 +58,6 @@ class CRM_Herald_CivirulesAdapter_ActionDelegationTest extends TestCase implemen
     self::assertSame(1, $this->bufferedRows());
   }
 
-  public function testContributionAlertRefusesATriggerWithoutAContribution(): void {
-    $action = new CRM_Herald_CivirulesAdapter_Action_ContributionAlert();
-    $action->setRuleActionData($this->ruleActionData(['template' => 'herald_contribution_alert_completed']));
-
-    $this->expectException(\CRM_Core_Exception::class);
-    $action->processAction(new class() extends CRM_Civirules_TriggerData_TriggerData {});
-  }
-
   /**
    * The row shape CiviRules hands a handler; only action_params is read.
    *

@@ -15,9 +15,8 @@ namespace Civi\Api4;
  *
  * The pipeline entry points the CiviRules adapters call — render a herald
  * template and deliver it, or answer a condition question:
- *   cv api4 Herald.notify / notifyContribution / notifyDigest
- *   cv api4 Herald.checkContributionTransition / checkEventDeactivated /
- *   checkFieldTransition
+ *   cv api4 Herald.notify / notifyDigest
+ *   cv api4 Herald.checkFieldTransition
  *
  * Buffer dead letter — buffered alerts the flush job could not deliver:
  *   cv api4 Herald.getParkedAlerts / Herald.reactivateParkedAlerts
@@ -49,20 +48,8 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
       ->setCheckPermissions($checkPermissions);
   }
 
-  public static function notifyContribution(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\NotifyContribution {
-    return (new \Civi\Herald\Api4\Action\NotifyContribution(__CLASS__, 'notifyContribution'))
-      ->setCheckPermissions($checkPermissions);
-  }
-
   public static function notifyDigest(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\NotifyDigest {
     return (new \Civi\Herald\Api4\Action\NotifyDigest(__CLASS__, 'notifyDigest'))
-      ->setCheckPermissions($checkPermissions);
-  }
-
-  public static function checkContributionTransition(
-    bool $checkPermissions = TRUE,
-  ): \Civi\Herald\Api4\Action\CheckContributionTransition {
-    return (new \Civi\Herald\Api4\Action\CheckContributionTransition(__CLASS__, 'checkContributionTransition'))
       ->setCheckPermissions($checkPermissions);
   }
 
@@ -70,11 +57,6 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
     bool $checkPermissions = TRUE,
   ): \Civi\Herald\Api4\Action\CheckFieldTransition {
     return (new \Civi\Herald\Api4\Action\CheckFieldTransition(__CLASS__, 'checkFieldTransition'))
-      ->setCheckPermissions($checkPermissions);
-  }
-
-  public static function checkEventDeactivated(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\CheckEventDeactivated {
-    return (new \Civi\Herald\Api4\Action\CheckEventDeactivated(__CLASS__, 'checkEventDeactivated'))
       ->setCheckPermissions($checkPermissions);
   }
 

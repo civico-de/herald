@@ -50,9 +50,13 @@ actions (no bespoke cron for alerts). Live in production.
   `format=text`) is escaped whole via `PlainText::toHtml()`. Sinks that do not
   render HTML get `Channel\PlainText::fromHtml()` of the body, never the raw
   markup; email and activity HTML get newlines as `<br>` (`HtmlLineBreaks`).
-- The `Previous Contribution status` condition relies on the
-  `hook_civicrm_pre` snapshot (`PreEditSnapshot`), not CiviRules change data.
-  The generic `Field transition` condition uses the same model; the fields it
+- herald ships one condition, `Field transition`, and one per-event action,
+  `Send notification`; entity specifics (contribution, campaign progress,
+  status names) are template variables in `Civi\Herald\Trigger\*`, not extra
+  handlers. Retired handlers move onto these two via
+  `CRM_Herald_CivirulesAdapter_RetiredHandlers::migrate()` (upgrade and
+  reconcile). The pre-edit value comes from CiviRules original data, else the
+  `hook_civicrm_pre` snapshot (`PreEditSnapshot`); the fields it
   watches are read from active rule configs (`FieldTransitionWatchList`,
   request-cached) and snapshotted in `hook_civicrm_pre`. The request cache
   means long-running queue/CLI workers keep a stale watch list until restart —

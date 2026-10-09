@@ -17,18 +17,8 @@ Renders any template with the variables the trigger carries
 | `vars` | JSON object of template variables. A top-level key here replaces the trigger's variable of that name as a whole: `{"contact": {…}}` drops the generated `contact` fields |
 | `scope_entity` | `Event`, `Membership` or `Participant`: the trigger entity the notification concerns, for [scoped subscriptions](delivery.md#scoped-subscriptions) |
 
-### Herald: Send contribution alert
-
-For Contribution triggers. Renders a contribution template with the trigger's
-contribution, campaign progress and the status transition
-([contribution variables](#contribution-alert-variables)).
-
-| Parameter | Default | Meaning |
-|---|---|---|
-| `campaign_id` | none | Campaign for the progress figures |
-| `goal` | none | Campaign goal; with `campaign_id` enables the percentage |
-| `campaign_title` | none | Free-text campaign name |
-| `include_status_transition` | `true` | Fill `from_status`; off leaves it empty. `to_status` is always set |
+On a Contribution trigger the variables also carry the contribution, the progress of
+its campaign and the status transition ([contribution variables](#contribution-variables)).
 
 ### Herald: Send contribution digest
 
@@ -39,25 +29,28 @@ Sends a digest each time the rule fires. Parameters as in
 
 | Condition | Parameters | True when |
 |---|---|---|
-| Herald: Previous Contribution status | `previous_status_id` | The edited contribution had this status before the edit |
 | Herald: Field transition | `entity`, `field`, `from_operator`, `from_value`, `to_operator`, `to_value` | The field's value before and after the edit match both configured sides |
-| Herald: Event was deactivated (is_active 1 → 0) | none | The edit switched an active event to inactive |
 
-The before-edit value comes from herald's own snapshot taken in `hook_civicrm_pre` or
-from the original data CiviRules keeps for delayed rules. When it is unknown, the
-condition is false: a missed alert beats a false one. Field transition and Event was
-deactivated read the after-value from the stored row, so a partial update whose payload
-lacks the field is still judged by its real value. Previous Contribution status only
-checks the before-edit status; combine it with a current-status condition.
+The before-edit value comes from the original data CiviRules records for the edit, which
+also survives delayed rules, or from herald's own snapshot taken in `hook_civicrm_pre`.
+When it is unknown, the condition is false: a missed alert beats a false one. The
+after-value comes from the stored row, so a partial update whose payload lacks the field
+is still judged by its real value.
 
-**Field transition.** `entity` is the APIv4 entity name, `field` the APIv4 field name.
+`entity` is the APIv4 entity name, `field` the APIv4 field name.
 Operators: `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty`,
 `not_empty`; an empty operator leaves that side unconstrained. With only one side
 configured, the value must also have changed, so unrelated edits of a record already in
 the target state do not fire again. With both sides configured, the two predicates alone
 decide. herald snapshots the fields that active rules watch;
 long-running queue or CLI workers pick up a newly configured field only after a restart.
-Example: entity `Membership`, field `status_id`, before `= 2`, after `= 3`.
+Examples:
+
+| Watches | Entity | Field | Before | After |
+|---|---|---|---|---|
+| Membership turns from status 2 to 3 | `Membership` | `status_id` | `= 2` | `= 3` |
+| Bank transfer received | `Contribution` | `contribution_status_id` | `=` Pending's id | `=` Completed's id |
+| Event unpublished | `Event` | `is_active` | `= 1` | `= 0` |
 
 ## APIv4
 
@@ -69,11 +62,8 @@ such as `getFields` need only "access CiviCRM".
 | `send` | `channel`, `message`, `subject`, `format`, `config` | Deliver a finished message through one channel. The entry point for other extensions; reports `unknown_config_keys` |
 | `publish` | `topic`, `message` or `template` + `vars`, `format`, `amount` | Deliver through the route in `herald_topics` ([topics](delivery.md#topics)) |
 | `notify` | `actionParams`, `triggerContext` | What "Send notification" calls |
-| `notifyContribution` | `actionParams`, `contribution`, `originalStatusId` | What "Send contribution alert" calls |
 | `notifyDigest` | `actionParams` | What "Send contribution digest" calls |
-| `checkContributionTransition` | `contributionId`, `expectedStatusId`, `originalStatusId` | What "Previous Contribution status" asks |
 | `checkFieldTransition` | `entity`, `entityId`, `field`, operators and values, `originalValue`, `hasOriginal` | What "Field transition" asks |
-| `checkEventDeactivated` | `eventId`, `originalIsActive` | What "Event was deactivated" asks |
 | `getChannels` | `channel` (optional) | Registered channels and their config keys |
 | `getParkedAlerts` | `ids` (optional) | [Parked alerts](delivery.md#parked-alerts), without bodies |
 | `reactivateParkedAlerts` | `ids` (optional, empty = all) | Put parked alerts back into circulation |
@@ -130,8 +120,7 @@ An admin's edit to a shipped template survives until a herald release changes th
 template; the release then overwrites the edit. To keep a customised version, copy it to
 a workflow name of your own. herald renders only the default version of a workflow
 (`is_default`). The CiviRules forms list workflows by prefix: "Send notification" offers
-`herald_%`, "Send contribution alert" `herald_contribution_%` without digests, and "Send
-contribution digest" `herald_contribution_digest_%`. The job and the API take any
+`herald_%`, "Send contribution digest" `herald_contribution_digest_%`. The job and the API take any
 workflow name.
 
 ### Escaping
@@ -158,13 +147,19 @@ A lookup error leaves the variable out and is logged instead of failing the
 notification. A deleted contact or group leaves its `id` with empty text fields; a
 deleted event keeps the values from the trigger's own data.
 
-### Contribution alert variables
+### Contribution variables
+
+**Send notification** adds these when the trigger carries a Contribution:
 
 | Variable | Content |
 |---|---|
 | `contribution` | The contribution's fields, e.g. `total_amount`, `source` (after [source normalisation](digests.md#source-normalisation)), `receive_date` |
-| `campaign.title`, `.goal`, `.total`, `.count`, `.percent` | Campaign progress when `campaign_id` and `goal` are set |
-| `from_status`, `to_status` | Status names before and after the edit |
+| `campaign.title`, `.total`, `.count` | The contribution's own campaign: its title and the running total and count of its contributions |
+| `campaign.goal`, `.percent` | The campaign's revenue goal (`goal_revenue`) and the share reached; `0` when the campaign has no goal |
+| `from_status`, `to_status` | Status names before and after the edit; `from_status` is empty on a new contribution |
+
+Without a campaign, every `campaign` field is empty or `0`, so `{if $campaign.goal}`
+hides the progress line.
 
 Digest variables are listed in [docs/digests.md](digests.md#template-variables).
 

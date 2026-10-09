@@ -10,10 +10,11 @@ delivers it through the channel the site configured.
 - **Templates:** `MessageTemplate` workflows rendered as Smarty strings. 17 ship with the
   extension, for contributions, tickets, events, memberships, group signups, digests and
   the check monitor.
-- **CiviRules:** three actions (send notification, contribution alert, contribution
-  digest) and three conditions (previous contribution status, field transition, event
-  deactivated), fired by CiviRules triggers instead of a bespoke cron. The contribution
-  action and condition need a Contribution trigger.
+- **CiviRules:** two actions (send notification, send contribution digest) and one
+  condition (field transition: a field's value before and after an edit), fired by
+  CiviRules triggers instead of a bespoke cron. On a Contribution trigger the
+  notification also carries the contribution, its campaign's progress and the status
+  change.
 - **Delivery:** to one recipient, to every contact subscribed to a notification kind,
   to the members of a group, or to a list of addresses. Alerts can be aggregated into one
   message per time window.
@@ -89,7 +90,7 @@ A Telegram message for every completed contribution:
 
 1. Administer → CiviRules → New rule, trigger **Contribution is added**.
 2. Condition **Contribution Status is (not) one of**: Completed.
-3. Action **Herald: Send contribution alert**, template "Herald: New completed
+3. Action **Herald: Send notification (generic)**, template "Herald: New completed
    contribution", channel Telegram. Leave the chat ID empty to use the default.
 
 [docs/recipes.md](docs/recipes.md) builds on this: bank-transfer matching, ticket sales

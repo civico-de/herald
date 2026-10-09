@@ -20,32 +20,25 @@ and received later.
 
 | Rule | Trigger | Conditions | Action and template |
 |---|---|---|---|
-| Paid immediately | Contribution is added | Contribution Status is (not) one of: Completed | Send contribution alert, `herald_contribution_alert_completed` |
-| Transfer announced | Contribution is added | Contribution Status is (not) one of: Pending; Contribution is (not) of Financial Type(s): Donation | Send contribution alert, `herald_contribution_alert_pending` |
-| Transfer received | Contribution is changed | Herald: Previous Contribution status = Pending; Contribution Status is (not) one of: Completed | Send contribution alert, `herald_contribution_status_changed` |
+| Paid immediately | Contribution is added | Contribution Status is (not) one of: Completed | Send notification, `herald_contribution_alert_completed` |
+| Transfer announced | Contribution is added | Contribution Status is (not) one of: Pending; Contribution is (not) of Financial Type(s): Donation | Send notification, `herald_contribution_alert_pending` |
+| Transfer received | Contribution is changed | Herald: Field transition on `contribution_status_id`, before = Pending; Contribution Status is (not) one of: Completed | Send notification, `herald_contribution_status_changed` |
 | Daily summary | (scheduled job, see [Scheduled digests](#scheduled-digests)) | | `herald_contribution_digest_daily` |
 
 The financial-type condition on "Transfer announced" matters when the site sells tickets:
 a pending event order is also a pending contribution and would otherwise be announced as
 a donation. Tickets get their own rules below.
 
-"Transfer received" relies on herald's **Previous Contribution status** condition, which
-reads the status before the edit from the original data CiviRules records for the edit,
-which also survives delayed execution, and falls back to herald's own pre-edit snapshot.
-Its form offers the statuses by name.
+"Transfer received" relies on herald's **Field transition** condition: entity
+`Contribution`, field `contribution_status_id`, before `=` the id of Pending, after left
+empty. It reads the status before the edit from the original data CiviRules records for
+the edit, which also survives delayed execution, and falls back to herald's own pre-edit
+snapshot.
 
-Campaign progress: set `campaign_id` and `goal` on an alert action and the template gets
-the campaign's running total, count and percentage.
-
-```json
-{
-  "channel": "telegram",
-  "template": "herald_contribution_alert_completed",
-  "campaign_id": 2,
-  "goal": 30000,
-  "campaign_title": "Campaign 2026"
-}
-```
+Campaign progress needs no configuration: a contribution that belongs to a campaign
+brings the campaign's title, running total and count, and with a revenue goal set on the
+campaign also the goal and percentage
+([contribution variables](reference.md#contribution-variables)).
 
 ### Contributions created by a bank import
 
@@ -64,9 +57,9 @@ To show such sources under one readable label in alerts and digests, configure
 |---|---|---|---|
 | Ticket paid online | Contribution is added | Financial Type: the ticket type; Status: Completed | `herald_contribution_alert_ticket` |
 | Ticket ordered by transfer | Contribution is added | Financial Type: the ticket type; Status: Pending | `herald_contribution_alert_ticket_pending` |
-| Ticket transfer received | Contribution is changed | Herald: Previous Contribution status = Pending; Financial Type: the ticket type; Status: Completed | `herald_contribution_alert_ticket_paid` |
+| Ticket transfer received | Contribution is changed | Herald: Field transition on `contribution_status_id`, before = Pending; Financial Type: the ticket type; Status: Completed | `herald_contribution_alert_ticket_paid` |
 
-All three use **Herald: Send contribution alert**. Sales come in bursts after an
+All three use **Herald: Send notification (generic)**. Sales come in bursts after an
 announcement, so aggregate them:
 
 ```json
@@ -89,7 +82,7 @@ event would otherwise go unnoticed. All rules use **Herald: Send notification (g
 | Rule | Trigger | Conditions | Template |
 |---|---|---|---|
 | Event created | Event is added | none | `herald_event_created_alert` |
-| Event deactivated | Event is changed | Herald: Event was deactivated (is_active 1 → 0) | `herald_event_deactivated_alert` |
+| Event deactivated | Event is changed | Herald: Field transition on Event `is_active`, before = 1, after = 0 | `herald_event_deactivated_alert` |
 | Event deleted | Event is deleted | none | `herald_event_deleted_alert` |
 | New registration | Event Participant is added | Participant status is (not) one of: Registered | `herald_event_registration_alert` |
 | Registration cancelled | Event Participant is changed | Compare Old Participant Status to New Participant Status: from Registered or Pending from pay later, to Cancelled | `herald_event_cancellation_alert` |
@@ -98,8 +91,8 @@ A sync usually unpublishes an event by setting `is_active = 0` instead of deleti
 "Event deactivated" is the rule that catches a removed event. Do not build it from a
 plain Field Value Comparison on `is_active = 0`: a partial edit that does not write
 `is_active` reads as empty, empty compares equal to `0`, and every unrelated edit raises
-a false alarm. herald's condition compares the pre-edit value with the stored row and
-fires only on a real 1 → 0 change.
+a false alarm. herald's Field transition compares the pre-edit value with the stored row
+and fires only on a real 1 → 0 change.
 
 Restricting the previous status of the cancellation rule keeps abandoned checkouts
 (incomplete transaction → Cancelled) silent. Limiting "New registration" to Registered

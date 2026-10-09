@@ -122,7 +122,7 @@ bodies are dropped, so a listener may answer unconditionally.
 
 Contribution sources are often technical: a payment processor's reference, a bank
 import's transaction prefix. `herald_source_normalization` maps them to readable labels in
-the digest breakdown and in the `contribution.source` of contribution alerts. It is empty
+the digest breakdown and in the `contribution.source` of contribution notifications. It is empty
 by default, which leaves sources untouched.
 
 ```bash

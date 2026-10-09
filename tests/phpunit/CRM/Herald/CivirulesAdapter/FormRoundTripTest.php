@@ -225,18 +225,6 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     );
   }
 
-  public function testContributionAlertForm(): void {
-    [$submitted, $expected] = $this->sendFields();
-    $this->assertRoundTrip(
-      self::ACTION,
-      CRM_Herald_CivirulesAdapter_Action_ContributionAlert::class,
-      CRM_Herald_CivirulesAdapter_Form_SendContributionAlert::class,
-      $submitted + ['campaign_id' => '5', 'goal' => '1000', 'campaign_title' => 'Spring'],
-      $expected
-      + ['campaign_id' => 5, 'goal' => 1000.0, 'campaign_title' => 'Spring', 'include_status_transition' => FALSE],
-    );
-  }
-
   public function testContributionDigestForm(): void {
     [$submitted, $expected] = $this->sendFields();
     $this->assertRoundTrip(
@@ -288,16 +276,6 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
       CRM_Herald_CivirulesAdapter_Form_FieldTransition::class,
       $values,
       $values,
-    );
-  }
-
-  public function testPreviousContributionStatusForm(): void {
-    $this->assertRoundTrip(
-      self::CONDITION,
-      CRM_Herald_CivirulesAdapter_Condition_PreviousContributionStatus::class,
-      CRM_Herald_CivirulesAdapter_Form_PreviousContributionStatus::class,
-      ['previous_status_id' => '2'],
-      ['previous_status_id' => 2],
     );
   }
 

@@ -15,9 +15,6 @@ final class CRM_Herald_CivirulesAdapter_Registrar {
   private const RENAMED_CLASSES = [
     'CRM_Herald_CivirulesActions_SendNotification' => 'CRM_Herald_CivirulesAdapter_Action_Notification',
     'CRM_Herald_CivirulesActions_SendContributionDigest' => 'CRM_Herald_CivirulesAdapter_Action_ContributionDigest',
-    'CRM_Herald_CivirulesActions_SendContributionAlert' => 'CRM_Herald_CivirulesAdapter_Action_ContributionAlert',
-    'CRM_Herald_CivirulesConditions_PreviousContributionStatus' => 'CRM_Herald_CivirulesAdapter_Condition_PreviousContributionStatus',
-    'CRM_Herald_CivirulesConditions_EventBecameInactive' => 'CRM_Herald_CivirulesAdapter_Condition_EventBecameInactive',
   ];
 
   /**

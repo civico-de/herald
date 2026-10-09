@@ -25,11 +25,8 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
    * Registered handler class → the test that exercises its contract.
    */
   private const SCENARIOS = [
-    CRM_Herald_CivirulesAdapter_Condition_EventBecameInactive::class => 'testEventBecameInactiveContract',
     CRM_Herald_CivirulesAdapter_Condition_FieldTransition::class => 'testFieldTransitionContract',
-    CRM_Herald_CivirulesAdapter_Condition_PreviousContributionStatus::class => 'testPreviousContributionStatusContract',
     CRM_Herald_CivirulesAdapter_Action_Notification::class => 'testNotificationContract',
-    CRM_Herald_CivirulesAdapter_Action_ContributionAlert::class => 'testContributionAlertContract',
     CRM_Herald_CivirulesAdapter_Action_ContributionDigest::class => 'testContributionDigestContract',
   ];
 
@@ -59,13 +56,6 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
     foreach (self::SCENARIOS as $class => $test) {
       self::assertTrue(method_exists($this, $test), "{$class}: scenario {$test} does not exist");
     }
-  }
-
-  public function testEventBecameInactiveContract(): void {
-    $condition = $this->condition(CRM_Herald_CivirulesAdapter_Condition_EventBecameInactive::class, []);
-    self::assertFalse($condition->getExtraDataInputUrl(7));
-    self::assertNotSame('', $condition->userFriendlyConditionParams());
-    $this->assertDeactivationScenarios($condition);
   }
 
   public function testFieldTransitionContract(): void {
@@ -101,14 +91,17 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
     )));
   }
 
-  public function testPreviousContributionStatusContract(): void {
+  public function testFieldTransitionOnContributionStatus(): void {
     $pending = $this->statusId('Pending');
     $condition = $this->condition(
-      CRM_Herald_CivirulesAdapter_Condition_PreviousContributionStatus::class,
-      ['previous_status_id' => $pending],
+      CRM_Herald_CivirulesAdapter_Condition_FieldTransition::class,
+      [
+        'entity' => 'Contribution',
+        'field' => 'contribution_status_id',
+        'from_operator' => '=',
+        'from_value' => (string) $pending,
+      ],
     );
-    self::assertStringContainsString('id=7', (string) $condition->getExtraDataInputUrl(7));
-    self::assertSame("previous status = #{$pending}", $condition->userFriendlyConditionParams());
 
     // Full payload: Pending → Completed.
     $id = $this->createContribution('Pending');
@@ -136,15 +129,6 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
       $completed,
       ['id' => $completed, 'source' => 'Partial edit'],
       ['id' => $completed],
-    )));
-
-    // No previous status configured: never matches, even when nothing is known.
-    $unconfigured = $this->condition(CRM_Herald_CivirulesAdapter_Condition_PreviousContributionStatus::class, []);
-    self::assertFalse($unconfigured->isConditionValid($this->editTrigger(
-      'Contribution',
-      $completed,
-      ['id' => $completed],
-      [],
     )));
   }
 
@@ -180,14 +164,12 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
     self::assertSame(2, $this->bufferedRows());
   }
 
-  public function testContributionAlertContract(): void {
-    $action = $this->action(CRM_Herald_CivirulesAdapter_Action_ContributionAlert::class, [
+  public function testNotificationWithContributionPayload(): void {
+    $action = $this->action(CRM_Herald_CivirulesAdapter_Action_Notification::class, [
       'channel' => 'telegram',
       'template' => 'herald_contribution_alert_completed',
       'aggregate_minutes' => 15,
     ]);
-    self::assertStringContainsString('id=7', (string) $action->getExtraDataInputUrl(7));
-    self::assertIsString($action->userFriendlyConditionParams());
 
     $id = $this->createContribution('Pending');
     $before = $this->contribution($id);

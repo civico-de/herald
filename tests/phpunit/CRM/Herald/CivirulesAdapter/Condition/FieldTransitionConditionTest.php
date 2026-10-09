@@ -133,8 +133,7 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransitionConditionTest extends
   }
 
   public function testOriginalDataBeatsSnapshot(): void {
-    // Same precedence as the PreviousContributionStatus condition: original
-    // data is per-edit and wins; the request-wide snapshot is the fallback.
+    // Original data is per-edit and wins; the request-wide snapshot is the fallback.
     $id = $this->createContribution(1);
     PreEditSnapshot::remember('Contribution', $id, 'contribution_status_id', 1);
     $this->assertTrue(

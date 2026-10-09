@@ -29,9 +29,9 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
 
   // phpcs:enable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 
-  private const OLD_CLASS = 'CRM_Herald_CivirulesActions_SendContributionAlert';
+  private const OLD_CLASS = 'CRM_Herald_CivirulesActions_SendNotification';
 
-  private const NEW_CLASS = 'CRM_Herald_CivirulesAdapter_Action_ContributionAlert';
+  private const NEW_CLASS = 'CRM_Herald_CivirulesAdapter_Action_Notification';
 
   public function setUpHeadless() {
     return \Civi\Test::headless()
@@ -41,7 +41,7 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
   }
 
   public function testPreRenameRuleSurvivesTheUpgrade(): void {
-    $actionId = $this->actionIdByName('herald_contribution_alert');
+    $actionId = $this->actionIdByName('herald_send');
     // Rewind the DB to its pre-upgrade state.
     \CRM_Core_DAO::executeQuery(
       'UPDATE civirule_action SET class_name = %1 WHERE id = %2',
@@ -51,7 +51,6 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
       'channel' => 'telegram',
       'template' => 'herald_contribution_alert_completed',
       'aggregate_minutes' => 30,
-      'include_status_transition' => FALSE,
     ]);
 
     $migrated = CRM_Herald_CivirulesAdapter_Registrar::migrateRenamedClasses();
@@ -74,7 +73,7 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
   }
 
   public function testEnableAlsoRewritesTheClassName(): void {
-    $actionId = $this->actionIdByName('herald_contribution_alert');
+    $actionId = $this->actionIdByName('herald_send');
     \CRM_Core_DAO::executeQuery(
       'UPDATE civirule_action SET class_name = %1 WHERE id = %2',
       [1 => [self::OLD_CLASS, 'String'], 2 => [$actionId, 'Integer']],
@@ -124,6 +123,144 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
       ),
       'upgrade reconcile did not restore the managed option value',
     );
+  }
+
+  public function testRetiredContributionAlertMovesOntoTheNotification(): void {
+    $alertId = $this->insertHandler(
+      'civirule_action',
+      'herald_contribution_alert',
+      'CRM_Herald_CivirulesAdapter_Action_ContributionAlert',
+    );
+    $ruleActionId = $this->createRuleAction($alertId, [
+      'channel' => 'telegram',
+      'template' => 'herald_contribution_alert_completed',
+      'campaign_id' => 2,
+      'goal' => 30_000,
+      'campaign_title' => 'Campaign 2026',
+      'chat_id' => '-1',
+      'aggregate_minutes' => 5,
+    ]);
+
+    self::assertSame(1, CRM_Herald_CivirulesAdapter_RetiredHandlers::migrate());
+
+    $sendId = $this->actionIdByName('herald_send');
+    self::assertSame($sendId, $this->handlerOf('civirule_rule_action', 'action', $ruleActionId));
+    self::assertSame(
+      [
+        'channel' => 'telegram',
+        'template' => 'herald_contribution_alert_completed',
+        'chat_id' => '-1',
+        'aggregate_minutes' => 5,
+      ],
+      $this->paramsOf('civirule_rule_action', 'action', $ruleActionId),
+    );
+    self::assertFalse($this->handlerExists('civirule_action', $alertId));
+    self::assertSame(0, CRM_Herald_CivirulesAdapter_RetiredHandlers::migrate(), 'a second run must be a no-op');
+
+    // The moved action runs the way the rule engine resolves it.
+    $action = CRM_Civirules_BAO_CiviRulesAction::getActionObjectById($sendId);
+    self::assertInstanceOf(CRM_Civirules_Action::class, $action);
+    $action->setRuleActionData($this->ruleActionRow($ruleActionId));
+    $action->processAction($this->triggerData());
+    self::assertSame(1, (int) \CRM_Core_DAO::singleValueQuery('SELECT COUNT(*) FROM civicrm_herald_buffer'));
+  }
+
+  public function testRetiredConditionsMoveOntoTheFieldTransition(): void {
+    $previousId = $this->insertHandler(
+      'civirule_condition',
+      'herald_previous_contribution_status',
+      'CRM_Herald_CivirulesAdapter_Condition_PreviousContributionStatus',
+    );
+    $inactiveId = $this->insertHandler(
+      'civirule_condition',
+      'herald_event_became_inactive',
+      'CRM_Herald_CivirulesConditions_EventBecameInactive',
+    );
+    $ruleId = $this->ruleIdOf($this->createRuleAction($this->actionIdByName('herald_send'), []));
+    $rows = [
+      $this->createRuleCondition($ruleId, $previousId, ['previous_status_id' => 2]),
+      $this->createRuleCondition($ruleId, $previousId, []),
+      $this->createRuleCondition($ruleId, $inactiveId, []),
+    ];
+
+    self::assertSame(3, CRM_Herald_CivirulesAdapter_RetiredHandlers::migrate());
+
+    $fieldTransitionId = (int) \CRM_Core_DAO::singleValueQuery(
+      "SELECT id FROM civirule_condition WHERE name = 'herald_field_transition'",
+    );
+    $status = ['entity' => 'Contribution', 'field' => 'contribution_status_id'];
+    $anyAfter = ['to_operator' => '', 'to_value' => ''];
+    $expected = [
+      $status + ['from_operator' => '=', 'from_value' => '2'] + $anyAfter,
+      // Without a configured status the old condition never matched; neither does this.
+      $status + ['from_operator' => '', 'from_value' => ''] + $anyAfter,
+      [
+        'entity' => 'Event',
+        'field' => 'is_active',
+        'from_operator' => '=',
+        'from_value' => '1',
+        'to_operator' => '=',
+        'to_value' => '0',
+      ],
+    ];
+    foreach ($rows as $i => $row) {
+      self::assertSame($fieldTransitionId, $this->handlerOf('civirule_rule_condition', 'condition', $row));
+      self::assertSame($expected[$i], $this->paramsOf('civirule_rule_condition', 'condition', $row));
+    }
+    self::assertFalse($this->handlerExists('civirule_condition', $previousId));
+    self::assertFalse($this->handlerExists('civirule_condition', $inactiveId));
+  }
+
+  private function handlerExists(string $table, int $id): bool {
+    return (bool) \CRM_Core_DAO::singleValueQuery(
+      "SELECT COUNT(*) FROM `{$table}` WHERE id = %1",
+      [1 => [$id, 'Integer']],
+    );
+  }
+
+  private function insertHandler(string $table, string $name, string $class): int {
+    \CRM_Core_DAO::executeQuery(
+      "INSERT INTO `{$table}` (name, label, class_name, is_active) VALUES (%1, %1, %2, 1)",
+      [1 => [$name, 'String'], 2 => [$class, 'String']],
+    );
+    return (int) \CRM_Core_DAO::singleValueQuery('SELECT LAST_INSERT_ID()');
+  }
+
+  /**
+   * @param array<string, mixed> $params
+   */
+  private function createRuleCondition(int $ruleId, int $conditionId, array $params): int {
+    \CRM_Core_DAO::executeQuery(
+      'INSERT INTO civirule_rule_condition (rule_id, condition_id, condition_params, is_active)
+       VALUES (%1, %2, %3, 1)',
+      [1 => [$ruleId, 'Integer'], 2 => [$conditionId, 'Integer'], 3 => [serialize($params), 'String']],
+    );
+    return (int) \CRM_Core_DAO::singleValueQuery('SELECT LAST_INSERT_ID()');
+  }
+
+  private function ruleIdOf(int $ruleActionId): int {
+    return (int) \CRM_Core_DAO::singleValueQuery(
+      'SELECT rule_id FROM civirule_rule_action WHERE id = %1',
+      [1 => [$ruleActionId, 'Integer']],
+    );
+  }
+
+  private function handlerOf(string $table, string $kind, int $id): int {
+    return (int) \CRM_Core_DAO::singleValueQuery(
+      "SELECT {$kind}_id FROM `{$table}` WHERE id = %1",
+      [1 => [$id, 'Integer']],
+    );
+  }
+
+  /**
+   * @return array<array-key, mixed>
+   */
+  private function paramsOf(string $table, string $kind, int $id): array {
+    $raw = (string) \CRM_Core_DAO::singleValueQuery(
+      "SELECT {$kind}_params FROM `{$table}` WHERE id = %1",
+      [1 => [$id, 'Integer']],
+    );
+    return (array) unserialize($raw, ['allowed_classes' => FALSE]);
   }
 
   private function actionIdByName(string $name): int {

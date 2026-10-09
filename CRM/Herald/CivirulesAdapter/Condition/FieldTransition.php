@@ -83,7 +83,7 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransition extends CRM_Civirule
 
   /**
    * Decode condition_params ourselves — CRM_Civirules_Condition's base class
-   * never fills $this->conditionParams (see PreviousContributionStatus).
+   * never fills $this->conditionParams.
    *
    * @return array<array-key, mixed>
    */

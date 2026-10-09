@@ -23,7 +23,6 @@ class CRM_Herald_CivirulesAdapter_ScopeEntitySupportTest extends TestCase {
 
   public function testOnlyTheNotificationFormOffersScopeEntity(): void {
     $this->assertTrue($this->supportsScope(CRM_Herald_CivirulesAdapter_Form_SendNotification::class));
-    $this->assertFalse($this->supportsScope(CRM_Herald_CivirulesAdapter_Form_SendContributionAlert::class));
     $this->assertFalse($this->supportsScope(CRM_Herald_CivirulesAdapter_Form_SendContributionDigest::class));
   }
 

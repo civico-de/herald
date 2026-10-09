@@ -21,10 +21,12 @@ class CRM_Herald_CivirulesAdapter_Action_Notification extends CRM_Herald_Civirul
       ->setActionParams($this->getActionParameters())
       ->setTriggerContext([
         'contact_id' => (int) $triggerData->getContactId(),
+        'Contribution' => $triggerData->getEntityData('Contribution'),
         'GroupContact' => $triggerData->getEntityData('GroupContact'),
         'Membership' => $triggerData->getEntityData('Membership'),
         'Participant' => $triggerData->getEntityData('Participant'),
         'Event' => $triggerData->getEntityData('Event'),
+        'original' => CRM_Herald_CivirulesAdapter_OriginalData::all($triggerData),
       ])
       ->execute();
   }

@@ -85,9 +85,9 @@ what it concerns through `scope_entity` on the **Send notification** action: `Ev
 `Membership` or `Participant`, resolved from the trigger; `Event` also resolves through a
 participant's event. Records without a scope receive everything they subscribed to. A
 scoped record applies to all of its subscriptions, so it no longer receives unscoped
-notifications such as contribution alerts or digests. The contribution actions have no
-scope. The self-service profile does not include the scope fields; admins set them on
-the contact.
+notifications such as contribution alerts or digests. The digest action has no scope.
+The self-service profile does not include the scope fields; admins set them on the
+contact.
 
 ## Topics
 
@@ -130,7 +130,7 @@ group goes out as one message.
   separately from actions. With `scope_entity` set, alerts about different events,
   memberships or participants form separate groups.
 - A single waiting alert goes out unchanged; aggregation only delayed it.
-- Several alerts get a header with the count and, for contribution alerts, the sum, such
+- Several alerts get a header with the count and, when the alerts concern contributions, the sum, such
   as "📬 7 messages, total 385.00 € (collected over 5 min)", followed by the individual
   bodies.
 - At most `herald_buffer_max_items` bodies are printed (default 25, `0` prints all); the

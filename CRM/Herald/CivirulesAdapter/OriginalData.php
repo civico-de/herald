@@ -37,26 +37,17 @@ final class CRM_Herald_CivirulesAdapter_OriginalData {
   }
 
   /**
-   * Pre-edit value of an integer field, or $default when unknown.
+   * All pre-edit values the trigger carries, keyed by its entity name; [] when none.
+   *
+   * @return array<string, array<array-key, mixed>>
    */
-  public static function intField(
-    CRM_Civirules_TriggerData_TriggerData $triggerData,
-    string $entity,
-    string $field,
-    int $default = 0,
-  ): int {
-    if (
-      !$triggerData instanceof CRM_Civirules_TriggerData_Interface_OriginalData
-      || strtolower((string) $triggerData->getOriginalEntity()) !== strtolower($entity)
-    ) {
-      return $default;
+  public static function all(CRM_Civirules_TriggerData_TriggerData $triggerData): array {
+    if (!$triggerData instanceof CRM_Civirules_TriggerData_Interface_OriginalData) {
+      return [];
     }
+    $entity = (string) $triggerData->getOriginalEntity();
     $original = $triggerData->getOriginalData();
-    $value = $original[$field] ?? NULL;
-    if ($value === NULL || $value === '' || !is_scalar($value)) {
-      return $default;
-    }
-    return (int) $value;
+    return $entity !== '' && is_array($original) ? [$entity => $original] : [];
   }
 
 }
