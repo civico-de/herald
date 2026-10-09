@@ -44,7 +44,8 @@ final class Composer {
    */
   public function compose(array $params): array {
     $blocks = BlockList::parse($params);
-    $parts = [trim(Cast::toString($params['header'] ?? ''))];
+    // The header is HTML; a job saved through the form stores it input-encoded.
+    $parts = [trim(TemplateRenderer::decodeInput(Cast::toString($params['header'] ?? '')))];
     $subject = NULL;
     $count = 0;
     foreach ($blocks as $block) {

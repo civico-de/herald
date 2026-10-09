@@ -62,7 +62,7 @@ class TemplateRenderer {
     }
 
     $subject = trim(self::str($template['msg_subject'] ?? ''));
-    $textVars = self::mapStrings($vars, self::decode(...));
+    $textVars = self::mapStrings($vars, self::decodeInput(...));
     return [
       'subject' => $subject !== '' ? $this->renderInline($subject, $textVars) : NULL,
       'body' => $isHtml
@@ -100,13 +100,13 @@ class TemplateRenderer {
    * @return array<K, mixed>
    */
   public static function escapeHtml(array $vars): array {
-    return self::mapStrings($vars, static fn (string $v): string => PlainText::toHtml(self::decode($v)));
+    return self::mapStrings($vars, static fn (string $v): string => PlainText::toHtml(self::decodeInput($v)));
   }
 
   /**
    * APIv3 and forms store `<`/`>` as `&lt;`/`&gt;` (HTMLInputCoder).
    */
-  private static function decode(string $value): string {
+  public static function decodeInput(string $value): string {
     return Cast::toString(\CRM_Utils_API_HTMLInputCoder::singleton()->decodeValue($value));
   }
 

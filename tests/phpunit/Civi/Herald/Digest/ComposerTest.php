@@ -85,6 +85,14 @@ class ComposerTest extends TestCase implements HeadlessInterface, HookInterface 
     self::assertMatchesRegularExpression('/ — 3 .+120/u', (string) $digest['subject']);
   }
 
+  public function testAnInputEncodedHeaderIsHtmlAgain(): void {
+    $digest = $this->composer()->compose([
+      'header' => '&lt;b&gt;LiMA&lt;/b&gt;',
+      'blocks' => [['type' => 'section', 'key' => 'test.seats']],
+    ]);
+    self::assertStringStartsWith("<b>LiMA</b>\n\n", $digest['body']);
+  }
+
   public function testSearchRowsAreEscaped(): void {
     $composer = new Composer(
       new ContributionStatsService(),
