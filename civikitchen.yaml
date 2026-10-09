@@ -2,9 +2,8 @@ $schema: https://raw.githubusercontent.com/jfilter/civikitchen/main/packages/civ
 version: 1
 policy:
   # Expected values for ckconform (the checker lives in the public civikitchen
-  # image; these values are ours and stay in this private repo).
-  license: Proprietary
-  npm_license: UNLICENSED
+  # image; these values are ours).
+  license: AGPL-3.0-or-later
   copyright: 'civico GmbH'
 
   # heraldChecks is herald's OWN invented hook: other extensions implement it to

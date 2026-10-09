@@ -133,4 +133,4 @@ a bootstrap that stubs the CiviRules base classes.
 
 ## License
 
-Proprietary. © civico GmbH. All rights reserved.
+AGPL-3.0-or-later. © civico GmbH. See [LICENSE.txt](LICENSE.txt).

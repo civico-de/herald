@@ -2,11 +2,11 @@
     "name": "civico-de/herald",
     "description": "Generic notification + digest layer for CiviCRM. Channel-pluggable (Telegram, Webhook, ntfy.sh, Pushover, Email, CiviCRM activities), template-driven, CiviRules-integrated.",
     "type": "civicrm-ext",
-    "license": "proprietary",
+    "license": "AGPL-3.0-or-later",
     "authors": [
         {
-            "name": "Johannes Filter",
-            "email": "hi@jfilter.de"
+            "name": "civico GmbH",
+            "email": "johannes@civico.de"
         }
     ],
     "require": {

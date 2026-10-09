@@ -3,11 +3,11 @@
   <file>herald</file>
   <name>Herald</name>
   <description>Generic notification + digest layer for CiviCRM. Channel-pluggable (Telegram, Webhook, ntfy.sh, Pushover, Email, CiviCRM activities), template-driven, CiviRules-integrated.</description>
-  <license>Proprietary</license>
+  <license>AGPL-3.0-or-later</license>
   <authors>
     <author>
-      <name>Johannes Filter</name>
-      <email>hi@jfilter.de</email>
+      <name>civico GmbH</name>
+      <email>johannes@civico.de</email>
       <role>Maintainer</role>
     </author>
   </authors>
@@ -15,6 +15,7 @@
     <url desc="Main Extension Page">https://github.com/civico-de/herald</url>
     <url desc="Documentation">https://github.com/civico-de/herald</url>
     <url desc="Support">https://github.com/civico-de/herald/issues</url>
+    <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
   <releaseDate>2026-09-02</releaseDate>
   <version>0.8.1</version>
