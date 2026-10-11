@@ -77,14 +77,16 @@ final class Composer {
     $vars = match ($type) {
       'contribution' => DigestVars::build($block, $this->stats),
       'search' => ($this->searchRunner)(Cast::toString($block['search'])),
+      default => throw new \CRM_Core_Exception("herald: unknown digest block type \"{$type}\""),
     };
     $vars['block_title'] = Cast::toString($block['title'] ?? '');
     $template = Cast::toString($block['template'] ?? '');
+    $totals = $vars['totals'] ?? NULL;
     $parts = $this->renderer->renderParts($template !== '' ? $template : self::DEFAULT_TEMPLATES[$type], $vars);
     return [
       'body' => trim($parts['body']),
       'subject' => $parts['subject'],
-      'count' => Cast::toInt($vars['totals']['count'] ?? $vars['count'] ?? 0),
+      'count' => Cast::toInt((is_array($totals) ? $totals['count'] ?? NULL : NULL) ?? $vars['count'] ?? 0),
     ];
   }
 

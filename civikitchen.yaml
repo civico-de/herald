@@ -6,11 +6,12 @@ policy:
   license: AGPL-3.0-or-later
   copyright: 'civico GmbH'
 
-  # heraldChecks is herald's OWN invented hook: other extensions implement it to
-  # contribute health checks to the transition monitor. It is not a core hook, so
-  # ckconform cannot know it — declared here so the dispatch is not read as a typo.
+  # herald's OWN invented hooks: other extensions implement them to contribute
+  # health checks to the monitor and sections to digests. They are not core hooks,
+  # so ckconform cannot know them — declared here so the dispatch is not read as a typo.
   known_hooks:
     - heraldChecks
+    - heraldDigestSections
 
   # Floor for ckcoverage: raise as coverage grows, never lower to make a build green.
   coverage:

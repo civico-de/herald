@@ -31,6 +31,7 @@ class ExtraSections {
    * @param array<string, mixed> $context
    */
   public static function answer(string $key, array $context): string {
+    /** @var array<array-key, mixed> $sections */
     $sections = [];
     \Civi::dispatcher()->dispatch(self::HOOK, GenericHookEvent::create([
       'keys' => [$key],

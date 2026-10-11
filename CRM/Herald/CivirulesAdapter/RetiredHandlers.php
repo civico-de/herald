@@ -101,19 +101,19 @@ final class CRM_Herald_CivirulesAdapter_RetiredHandlers {
       if ($targetId <= 0) {
         throw new \CRM_Core_Exception("herald: {$targetClass} is not registered as a CiviRules {$kind}");
       }
-      $rows = civicrm_api4($entities['rule'], 'get', [
+      $paramsByRow = civicrm_api4($entities['rule'], 'get', [
         'select' => ['id', "{$kind}_params"],
         'where' => [["{$kind}_id", '=', $handlerId]],
         'checkPermissions' => FALSE,
-      ]);
-      foreach ($rows as $row) {
-        $params = $row["{$kind}_params"] ?? [];
+      ])->indexBy('id')->column("{$kind}_params");
+      foreach ($paramsByRow as $rowId => $params) {
+        $rowId = (int) $rowId;
         civicrm_api4($entities['rule'], 'update', [
           'values' => [
             "{$kind}_id" => $targetId,
-            "{$kind}_params" => self::transform($transform, is_array($params) ? $params : [], (int) $row['id']),
+            "{$kind}_params" => self::transform($transform, is_array($params) ? $params : [], $rowId),
           ],
-          'where' => [['id', '=', $row['id']]],
+          'where' => [['id', '=', $rowId]],
           'checkPermissions' => FALSE,
         ]);
         $moved++;
@@ -127,12 +127,12 @@ final class CRM_Herald_CivirulesAdapter_RetiredHandlers {
   }
 
   private static function handlerId(string $entity, string $class): int {
-    $row = civicrm_api4($entity, 'get', [
+    $ids = civicrm_api4($entity, 'get', [
       'select' => ['id'],
       'where' => [['class_name', '=', $class]],
       'checkPermissions' => FALSE,
-    ])->first();
-    return (int) ($row['id'] ?? 0);
+    ])->column('id');
+    return \Civi\Herald\Util\Cast::toInt($ids[0] ?? 0);
   }
 
   /**

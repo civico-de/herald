@@ -63,7 +63,7 @@ final class SearchBlock {
       if ($expression === '*' || str_ends_with($expression, '.*')) {
         return [];
       }
-      $columns[] = \Civi\Api4\Query\SqlExpression::convert($expression, TRUE)->getAlias();
+      $columns[] = \Civi\Api4\Query\SqlExpression::convert($expression, parseAlias: TRUE)->getAlias();
     }
     return $columns;
   }

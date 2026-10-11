@@ -19,25 +19,29 @@ final class CRM_Herald_Upgrader_DigestJobs {
       ->addSelect('id', 'parameters')
       ->addWhere('api_entity', '=', 'Job')
       ->addWhere('api_action', '=', 'herald_contribution_digest')
-      ->execute();
+      ->execute()
+      ->indexBy('id')
+      ->column('parameters');
     $migrated = 0;
-    foreach ($jobs as $job) {
+    foreach ($jobs as $jobId => $parameters) {
+      $jobId = (int) $jobId;
       try {
-        $params = CRM_Core_BAO_Job::parseParameters(\Civi\Herald\Util\Cast::toString($job['parameters']));
+        $parsed = CRM_Core_BAO_Job::parseParameters(\Civi\Herald\Util\Cast::toString($parameters));
+        $params = \Civi\Herald\Util\Cast::namedOnly($parsed);
       }
       catch (CRM_Core_Exception $e) {
         // Such a job could not run before either; it keeps failing visibly in the job log.
         \Civi::log()->warning('herald: digest job left unmigrated, its parameters do not parse', [
-          'job_id' => $job['id'],
+          'job_id' => $jobId,
           'error' => $e->getMessage(),
         ]);
         continue;
       }
       \Civi\Api4\Job::update(checkPermissions: FALSE)
-        ->addWhere('id', '=', $job['id'])
+        ->addWhere('id', '=', $jobId)
         ->addValue('api_entity', 'Herald')
         ->addValue('api_action', 'notifyDigest')
-        ->addValue('parameters', self::parameters($params, (int) $job['id']))
+        ->addValue('parameters', self::parameters($params, $jobId))
         ->execute();
       $migrated++;
     }
@@ -84,6 +88,7 @@ final class CRM_Herald_Upgrader_DigestJobs {
     if (is_array($blocks) && $blocks !== []) {
       $blocks = array_map(static function ($block) use (&$dropped) {
         if (is_array($block)) {
+          $block = \Civi\Herald\Util\Cast::namedOnly($block);
           $dropped += self::withoutRetired($block);
         }
         return $block;

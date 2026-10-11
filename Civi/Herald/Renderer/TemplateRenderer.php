@@ -78,17 +78,7 @@ class TemplateRenderer {
    * @param array<string, mixed> $vars
    */
   public function renderInline(string $body, array $vars): string {
-    $smarty = \CRM_Core_Smarty::singleton();
-    $smarty->pushScope($vars);
-    try {
-      // CRM_Core_Smarty forwards fetch() to the wrapped Smarty\Smarty via
-      // __call(), which phpstan cannot see through.
-      // @phpstan-ignore method.notFound, return.type
-      return $smarty->fetch('string:' . $body);
-    }
-    finally {
-      $smarty->popScope();
-    }
+    return Cast::toString(\CRM_Core_Smarty::singleton()->fetchWith('string:' . $body, $vars));
   }
 
   /**
