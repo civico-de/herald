@@ -38,13 +38,14 @@ function ck_headless(): \Civi\Test\CiviEnvBuilder {
 }
 
 /**
- * CoreSchemaStep::getSig() drops the core foreign keys (civicrm-core#36980);
- * re-running its cached SQL once per process puts them back.
+ * Before 6.20, CoreSchemaStep::getSig() drops the core foreign keys
+ * (civicrm-core#36980); re-running its cached SQL once per process puts them
+ * back. On 6.20 and later the keys stay, and re-adding them fails.
  * Drop when the supported floor carries that fix.
  */
 function ck_restore_core_foreign_keys(): void {
   static $restored = FALSE;
-  if ($restored) {
+  if ($restored || version_compare(\CRM_Utils_System::version(), '6.20.alpha1', '>=')) {
     return;
   }
   $restored = TRUE;

@@ -53,25 +53,37 @@ $ckRegister = static function (string $ckDir): void {
 // but live off its classloader path, so Civi\Api4\Membership and friends are
 // unknown classes without this. Registered by layout, not by a name list: a
 // package whose classes sit somewhere else (flexmailer's src/) is not covered
-// and stays a scanDirectories entry.
-foreach (glob($coreDir . '/ext/*', GLOB_ONLYDIR) ?: [] as $ckCoreExt) {
-  if (!is_dir($ckCoreExt . '/Civi') && !is_dir($ckCoreExt . '/CRM')) {
-    continue;
+// and stays a scanDirectories entry. Found by info.xml one or two levels deep:
+// afform keeps its extensions a level down (ext/afform/core).
+libxml_use_internal_errors(use_errors: TRUE);
+$ckCoreKeys = [];
+foreach (array_merge(
+  glob($coreDir . '/ext/*/info.xml') ?: [],
+  glob($coreDir . '/ext/*/*/info.xml') ?: [],
+) as $ckCoreInfo) {
+  $ckCoreExt = dirname($ckCoreInfo);
+  $ckCoreXml = simplexml_load_file($ckCoreInfo);
+  if ($ckCoreXml !== FALSE) {
+    $ckCoreKeys[] = (string) $ckCoreXml['key'];
   }
-  $ckRegister($ckCoreExt);
+  if (is_dir($ckCoreExt . '/Civi') || is_dir($ckCoreExt . '/CRM')) {
+    $ckRegister($ckCoreExt);
+  }
 }
 
-// Required extensions live off core's classloader path. Each one mounted or
+// Other required extensions live off core's classloader path. Each one mounted or
 // downloaded under the ext dir (named by its key, as the images do) gets the
 // civix layout autoloaded: CRM_* by underscore, Civi\* PSR-4, api_* by
 // underscore, plus its own vendor/. A required key with no directory is only
 // noted — analysis of code that never touches it is still complete, and code
 // that does gets phpstan's honest "unknown class".
 $ckExtDir = getenv('CK_EXT_DIR') ?: '/var/www/html/ext';
-libxml_use_internal_errors(use_errors: TRUE);
 $ckInfo = simplexml_load_file(__DIR__ . '/info.xml');
 foreach ($ckInfo === FALSE ? [] : $ckInfo->requires->ext ?? [] as $ckRequired) {
   $ckKey = trim((string) $ckRequired);
+  if (in_array($ckKey, $ckCoreKeys, TRUE)) {
+    continue;
+  }
   $ckDir = $ckExtDir . '/' . $ckKey;
   if ($ckKey === '' || !is_dir($ckDir)) {
     fwrite(
