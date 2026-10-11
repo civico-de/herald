@@ -8,7 +8,6 @@ use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
-// phpcs:disable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 // ckfmt wraps this declaration with 2-space continuations; the sniff wants 4.
 /**
  * End-to-end adapter test: CiviRules trigger data → Herald.checkFieldTransition.
@@ -23,8 +22,6 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransitionConditionTest extends
   HeadlessInterface,
   HookInterface,
   TransactionalInterface {
-
-  // phpcs:enable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 
   public function setUpHeadless() {
     return \Civi\Test::headless()

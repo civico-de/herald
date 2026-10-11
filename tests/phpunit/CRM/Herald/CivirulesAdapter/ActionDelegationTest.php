@@ -7,7 +7,6 @@ use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
-// phpcs:disable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 /**
  * The action adapters do one thing: unpack the trigger and hand over to a
  * Herald.* APIv4 action. Asserted by running each adapter with an aggregation
@@ -19,8 +18,6 @@ class CRM_Herald_CivirulesAdapter_ActionDelegationTest extends TestCase implemen
   HeadlessInterface,
   HookInterface,
   TransactionalInterface {
-
-  // phpcs:enable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 
   public function setUpHeadless() {
     return \Civi\Test::headless()

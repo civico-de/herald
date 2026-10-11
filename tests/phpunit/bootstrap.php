@@ -2,9 +2,7 @@
 
 ini_set('memory_limit', '2G');
 
-// phpcs:disable
 eval(cv('php:boot --level=classloader', 'phpcode'));
-// phpcs:enable
 
 // Half of the deprecation gate. phpunit.xml.dist has
 // convertDeprecationsToExceptions, but PHPUnit's error handler ignores errors

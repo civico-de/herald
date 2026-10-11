@@ -11,7 +11,6 @@ use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
-// phpcs:disable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 // ckfmt wraps this declaration with 2-space continuations; the sniff wants 4.
 /**
  * @group headless
@@ -20,8 +19,6 @@ class ContributionStatsServiceTest extends TestCase implements
   HeadlessInterface,
   HookInterface,
   TransactionalInterface {
-
-  // phpcs:enable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 
   private int $contactId;
   private ContributionStatsService $service;

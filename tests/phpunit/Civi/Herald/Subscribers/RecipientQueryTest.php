@@ -9,7 +9,6 @@ use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
-// phpcs:disable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 // ckfmt wraps this declaration with 2-space continuations; the sniff wants 4.
 /**
  * Headless tests for the recipient-resolution queries: group fan-out,
@@ -18,8 +17,6 @@ use PHPUnit\Framework\TestCase;
  * @group headless
  */
 class RecipientQueryTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
-
-  // phpcs:enable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 
   public function setUpHeadless() {
     return \Civi\Test::headless()

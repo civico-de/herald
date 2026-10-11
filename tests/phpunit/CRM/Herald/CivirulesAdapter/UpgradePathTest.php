@@ -7,7 +7,6 @@ use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
-// phpcs:disable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 // ckfmt wraps this declaration with 2-space continuations; the sniff wants 4.
 /**
  * A rule configured BEFORE the handlers moved into CivirulesAdapter must keep
@@ -26,8 +25,6 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
   HeadlessInterface,
   HookInterface,
   TransactionalInterface {
-
-  // phpcs:enable Drupal.Classes.ClassDeclaration.InterfaceWrongIndent
 
   private const OLD_CLASS = 'CRM_Herald_CivirulesActions_SendNotification';
 
