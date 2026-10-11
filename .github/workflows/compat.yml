@@ -1,0 +1,24 @@
+# Slow checks, off the push path: each costs a full stack boot. The upgrade
+# and schema-parity jobs exercise the path every existing site takes from the
+# last release tag, which a fresh install never does.
+name: Compatibility
+
+on:
+  schedule:
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compat:
+    uses: jfilter/civikitchen/.github/workflows/extension-ci.yml@v1
+    with:
+      key: herald
+      # The 6.18 floor from info.xml, next to the default image.
+      matrix_images: ghcr.io/jfilter/civikitchen:standalone-6.18
+      lifecycle: true
+      upgrade_from_last_release: true
+      schema_parity: true
+      check_template: false
