@@ -17,8 +17,8 @@
     <url desc="Support">https://github.com/civico-de/herald/issues</url>
     <url desc="Licensing">http://www.gnu.org/licenses/agpl-3.0.html</url>
   </urls>
-  <releaseDate>2026-09-02</releaseDate>
-  <version>0.8.1</version>
+  <releaseDate>2026-10-12</releaseDate>
+  <version>0.9.0</version>
   <develStage>alpha</develStage>
   <compatibility>
     <ver>6.18</ver>
