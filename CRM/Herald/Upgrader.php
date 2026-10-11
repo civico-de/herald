@@ -45,26 +45,6 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
   }
 
   /**
-   * The buffer flush claims the rows it delivers; existing buffer tables need
-   * the claim columns to store that mark.
-   */
-  public function upgrade_1004(): bool {
-    $this->ctx->log->info('herald: adding claim columns to civicrm_herald_buffer');
-    CRM_Herald_Upgrader_BufferColumns::add(['claimed_by', 'claimed_at'], 'claimed_by');
-    return TRUE;
-  }
-
-  /**
-   * The buffer flush parks items it can never deliver; existing buffer tables
-   * need the dead-letter columns to hold that state.
-   */
-  public function upgrade_1005(): bool {
-    $this->ctx->log->info('herald: adding dead-letter columns to civicrm_herald_buffer');
-    CRM_Herald_Upgrader_BufferColumns::add(['attempts', 'parked_at', 'park_reason', 'last_error'], 'parked_at');
-    return TRUE;
-  }
-
-  /**
    * herald_rule_health is no longer a declared setting; SQL, because the
    * settings API refuses a name without metadata.
    */
@@ -85,6 +65,16 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
     $this->ctx->log->info("herald: moved {$migrated} rule action(s) and condition(s)");
     $jobs = CRM_Herald_Upgrader_DigestJobs::migrate();
     $this->ctx->log->info("herald: moved {$jobs} digest job(s) to Herald.notifyDigest");
+    return TRUE;
+  }
+
+  /**
+   * Buffer tables from older releases lack columns, column comments or the row
+   * format of schema/; bring them in line.
+   */
+  public function upgrade_1008(): bool {
+    $this->ctx->log->info('herald: aligning civicrm_herald_buffer with schema/');
+    CRM_Herald_Upgrader_BufferTable::sync();
     return TRUE;
   }
 
@@ -113,8 +103,7 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
   public function postInstall(): void {
     // An uninstall by an older release left the buffer table in place, and
     // CREATE TABLE IF NOT EXISTS keeps it as it was.
-    CRM_Herald_Upgrader_BufferColumns::add(['claimed_by', 'claimed_at'], 'claimed_by');
-    CRM_Herald_Upgrader_BufferColumns::add(['attempts', 'parked_at', 'park_reason', 'last_error'], 'parked_at');
+    CRM_Herald_Upgrader_BufferTable::sync();
     self::reconcile($this->extensionDir);
   }
 

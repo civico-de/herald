@@ -35,41 +35,30 @@ class CRM_Herald_BufferSchemaUpgradeTest extends TestCase implements HeadlessInt
   }
 
   /**
-   * Column definitions and indexes, in order; comments are left out because
-   * the first release created its columns without them.
+   * The table's DDL as the schema-parity check compares it: without the
+   * AUTO_INCREMENT counter.
    */
   private function shape(): string {
-    $params = [1 => [self::TABLE, 'String']];
-    return (
-      CRM_Core_DAO::singleValueQuery(
-        "SELECT GROUP_CONCAT(CONCAT_WS(' ', COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, IFNULL(COLUMN_DEFAULT, '-'), EXTRA)
-         ORDER BY ORDINAL_POSITION SEPARATOR '\n')
-       FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %1",
-        $params,
-      )
-      . "\n"
-      . CRM_Core_DAO::singleValueQuery(
-        "SELECT GROUP_CONCAT(CONCAT_WS(' ', INDEX_NAME, NON_UNIQUE, COLUMN_NAME)
-         ORDER BY INDEX_NAME, SEQ_IN_INDEX SEPARATOR '\n')
-       FROM INFORMATION_SCHEMA.STATISTICS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = %1",
-        $params,
-      )
-    );
+    $row = CRM_Core_DAO::executeQuery('SHOW CREATE TABLE `' . self::TABLE . '`')
+      ->getDatabaseResult()
+      ->fetchRow();
+    return preg_replace('/ AUTO_INCREMENT=[0-9]+/', '', \Civi\Herald\Util\Cast::toString($row[1] ?? '')) ?? '';
   }
 
   public function testUpgradedLegacyTableMatchesTheSchema(): void {
     E::schema()->dropTable(self::TABLE);
     E::schema()->createEntityTable(self::SCHEMA);
     $fresh = $this->shape();
-    $this->assertStringContainsString('index_parked_at 1 parked_at', $fresh);
+    $this->assertStringContainsString('KEY `index_parked_at` (`parked_at`)', $fresh);
+    $this->assertStringContainsString('ROW_FORMAT=DYNAMIC', $fresh);
 
     E::schema()->dropTable(self::TABLE);
     $this->createFirstReleaseTable();
-    foreach (['upgrade_1001', 'upgrade_1004', 'upgrade_1005'] as $step) {
+    foreach (['upgrade_1001', 'upgrade_1008'] as $step) {
       $this->upgrade($step);
     }
     $upgraded = $this->shape();
-    foreach (['upgrade_1001', 'upgrade_1004', 'upgrade_1005'] as $step) {
+    foreach (['upgrade_1001', 'upgrade_1008'] as $step) {
       $this->upgrade($step);
     }
 
