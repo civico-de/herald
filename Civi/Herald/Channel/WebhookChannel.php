@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Channel;
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use GuzzleHttp\ClientInterface;
 
 /**
@@ -74,16 +75,16 @@ class WebhookChannel implements ChannelInterface {
       );
     }
 
-    $effectiveUrl = self::str($url);
+    $effectiveUrl = Cast::toString($url);
     $allowedHosts = \Civi::settings()->get('herald_webhook_allowed_hosts');
     self::assertUrlAllowed($effectiveUrl, [
       'allowed_hosts' => is_array($allowedHosts) ? $allowedHosts : [],
       'resolver' => $this->hostResolver,
     ]);
 
-    $method = strtoupper(self::str($config['webhook_method'] ?? 'POST'));
-    $format = self::str($config['webhook_body_format'] ?? 'text');
-    $payload = self::buildPayload($renderedBody, $format, self::str($config['webhook_body_key'] ?? 'text'));
+    $method = strtoupper(Cast::toString($config['webhook_method'] ?? 'POST'));
+    $format = Cast::toString($config['webhook_body_format'] ?? 'text');
+    $payload = self::buildPayload($renderedBody, $format, Cast::toString($config['webhook_body_key'] ?? 'text'));
 
     $headers = self::normaliseHeaders($config['webhook_headers'] ?? []);
     // The default token is paired with the default URL: it must not leak to
@@ -106,7 +107,7 @@ class WebhookChannel implements ChannelInterface {
         break;
       }
       if (!$hasAuth) {
-        $headers['Authorization'] = 'Bearer ' . self::str($authToken);
+        $headers['Authorization'] = 'Bearer ' . Cast::toString($authToken);
       }
     }
 
@@ -188,7 +189,7 @@ class WebhookChannel implements ChannelInterface {
     if (is_array($allowed) && $allowed !== []) {
       $lcHost = strtolower($host);
       foreach ($allowed as $entry) {
-        $needle = strtolower(trim(self::str($entry)));
+        $needle = strtolower(trim(Cast::toString($entry)));
         if ($needle === '') {
           continue;
         }
@@ -326,16 +327,9 @@ class WebhookChannel implements ChannelInterface {
         continue;
       }
 
-      $out[$name] = self::str($value);
+      $out[$name] = Cast::toString($value);
     }
     return $out;
-  }
-
-  /**
-   * Non-scalar config values collapse to '' instead of "Array".
-   */
-  private static function str(mixed $value): string {
-    return is_scalar($value) ? (string) $value : '';
   }
 
   /**

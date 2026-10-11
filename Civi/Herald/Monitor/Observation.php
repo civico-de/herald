@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Monitor;
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+
 /**
  * One check's normalized result: anything but an explicit 'fail' counts as ok here.
  */
@@ -22,7 +24,7 @@ class Observation {
     return new self(
       $name,
       ($obs['status'] ?? 'ok') === 'fail',
-      Coerce::str($obs['detail'] ?? NULL),
+      Cast::toString($obs['detail'] ?? NULL),
     );
   }
 

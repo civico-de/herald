@@ -132,7 +132,7 @@ final class CRM_Herald_CivirulesAdapter_RetiredHandlers {
       'where' => [['class_name', '=', $class]],
       'checkPermissions' => FALSE,
     ])->column('id');
-    return \Civi\Herald\Util\Cast::toInt($ids[0] ?? 0);
+    return \Civi\Herald\Vendor\Civico\Stdlib\Cast::toInt($ids[0] ?? 0);
   }
 
   /**

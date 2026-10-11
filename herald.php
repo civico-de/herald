@@ -3,6 +3,8 @@
 declare(strict_types = 1);
 
 require_once 'herald.civix.php';
+// Bundled packages, prefixed into Civi\Herald\Vendor\ by `composer install`.
+require_once __DIR__ . '/vendor/autoload.php';
 
 /**
  * Implements hook_civicrm_config().

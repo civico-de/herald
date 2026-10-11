@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Channel;
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 use GuzzleHttp\ClientInterface;
 
@@ -29,7 +30,7 @@ class TelegramChannel implements ChannelInterface {
    * @param array<string, mixed> $config
    */
   public function send(string $renderedBody, array $config): void {
-    $token = self::str(\Civi::settings()->get('herald_telegram_bot_token'));
+    $token = Cast::toString(\Civi::settings()->get('herald_telegram_bot_token'));
     if ($token === '') {
       throw new \CRM_Core_Exception(
         'herald: Telegram bot token is not configured. Set "herald_telegram_bot_token" in CRM settings.',
@@ -47,9 +48,9 @@ class TelegramChannel implements ChannelInterface {
 
     // '' means "Plain text" — omit the key entirely rather than sending an
     // empty parse_mode to the Bot API.
-    $parseMode = self::str($config['parse_mode'] ?? 'HTML');
+    $parseMode = Cast::toString($config['parse_mode'] ?? 'HTML');
     $payload = [
-      'chat_id' => self::str($chatId),
+      'chat_id' => Cast::toString($chatId),
       'text' => TelegramText::fit(TelegramText::forParseMode($renderedBody, $parseMode), $parseMode),
     ];
     if ($parseMode !== '') {
@@ -90,13 +91,6 @@ class TelegramChannel implements ChannelInterface {
     if (!is_array($decoded) || empty($decoded['ok'])) {
       throw new \CRM_Core_Exception('herald: Telegram API responded with ok=false. Body: ' . substr($body, 0, 500));
     }
-  }
-
-  /**
-   * Non-scalar config values collapse to '' instead of "Array".
-   */
-  private static function str(mixed $value): string {
-    return is_scalar($value) ? (string) $value : '';
   }
 
   /**

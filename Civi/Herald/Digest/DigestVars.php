@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Digest;
 
 use Civi\Herald\Trigger\CampaignProgress;
-use Civi\Herald\Util\Cast;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Variable bag for the contribution-digest templates.

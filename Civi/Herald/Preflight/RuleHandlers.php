@@ -7,7 +7,7 @@ namespace Civi\Herald\Preflight;
 use Civi\Api4\CiviRulesRule;
 use Civi\Api4\CiviRulesRuleAction;
 use Civi\Api4\CiviRulesRuleCondition;
-use Civi\Herald\Util\Cast;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * The handler classes CiviRules would load, keyed "kind:class", from herald's

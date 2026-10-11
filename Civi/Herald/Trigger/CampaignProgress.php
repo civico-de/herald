@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Trigger;
 
-use Civi\Herald\Util\Cast;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Progress of a contribution's campaign: title and goal from the Campaign

@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Digest;
 
-use Civi\Herald\Util\Cast;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
 /**

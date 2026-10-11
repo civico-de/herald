@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Channel;
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+
 /**
  * Email channel — delivers the rendered body through CiviCRM's configured
  * outbound mailer (CRM_Utils_Mail::send), so SMTP settings, mail logging and
@@ -59,7 +61,7 @@ class EmailChannel implements ChannelInterface {
       );
     }
 
-    $from = self::str(\Civi::settings()->get('herald_email_from'));
+    $from = Cast::toString(\Civi::settings()->get('herald_email_from'));
     if ($from === '') {
       $from = \CRM_Core_BAO_Domain::getFromEmail();
     }
@@ -83,26 +85,19 @@ class EmailChannel implements ChannelInterface {
   public static function buildMailParams(string $body, array $config, string $from): array {
     $params = [
       'from' => $from,
-      'toEmail' => self::str($config['email_to']),
-      'toName' => self::str($config['email_to_name'] ?? ''),
-      'subject' => !empty($config['email_subject']) ? self::str($config['email_subject']) : self::DEFAULT_SUBJECT,
+      'toEmail' => Cast::toString($config['email_to']),
+      'toName' => Cast::toString($config['email_to_name'] ?? ''),
+      'subject' => !empty($config['email_subject']) ? Cast::toString($config['email_subject']) : self::DEFAULT_SUBJECT,
     ];
     $isText = ($config['email_format'] ?? 'html') === 'text';
     $params[$isText ? 'text' : 'html'] = $isText ? PlainText::fromHtml($body) : HtmlLineBreaks::apply($body);
     if (!empty($config['email_cc'])) {
-      $params['cc'] = self::str($config['email_cc']);
+      $params['cc'] = Cast::toString($config['email_cc']);
     }
     if (!empty($config['email_bcc'])) {
-      $params['bcc'] = self::str($config['email_bcc']);
+      $params['bcc'] = Cast::toString($config['email_bcc']);
     }
     return $params;
-  }
-
-  /**
-   * Non-scalar config values collapse to '' instead of "Array".
-   */
-  private static function str(mixed $value): string {
-    return is_scalar($value) ? (string) $value : '';
   }
 
   /**

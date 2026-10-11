@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Buffer;
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+
 /**
  * Anti-spam aggregation buffer for realtime alerts.
  *
@@ -23,8 +25,6 @@ namespace Civi\Herald\Buffer;
  * Dead letter — rows that cannot be delivered are parked rather than retried
  * forever or dropped; claimDue() skips parked rows, the rest lives in
  * DeadLetter.
- * @mago-expect lint:cyclomatic-complexity
- * @mago-expect lint:too-many-methods
  */
 class AlertBuffer {
 
@@ -145,7 +145,7 @@ class AlertBuffer {
     ');
     $hashes = [];
     while ($due->fetch()) {
-      $hashes[] = self::str($due->group_hash);
+      $hashes[] = Cast::toString($due->group_hash);
     }
     return $hashes;
   }
@@ -170,13 +170,13 @@ class AlertBuffer {
     $window = 0;
     $deliveryParams = [];
     while ($rows->fetch()) {
-      $ids[] = self::int($rows->id);
-      $bodies[] = self::str($rows->body);
+      $ids[] = Cast::toInt($rows->id);
+      $bodies[] = Cast::toString($rows->body);
       if ($rows->amount !== NULL) {
-        $amounts[] = self::flt($rows->amount);
+        $amounts[] = Cast::toFloat($rows->amount);
       }
-      $window = max($window, self::int($rows->window_minutes));
-      $delivery = json_decode(self::str($rows->delivery), TRUE);
+      $window = max($window, Cast::toInt($rows->window_minutes));
+      $delivery = json_decode(Cast::toString($rows->delivery), TRUE);
       if ($deliveryParams === [] && is_array($delivery)) {
         // First decodable row wins: the group's rows share the rule config, but
         // each carries the subject ITS OWN event rendered — composeDelivery()
@@ -239,29 +239,6 @@ class AlertBuffer {
     \CRM_Core_DAO::executeQuery(
       'DELETE FROM `' . self::TABLE . '` WHERE id IN (' . implode(',', array_map('intval', $ids)) . ')',
     );
-  }
-
-  /**
-   * Coerce a DAO result-row value (dynamic property, therefore untyped) to
-   * string. Every column read here is declared scalar in schema/, so the
-   * default only ever guards against the theoretical mixed type.
-   */
-  private static function str(mixed $value): string {
-    return is_scalar($value) ? (string) $value : '';
-  }
-
-  /**
-   * Coerce a DAO result-row value to int. See self::str().
-   */
-  private static function int(mixed $value): int {
-    return is_scalar($value) ? (int) $value : 0;
-  }
-
-  /**
-   * Coerce a DAO result-row value to float. See self::str().
-   */
-  private static function flt(mixed $value): float {
-    return is_scalar($value) ? (float) $value : 0.0;
   }
 
 }

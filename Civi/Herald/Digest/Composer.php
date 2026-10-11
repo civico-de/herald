@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Digest;
 
 use Civi\Herald\Renderer\TemplateRenderer;
-use Civi\Herald\Util\Cast;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Assembles a digest from its blocks (BlockList) into one body.

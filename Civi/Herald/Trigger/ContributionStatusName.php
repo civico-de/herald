@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Trigger;
 
-use Civi\Herald\Util\Cast;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Contribution status ids as the machine names templates show (2 → "Pending"),

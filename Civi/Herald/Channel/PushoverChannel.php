@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Channel;
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use GuzzleHttp\ClientInterface;
 
 /**
@@ -47,7 +48,7 @@ class PushoverChannel implements ChannelInterface {
    * @param array<string, mixed> $config
    */
   public function send(string $renderedBody, array $config): void {
-    $appToken = self::str(\Civi::settings()->get('herald_pushover_app_token'));
+    $appToken = Cast::toString(\Civi::settings()->get('herald_pushover_app_token'));
     if ($appToken === '') {
       throw new \CRM_Core_Exception('herald: Pushover app token not configured (herald_pushover_app_token).');
     }
@@ -61,7 +62,7 @@ class PushoverChannel implements ChannelInterface {
       );
     }
 
-    $form = self::buildForm($appToken, self::str($userKey), $renderedBody, $config);
+    $form = self::buildForm($appToken, Cast::toString($userKey), $renderedBody, $config);
 
     $client = $this->httpClient ?? new \GuzzleHttp\Client();
     try {
@@ -85,7 +86,7 @@ class PushoverChannel implements ChannelInterface {
       ));
     }
     $decoded = json_decode($body, TRUE);
-    if (!is_array($decoded) || self::int($decoded['status'] ?? 0) !== 1) {
+    if (!is_array($decoded) || Cast::toInt($decoded['status'] ?? 0) !== 1) {
       throw new \CRM_Core_Exception('herald: Pushover responded with status != 1. Body: ' . substr($body, 0, 500));
     }
   }
@@ -109,40 +110,29 @@ class PushoverChannel implements ChannelInterface {
       'message' => empty($config['pushover_html']) ? PlainText::fromHtml($body) : $body,
     ];
     if (!empty($config['pushover_title'])) {
-      $form['title'] = self::str($config['pushover_title']);
+      $form['title'] = Cast::toString($config['pushover_title']);
     }
     if (isset($config['pushover_priority']) && $config['pushover_priority'] !== '') {
-      $form['priority'] = self::int($config['pushover_priority']);
+      $form['priority'] = Cast::toInt($config['pushover_priority']);
       if ($form['priority'] === 2) {
         // Emergency priority requires retry/expire or the API rejects the call.
-        $form['retry'] = max(30, self::int($config['pushover_retry'] ?? 60));
-        $form['expire'] = min(10_800, max(1, self::int($config['pushover_expire'] ?? 3600)));
+        $form['retry'] = max(30, Cast::toInt($config['pushover_retry'] ?? 60));
+        $form['expire'] = min(10_800, max(1, Cast::toInt($config['pushover_expire'] ?? 3600)));
       }
     }
     if (!empty($config['pushover_sound'])) {
-      $form['sound'] = self::str($config['pushover_sound']);
+      $form['sound'] = Cast::toString($config['pushover_sound']);
     }
     if (!empty($config['pushover_url'])) {
-      $form['url'] = self::str($config['pushover_url']);
+      $form['url'] = Cast::toString($config['pushover_url']);
     }
     if (!empty($config['pushover_url_title'])) {
-      $form['url_title'] = self::str($config['pushover_url_title']);
+      $form['url_title'] = Cast::toString($config['pushover_url_title']);
     }
     if (!empty($config['pushover_html'])) {
       $form['html'] = 1;
     }
     return $form;
-  }
-
-  /**
-   * Non-scalar config values collapse to '' instead of "Array".
-   */
-  private static function str(mixed $value): string {
-    return is_scalar($value) ? (string) $value : '';
-  }
-
-  private static function int(mixed $value): int {
-    return is_scalar($value) ? (int) $value : 0;
   }
 
   /**

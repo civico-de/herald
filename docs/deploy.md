@@ -8,6 +8,9 @@ every handler loads.
 
 ## Steps
 
+A git checkout has no `vendor/`. Build it with `composer install --no-dev` before the swap;
+the release archive already carries it.
+
 Wrap the code swap in these steps, the scripts run with `cv scr`, and stop at the first
 non-zero exit:
 

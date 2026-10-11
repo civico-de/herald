@@ -26,8 +26,8 @@ final class CRM_Herald_Upgrader_DigestJobs {
     foreach ($jobs as $jobId => $parameters) {
       $jobId = (int) $jobId;
       try {
-        $parsed = CRM_Core_BAO_Job::parseParameters(\Civi\Herald\Util\Cast::toString($parameters));
-        $params = \Civi\Herald\Util\Cast::namedOnly($parsed);
+        $parsed = CRM_Core_BAO_Job::parseParameters(\Civi\Herald\Vendor\Civico\Stdlib\Cast::toString($parameters));
+        $params = \Civi\Herald\Vendor\Civico\Stdlib\Cast::namedOnly($parsed);
       }
       catch (CRM_Core_Exception $e) {
         // Such a job could not run before either; it keeps failing visibly in the job log.
@@ -88,7 +88,7 @@ final class CRM_Herald_Upgrader_DigestJobs {
     if (is_array($blocks) && $blocks !== []) {
       $blocks = array_map(static function ($block) use (&$dropped) {
         if (is_array($block)) {
-          $block = \Civi\Herald\Util\Cast::namedOnly($block);
+          $block = \Civi\Herald\Vendor\Civico\Stdlib\Cast::namedOnly($block);
           $dropped += self::withoutRetired($block);
         }
         return $block;

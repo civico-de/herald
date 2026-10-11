@@ -90,6 +90,12 @@ actions (no bespoke cron for alerts). Live in production.
   no APIv3 job wrapper.
 - Post-hook payloads of partial updates carry only the written fields; code
   reading an entity payload completes it from the stored row.
+- Bundled packages (`civico-de/stdlib`) are prefixed into `Civi\Herald\Vendor\`
+  by Strauss as composer's post-install script (`.civikitchen/strauss.php`).
+  `vendor/` is not committed; `herald.php` requires `vendor/autoload.php`, so
+  CI, release and deploy all run `composer install`. Packages core ships
+  (Guzzle, PSR-7) stay under `provide`: a bundled copy would replace core's
+  for every extension.
 
 ## Verify
 

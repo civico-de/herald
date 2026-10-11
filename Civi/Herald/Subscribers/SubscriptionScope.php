@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Subscribers;
 
-use Civi\Herald\Util\Cast;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Source-entity scoping of per-contact subscriptions.

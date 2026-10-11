@@ -14,13 +14,16 @@
         "ext-ctype": "*",
         "ext-filter": "*",
         "ext-mbstring": "*",
-        "guzzlehttp/guzzle": "^7.0"
+        "civico-de/stdlib": "^0.1"
     },
     "require-dev": {
         "ext-libxml": "*",
         "ext-simplexml": "*",
-        "guzzlehttp/psr7": "^2.0",
         "phpunit/phpunit": "^9.6"
+    },
+    "provide": {
+        "guzzlehttp/guzzle": "^7.0",
+        "guzzlehttp/psr7": "^2.0"
     },
     "autoload": {
         "psr-4": {
@@ -40,5 +43,33 @@
             "php": "8.3.0"
         },
         "sort-packages": true
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "https://github.com/civico-de/stdlib"
+        }
+    ],
+    "extra": {
+        "strauss": {
+            "target_directory": "vendor",
+            "namespace_prefix": "Civi\\Herald\\Vendor\\",
+            "classmap_prefix": "Civi_Herald_Vendor_",
+            "packages": [
+                "civico-de/stdlib"
+            ]
+        }
+    },
+    "scripts": {
+        "prefix-namespaces": [
+            "@php .civikitchen/strauss.php",
+            "@composer dump-autoload"
+        ],
+        "post-install-cmd": [
+            "@prefix-namespaces"
+        ],
+        "post-update-cmd": [
+            "@prefix-namespaces"
+        ]
     }
 }

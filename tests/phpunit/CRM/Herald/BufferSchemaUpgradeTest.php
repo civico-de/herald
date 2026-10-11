@@ -42,7 +42,10 @@ class CRM_Herald_BufferSchemaUpgradeTest extends TestCase implements HeadlessInt
     $row = CRM_Core_DAO::executeQuery('SHOW CREATE TABLE `' . self::TABLE . '`')
       ->getDatabaseResult()
       ->fetchRow();
-    return preg_replace('/ AUTO_INCREMENT=[0-9]+/', '', \Civi\Herald\Util\Cast::toString($row[1] ?? '')) ?? '';
+    return (
+      preg_replace('/ AUTO_INCREMENT=[0-9]+/', '', \Civi\Herald\Vendor\Civico\Stdlib\Cast::toString($row[1] ?? ''))
+      ?? ''
+    );
   }
 
   public function testUpgradedLegacyTableMatchesTheSchema(): void {

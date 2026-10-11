@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Renderer;
 
 use Civi\Herald\Channel\PlainText;
-use Civi\Herald\Util\Cast;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Look up a CiviCRM MessageTemplate by workflow_name and render its msg_html
@@ -53,7 +53,7 @@ class TemplateRenderer {
     }
 
     $isHtml = isset($template['msg_html']);
-    $body = self::str($template['msg_html'] ?? $template['msg_text'] ?? '');
+    $body = Cast::toString($template['msg_html'] ?? $template['msg_text'] ?? '');
     if ($body === '') {
       throw new \CRM_Core_Exception(sprintf(
         'herald: MessageTemplate "%s" has empty msg_html and msg_text.',
@@ -61,7 +61,7 @@ class TemplateRenderer {
       ));
     }
 
-    $subject = trim(self::str($template['msg_subject'] ?? ''));
+    $subject = trim(Cast::toString($template['msg_subject'] ?? ''));
     $textVars = self::mapStrings($vars, self::decodeInput(...));
     return [
       'subject' => $subject !== '' ? $this->renderInline($subject, $textVars) : NULL,
@@ -115,13 +115,6 @@ class TemplateRenderer {
       },
       $vars,
     );
-  }
-
-  /**
-   * Non-scalar config values collapse to '' instead of "Array".
-   */
-  private static function str(mixed $value): string {
-    return is_scalar($value) ? (string) $value : '';
   }
 
 }

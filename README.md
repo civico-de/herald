@@ -32,6 +32,10 @@ declared in `info.xml`.
 cv ext:enable herald
 ```
 
+The release archive carries `vendor/`. A git checkout needs `composer install --no-dev`
+first: `herald.php` loads `vendor/autoload.php`, so without it every request of a site
+with herald enabled fails.
+
 Then configure the channels you use, on the admin screen `civicrm/admin/setting/herald`
 or with `cv setting:set`. Array settings such as topic routes have no form field. The
 full list is in [docs/reference.md](docs/reference.md#settings).
@@ -121,12 +125,13 @@ docker compose exec -T app \
 ```
 
 The first `up` installs CiviCRM and CiviRules and runs `composer install` on the mounted
-extension. The test run needs no `ext:enable` and no environment variables: the headless
-suite installs itself into the separate `civicrm_test` database that
-`tests/docker/initdb/` creates, so the dev site stays untouched. The bootstrap refuses to
-run unless cv's configuration points the tests at a `*_test` database; the civikitchen
-stack provides that. A `db-data` volume older than that init script needs one
-`docker compose down -v`.
+extension. That install also builds `vendor/`: Strauss rewrites the bundled
+`civico-de/stdlib` into herald's own `Civi\Herald\Vendor\` namespace. The test run
+needs no `ext:enable` and no environment variables: the headless suite installs itself
+into the separate `civicrm_test` database that `tests/docker/initdb/` creates, so the dev
+site stays untouched. The bootstrap refuses to run unless cv's configuration points the
+tests at a `*_test` database; the civikitchen stack provides that. A `db-data` volume
+older than that init script needs one `docker compose down -v`.
 
 CI uses the shared civikitchen layer in `.docker/` (ports 8080, 8081, 1080). The
 `@group unit` tests also run without any CiviCRM checkout, with `--no-configuration` and

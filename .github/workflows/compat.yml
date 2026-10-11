@@ -16,6 +16,7 @@ jobs:
     uses: jfilter/civikitchen/.github/workflows/extension-ci.yml@v1
     with:
       key: herald
+      composer_install: true
       # The 6.18 floor from info.xml, next to the default image.
       matrix_images: ghcr.io/jfilter/civikitchen:standalone-6.18
       lifecycle: true

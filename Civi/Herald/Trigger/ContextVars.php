@@ -8,8 +8,8 @@ use Civi\Api4\Contribution;
 use Civi\Api4\Membership;
 use Civi\Api4\Participant;
 use Civi\Herald\Privacy\Mask;
-use Civi\Herald\Util\Cast;
 use Civi\Herald\Util\StoredFields;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Template variables derived from a trigger's entity payload.

@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Condition;
 
-use Civi\Herald\Util\Cast;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Did field X of entity E transition from (operator, value) to (operator, value)?

@@ -8,14 +8,9 @@ declare(strict_types = 1);
  * here.
  */
 
-// The extension's own classes come from composer's autoload (psr-0/psr-4 in
-// composer.json); the dev-deps the suite mocks with (Guzzle's MockHandler)
-// ride along. Conditional because vendor/ is not tracked — CI runs against
-// what the image and CiviCRM core already provide.
-$heraldVendor = __DIR__ . '/../../vendor/autoload.php';
-if (file_exists($heraldVendor)) {
-  require_once $heraldVendor;
-}
+// The extension's own classes (psr-0/psr-4 in composer.json) and the bundled
+// packages Strauss prefixed; `composer install` builds vendor/.
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 // CiviRules' base classes (parents of herald's actions/conditions) must be
 // loadable BEFORE the first headless test boots Civi — the pure (@group unit)

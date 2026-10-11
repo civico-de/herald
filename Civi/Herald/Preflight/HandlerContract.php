@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Preflight;
 
-use Civi\Herald\Util\Cast;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * How CiviRules resolves a handler: a trigger row to its class, then class_exists,

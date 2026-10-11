@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Subscribers;
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+
 /**
  * Resolves contacts subscribed to a given notification kind into a flat list
  * of dispatch instructions (which channel, with which channel_config).
@@ -69,7 +71,7 @@ class SubscriberLookup {
    * @param array<string, mixed> $options
    */
   public static function addLocationEmailJoin($query, array $options): void {
-    $locationTypeId = self::int($options['location_type_id'] ?? 0);
+    $locationTypeId = Cast::toInt($options['location_type_id'] ?? 0);
     if ($locationTypeId <= 0) {
       return;
     }
@@ -122,12 +124,12 @@ class SubscriberLookup {
       // Preference and scope fields are per contact, so the first row speaks
       // for all of them; only the joined email columns vary per row.
       $row = $contactRows[0];
-      $contactId = self::int($row['id'] ?? 0);
+      $contactId = Cast::toInt($row['id'] ?? 0);
       if (!SubscriptionScope::rowMatches($row, $scope)) {
         $bump('scope_mismatch');
         continue;
       }
-      $channel = self::str($row['herald_preferences.preferred_channel'] ?? '');
+      $channel = Cast::toString($row['herald_preferences.preferred_channel'] ?? '');
       if ($channel === '') {
         continue;
       }
@@ -157,7 +159,7 @@ class SubscriberLookup {
     $grouped = [];
     $anonymous = [];
     foreach ($rows as $row) {
-      $contactId = self::int($row['id'] ?? 0);
+      $contactId = Cast::toInt($row['id'] ?? 0);
       if ($contactId <= 0) {
         $anonymous[] = [$row];
         continue;
@@ -207,9 +209,9 @@ class SubscriberLookup {
     }
     $candidates = [];
     foreach ($contactRows as $row) {
-      $candidates[] = [self::str($row['herald_loc_email.email'] ?? ''), !empty($row['herald_loc_email.on_hold'])];
+      $candidates[] = [Cast::toString($row['herald_loc_email.email'] ?? ''), !empty($row['herald_loc_email.on_hold'])];
     }
-    $candidates[] = [self::str($first['email_primary.email'] ?? ''), !empty($first['email_primary.on_hold'])];
+    $candidates[] = [Cast::toString($first['email_primary.email'] ?? ''), !empty($first['email_primary.on_hold'])];
     $sawAddress = FALSE;
     foreach ($candidates as [$address, $onHold]) {
       if ($address === '') {
@@ -250,8 +252,8 @@ class SubscriberLookup {
    * @param array<string, mixed> $row
    */
   public static function resolveEmailAddress(array $row): string {
-    $loc = self::str($row['herald_loc_email.email'] ?? '');
-    return $loc !== '' ? $loc : self::str($row['email_primary.email'] ?? '');
+    $loc = Cast::toString($row['herald_loc_email.email'] ?? '');
+    return $loc !== '' ? $loc : Cast::toString($row['email_primary.email'] ?? '');
   }
 
   /**
@@ -294,17 +296,6 @@ class SubscriberLookup {
    */
   private static function nonEmpty(array $row, string $key, array $config): ?array {
     return !empty($row[$key]) ? $config : NULL;
-  }
-
-  /**
-   * Non-scalar config values collapse to '' instead of "Array".
-   */
-  private static function str(mixed $value): string {
-    return is_scalar($value) ? (string) $value : '';
-  }
-
-  private static function int(mixed $value): int {
-    return is_scalar($value) ? (int) $value : 0;
   }
 
 }

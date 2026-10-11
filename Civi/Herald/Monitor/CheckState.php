@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Monitor;
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+
 /**
  * One check's persisted state machine entry.
  *
@@ -35,9 +37,9 @@ class CheckState {
   public static function fromArray(array $p, int $now): self {
     $state = new self();
     $state->status = ($p['status'] ?? 'ok') === 'fail' ? 'fail' : 'ok';
-    $state->detail = Coerce::str($p['detail'] ?? NULL);
-    $state->consecutiveFails = max(0, Coerce::int($p['consecutive_fails'] ?? 0));
-    $state->consecutiveOks = max(0, Coerce::int($p['consecutive_oks'] ?? 0));
+    $state->detail = Cast::toString($p['detail'] ?? NULL);
+    $state->consecutiveFails = max(0, Cast::toInt($p['consecutive_fails'] ?? 0));
+    $state->consecutiveOks = max(0, Cast::toInt($p['consecutive_oks'] ?? 0));
     // A bare {status, detail} entry without 'notified': treat a reported fail as
     // announced, otherwise it would re-alert or swallow the recovery.
     $state->notified = (bool) ($p['notified'] ?? $state->status === 'fail');

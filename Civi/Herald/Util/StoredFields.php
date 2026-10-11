@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Util;
 
 use Civi\Api4\Generic\DAOGetAction;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Post-hook payloads of partial updates carry only the written fields; the

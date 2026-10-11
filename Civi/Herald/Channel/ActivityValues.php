@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Channel;
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+
 /**
  * Maps channel configuration and a rendered message to Activity.create
  * values. Kept separate from transport orchestration so validation and option
@@ -26,9 +28,9 @@ final class ActivityValues {
 
     $sourceId = ActivityContactId::optional($config['activity_source_contact_id'] ?? NULL) ?? $assigneeId;
     $targetId = ActivityContactId::optional($config['activity_target_contact_id'] ?? NULL);
-    $format = self::string($config['activity_format'] ?? 'html');
+    $format = Cast::toString($config['activity_format'] ?? 'html');
 
-    $configuredSubject = trim(self::string($config['activity_subject'] ?? ''));
+    $configuredSubject = trim(Cast::toString($config['activity_subject'] ?? ''));
     $subject = ActivityText::subject($configuredSubject === '' ? $body : $configuredSubject);
 
     $optionResolver ??= [ActivityOptionResolver::class, 'resolve'];
@@ -53,12 +55,8 @@ final class ActivityValues {
   }
 
   private static function nonEmptyString(mixed $value, string $default): string {
-    $value = trim(self::string($value));
+    $value = trim(Cast::toString($value));
     return $value === '' ? $default : $value;
-  }
-
-  private static function string(mixed $value): string {
-    return is_scalar($value) ? (string) $value : '';
   }
 
 }

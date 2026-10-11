@@ -37,3 +37,7 @@ jobs:
   ci:
     uses: jfilter/civikitchen/.github/workflows/extension-ci.yml@v1
 # END CIVIKITCHEN MANAGED caller
+    with:
+      # herald.php loads vendor/autoload.php (civico-de/stdlib, prefixed by
+      # Strauss), and vendor/ is not committed.
+      composer_install: true

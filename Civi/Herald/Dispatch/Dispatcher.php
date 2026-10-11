@@ -9,7 +9,7 @@ use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Renderer\TemplateRenderer;
 use Civi\Herald\Subscribers\GroupRecipients;
 use Civi\Herald\Subscribers\SubscriberLookup;
-use Civi\Herald\Util\Cast;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Render-and-dispatch core of herald.

@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Channel;
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use GuzzleHttp\ClientInterface;
 
 /**
@@ -25,7 +26,6 @@ use GuzzleHttp\ClientInterface;
  *   herald_ntfy_server         — base URL (default https://ntfy.sh)
  *   herald_ntfy_default_topic  — fallback topic
  *   herald_ntfy_token          — Bearer token for protected topics
- * @mago-expect lint:cyclomatic-complexity
  */
 class NtfyChannel implements ChannelInterface {
 
@@ -53,11 +53,11 @@ class NtfyChannel implements ChannelInterface {
       );
     }
 
-    $server = self::str(\Civi::settings()->get('herald_ntfy_server') ?: 'https://ntfy.sh');
-    $url = rtrim($server, '/') . '/' . ltrim(self::str($topic), '/');
+    $server = Cast::toString(\Civi::settings()->get('herald_ntfy_server') ?: 'https://ntfy.sh');
+    $url = rtrim($server, '/') . '/' . ltrim(Cast::toString($topic), '/');
 
     $headers = self::buildHeaders($config);
-    $token = self::str(\Civi::settings()->get('herald_ntfy_token'));
+    $token = Cast::toString(\Civi::settings()->get('herald_ntfy_token'));
     if ($token !== '' && !isset($headers['Authorization'])) {
       $headers['Authorization'] = 'Bearer ' . $token;
     }
@@ -94,28 +94,21 @@ class NtfyChannel implements ChannelInterface {
   public static function buildHeaders(array $config): array {
     $h = ['Content-Type' => 'text/plain; charset=utf-8'];
     if (!empty($config['ntfy_title'])) {
-      $h['X-Title'] = self::str($config['ntfy_title']);
+      $h['X-Title'] = Cast::toString($config['ntfy_title']);
     }
     if (isset($config['ntfy_priority']) && $config['ntfy_priority'] !== '') {
-      $h['X-Priority'] = self::str($config['ntfy_priority']);
+      $h['X-Priority'] = Cast::toString($config['ntfy_priority']);
     }
     if (!empty($config['ntfy_tags'])) {
-      $h['X-Tags'] = self::str($config['ntfy_tags']);
+      $h['X-Tags'] = Cast::toString($config['ntfy_tags']);
     }
     if (!empty($config['ntfy_click'])) {
-      $h['X-Click'] = self::str($config['ntfy_click']);
+      $h['X-Click'] = Cast::toString($config['ntfy_click']);
     }
     if (!empty($config['ntfy_markdown'])) {
       $h['X-Markdown'] = 'yes';
     }
     return $h;
-  }
-
-  /**
-   * Non-scalar config values collapse to '' instead of "Array".
-   */
-  private static function str(mixed $value): string {
-    return is_scalar($value) ? (string) $value : '';
   }
 
   /**

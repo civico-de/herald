@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Monitor;
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+
 /**
  * Generic health-check monitor: any extension contributes checks, herald
  * runs them on cron and publishes STATE TRANSITIONS (ok→fail, fail→ok) to a
@@ -109,9 +111,9 @@ class Monitor {
     }
 
     return [
-      'open_after' => max(1, Coerce::int(\Civi::settings()->get('herald_monitor_open_after') ?: 1)),
-      'close_after' => max(1, Coerce::int(\Civi::settings()->get('herald_monitor_close_after') ?: 1)),
-      'renotify_seconds' => max(0, Coerce::int(\Civi::settings()->get('herald_monitor_renotify_hours') ?? 24)) * 3600,
+      'open_after' => max(1, Cast::toInt(\Civi::settings()->get('herald_monitor_open_after') ?: 1)),
+      'close_after' => max(1, Cast::toInt(\Civi::settings()->get('herald_monitor_close_after') ?: 1)),
+      'renotify_seconds' => max(0, Cast::toInt(\Civi::settings()->get('herald_monitor_renotify_hours') ?? 24)) * 3600,
       'snooze' => $snooze,
       'now' => $now,
     ];
@@ -125,7 +127,7 @@ class Monitor {
    * @return array{int, int} Transitions published, transitions whose publish failed.
    */
   private function publishPlans(array $plans, array $state): array {
-    $topic = Coerce::str(\Civi::settings()->get(self::TOPIC_SETTING) ?: 'ops', 'ops');
+    $topic = Cast::toString(\Civi::settings()->get(self::TOPIC_SETTING) ?: 'ops', 'ops');
     $transitions = 0;
     $failures = 0;
 

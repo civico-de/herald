@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Buffer;
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+
 /**
  * Dead-letter side of the alert buffer.
  *
@@ -125,13 +127,13 @@ class DeadLetter {
     $out = [];
     while ($rows->fetch()) {
       $out[] = [
-        'id' => self::int($rows->id),
-        'group_hash' => self::str($rows->group_hash),
-        'created_date' => self::str($rows->created_date),
-        'parked_at' => self::str($rows->parked_at),
-        'park_reason' => self::str($rows->park_reason),
-        'attempts' => self::int($rows->attempts),
-        'last_error' => self::str($rows->last_error),
+        'id' => Cast::toInt($rows->id),
+        'group_hash' => Cast::toString($rows->group_hash),
+        'created_date' => Cast::toString($rows->created_date),
+        'parked_at' => Cast::toString($rows->parked_at),
+        'park_reason' => Cast::toString($rows->park_reason),
+        'attempts' => Cast::toInt($rows->attempts),
+        'last_error' => Cast::toString($rows->last_error),
       ];
     }
     return $out;
@@ -142,21 +144,6 @@ class DeadLetter {
    */
   private static function truncateError(string $error): string {
     return mb_substr($error, 0, 500);
-  }
-
-  /**
-   * Coerce a DAO result-row value (dynamic property, therefore untyped) to
-   * string; every column read here is declared scalar.
-   */
-  private static function str(mixed $value): string {
-    return is_scalar($value) ? (string) $value : '';
-  }
-
-  /**
-   * Coerce a DAO result-row value to int. See self::str().
-   */
-  private static function int(mixed $value): int {
-    return is_scalar($value) ? (int) $value : 0;
   }
 
 }

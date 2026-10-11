@@ -7,7 +7,7 @@ namespace Civi\Herald\Trigger;
 use Civi\Herald\Digest\ContributionStatsService;
 use Civi\Herald\Digest\SourceNormalizer;
 use Civi\Herald\StatusTransitionDispatcher;
-use Civi\Herald\Util\Cast;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Template variables for a trigger that carries a Contribution: the row,
