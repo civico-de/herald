@@ -7,7 +7,7 @@
 # URLs:  CiviCRM http://localhost:8080 (admin/admin)
 #        maildev http://localhost:1080 · phpMyAdmin http://localhost:8081
 #
-# Re-provision from scratch (re-runs init.d hooks): docker compose down -v && up -d
+# Re-provision from scratch (re-seeds the profile, re-runs init.d hooks): docker compose down -v && up -d
 
 # Explicit project name — unnamed .docker/ stacks all become one project
 # called "docker" and share volumes across checkouts.
@@ -33,6 +33,10 @@ services:
       # Must match the host:port opened in the browser (asset URLs).
       CIVIKITCHEN_SITE_URL: "http://localhost:8080"
       CIVIKITCHEN_DEMO_USER: admin
+      # Dependencies, config, seed records and API users: profiles/dev/profile.json.
+      CIVIKITCHEN_PROFILE: dev
+      CIVIKITCHEN_PROFILE_PATH: /civikitchen-profiles
+      CIVIKITCHEN_TRUST_EXTERNAL_PROFILES: "1"
       # Outbound mail lands in maildev.
       CIVIKITCHEN_SMTP_HOST: maildev
       CIVIKITCHEN_SMTP_PORT: "1025"
@@ -45,8 +49,8 @@ services:
       - ..:/var/www/html/ext/herald
       # Sibling extension example (mount + add to CIVIKITCHEN_ENABLE_EXTENSIONS):
       # - ../../othersibling:/var/www/html/ext/othersibling
-      # First-boot provisioning hooks (seed data, API users, settings) — run
-      # after install + ext:enable, in lexical order. See init.d/README.md.
+      - ./profiles:/civikitchen-profiles:ro
+      # Hooks for the stack's environment, run after the profile. See init.d/README.md.
       - ./init.d:/civikitchen-init.d:ro
 
   db:

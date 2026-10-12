@@ -42,6 +42,7 @@ if ($phar === FALSE || file_put_contents($phar, $bytes) !== strlen($bytes)) {
   exit(1);
 }
 
+$status = 1;
 passthru(implode(' ', array_map('escapeshellarg', [PHP_BINARY, $phar, ...array_slice($argv, 1)])), $status);
 // A cache path held by someone else only costs the next run a download.
 if ($cached || !rename($phar, $cache)) {
