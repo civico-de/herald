@@ -11,6 +11,8 @@ use CRM_Herald_ExtensionUtil as E;
  *
  * Subclasses add their action-specific fields in addExtraFields() and pull
  * extra values out via getExtraValues().
+ * CiviRules opens its parameter screens as QuickForm forms by route.
+ * @mago-expect analysis:civikitchen/legacy-ui-base
  * @mago-expect lint:too-many-methods
  * @mago-expect lint:cyclomatic-complexity
  * @mago-expect lint:kan-defect
@@ -262,6 +264,7 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
    */
   protected function getSubscriptionTypeOptions(): array {
     try {
+      /** @var list<array<string, mixed>> $rows */
       $rows = \Civi\Api4\OptionValue::get(checkPermissions: FALSE)
         ->addSelect('value', 'label')
         ->addWhere('option_group_id:name', '=', 'herald_subscription_type')
@@ -275,9 +278,6 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
     }
     $opts = ['' => E::ts('— none —')];
     foreach ($rows as $row) {
-      if (!is_array($row)) {
-        continue;
-      }
       $value = $row['value'] ?? NULL;
       if (!is_string($value) && !is_int($value)) {
         continue;

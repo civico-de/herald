@@ -4,6 +4,11 @@ declare(strict_types = 1);
 
 use CRM_Herald_ExtensionUtil as E;
 
+/**
+ * Form for the per-event notification action.
+ * CiviRules opens its parameter screens as QuickForm forms by route.
+ * @mago-expect analysis:civikitchen/legacy-ui-base
+ */
 class CRM_Herald_CivirulesAdapter_Form_SendNotification extends CRM_Herald_CivirulesAdapter_Form_AbstractSend {
 
   protected function getTemplateOptions(): array {
@@ -54,6 +59,7 @@ class CRM_Herald_CivirulesAdapter_Form_SendNotification extends CRM_Herald_Civir
    * @return array<string, string>
    */
   private function lookupHeraldTemplates(): array {
+    /** @var list<array<string, mixed>> $rows */
     $rows = \Civi\Api4\MessageTemplate::get(checkPermissions: FALSE)
       ->addSelect('workflow_name', 'msg_title')
       ->addWhere('workflow_name', 'LIKE', 'herald_%')
@@ -62,10 +68,10 @@ class CRM_Herald_CivirulesAdapter_Form_SendNotification extends CRM_Herald_Civir
       ->getArrayCopy();
     $opts = [];
     foreach ($rows as $row) {
-      if (!is_array($row) || !is_string($row['workflow_name'] ?? NULL)) {
+      $workflowName = $row['workflow_name'] ?? NULL;
+      if (!is_string($workflowName)) {
         continue;
       }
-      $workflowName = $row['workflow_name'];
       $msgTitle = $row['msg_title'] ?? NULL;
       $msgTitle = is_string($msgTitle) ? $msgTitle : '';
       $opts[$workflowName] = $msgTitle !== '' ? $msgTitle : $workflowName;

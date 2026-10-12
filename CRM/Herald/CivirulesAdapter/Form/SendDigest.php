@@ -7,6 +7,8 @@ use CRM_Herald_ExtensionUtil as E;
 /**
  * Form for the digest action: either the fields of one contribution block or
  * a JSON list of blocks of any type.
+ * CiviRules opens its parameter screens as QuickForm forms by route.
+ * @mago-expect analysis:civikitchen/legacy-ui-base
  * @mago-expect lint:cyclomatic-complexity
  */
 class CRM_Herald_CivirulesAdapter_Form_SendDigest extends CRM_Herald_CivirulesAdapter_Form_AbstractSend {
@@ -19,6 +21,7 @@ class CRM_Herald_CivirulesAdapter_Form_SendDigest extends CRM_Herald_CivirulesAd
    * @return array<string, string>
    */
   protected function getTemplateOptions(): array {
+    /** @var list<array<string, mixed>> $rows */
     $rows = \Civi\Api4\MessageTemplate::get(checkPermissions: FALSE)
       ->addSelect('workflow_name', 'msg_title')
       ->addWhere('workflow_name', 'LIKE', 'herald_contribution_digest_%')
@@ -27,10 +30,10 @@ class CRM_Herald_CivirulesAdapter_Form_SendDigest extends CRM_Herald_CivirulesAd
       ->getArrayCopy();
     $opts = ['' => E::ts('- block default -')];
     foreach ($rows as $row) {
-      if (!is_array($row) || !is_string($row['workflow_name'] ?? NULL)) {
+      $workflowName = $row['workflow_name'] ?? NULL;
+      if (!is_string($workflowName)) {
         continue;
       }
-      $workflowName = $row['workflow_name'];
       $msgTitle = $row['msg_title'] ?? NULL;
       $msgTitle = is_string($msgTitle) ? $msgTitle : '';
       $opts[$workflowName] = $msgTitle !== '' ? $msgTitle : $workflowName;

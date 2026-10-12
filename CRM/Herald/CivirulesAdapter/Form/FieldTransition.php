@@ -9,6 +9,8 @@ use CRM_Herald_ExtensionUtil as E;
 /**
  * Parameter form for the generic field-transition condition: entity, field,
  * and an optional (operator, value) pair for each side of the transition.
+ * CiviRules opens its parameter screens as QuickForm forms by route.
+ * @mago-expect analysis:civikitchen/legacy-ui-base
  */
 class CRM_Herald_CivirulesAdapter_Form_FieldTransition extends CRM_CivirulesConditions_Form_Form {
 
