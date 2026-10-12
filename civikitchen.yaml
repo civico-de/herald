@@ -15,7 +15,7 @@ policy:
 
   # Floor for ckcoverage: raise as coverage grows, never lower to make a build green.
   coverage:
-    minimum: 68
+    minimum: 95
 
   # Business hooks live in scan classes (AutoSubscriber/HookInterface); the
   # classic function form is reserved for pre-boot/lifecycle/return-value hooks.
