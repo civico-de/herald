@@ -311,7 +311,7 @@ class ContributionStatsService {
       static function ($r) {
         $qty = (float) ($r['qty_sum'] ?? 0);
         return [
-          'label' => ($r['label'] ?? '') ?: 'Unknown',
+          'label' => $r['label'] ?? '' ?: 'Unknown',
           'unit_price' => (float) ($r['unit_price'] ?? 0),
           // Whole quantities render as "6×", not "6.00×".
           // @mago-expect lint:identity-comparison
