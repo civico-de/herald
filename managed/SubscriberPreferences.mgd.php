@@ -15,10 +15,8 @@ use CRM_Herald_ExtensionUtil as E;
  *     channel pick + channel-specific recipient identifiers + the multi-value
  *     `subscriptions` field.
  *
- * UFGroup (profile) is NOT shipped here — UFField references custom fields
- * by their numeric `custom_<id>`, which only exists after the custom fields
- * are installed. Admins run `cv scr bin/install-profile.php` once after
- * enable, or set up a profile by hand. See README "Self-service" section.
+ * The self-service profile is not shipped here: its UFFields name custom
+ * fields by id (CRM_Herald_Upgrader_PreferencesProfile).
  */
 
 $subscriptionTypes = [

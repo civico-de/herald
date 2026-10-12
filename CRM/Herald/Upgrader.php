@@ -79,6 +79,16 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
   }
 
   /**
+   * Existing installs: the self-service preferences profile, formerly a
+   * one-off script; a profile that script created is kept.
+   */
+  public function upgrade_1009(): bool {
+    $this->ctx->log->info('herald: ensuring the herald_my_preferences profile');
+    CRM_Herald_Upgrader_PreferencesProfile::ensure();
+    return TRUE;
+  }
+
+  /**
    * Bring CiviRules manifests, renamed handler classes and managed entities
    * in line with the shipped code. Shared by enable() and upgrade steps.
    */
@@ -105,6 +115,7 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
     // CREATE TABLE IF NOT EXISTS keeps it as it was.
     CRM_Herald_Upgrader_BufferTable::sync();
     self::reconcile($this->extensionDir);
+    CRM_Herald_Upgrader_PreferencesProfile::ensure();
   }
 
 }

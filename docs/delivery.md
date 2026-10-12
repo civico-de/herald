@@ -41,15 +41,11 @@ custom group `herald_preferences` on contacts:
 | Subscriptions | The notification kinds the contact wants |
 | Scope: entity type, Scope: entity ID | Optional, see [Scoped subscriptions](#scoped-subscriptions) |
 
-Admins fill these in on the contact. For self-service, create the profile once:
-
-```bash
-cv scr /var/www/html/ext/herald/bin/install-profile.php
-# prints the URL: /civicrm/profile/edit?gid=<N>&reset=1
-```
-
-The script is idempotent. Send staff the printed URL: CiviCRM opens the profile for the
-logged-in contact, who can only see and edit their own record.
+Admins fill these in on the contact. For self-service, herald installs the profile
+"My notification preferences" (`herald_my_preferences`). Send staff its URL,
+`/civicrm/profile/edit?gid=<id>&reset=1`, with the id from Administer → Customize Data
+and Screens → Profiles: CiviCRM opens the profile for the logged-in contact, who can only
+see and edit their own record.
 
 Then set an action's delivery mode to "Subscribers" and pick the subscription type. The
 action's own recipient keys are ignored in this mode. From the rule only presentation
