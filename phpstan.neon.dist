@@ -1,50 +1,69 @@
+includes:
+	# The CiviCRM call bans (APIv3 entry points, CRM_Utils_Array::value, …) as
+	# spaze/phpstan-disallowed-calls config — shipped in the civikitchen image,
+	# which is also the only place a phpstan binary exists.
+	- /opt/civikitchen/toolbelt/phpstan-config/civicrm-disallowed.neon
+	# Opt in when the repo is ready; it is loud on older code:
+	# - /opt/civikitchen/toolbelt/phpstan-root/vendor/phpstan/phpstan-strict-rules/rules.neon
+
 parameters:
 	level: 10
-	# Analyse against the declared PHP floor, not the image's PHP.
+	# Analyse for the floor composer.json promises, not for whatever PHP the
+	# image runs — keep the two in step (ckconform: php-version-coherence).
 	phpVersion: 80300
 	# PHPDoc array shapes (APIv4 rows, decoded JSON) describe what the data
 	# IS, but defensive runtime checks (is_array on decoded JSON) must not be
 	# reported as redundant because of them. Also: PEAR-era signatures lie in
 	# their PHPDocs (a documented "array" can be a PEAR_Error).
 	treatPhpDocTypesAsCertain: false
-	# A typed property with no default is a runtime Error waiting for the one
-	# path that reads it before writing it; APIv4 action parameters are exempt.
+	# Not implied by any level. A typed property with no default is a runtime
+	# Error waiting for the one path that reads it before writing it; APIv4
+	# action parameters are exempted by the package's properties extension.
 	checkUninitializedProperties: true
+	# The whole repository, so a directory added later is analysed without an
+	# edit here; phpstan has no optional entries in paths.
 	paths:
-		- Civi
-		- CRM
-		- managed
-		- herald.php
+		- .
 	excludePaths:
 		analyse:
-			# civix-generated stubs; the DAO base class is created at runtime
+			# civix-generated; BAO/ is not — civix only seeds it, the logic is the repo's
 			- CRM/*/DAO/*
-			- CRM/*/BAO/*
+			- herald.civix.php
+			- mixin (?)
+			# phpstan-tests.neon.dist analyses the suite in a second pass
+			- tests (?)
+		analyseAndScan:
+			- phpstanBootstrap.php
+			- vendor (?)
+			- node_modules (?)
+			- build (?)
+			- .civikitchen-siblings (?)
 	scanFiles:
 		- herald.civix.php
-	scanDirectories:
-		# CiviRules base classes (parents of the herald actions/conditions/forms)
-		# live off the classloader path in the dev container.
-		- /var/www/html/ext/org.civicoop.civirules
-		# Core ships APIv4 entities from its bundled extensions, not only from
-		# Civi/Api4 proper — Civi\Api4\Contribution lives in civi_contribute.
-		# Without this every call on such an entity is class.notFound, and the
-		# whole fluent chain after it degrades to mixed.
-		- /var/www/html/core/ext
+	# scanDirectories:
+	#	# phpstanBootstrap.php already autoloads core's own ext packages and
+	#	# every extension in info.xml <requires>. Add here what neither
+	#	# covers: an extension this repo does not <require>, or a package
+	#	# whose classes sit off the civix layout, e.g.:
+	#	# - /var/www/html/core/ext/flexmailer/src
 	bootstrapFiles:
 		- phpstanBootstrap.php
-		# Repo-specific half (Smarty preload, the extension-class autoloader and
-		# the CiviRules DAO alias) — kept out of the template-managed file above,
-		# which ckinit --update rewrites wholesale.
-		- phpstanBootstrap.local.php
+	civikitchen:
+		# ck.sql.unknownTable checks `civicrm_`-prefixed table names in raw SQL
+		# against core's schema plus this repo's own (schema/, xml/schema/,
+		# sql/). List here the `civicrm_`-prefixed tables of OTHER extensions
+		# this repo queries — they exist on the site but in no catalog:
+		#	- civicrm_someext_thing
+		sqlKnownTables: []
 	# ignoreErrors: only ever narrowly scoped (identifier + path + count) and
 	# carrying a comment that says WHY the report is wrong — never blanket
-	# patterns, never a baseline file.
+	# patterns, never a baseline file. A boundary report
+	# (phpat.testOnlyCoreAndOwnCivicrmDependencies) on an extension this one
+	# <requires> means its checkout was not found beside this repo — mount
+	# it (sibling_repo in CI); it is not an ignoreErrors case.
 	ignoreErrors:
-		# CiviRules' action/condition parameter screens ARE QuickForm —
-		# CRM_CivirulesActions_Form_Form extends CRM_Core_Form, and CiviRules
-		# opens them by route. There is no SearchKit/Afform equivalent to
-		# migrate to; the exception is confined to the adapter forms.
+		# CiviRules opens its action and condition parameter screens as QuickForm
+		# forms by route; the exception is confined to the adapter forms.
 		-
 			identifier: phpat.testNoLegacyUiBases
 			paths:

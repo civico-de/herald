@@ -13,16 +13,16 @@ use Civi\Herald\Monitor\Monitor;
  * managed/Job.mgd.php; a run with no registered checks is a cheap no-op.
  * A run in which a publish failed returns an error.
  *
- * @param array $spec
+ * @param array<string, mixed> $spec
  */
-function _civicrm_api3_job_herald_monitor_spec(&$spec) {
+function _civicrm_api3_job_herald_monitor_spec(array &$spec): void {
 }
 
 /**
- * @param array $params
- * @return array
+ * @param array<string, mixed> $params
+ * @return array<array-key, mixed>
  */
-function civicrm_api3_job_herald_monitor($params) {
+function civicrm_api3_job_herald_monitor(array $params): array {
   $result = (new Monitor())->run();
   $failures = $result['publish_failures'] ?? 0;
   if ($failures > 0) {

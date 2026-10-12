@@ -17,13 +17,15 @@ declare(strict_types = 1);
 use Civi\Api4\Contact;
 
 $externalIdentifier = 'civico-showroom-coordinator';
+/** @var array{id: int}|null $coordinator */
 $coordinator = Contact::get(checkPermissions: FALSE)
   ->addSelect('id')
   ->addWhere('external_identifier', '=', $externalIdentifier)
   ->execute()
   ->first();
 
-if (!is_numeric($coordinator['id'] ?? NULL)) {
+if ($coordinator === NULL) {
+  /** @var array{id: int} $coordinator */
   $coordinator = Contact::create(checkPermissions: FALSE)
     ->addValue('contact_type', 'Individual')
     ->addValue('first_name', 'Demo')
@@ -32,7 +34,7 @@ if (!is_numeric($coordinator['id'] ?? NULL)) {
     ->execute()
     ->single();
 }
-$coordinatorId = (int) $coordinator['id'];
+$coordinatorId = $coordinator['id'];
 
 $activityRoute = [
   'channel' => 'activity',

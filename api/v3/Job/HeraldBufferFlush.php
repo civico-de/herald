@@ -6,6 +6,7 @@ use Civi\Herald\Buffer\AggregateSummary;
 use Civi\Herald\Buffer\AlertBuffer;
 use Civi\Herald\Buffer\DeadLetter;
 use Civi\Herald\Dispatch\Dispatcher;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Job.herald_buffer_flush
@@ -27,16 +28,16 @@ use Civi\Herald\Dispatch\Dispatcher;
  * while another holds it, and AlertBuffer::claimDue() stamps the rows it hands
  * out, which is what actually rules out delivering a group twice.
  *
- * @param array $spec
+ * @param array<string, mixed> $spec
  */
-function _civicrm_api3_job_herald_buffer_flush_spec(&$spec) {
+function _civicrm_api3_job_herald_buffer_flush_spec(array &$spec): void {
 }
 
 /**
- * @param array $params
- * @return array
+ * @param array<string, mixed> $params
+ * @return array<array-key, mixed>
  */
-function civicrm_api3_job_herald_buffer_flush($params) {
+function civicrm_api3_job_herald_buffer_flush(array $params): array {
   $lock = \Civi::lockManager()->acquire(AlertBuffer::LOCK_NAME);
   if (!$lock->isAcquired()) {
     return civicrm_api3_create_success(
@@ -52,8 +53,8 @@ function civicrm_api3_job_herald_buffer_flush($params) {
   $sent = 0;
   $failed = 0;
   $parked = 0;
-  $maxAttempts = (int) \Civi::settings()->get('herald_buffer_max_attempts');
-  $maxItems = (int) \Civi::settings()->get('herald_buffer_max_items');
+  $maxAttempts = Cast::toInt(\Civi::settings()->get('herald_buffer_max_attempts'));
+  $maxItems = Cast::toInt(\Civi::settings()->get('herald_buffer_max_items'));
   try {
     foreach ($buffer->claimDue() as $group) {
       try {

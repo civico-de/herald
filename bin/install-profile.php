@@ -26,6 +26,7 @@ use Civi\Api4\UFGroup;
 $profileName = 'herald_my_preferences';
 $profileTitle = 'My notification preferences';
 
+/** @var array{id: int}|null $existing */
 $existing = UFGroup::get(checkPermissions: FALSE)
   ->addSelect('id')
   ->addWhere('name', '=', $profileName)
@@ -33,12 +34,13 @@ $existing = UFGroup::get(checkPermissions: FALSE)
   ->first();
 
 if ($existing) {
-  $gid = (int) $existing['id'];
+  $gid = $existing['id'];
   echo "[herald] UFGroup '{$profileName}' already exists (id={$gid}).\n";
 }
 // @mago-expect lint:no-else-clause
 else {
-  $gid = (int) UFGroup::create(checkPermissions: FALSE)
+  /** @var array{id: int} $created */
+  $created = UFGroup::create(checkPermissions: FALSE)
     ->addValue('name', $profileName)
     ->addValue('title', $profileTitle)
     ->addValue('group_type', 'Individual,Contact')
@@ -46,7 +48,8 @@ else {
     ->addValue('is_reserved', value: FALSE)
     ->addValue('help_pre', 'Pick your preferred channel and what kinds of notifications you want to receive.')
     ->execute()
-    ->single()['id'];
+    ->single();
+  $gid = $created['id'];
   echo "[herald] Created UFGroup '{$profileName}' (id={$gid}).\n";
 }
 
@@ -60,6 +63,7 @@ $fieldOrder = [
 ];
 
 foreach ($fieldOrder as $f) {
+  /** @var array{id: int, name: string}|null $cf */
   $cf = CustomField::get(checkPermissions: FALSE)
     ->addSelect('id', 'name')
     ->addWhere('custom_group_id:name', '=', 'herald_preferences')
@@ -73,8 +77,9 @@ foreach ($fieldOrder as $f) {
     );
     continue;
   }
-  $fieldName = 'custom_' . (int) $cf['id'];
+  $fieldName = 'custom_' . $cf['id'];
 
+  /** @var array{id: int}|null $existingField */
   $existingField = UFField::get(checkPermissions: FALSE)
     ->addSelect('id')
     ->addWhere('uf_group_id', '=', $gid)
@@ -87,7 +92,8 @@ foreach ($fieldOrder as $f) {
     continue;
   }
 
-  $newId = UFField::create(checkPermissions: FALSE)
+  /** @var array{id: int} $newField */
+  $newField = UFField::create(checkPermissions: FALSE)
     ->addValue('uf_group_id', $gid)
     ->addValue('field_name', $fieldName)
     ->addValue('label', $f['label'])
@@ -96,7 +102,8 @@ foreach ($fieldOrder as $f) {
     ->addValue('is_active', value: TRUE)
     ->addValue('visibility', 'User and User Admin Only')
     ->execute()
-    ->single()['id'];
+    ->single();
+  $newId = $newField['id'];
   echo "[herald]   + Added UFField {$f['name']} (id={$newId}).\n";
 }
 
