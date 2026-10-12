@@ -1,11 +1,15 @@
 # CI stack — standalone, NOT an override of docker-compose.yml. App + db
-# only: no ports, no SMTP sink, no sibling mounts (CI checks out this
-# extension alone; unit tests use stub mailers, integrations are covered by
-# the E2E suites, which run locally against the full dev stack).
+# only: no ports and no SMTP sink (unit tests use stub mailers, integrations
+# are covered by the E2E suites, which run locally against the full dev stack).
 #
 #   docker compose -f .docker/docker-compose.ci.yml up -d --wait
-#   docker compose -f .docker/docker-compose.ci.yml exec -T -u www-data app bash -c \
-#     'cd /var/www/html/ext/herald && CIVICRM_UF=UnitTests phpunit --coverage-text tests/phpunit && phpstan analyse'
+#   docker compose -f .docker/docker-compose.ci.yml exec -T -u www-data \
+#     -w /var/www/html/ext/herald app ck ci
+#
+# `ck ci` runs every in-container gate of the shared CI workflow, in its order.
+# In a repository of several extensions the repository root is mounted at
+# /civikitchen-repo; the git-reading gates run from there, so pass
+# -e CK_TOOL_PATH=/civikitchen-repo/<directory> to the exec.
 #
 # Keep image tag and db version in sync with docker-compose.yml.
 #
@@ -19,7 +23,9 @@
 #
 # The two marked blocks are template-managed (ckinit --update refreshes them);
 # between them the repo adds what only it needs, e.g. a sibling mount:
-#       - ../../sibling:/var/www/html/ext/sibling:ro
+#       - ../../sibling:/var/www/html/ext/de.example.sibling:ro
+# The mount target is the sibling's extension KEY: that is where a <requires>
+# entry is looked up.
 # BEGIN CIVIKITCHEN MANAGED app
 name: herald-ci
 

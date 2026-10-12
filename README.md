@@ -114,28 +114,27 @@ with aggregation, event lifecycle alerts, signups and scheduled digests.
 
 ## Development
 
-The repo ships a [civikitchen](https://github.com/jfilter/civikitchen) stack in
-`tests/docker/`:
+herald uses the [civikitchen](https://github.com/jfilter/civikitchen) template
+stack in `.docker/`. From a civikitchen checkout next to the repo:
 
 ```bash
-cd tests/docker && docker compose up -d           # CiviCRM :8090, phpMyAdmin :8091, Maildev :1090
-docker compose exec app cv ext:enable herald      # once per fresh DB, for manual testing
-docker compose exec -T app \
-    bash -c "cd /var/www/html/ext/herald && vendor/bin/phpunit"
+../civikitchen/scaffold/ckup            # dev stack on free host ports, prints the URL
+../civikitchen/scaffold/ckx ck ci       # every CI gate: lint, format, tests with coverage, phpstan, …
+../civikitchen/scaffold/ckx phpunit     # the test suite alone
 ```
 
-The first `up` installs CiviCRM and CiviRules and runs `composer install` on the mounted
-extension. That install also builds `vendor/`: Strauss rewrites the bundled
-`civico-de/stdlib` into herald's own `Civi\Herald\Vendor\` namespace. The test run
-needs no `ext:enable` and no environment variables: the headless suite installs itself
-into the separate `civicrm_test` database that `tests/docker/initdb/` creates, so the dev
-site stays untouched. The bootstrap refuses to run unless cv's configuration points the
-tests at a `*_test` database; the civikitchen stack provides that. A `db-data` volume
-older than that init script needs one `docker compose down -v`.
+`ckup` writes the host ports to `.docker/.env`, runs `composer install` on the
+checkout and starts the stack; the first boot installs CiviCRM, enables herald
+and installs CiviRules from its `<requires>`. `composer install` also builds
+`vendor/`: Strauss rewrites the bundled `civico-de/stdlib` into herald's own
+`Civi\Herald\Vendor\` namespace.
 
-CI uses the shared civikitchen layer in `.docker/` (ports 8080, 8081, 1080). The
-`@group unit` tests also run without any CiviCRM checkout, with `--no-configuration` and
-a bootstrap that stubs the CiviRules base classes.
+The headless suite installs itself into the separate `civicrm_test` database
+the image creates, so the dev site stays untouched and no `ext:enable` or
+environment variables are needed. The bootstrap refuses to run unless cv's
+configuration points the tests at a `*_test` database. CI runs the same gates
+on the same image (`.github/workflows/ci.yml`); the coverage floor is
+`coverage.minimum` in `civikitchen.yaml`.
 
 ## License
 

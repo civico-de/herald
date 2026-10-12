@@ -2,12 +2,22 @@
 # + phpMyAdmin.
 #
 # Usage:
-#   cd .docker && docker compose up -d        # first boot: auto-install + provisioning
+#   /path/to/civikitchen/scaffold/ckup     # composer install, free host ports, `up -d`
+#   cd .docker && docker compose up -d     # default ports below; no composer install
 #
-# URLs:  CiviCRM http://localhost:8080 (admin/admin)
-#        maildev http://localhost:1080 · phpMyAdmin http://localhost:8081
+# URLs:  CiviCRM http://localhost:${CK_HTTP_PORT:-8080} (admin/admin)
+#        maildev :${CK_MAILDEV_PORT:-1080} · phpMyAdmin :${CK_PMA_PORT:-8081}
+#
+# Host ports come from .docker/.env (gitignored; ckup writes it) so several
+# stacks can run side by side; the defaults apply when it is absent.
 #
 # Re-provision from scratch (re-seeds the profile, re-runs init.d hooks): docker compose down -v && up -d
+#
+# Every gate the shared CI runs in the container, with a summary table:
+#   /path/to/civikitchen/scaffold/ckx ck ci
+# ckx execs into app as www-data in the extension directory. In a repository of
+# several extensions the repository root is mounted at /civikitchen-repo, and
+# ckx points the git-reading gates there (CK_TOOL_PATH).
 
 # Explicit project name — unnamed .docker/ stacks all become one project
 # called "docker" and share volumes across checkouts.
@@ -15,23 +25,24 @@ name: herald
 
 services:
   app:
-    image: ${CIVIKITCHEN_IMAGE:-ghcr.io/jfilter/civikitchen:standalone}
-    # Override CIVIKITCHEN_IMAGE to pin a specific CiviCRM minor for this
-    # extension. Always pull so a stale local layer doesn't mask entrypoint fixes.
+    image: ${CIVIKITCHEN_IMAGE:-ghcr.io/jfilter/civikitchen:v1}
+    # :v1 is the released contract image, matching the @v1 CI pin. Override
+    # CIVIKITCHEN_IMAGE to pin a specific CiviCRM minor (e.g.
+    # ghcr.io/jfilter/civikitchen:standalone-6.15) for this extension. Always
+    # pull so a stale local layer doesn't mask entrypoint fixes.
     pull_policy: always
     depends_on:
       db:
         condition: service_healthy
     ports:
-      - "8080:80"
+      - "${CK_HTTP_PORT:-8080}:80"
+    # The DB connection (host db, database/user/password civicrm) is the
+    # image's default and matches the db service below; only what differs
+    # from the defaults in docs/configuration.md needs a line here.
     environment:
       CIVICRM_AUTO_INSTALL: "1"
-      CIVICRM_DB_HOST: db
-      CIVICRM_DB_NAME: civicrm
-      CIVICRM_DB_USER: civicrm
-      CIVICRM_DB_PASSWORD: civicrm
       # Must match the host:port opened in the browser (asset URLs).
-      CIVIKITCHEN_SITE_URL: "http://localhost:8080"
+      CIVIKITCHEN_SITE_URL: "http://localhost:${CK_HTTP_PORT:-8080}"
       CIVIKITCHEN_DEMO_USER: admin
       # Dependencies, config, seed records and API users: profiles/dev/profile.json.
       CIVIKITCHEN_PROFILE: dev
@@ -40,21 +51,21 @@ services:
       # Outbound mail lands in maildev.
       CIVIKITCHEN_SMTP_HOST: maildev
       CIVIKITCHEN_SMTP_PORT: "1025"
-      # Enable the mounted extension reproducibly on first boot. Add sibling
-      # extensions here (comma-separated) instead of coupling them in info.xml
-      # when the integration is optional by design.
-      # CiviRules (info.xml <requires>) is installed by the entrypoint — nothing to add here.
-      CIVIKITCHEN_ENABLE_EXTENSIONS: "herald"
     volumes:
+      # Every extension mounted under ext/ is enabled on first boot, with its
+      # info.xml <requires> resolved. Mount siblings the same way; use
+      # CIVIKITCHEN_ENABLE_EXTENSIONS only to order them or add non-mounts.
       - ..:/var/www/html/ext/herald
-      # Sibling extension example (mount + add to CIVIKITCHEN_ENABLE_EXTENSIONS):
-      # - ../../othersibling:/var/www/html/ext/othersibling
+      # - ../../othersibling:/var/www/html/ext/de.example.othersibling
       - ./profiles:/civikitchen-profiles:ro
       # Hooks for the stack's environment, run after the profile. See init.d/README.md.
       - ./init.d:/civikitchen-init.d:ro
 
   db:
     image: mariadb:10.11
+    # Civi\Test's schema rebuild creates triggers as the app user; with binary
+    # logging the server refuses that unless it trusts non-SUPER creators.
+    command: --log-bin-trust-function-creators=1
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: civicrm
@@ -62,8 +73,6 @@ services:
       MYSQL_PASSWORD: civicrm
     volumes:
       - db-data:/var/lib/mysql
-      # Global grants so headless tests can (re)create the civicrm_test scratch DB.
-      - ./db-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 5s
@@ -71,19 +80,31 @@ services:
       retries: 10
 
   maildev:
-    image: maildev/maildev:2.1.0
+    image: maildev/maildev:2.2.1
     ports:
-      - "1080:1080"
-      - "1025:1025"
+      - "${CK_MAILDEV_PORT:-1080}:1080"
+      - "${CK_SMTP_PORT:-1025}:1025"
 
   phpmyadmin:
-    image: phpmyadmin/phpmyadmin:5.2.2
+    image: phpmyadmin/phpmyadmin:5.2.3
     depends_on:
       - db
     ports:
-      - "8081:80"
+      - "${CK_PMA_PORT:-8081}:80"
     environment:
       PMA_HOST: db
+
+  # Headless Chrome for browser tests (Civi\Test\MinkBase), opt-in:
+  #   docker compose --profile browser up -d
+  # It shares the app's network, so it opens the site URL as your browser does
+  # and MinkBase reaches it at its default localhost:9222.
+  browser:
+    profiles: [browser]
+    image: chromedp/headless-shell:151.0.7922.109
+    network_mode: service:app
+    # Docker's default 64 MB /dev/shm makes Chrome drop script loads on
+    # asset-heavy pages (net::ERR_INSUFFICIENT_RESOURCES); the image README advises 2G.
+    shm_size: 2gb
 
 volumes:
   db-data:

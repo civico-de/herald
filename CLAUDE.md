@@ -100,15 +100,12 @@ actions (no bespoke cron for alerts). Live in production.
 ## Verify
 
 ```bash
-cd tests/docker && docker compose up -d
-docker compose exec -T app bash -c "cd /var/www/html/ext/herald && vendor/bin/phpunit"
+../civikitchen/scaffold/ckup          # template stack in .docker/, free host ports
+../civikitchen/scaffold/ckx ck ci     # every CI gate, as CI runs them
 ```
 
 Headless tests self-install into the isolated `civicrm_test` DB — no prior
-`ext:enable`, no env vars. If the `db-data` volume predates
-`tests/docker/initdb/`, run `docker compose down -v` once. Pure `@group unit`
-tests can run without any Civi checkout (`--no-configuration` plus a stub
-bootstrap). Smoke-test real sends with `cv api4 Herald.testTelegram` /
+`ext:enable`, no env vars. Smoke-test real sends with `cv api4 Herald.testTelegram` /
 `Herald.renderTemplate` (see README). User docs live in `docs/`
 (recipes, channels, delivery, digests, monitor, reference, deploy); keep them
 in step with code changes.

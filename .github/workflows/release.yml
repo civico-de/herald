@@ -8,7 +8,7 @@
 # Everything up to the END marker is template-managed; `with:` inputs and
 # `secrets:` for the call go below the marker and survive `ckinit --update`.
 # A repo that never releases declares `release: none` with a reason in
-# civikitchen.yaml and removes this file under policy.template_custom.
+# civikitchen.yaml; `ckinit --update` then deletes this file.
 # BEGIN CIVIKITCHEN MANAGED caller
 name: Release
 

@@ -11,8 +11,8 @@
 # The @v1 pin is the versioned contract: workflow, template, ck* tools and
 # images are released together, so this ref and the image tag in
 # .docker/docker-compose.ci.yml move as one. Fixes arrive without a PR here;
-# a breaking change has to announce itself as @v2. See civikitchen's
-# docs/releases.md.
+# a change this repo has to react to ships as a minor marked Breaking in the
+# changelog. See civikitchen's docs/releases.md.
 #
 # Everything up to the END marker is template-managed; what this repo needs
 # beyond it — `with:` inputs for the call, further jobs — goes below the

@@ -1,7 +1,27 @@
+# Dependencies are installed, not committed — but their LOCKFILES are, so a
+# build can be reproduced. ckconform fails a repo that ignores a lockfile.
 /vendor/
-/.phpunit.result.cache
-/.phpunit.cache/
+node_modules/
+
+# PHP tooling caches
+.phpunit.result.cache
+# ckphpunit's generated config (repo config + transaction canary); removed on
+# exit, so only a killed run leaves one behind.
+.ckphpunit-canary.xml
+.phpunit.cache/
+.phpstan-cache/
+
+# Docker secrets
+.docker/.env
+
+# OS / IDE
 .DS_Store
+Thumbs.db
+.idea/
+.vscode/
 *.swp
 *.swo
-/tests/docker/.env
+
+# TypeScript's incremental build cache (named after the tsconfig it belongs
+# to, so a bare '.tsbuildinfo' pattern misses it)
+*.tsbuildinfo
