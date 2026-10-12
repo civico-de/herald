@@ -35,7 +35,7 @@ cv() { # through the dev stack, or directly inside the image (GitLab CI jobs)
   if [ "${CK_IN_IMAGE:-}" = 1 ]; then
     command cv "$@" 2>/dev/null
   else
-    (cd "$COMPOSE_DIR" && docker compose exec -T app cv "$@" 2>/dev/null)
+    (cd "$COMPOSE_DIR" && docker compose exec -T -u www-data app cv "$@" 2>/dev/null)
   fi
 }
 
