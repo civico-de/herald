@@ -24,7 +24,10 @@ $bytes = is_file($cache) ? file_get_contents($cache, length: 32 << 20) : FALSE;
 $cached = is_string($bytes) && hash('sha256', $bytes) === STRAUSS_SHA256;
 if (!$cached) {
   $url = 'https://github.com/BrianHenryIE/strauss/releases/download/' . STRAUSS_VERSION . '/strauss.phar';
-  $bytes = file_get_contents($url);
+  // PHP's stream wrapper ignores the proxy variables curl and composer honour.
+  $proxy = parse_url((string) (getenv('https_proxy') ?: getenv('HTTPS_PROXY')));
+  $options = isset($proxy['host']) ? ['http' => ['proxy' => "tcp://{$proxy['host']}:" . ($proxy['port'] ?? 80)]] : [];
+  $bytes = file_get_contents($url, context: stream_context_create($options));
   if (!is_string($bytes) || hash('sha256', $bytes) !== STRAUSS_SHA256) {
     fwrite(STDERR, "strauss: {$url} did not download or does not match the pinned SHA-256\n");
     exit(1);
