@@ -296,7 +296,7 @@ class ContributionStatsService {
       $where[] = ['contribution_id.receive_date', '<', $period->endSql()];
     }
 
-    /** @var array<int, array{label: string|null, unit_price: float|int|numeric-string|null, qty: float|int|numeric-string|null, total: float|int|numeric-string|null}> $rows */
+    /** @var array<int, array{label: string|null, unit_price: float|int|numeric-string|null, qty_sum: float|int|numeric-string|null, total: float|int|numeric-string|null}> $rows */
     $rows = \Civi\Api4\LineItem::get(checkPermissions: FALSE)
       // Alias must differ from the field name (Api4SelectQuery restriction).
       ->addSelect('label', 'unit_price', 'SUM(qty) AS qty_sum', 'SUM(line_total) AS total')
@@ -311,7 +311,7 @@ class ContributionStatsService {
       static function ($r) {
         $qty = (float) ($r['qty_sum'] ?? 0);
         return [
-          'label' => (string) ($r['label'] ?? '') ?: 'Unknown',
+          'label' => ($r['label'] ?? '') ?: 'Unknown',
           'unit_price' => (float) ($r['unit_price'] ?? 0),
           // Whole quantities render as "6×", not "6.00×".
           // @mago-expect lint:identity-comparison

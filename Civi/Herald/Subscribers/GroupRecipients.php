@@ -67,6 +67,7 @@ class GroupRecipients {
    */
   public static function mapGroupRows(array $rows, array $options = []): array {
     $out = [];
+    /** @var array<string, int> $skipped */
     $skipped = [];
     $bump = static function (string $reason) use (&$skipped): void {
       $skipped[$reason] = ($skipped[$reason] ?? 0) + 1;

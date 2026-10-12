@@ -97,15 +97,11 @@ class Monitor {
   private function runConfig(): array {
     // Admin-editable map check-name => ISO datetime.
     $snoozeRaw = \Civi::settings()->get('herald_monitor_snooze');
-    /** @var array<string, string> $snooze */
     $snooze = is_array($snoozeRaw) ? $snoozeRaw : [];
     $now = \CRM_Utils_Time::time();
 
-    // Drop lapsed snoozes so the setting does not accumulate stale rows.
-    $liveSnooze = array_filter(
-      $snooze,
-      static fn ($iso) => is_string($iso) && ($t = strtotime($iso)) !== FALSE && $t > $now,
-    );
+    // Drop lapsed and malformed snoozes so the setting does not accumulate stale rows.
+    $liveSnooze = MonitorConfig::liveSnooze($snooze, $now);
     if ($liveSnooze !== $snooze) {
       \Civi::settings()->set('herald_monitor_snooze', $liveSnooze);
     }
@@ -114,7 +110,7 @@ class Monitor {
       'open_after' => max(1, Cast::toInt(\Civi::settings()->get('herald_monitor_open_after') ?: 1)),
       'close_after' => max(1, Cast::toInt(\Civi::settings()->get('herald_monitor_close_after') ?: 1)),
       'renotify_seconds' => max(0, Cast::toInt(\Civi::settings()->get('herald_monitor_renotify_hours') ?? 24)) * 3600,
-      'snooze' => $snooze,
+      'snooze' => $liveSnooze,
       'now' => $now,
     ];
   }

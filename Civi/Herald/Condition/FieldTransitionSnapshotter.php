@@ -28,7 +28,7 @@ final class FieldTransitionSnapshotter {
       $byEntity[$watch['entity']][] = $watch['field'];
     }
     foreach ($byEntity as $entity => $fields) {
-      self::snapshotEntityFields((string) $entity, $id, $fields);
+      self::snapshotEntityFields($entity, $id, $fields);
     }
   }
 

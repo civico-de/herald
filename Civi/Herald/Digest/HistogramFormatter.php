@@ -117,11 +117,13 @@ class HistogramFormatter {
     $step = ($high - $low) / $count;
 
     $edges = [$low];
+    $last = $low;
     for ($i = 1; $i < $count; $i++) {
       $raw = $low + ($step * $i);
       $nice = self::niceCeiling($raw);
-      if ($nice > end($edges) && $nice < $high) {
+      if ($nice > $last && $nice < $high) {
         $edges[] = $nice;
+        $last = $nice;
       }
     }
     $edges[] = $high;
@@ -136,16 +138,18 @@ class HistogramFormatter {
     $logMax = log10($max);
     $step = ($logMax - $logMin) / $count;
 
-    $edges = [self::niceFloor(max($min, 1))];
+    $last = self::niceFloor(max($min, 1));
+    $edges = [$last];
     for ($i = 1; $i < $count; $i++) {
-      $raw = pow(10, $logMin + ($step * $i));
+      $raw = 10 ** ($logMin + ($step * $i));
       $nice = self::niceCeiling($raw);
-      if ($nice > end($edges)) {
+      if ($nice > $last) {
         $edges[] = $nice;
+        $last = $nice;
       }
     }
     $finalHigh = self::niceCeiling($max);
-    if ($finalHigh > end($edges)) {
+    if ($finalHigh > $last) {
       $edges[] = $finalHigh;
     }
     return $edges;

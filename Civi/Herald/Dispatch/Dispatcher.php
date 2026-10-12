@@ -395,7 +395,7 @@ class Dispatcher {
    * @return array<string, mixed>
    */
   public static function filterSubscriberSafe(array $config): array {
-    return array_intersect_key($config, array_flip(self::SUBSCRIBER_SAFE_KEYS));
+    return Cast::namedOnly(array_intersect_key($config, array_flip(self::SUBSCRIBER_SAFE_KEYS)));
   }
 
   /**

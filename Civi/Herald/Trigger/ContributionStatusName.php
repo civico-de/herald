@@ -25,6 +25,7 @@ final class ContributionStatusName {
     /** @var array<int, string>|null $cache */
     static $cache = NULL;
     if ($cache === NULL) {
+      /** @var list<array<string, mixed>> $rows */
       $rows = \Civi\Api4\OptionValue::get(checkPermissions: FALSE)
         ->addSelect('value', 'name')
         ->addWhere('option_group_id:name', '=', 'contribution_status')
@@ -32,9 +33,6 @@ final class ContributionStatusName {
         ->getArrayCopy();
       $cache = [];
       foreach ($rows as $row) {
-        if (!is_array($row)) {
-          continue;
-        }
         $cache[Cast::toInt($row['value'] ?? NULL)] = Cast::toString($row['name'] ?? NULL);
       }
     }

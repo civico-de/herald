@@ -35,7 +35,9 @@ final class HeraldBufferedAlert extends Generic\AbstractEntity {
   public static function getInfo() {
     $info = parent::getInfo();
     // DAOGetAction makes this a DAO entity for SearchKit.
-    $info['type'][0] = 'DAOEntity';
+    $types = is_array($info['type'] ?? NULL) ? $info['type'] : [];
+    $types[0] = 'DAOEntity';
+    $info['type'] = $types;
     return $info;
   }
 

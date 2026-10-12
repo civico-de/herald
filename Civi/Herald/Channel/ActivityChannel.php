@@ -35,9 +35,9 @@ class ActivityChannel implements ChannelInterface {
   private $optionResolver;
 
   /**
-   * @param callable|null $creator
+   * @param (callable(array<string, mixed>): void)|null $creator
    *   Test seam replacing the APIv4 Activity.create call.
-   * @param callable|null $optionResolver
+   * @param (callable(string, string): int)|null $optionResolver
    *   Test seam resolving an option-group name and option name to its value.
    */
   public function __construct(?callable $creator = NULL, ?callable $optionResolver = NULL) {

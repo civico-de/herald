@@ -36,7 +36,7 @@ class EmailChannel implements ChannelInterface {
   private $mailer;
 
   /**
-   * @param callable|null $mailer
+   * @param (callable(array<string, mixed>): bool)|null $mailer
    *   Test-seam: callable(array $mailParams): bool replacing CRM_Utils_Mail::send.
    */
   public function __construct(?callable $mailer = NULL) {
@@ -68,7 +68,7 @@ class EmailChannel implements ChannelInterface {
 
     $params = self::buildMailParams($renderedBody, ['email_to' => $to] + $config, $from);
 
-    $mailer = $this->mailer ?? static fn (array $p): bool => (bool) \CRM_Utils_Mail::send($p);
+    $mailer = $this->mailer ?? \CRM_Utils_Mail::send(...);
     if (!$mailer($params)) {
       throw new \CRM_Core_Exception(
         'herald: email delivery failed — CRM_Utils_Mail::send returned FALSE. Check the outbound mail settings.',

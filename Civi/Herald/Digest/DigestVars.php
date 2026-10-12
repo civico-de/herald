@@ -71,7 +71,7 @@ final class DigestVars {
       $vars['by_source'] = $summary['bySource'];
     }
 
-    if ((bool) ($params['show_pending'] ?? TRUE)) {
+    if (!isset($params['show_pending']) || !empty($params['show_pending'])) {
       if ($groupBy === 'line_item') {
         $pendingItems = $stats->getItemSummary($filters, NULL, 'Pending');
         $vars['pending_items'] = $pendingItems;
@@ -87,7 +87,7 @@ final class DigestVars {
       }
     }
 
-    if ((bool) ($params['show_histogram'] ?? TRUE)) {
+    if (!isset($params['show_histogram']) || !empty($params['show_histogram'])) {
       $amounts = $stats->getAmountDistribution($filters, $period);
       $bucketCount = Cast::toInt($params['bucket_count'] ?? 8, 8);
       $edges = self::decodeEdges($params['bucket_edges'] ?? NULL);

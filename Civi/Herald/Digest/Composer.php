@@ -35,7 +35,7 @@ final class Composer {
     private readonly TemplateRenderer $renderer = new TemplateRenderer(),
     ?callable $searchRunner = NULL,
   ) {
-    $this->searchRunner = \Closure::fromCallable($searchRunner ?? SearchBlock::vars(...));
+    $this->searchRunner = $searchRunner === NULL ? SearchBlock::vars(...) : $searchRunner(...);
   }
 
   /**

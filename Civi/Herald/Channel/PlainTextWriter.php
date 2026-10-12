@@ -11,6 +11,9 @@ final class PlainTextWriter {
 
   private string $out = '';
 
+  /**
+   * @var non-negative-int
+   */
   private int $breaks = 0;
 
   public function result(): string {
@@ -51,6 +54,8 @@ final class PlainTextWriter {
 
   /**
    * Line breaks implied by layout: at most one blank line.
+   *
+   * @param non-negative-int $newlines
    */
   private function layout(int $newlines): void {
     $this->breaks = max($this->breaks, min(2, $newlines));

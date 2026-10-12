@@ -24,8 +24,7 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransition extends CRM_Civirule
     if ($entity === '' || $field === '') {
       return FALSE;
     }
-    $row = $triggerData->getEntityData($entity);
-    $rawId = is_array($row) ? $row['id'] ?? 0 : 0;
+    $rawId = $triggerData->getEntityData($entity)['id'] ?? 0;
     $original = CRM_Herald_CivirulesAdapter_OriginalData::rawField($triggerData, $entity, $field);
 
     // CiviRules evaluates rules in a system context (cron, post-commit
@@ -42,7 +41,7 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransition extends CRM_Civirule
       ->setHasOriginal($original['known'])
       ->execute();
 
-    return (bool) ($result->first()['matched'] ?? FALSE);
+    return !empty($result->first()['matched']);
   }
 
   /**
@@ -89,7 +88,7 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransition extends CRM_Civirule
    */
   private function conditionParams(): array {
     $raw = $this->ruleCondition['condition_params'] ?? NULL;
-    $decoded = is_string($raw) ? (unserialize($raw, ['allowed_classes' => FALSE]) ?: []) : (array) $raw;
+    $decoded = is_string($raw) ? unserialize($raw, ['allowed_classes' => FALSE]) : $raw;
     return is_array($decoded) ? $decoded : [];
   }
 

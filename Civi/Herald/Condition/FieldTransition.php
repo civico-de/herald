@@ -109,11 +109,11 @@ final class FieldTransition {
   }
 
   private static function ordered(string $operator, mixed $actual, string $expected): bool {
-    if (!is_numeric($expected) || !is_scalar($actual) || !is_numeric(Cast::toStoredString($actual))) {
+    $a = is_scalar($actual) ? trim(Cast::toStoredString($actual)) : '';
+    $b = trim($expected);
+    if (!is_numeric($a) || !is_numeric($b)) {
       return FALSE;
     }
-    $a = trim(Cast::toStoredString($actual));
-    $b = trim($expected);
     $cmp = self::floatSafe($a) && self::floatSafe($b)
       ? (float) $a <=> (float) $b
       : self::compareIntStrings($a, $b);

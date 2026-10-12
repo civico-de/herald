@@ -46,7 +46,7 @@ else {
     ->addValue('is_reserved', value: FALSE)
     ->addValue('help_pre', 'Pick your preferred channel and what kinds of notifications you want to receive.')
     ->execute()
-    ->first()['id'];
+    ->single()['id'];
   echo "[herald] Created UFGroup '{$profileName}' (id={$gid}).\n";
 }
 
@@ -73,7 +73,7 @@ foreach ($fieldOrder as $f) {
     );
     continue;
   }
-  $fieldName = 'custom_' . $cf['id'];
+  $fieldName = 'custom_' . (int) $cf['id'];
 
   $existingField = UFField::get(checkPermissions: FALSE)
     ->addSelect('id')
@@ -96,7 +96,7 @@ foreach ($fieldOrder as $f) {
     ->addValue('is_active', value: TRUE)
     ->addValue('visibility', 'User and User Admin Only')
     ->execute()
-    ->first()['id'];
+    ->single()['id'];
   echo "[herald]   + Added UFField {$f['name']} (id={$newId}).\n";
 }
 

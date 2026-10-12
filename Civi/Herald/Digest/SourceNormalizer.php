@@ -92,21 +92,16 @@ final class SourceNormalizer {
   private static function validatedRules(array $rules): array {
     $valid = [];
     foreach ($rules as $rule) {
-      if (
-        !is_array($rule)
-        || !isset($rule['match'], $rule['type'], $rule['label'])
-        || !is_string($rule['match'])
-        || !is_string($rule['type'])
-        || !is_string($rule['label'])
-        || !in_array($rule['type'], ['contains', 'prefix', 'regex'], TRUE)
-      ) {
+      if (!is_array($rule)) {
         continue;
       }
-      $valid[] = [
-        'match' => $rule['match'],
-        'type' => $rule['type'],
-        'label' => $rule['label'],
-      ];
+      $match = $rule['match'] ?? NULL;
+      $type = $rule['type'] ?? NULL;
+      $label = $rule['label'] ?? NULL;
+      if (!is_string($match) || !is_string($label) || !in_array($type, ['contains', 'prefix', 'regex'], TRUE)) {
+        continue;
+      }
+      $valid[] = ['match' => $match, 'type' => $type, 'label' => $label];
     }
     return $valid;
   }

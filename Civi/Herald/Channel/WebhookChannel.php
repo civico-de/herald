@@ -172,10 +172,11 @@ class WebhookChannel implements ChannelInterface {
    */
   public static function assertUrlAllowed(string $url, array $opts = []): void {
     $parts = parse_url($url);
-    if (!is_array($parts) || empty($parts['scheme']) || empty($parts['host'])) {
+    $scheme = strtolower(is_array($parts) ? $parts['scheme'] ?? '' : '');
+    $host = trim(is_array($parts) ? $parts['host'] ?? '' : '', '[]');
+    if ($scheme === '' || $host === '') {
       throw new \CRM_Core_Exception('herald: webhook URL is not a valid absolute URL.');
     }
-    $scheme = strtolower((string) $parts['scheme']);
     if ($scheme !== 'http' && $scheme !== 'https') {
       throw new \CRM_Core_Exception('herald: webhook URL must use http or https, got ' . $scheme . '.');
     }
@@ -183,10 +184,8 @@ class WebhookChannel implements ChannelInterface {
       throw new \CRM_Core_Exception('herald: webhook URL must not contain credentials.');
     }
 
-    $host = trim((string) $parts['host'], '[]');
-
     $allowed = $opts['allowed_hosts'] ?? [];
-    if (is_array($allowed) && $allowed !== []) {
+    if ($allowed !== []) {
       $lcHost = strtolower($host);
       foreach ($allowed as $entry) {
         $needle = strtolower(trim(Cast::toString($entry)));

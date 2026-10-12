@@ -34,10 +34,31 @@ class MonitorConfig {
   }
 
   /**
+   * The entries of an admin-edited snooze map that are well-formed and not yet lapsed.
+   *
+   * @param array<array-key, mixed> $snooze
+   * @return array<string, string>
+   */
+  public static function liveSnooze(array $snooze, int $now): array {
+    $live = [];
+    foreach ($snooze as $name => $iso) {
+      if (!is_string($name) || !is_string($iso)) {
+        continue;
+      }
+      $until = strtotime($iso);
+      if ($until === FALSE || $until <= $now) {
+        continue;
+      }
+      $live[$name] = $iso;
+    }
+    return $live;
+  }
+
+  /**
    * Unparseable or past snooze timestamps count as not snoozed.
    */
   public function isSnoozed(string $name): bool {
-    if (!isset($this->snooze[$name]) || !is_string($this->snooze[$name])) {
+    if (!isset($this->snooze[$name])) {
       return FALSE;
     }
     $until = strtotime($this->snooze[$name]);

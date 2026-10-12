@@ -116,6 +116,7 @@ class SubscriberLookup {
     /** @var array{entity_type: string, entity_id: int}|null $scope */
     $scope = is_array($scope) ? $scope : NULL;
     $out = [];
+    /** @var array<string, int> $skipped */
     $skipped = [];
     $bump = static function (string $reason) use (&$skipped): void {
       $skipped[$reason] = ($skipped[$reason] ?? 0) + 1;

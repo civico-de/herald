@@ -38,7 +38,7 @@ class ExtraSections {
       'context' => $context,
       'sections' => &$sections,
     ]));
-    if (!array_key_exists($key, $sections) || !is_scalar($sections[$key])) {
+    if (!is_array($sections) || !array_key_exists($key, $sections) || !is_scalar($sections[$key])) {
       throw new \CRM_Core_Exception("herald: no extension answers the digest section \"{$key}\"");
     }
     return trim((string) $sections[$key]);

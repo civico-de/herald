@@ -54,6 +54,7 @@ final class HtmlTokens {
    * Lower-case element name of a tag, '' for a comment.
    */
   public static function name(string $tag): string {
+    $m = [];
     return preg_match('#^</?([a-zA-Z][a-zA-Z0-9-]*)#', $tag, $m) === 1 ? strtolower($m[1]) : '';
   }
 

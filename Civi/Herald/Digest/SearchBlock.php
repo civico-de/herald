@@ -30,9 +30,11 @@ final class SearchBlock {
     unset($params['version']);
     $params['checkPermissions'] = FALSE;
     $columns = self::columns(is_array($params['select'] ?? NULL) ? $params['select'] : []);
+    /** @var list<array<string, mixed>> $result */
+    $result = civicrm_api4(Cast::toString($saved['api_entity']), 'get', $params)->getArrayCopy();
     $rows = [];
-    foreach (civicrm_api4(Cast::toString($saved['api_entity']), 'get', $params) as $row) {
-      $rows[] = self::row(is_array($row) ? $row : [], $columns);
+    foreach ($result as $row) {
+      $rows[] = self::row($row, $columns);
     }
     return ['rows' => $rows, 'count' => count($rows)];
   }

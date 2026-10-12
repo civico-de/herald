@@ -9,8 +9,12 @@ declare(strict_types = 1);
 
 // DeployGate::marker(), spelled out: this runs before the swap, against the old classes.
 $marker = Civi::paths()->getPath('[civicrm.private]/herald_deploy_disabled_rules');
+if (!is_string($marker)) {
+  throw new RuntimeException('[herald deploy] cannot resolve the marker path; no rule was disabled');
+}
 
 $ids = [];
+/** @var CRM_Core_DAO&object{id: string} $dao */
 $dao = CRM_Core_DAO::executeQuery(
   "SELECT DISTINCT r.id
    FROM civirule_rule r

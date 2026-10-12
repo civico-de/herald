@@ -14,7 +14,11 @@ namespace Civi\Herald\Channel;
 final class Utf16Text {
 
   public static function length(string $text): int {
-    return (int) (strlen(mb_convert_encoding($text, 'UTF-16LE', 'UTF-8')) / 2);
+    $utf16 = mb_convert_encoding($text, 'UTF-16LE', 'UTF-8');
+    if ($utf16 === FALSE) {
+      throw new \RuntimeException('herald: cannot convert text to UTF-16');
+    }
+    return intdiv(strlen($utf16), 2);
   }
 
   /**

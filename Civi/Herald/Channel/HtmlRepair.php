@@ -44,7 +44,9 @@ final class HtmlRepair {
    */
   public static function closeOpenTags(string $html): string {
     $html = rtrim(self::dropTrailingFragment($html));
+    $matches = [];
     preg_match_all('#<\s*(/?)([a-zA-Z-]+)[^>]*>#', $html, $matches, PREG_SET_ORDER);
+    /** @var list<string> $open */
     $open = [];
     foreach ($matches as $match) {
       $tag = strtolower($match[2]);

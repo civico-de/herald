@@ -40,7 +40,7 @@ class CheckCollector {
     $checks = [];
     \Civi::dispatcher()->dispatch('hook_civicrm_heraldChecks', GenericHookEvent::create(['checks' => &$checks]));
 
-    return $checks;
+    return is_array($checks) ? $checks : [];
   }
 
   /**

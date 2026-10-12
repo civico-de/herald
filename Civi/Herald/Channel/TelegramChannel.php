@@ -57,10 +57,10 @@ class TelegramChannel implements ChannelInterface {
       $payload['parse_mode'] = $parseMode;
     }
     if (isset($config['disable_notification'])) {
-      $payload['disable_notification'] = (bool) $config['disable_notification'];
+      $payload['disable_notification'] = !empty($config['disable_notification']);
     }
     if (isset($config['disable_web_page_preview'])) {
-      $payload['disable_web_page_preview'] = (bool) $config['disable_web_page_preview'];
+      $payload['disable_web_page_preview'] = !empty($config['disable_web_page_preview']);
     }
 
     $url = sprintf('https://api.telegram.org/bot%s/sendMessage', $token);

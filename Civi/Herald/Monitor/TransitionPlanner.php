@@ -27,7 +27,7 @@ class TransitionPlanner {
   public function plan(array $prev, array $observations): array {
     $plans = [];
     foreach ($observations as $name => $obs) {
-      $plans[] = $this->planCheck((string) $name, $obs, $prev[$name] ?? []);
+      $plans[] = $this->planCheck($name, $obs, $prev[$name] ?? []);
     }
 
     return $plans;

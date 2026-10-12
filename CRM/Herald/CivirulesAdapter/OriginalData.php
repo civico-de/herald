@@ -25,7 +25,7 @@ final class CRM_Herald_CivirulesAdapter_OriginalData {
   ): array {
     if (
       !$triggerData instanceof CRM_Civirules_TriggerData_Interface_OriginalData
-      || strtolower((string) $triggerData->getOriginalEntity()) !== strtolower($entity)
+      || strtolower($triggerData->getOriginalEntity()) !== strtolower($entity)
     ) {
       return ['known' => FALSE, 'value' => NULL];
     }
@@ -45,9 +45,8 @@ final class CRM_Herald_CivirulesAdapter_OriginalData {
     if (!$triggerData instanceof CRM_Civirules_TriggerData_Interface_OriginalData) {
       return [];
     }
-    $entity = (string) $triggerData->getOriginalEntity();
-    $original = $triggerData->getOriginalData();
-    return $entity !== '' && is_array($original) ? [$entity => $original] : [];
+    $entity = $triggerData->getOriginalEntity();
+    return $entity !== '' ? [$entity => $triggerData->getOriginalData()] : [];
   }
 
 }

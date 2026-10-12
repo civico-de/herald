@@ -42,7 +42,7 @@ class CheckState {
     $state->consecutiveOks = max(0, Cast::toInt($p['consecutive_oks'] ?? 0));
     // A bare {status, detail} entry without 'notified': treat a reported fail as
     // announced, otherwise it would re-alert or swallow the recovery.
-    $state->notified = (bool) ($p['notified'] ?? $state->status === 'fail');
+    $state->notified = isset($p['notified']) ? !empty($p['notified']) : $state->status === 'fail';
     $state->lastNotified = isset($p['last_notified']) && is_numeric($p['last_notified'])
       ? (int) $p['last_notified']
       : NULL;
