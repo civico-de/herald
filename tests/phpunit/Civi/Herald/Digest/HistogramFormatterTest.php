@@ -96,6 +96,21 @@ class HistogramFormatterTest extends TestCase {
     $this->assertSame([14, 8, 4, 1, 2], array_column($buckets, 'count'));
   }
 
+  public function testLinearModeKeepsToTheRequestedBucketCount(): void {
+    $this->assertSame(['10–100'], array_column(HistogramFormatter::compute([10, 60], 1), 'label'));
+  }
+
+  public function testDecimalEdgesDoNotDrift(): void {
+    $amounts = [];
+    for ($round = 0; $round < 3; $round++) {
+      array_push($amounts, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9);
+    }
+    $buckets = HistogramFormatter::compute($amounts);
+
+    $this->assertSame([0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8], array_column($buckets, 'low'));
+    $this->assertSame([3, 3, 3, 3, 3, 3, 3, 6], array_column($buckets, 'count'));
+  }
+
   public function testMidRangeUsesLogMode(): void {
     // €1-€500, n=150 — logSpan ~2.7 → log mode, finer granularity
     $amounts = $this->logUniform(150, 1, 500, 42);

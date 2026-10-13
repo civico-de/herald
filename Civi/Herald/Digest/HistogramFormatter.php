@@ -117,15 +117,26 @@ class HistogramFormatter {
   private static function linearEdges(float $min, float $max, int $count): array {
     $low = self::niceFloor($min);
     $step = self::niceCeiling(($max - $low) / $count);
-    while ((int) ceil((($max - $low) / $step) - 1e-9) > $count) {
+    $edges = self::steppedEdges($low, $max, $step);
+    while ((count($edges) - 1) > $count) {
       $step = self::niceCeiling($step * 1.01);
+      $edges = self::steppedEdges($low, $max, $step);
     }
+    return $edges;
+  }
 
+  /**
+   * $low, then every multiple of $step up to the first one at or above $max.
+   * Rounded, so 3 × 0.1 is the edge 0.3 and not 0.30000000000000004.
+   *
+   * @return float[]
+   */
+  private static function steppedEdges(float $low, float $max, float $step): array {
     $edges = [$low];
-    for ($edge = (floor($low / $step) + 1) * $step; $edge < ($max - 1e-9); $edge += $step) {
-      $edges[] = $edge;
+    $last = (int) ceil(($max / $step) - 1e-9);
+    for ($k = (int) floor(($low / $step) + 1e-9) + 1; $k <= $last; $k++) {
+      $edges[] = round($k * $step, 10);
     }
-    $edges[] = (float) (ceil(($max / $step) - 1e-9) * $step);
     return $edges;
   }
 
