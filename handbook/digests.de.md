@@ -17,9 +17,9 @@ Ein Report ohne Blöcke ist ein einzelner Beitragsblock. Seine Einstellungen ste
 
 ## Wege, einen Report zu verschicken
 
-- Ein geplanter Job, der die API-Aktion `Herald.notifyDigest` ausführt, verschickt tägliche oder wöchentliche Zusammenfassungen. CiviRules hat keinen Trigger für eine Uhrzeit, regelmäßige Zusammenfassungen gehören deshalb in einen Job. Die Einrichtung zeigt [Geplante Reports](recipes.md#geplante-reports).
-- Die CiviRules-Aktion „Herald: Send digest“ verschickt einen Report, wenn der Trigger der Regel auslöst.
-- Skripte können `Herald.notifyDigest` direkt aufrufen.
+- Eine CiviRules-Regel mit dem Trigger „Herald: Schedule“ und der Aktion „Herald: Send digest“ verschickt tägliche oder wöchentliche Zusammenfassungen zu einer festen Stunde. Die Einrichtung zeigt [Geplante Reports](recipes.md#geplante-reports).
+- Die Aktion „Herald: Send digest“ funktioniert auch mit jedem anderen Trigger und verschickt dann bei jedem Auslösen einen Report.
+- Skripte und die Crontab des Servers können die API-Aktion `Herald.notifyDigest` direkt aufrufen.
 
 Alle drei Wege unterstützen jeden [Zustellmodus](delivery.md#zustellmodi).
 
@@ -39,7 +39,7 @@ In der CiviRules-Aktion hat jede Einstellung ein Formularfeld. Bei `Herald.notif
 
 Ein Block übernimmt von der obersten Ebene nichts außer dem Zeitraum.
 
-`Herald.notifyDigest` nimmt außerdem `sendHour` entgegen, außerhalb von `actionParams`. Damit wird der Report nur in dieser Stunde des Tages verschickt, von 0 bis 23 in der Zeitzone von CiviCRM. In jeder anderen Stunde gibt der Aufruf `skipped` zurück und sendet nichts. Lassen Sie die Einstellung weg, wenn Sie einen Report von Hand auslösen.
+`Herald.notifyDigest` nimmt außerdem `sendHour` entgegen, außerhalb von `actionParams`. Damit wird der Report nur in dieser Stunde des Tages verschickt, von 0 bis 23 in der Zeitzone von CiviCRM. In jeder anderen Stunde gibt der Aufruf `skipped` zurück und sendet nichts, und ein Wert außerhalb von 0 bis 23 ist ein Fehler. Lassen Sie die Einstellung weg, wenn Sie einen Report von Hand auslösen. Eine Regel legt ihre Stunde stattdessen im Trigger „Herald: Schedule“ fest.
 
 ## Blocktypen
 

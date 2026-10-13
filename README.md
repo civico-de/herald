@@ -2,7 +2,7 @@
 
 herald is a CiviCRM extension that sends notifications and digests. CiviRules rules, scheduled jobs, other extensions and scripts hand it a message or a template. herald renders it and delivers it to Telegram, a webhook such as Slack or Discord, ntfy, Pushover, email or an assigned CiviCRM activity.
 
-It ships templates for contributions, ticket sales, events, memberships and group signups. It adds CiviRules actions to send notifications and digests, and a condition that compares a field before and after an edit. Notifications can go to one recipient, to subscribed contacts on their own channels, to a group or to a list of addresses, and bursts can be collected into one message. A check monitor reports when the health checks of your extensions start failing and when they recover.
+It ships templates for contributions, ticket sales, events, memberships and group signups. It adds CiviRules actions to send notifications and digests, a trigger that fires at a set hour on chosen weekdays, and a condition that compares a field before and after an edit. Notifications can go to one recipient, to subscribed contacts on their own channels, to a group or to a list of addresses, and bursts can be collected into one message. A check monitor reports when the health checks of your extensions start failing and when they recover.
 
 Documentation: https://civico-de.github.io/herald/
 

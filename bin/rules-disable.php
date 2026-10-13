@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 /**
  * Deploy step, run via `cv scr` before the code swap: records, then disables,
- * the active rules backed by a herald condition or action class for the gate.
+ * the active rules backed by a herald condition, action or trigger class for the gate.
  */
 
 // DeployGate::marker(), spelled out: this runs before the swap, against the old classes.
@@ -22,8 +22,9 @@ $dao = CRM_Core_DAO::executeQuery(
    LEFT JOIN civirule_action a ON a.id = ra.action_id
    LEFT JOIN civirule_rule_condition rc ON rc.rule_id = r.id
    LEFT JOIN civirule_condition c ON c.id = rc.condition_id
+   LEFT JOIN civirule_trigger t ON t.id = r.trigger_id
    WHERE r.is_active = 1
-     AND (a.class_name LIKE 'CRM_Herald%' OR c.class_name LIKE 'CRM_Herald%')",
+     AND (a.class_name LIKE 'CRM_Herald%' OR c.class_name LIKE 'CRM_Herald%' OR t.class_name LIKE 'CRM_Herald%')",
 );
 while ($dao->fetch()) {
   $ids[] = (int) $dao->id;

@@ -6,6 +6,7 @@ namespace Civi\Herald\Digest;
 
 use Civi\Api4\Job;
 use Civi\Api4\MessageTemplate;
+use Civi\Herald\Schedule\Clock;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
@@ -23,6 +24,11 @@ class DigestJobSubjectTest extends TestCase implements HeadlessInterface, HookIn
 
   public function setUpHeadless() {
     return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+  }
+
+  protected function tearDown(): void {
+    \CRM_Utils_Time::resetTime();
+    parent::tearDown();
   }
 
   public function setUp(): void {
@@ -69,23 +75,40 @@ class DigestJobSubjectTest extends TestCase implements HeadlessInterface, HookIn
   }
 
   public function testSendHourOutsideTheHourSkips(): void {
+    $this->setClock('2030-01-07 07:59:00');
     $result = \Civi\Api4\Herald::notifyDigest(checkPermissions: FALSE)
-      ->setSendHour(((int) date('G') + 12) % 24)
+      ->setSendHour(8)
       ->setActionParams(['template' => self::WORKFLOW, 'channel' => 'email', 'email_to' => 'ops@example.org'])
       ->execute()
       ->single();
-    $this->assertSame('skipped', $result['mode']);
+    $this->assertSame(['mode' => 'skipped', 'send_hour' => 8, 'current_hour' => 7], $result);
     $this->assertSame('0', (string) \CRM_Core_DAO::singleValueQuery('SELECT COUNT(*) FROM civicrm_mailing_spool'));
   }
 
   public function testDuringTheSendHourItSends(): void {
-    $zone = \CRM_Core_Config::singleton()->userSystem->getTimeZoneString() ?: date_default_timezone_get();
+    $this->setClock('2030-01-07 08:59:00');
     $result = \Civi\Api4\Herald::notifyDigest(checkPermissions: FALSE)
-      ->setSendHour((int) (new \DateTime('now', new \DateTimeZone($zone)))->format('G'))
+      ->setSendHour(8)
       ->setActionParams(['template' => self::WORKFLOW, 'channel' => 'email', 'email_to' => 'ops@example.org'])
       ->execute()
       ->single();
     $this->assertSame('sent', $result['mode']);
+  }
+
+  public function testASendHourOutsideTheDayIsRejected(): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessage('herald: sendHour must be an hour from 0 to 23, got 25');
+    \Civi\Api4\Herald::notifyDigest(checkPermissions: FALSE)
+      ->setSendHour(25)
+      ->setActionParams(['template' => self::WORKFLOW, 'channel' => 'email', 'email_to' => 'ops@example.org'])
+      ->execute();
+  }
+
+  /**
+   * Local wall time in CiviCRM's timezone.
+   */
+  private function setClock(string $local): void {
+    \CRM_Utils_Time::setTime((new \DateTimeImmutable($local, Clock::zone()))->getTimestamp());
   }
 
   public function testAnAggregatedDigestCarriesNoAmount(): void {

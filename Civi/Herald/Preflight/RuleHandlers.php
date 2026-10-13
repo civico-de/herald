@@ -19,6 +19,7 @@ final class RuleHandlers {
   private const MANIFESTS = [
     'civirules_conditions.json' => 'condition',
     'civirules_actions.json' => 'action',
+    'civirules_triggers.json' => 'trigger',
   ];
 
   /**

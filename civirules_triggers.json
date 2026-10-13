@@ -1,0 +1,8 @@
+[
+  {
+    "name": "herald_schedule",
+    "label": "Herald: Schedule",
+    "cron": 1,
+    "class_name": "CRM_Herald_CivirulesAdapter_Trigger_Schedule"
+  }
+]

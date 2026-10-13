@@ -5,6 +5,7 @@ routes:
   - civicrm/herald/form/civirulesaction/sendnotification
   - civicrm/herald/form/civirulesaction/senddigest
   - civicrm/herald/form/civirulescondition/fieldtransition
+  - civicrm/herald/form/civirulestrigger/schedule
 ---
 
 # Reference
@@ -36,6 +37,21 @@ On a contribution trigger, the variables also include the contribution, its camp
 ### Send digest
 
 The action "Herald: Send digest" sends a digest each time the rule fires. Its fields are the digest settings described in [Digest settings](digests.md#digest-settings). The template list offers the templates whose workflow name starts with herald_contribution_digest_, and "- block default -". The form checks the blocks before it saves them.
+
+## CiviRules triggers
+
+### Schedule
+
+The trigger "Herald: Schedule" fires once at the full hour on the chosen weekdays, in CiviCRM's timezone, and carries no contact. It is meant for actions such as "Herald: Send digest", see [Scheduled digests](recipes.md#scheduled-digests). Its form has two fields:
+
+| Field | Meaning |
+|---|---|
+| Weekdays | Any of Monday to Sunday. Empty means every day. |
+| Time | The hour, from 00:00 to 23:00. |
+
+The rule list describes the schedule, for example "Every Monday at 08:00" or "Daily at 08:00". The trigger stores `weekdays` (ISO numbers, 1 for Monday to 7 for Sunday), `hour` and `since`, the time the form was saved.
+
+At each run of CiviRules' scheduled job, the rule fires when its latest slot is not older than the rule or than `since`, and the rule log has no run since that slot. The form needs the permission "administer CiviCRM".
 
 ## CiviRules conditions
 
@@ -78,7 +94,8 @@ The entity `Herald` offers these actions. Every action needs the permission "adm
 | send | channel, message, subject, format, config | Delivers a finished message through one channel. This is the entry point for other extensions. The result lists `unknown_config_keys`. |
 | publish | topic, message or template with vars, format, amount | Delivers through the route in `herald_topics`, see [Topics](delivery.md#topics). |
 | notify | actionParams, triggerContext | What "Send notification" calls. |
-| notifyDigest | actionParams, sendHour | What "Send digest" and [Scheduled digests](recipes.md#scheduled-digests) call. |
+| notifyDigest | actionParams, sendHour | What "Send digest" calls, and scripts, see [Without a rule](recipes.md#without-a-rule). |
+| checkSchedule | ruleId, schedule | What "Herald: Schedule" calls. Returns `due`, `slot`, `last_run` and `not_before`. |
 | checkFieldTransition | entity, entityId, field, fromOperator, fromValue, toOperator, toValue, originalValue, hasOriginal | What "Field transition" calls. Returns `matched`. |
 | getChannels | channel, optional | Lists the channels and the keys they accept. |
 | getParkedAlerts | ids, optional | Lists [Parked alerts](delivery.md#parked-alerts) without their bodies. |
@@ -111,7 +128,7 @@ if (class_exists(\Civi\Api4\Herald::class)) {
 |---|---|---|---|
 | Herald: Flush alert aggregation buffer | yes | Always | Sends the aggregated groups whose window has passed. |
 | Herald: Run check monitor | yes | Always | Runs the [Check monitor](monitor.md). |
-| Herald.notifyDigest | no, create it yourself | Hourly with sendHour | Sends a digest, see [Scheduled digests](recipes.md#scheduled-digests). |
+| Herald.notifyDigest | no, create it yourself | Hourly with sendHour | Sends a digest without a rule, see [Without a rule](recipes.md#without-a-rule). |
 
 Both shipped jobs take a lock, so a run that overlaps with another one does not send twice.
 

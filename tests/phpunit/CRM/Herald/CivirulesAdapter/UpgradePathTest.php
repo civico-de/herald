@@ -85,7 +85,7 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
   /**
    * 0.7.0 regression: manifests and managed entities added in a release must
    * reach EXISTING installs via the upgrader, not only via install/enable.
-   * upgrade_1003 delegates to reconcile(); this exercises that path against a
+   * upgrade_1003 delegates to CRM_Herald_Upgrader_Reconcile::run(); this exercises that path against a
    * DB missing the 0.7.0 additions.
    */
   public function testReconcileRegistersManifestAdditionsOnExistingInstalls(): void {
@@ -102,7 +102,7 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
        WHERE og.name = 'herald_subscription_type' AND ov.name = 'weekly_digest'",
     );
 
-    CRM_Herald_Upgrader::reconcile(dirname(__DIR__, 5));
+    CRM_Herald_Upgrader_Reconcile::run(dirname(__DIR__, 5));
 
     self::assertSame(
       'CRM_Herald_CivirulesAdapter_Condition_FieldTransition',

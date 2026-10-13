@@ -3,7 +3,7 @@
 declare(strict_types = 1);
 
 /**
- * CiviRules instantiates handlers from civirule_action/condition.class_name,
+ * CiviRules instantiates handlers from civirule_action/condition/trigger.class_name,
  * so a class rename is a data migration; migrateRenamedClasses() also covers
  * rows whose `name` an admin has changed and the JSON import cannot match.
  */
@@ -44,6 +44,9 @@ final class CRM_Herald_CivirulesAdapter_Registrar {
         $extensionDir . DIRECTORY_SEPARATOR . 'civirules_conditions.json',
       );
     }
+    CRM_Civirules_Utils_Upgrader::insertTriggersFromJson(
+      $extensionDir . DIRECTORY_SEPARATOR . 'civirules_triggers.json',
+    );
   }
 
   /**

@@ -49,8 +49,8 @@ actions (no bespoke cron for alerts).
   `format=text`) is escaped whole via `PlainText::toHtml()`. Sinks that do not
   render HTML get `Channel\PlainText::fromHtml()` of the body, never the raw
   markup; email and activity HTML get newlines as `<br>` (`HtmlLineBreaks`).
-- herald ships one condition, `Field transition`, and one per-event action,
-  `Send notification`; entity specifics (contribution, campaign progress,
+- herald ships one trigger, `Schedule`, one condition, `Field transition`,
+  and one per-event action, `Send notification`; entity specifics (contribution, campaign progress,
   status names) are template variables in `Civi\Herald\Trigger\*`, not extra
   handlers; the third action, `Send digest`, composes blocks. Retired handlers
   move onto these via
@@ -84,9 +84,14 @@ actions (no bespoke cron for alerts).
 - A digest is a list of blocks (`Civi\Herald\Digest\Composer`): contribution,
   saved search, hook section. Search blocks run the SavedSearch's `api_params`
   without permission checks — whoever configures a digest can report any search,
-  the same trust as the contribution queries. Scheduled digests are APIv4 jobs
-  of `Herald.notifyDigest` (`"checkPermissions": false`, `sendHour`); there is
-  no APIv3 job wrapper.
+  the same trust as the contribution queries. Scheduled digests are rules on
+  the cron trigger "Herald: Schedule" (`Herald.checkSchedule`): a slot fires
+  once, when the rule log has no run since it and it is not older than the
+  rule's `created_date` or the trigger's `since` — never `modified_date`, which
+  the deploy's rule disable/re-enable touches. CiviRules stamps `log_date` and
+  `created_date` with PHP's wall clock, so they are read back in PHP's
+  timezone. `Herald.notifyDigest` with `sendHour` stays for scripts and
+  crontab; there is no APIv3 job wrapper.
 - Post-hook payloads of partial updates carry only the written fields; code
   reading an entity payload completes it from the stored row.
 - Bundled packages (`civico-de/stdlib`) are prefixed into `Civi\Herald\Vendor\`

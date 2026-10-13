@@ -42,7 +42,7 @@ class DeployGateTest extends TestCase implements HeadlessInterface, Transactiona
     $handlers = RuleHandlers::registered();
     self::assertNotEmpty($handlers);
     foreach ($handlers as $handler) {
-      self::assertContains($handler['kind'], ['condition', 'action']);
+      self::assertContains($handler['kind'], ['condition', 'action', 'trigger']);
       self::assertStringStartsWith('CRM_Herald_CivirulesAdapter_', $handler['class']);
     }
   }
@@ -63,6 +63,14 @@ class DeployGateTest extends TestCase implements HeadlessInterface, Transactiona
     self::assertStringContainsString("re-enabled 1 herald rule(s): {$rule}", $this->script('rules-reenable.php'));
     self::assertTrue($this->isActive($rule));
     self::assertFileDoesNotExist(DeployGate::marker());
+  }
+
+  public function testARuleOnHeraldsScheduleTriggerIsDisabledForTheSwap(): void {
+    $rule = $this->rule($this->triggerId('herald_schedule'), active: TRUE);
+
+    self::assertStringContainsString('disabled 1 herald rule(s)', $this->script('rules-disable.php'));
+    self::assertFalse($this->isActive($rule));
+    self::assertSame([$rule], DeployGate::markedRuleIds());
   }
 
   public function testABrokenHandlerInADisabledHeraldRuleFailsTheGate(): void {

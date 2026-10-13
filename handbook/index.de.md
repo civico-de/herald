@@ -14,17 +14,18 @@ herald stellt über sechs Kanäle zu: Telegram, einen generischen Webhook für S
 
 Die Nachrichten stammen aus CiviCRM-Nachrichtenvorlagen, sodass Admins den Wortlaut unter „Mailings, Message Templates“ (Mailings, Nachrichtenvorlagen) anpassen können. herald bringt Vorlagen für Beiträge, Ticketverkäufe, Events, Mitgliedschaften, Gruppenanmeldungen, Reports und Health-Checks mit. Die Vorlagen sind auf Englisch geschrieben, eine deutsche Übersetzung liegt bei.
 
-herald ergänzt CiviRules um drei Bausteine:
+herald ergänzt CiviRules um vier Bausteine:
 
 - die Aktion „Herald: Send notification (generic)“, die eine Vorlage mit den Daten des Triggers rendert
 - die Aktion „Herald: Send digest“, die einen Report verschickt
+- den Trigger „Herald: Schedule“, der an gewählten Wochentagen einmal zu einer festen Stunde auslöst
 - die Bedingung „Herald: Field transition“, die den Wert eines Feldes vor und nach einer Änderung vergleicht, etwa wenn ein Beitrag von Pending (ausstehend) zu Completed (abgeschlossen) wechselt
 
 Eine Benachrichtigung kann an ein einzelnes Ziel gehen, an alle Kontakte, die diese Art von Benachrichtigung abonniert haben, an die Mitglieder einer Gruppe oder an eine Liste von E-Mail-Adressen. Jeder Kontakt kann seinen eigenen Kanal wählen. Meldungen, die gehäuft auftreten, lassen sich sammeln und als eine Nachricht pro Zeitfenster verschicken. Siehe [Zustellung](delivery.md).
 
 Skripte und andere Extensions können in ein benanntes Topic wie ops veröffentlichen. Eine Einstellung legt fest, welchen Kanal und welches Ziel jedes Topic erreicht. Wer veröffentlicht, muss also nie eine Chat-ID oder eine URL kennen.
 
-Ein Report fasst die Beiträge eines Zeitraums zusammen, listet die Zeilen einer gespeicherten SearchKit-Suche auf oder enthält Zahlen, die eine andere Extension liefert. Reports laufen meist als täglicher oder wöchentlicher geplanter Job. Siehe [Reports](digests.md).
+Ein Report fasst die Beiträge eines Zeitraums zusammen, listet die Zeilen einer gespeicherten SearchKit-Suche auf oder enthält Zahlen, die eine andere Extension liefert. Reports gehen meist täglich oder wöchentlich hinaus, über eine Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
 
 Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet, wenn ein Check fehlschlägt und wenn er sich wieder erholt, und erinnert an Checks, die dauerhaft fehlschlagen. Auf einer gesunden Site bleibt es still. Siehe [Check-Monitor](monitor.md).
 
@@ -72,5 +73,5 @@ Die übrigen Kanäle richten Sie genauso ein. Ihre Einstellungen finden Sie unte
 - [Zustellung](delivery.md) erklärt Empfänger:innen, Abonnements, Topics, das Sammeln von Meldungen und was passiert, wenn eine Zustellung fehlschlägt.
 - [Reports](digests.md) beschreibt die Report-Blöcke, ihre Filter und ihre Vorlagenvariablen.
 - [Check-Monitor](monitor.md) zeigt, wie Sie einen Health-Check beisteuern und die Meldungen feinjustieren.
-- [Referenz](reference.md) listet die CiviRules-Aktionen und -Bedingungen, die API, die geplanten Jobs, die Vorlagen, die Einstellungen und die Hooks auf.
+- [Referenz](reference.md) listet die CiviRules-Aktionen, -Trigger und -Bedingungen, die API, die geplanten Jobs, die Vorlagen, die Einstellungen und die Hooks auf.
 - [Deployment](deploy.md) erklärt, wie Sie herald aktualisieren, ohne die Schreibvorgänge zu stören, in denen seine Regeln laufen.

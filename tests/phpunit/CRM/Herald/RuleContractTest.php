@@ -28,6 +28,7 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
     CRM_Herald_CivirulesAdapter_Condition_FieldTransition::class => 'testFieldTransitionContract',
     CRM_Herald_CivirulesAdapter_Action_Notification::class => 'testNotificationContract',
     CRM_Herald_CivirulesAdapter_Action_Digest::class => 'testDigestContract',
+    CRM_Herald_CivirulesAdapter_Trigger_Schedule::class => 'testScheduleContract',
   ];
 
   public function setUpHeadless(): \Civi\Test\CiviEnvBuilder {
@@ -200,6 +201,47 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
     // Cron triggers carry no entity at all; the digest must not need one.
     $action->processAction(new CRM_Civirules_TriggerData_Cron(NULL, 'Contribution', []));
     self::assertSame(1, $this->bufferedRows());
+  }
+
+  public function testScheduleContract(): void {
+    $trigger = new CRM_Herald_CivirulesAdapter_Trigger_Schedule();
+    self::assertStringContainsString('rule_id=7', (string) $trigger->getExtraDataInputUrl(7));
+    self::assertNotSame('', $trigger->getHelpText('triggerDescription'));
+    self::assertNotSame('', $trigger->getHelpText('triggerParamsHelp'));
+    $trigger->setTriggerParams(serialize(['weekdays' => [1], 'hour' => 8]));
+    self::assertSame('Every Monday at 08:00', $trigger->getHelpText('triggerDescriptionWithParams'));
+    $entity = $trigger->getReactOnEntity();
+    self::assertSame('civirule_rule', $entity->daoClass::getTableName());
+
+    // Full payload: a configured schedule whose slot is due fires once per cron run.
+    $rule = $this->scheduleRule(serialize(['hour' => 0]));
+    self::assertSame(1, $this->processSchedule($rule, serialize(['hour' => 0]))['count']);
+    self::assertSame(0, $this->processSchedule($rule, serialize(['hour' => 0]))['count']);
+
+    // Partial payload: no hour. Nothing fires, and the description says why.
+    $partial = $this->scheduleRule('');
+    self::assertSame(0, $this->processSchedule($partial, '')['count']);
+    $trigger->setTriggerParams('');
+    self::assertStringStartsWith('Not configured', $trigger->getTriggerDescription());
+  }
+
+  private function scheduleRule(string $params): int {
+    CRM_Core_DAO::executeQuery(
+      "INSERT INTO civirule_rule (name, label, trigger_id, trigger_params, is_active, created_date)
+       VALUES (%1, %1, (SELECT id FROM civirule_trigger WHERE name = 'herald_schedule'), %2, 1, '2020-01-01')",
+      [1 => ['herald_contract_' . uniqid(), 'String'], 2 => [$params, 'String']],
+    );
+    return (int) CRM_Core_DAO::singleValueQuery('SELECT LAST_INSERT_ID()');
+  }
+
+  /**
+   * @return array<string, int>
+   */
+  private function processSchedule(int $rule, string $params): array {
+    $trigger = new CRM_Herald_CivirulesAdapter_Trigger_Schedule();
+    $trigger->setRuleId($rule);
+    $trigger->setTriggerParams($params);
+    return $trigger->process();
   }
 
   /**

@@ -24,4 +24,10 @@
     <title>herald: Field Transition</title>
     <access_arguments>administer CiviCRM</access_arguments>
   </item>
+  <item>
+    <path>civicrm/herald/form/civirulestrigger/schedule</path>
+    <page_callback>CRM_Herald_CivirulesAdapter_Form_Schedule</page_callback>
+    <title>herald: Schedule</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+  </item>
 </menu>

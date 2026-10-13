@@ -16,7 +16,7 @@ namespace Civi\Api4;
  * The pipeline entry points the CiviRules adapters call — render a herald
  * template and deliver it, or answer a condition question:
  *   cv api4 Herald.notify / notifyDigest
- *   cv api4 Herald.checkFieldTransition
+ *   cv api4 Herald.checkFieldTransition / checkSchedule
  *
  * Buffer dead letter — buffered alerts the flush job could not deliver:
  *   cv api4 Herald.getParkedAlerts / Herald.reactivateParkedAlerts
@@ -57,6 +57,11 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
     bool $checkPermissions = TRUE,
   ): \Civi\Herald\Api4\Action\CheckFieldTransition {
     return (new \Civi\Herald\Api4\Action\CheckFieldTransition(__CLASS__, 'checkFieldTransition'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function checkSchedule(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\CheckSchedule {
+    return (new \Civi\Herald\Api4\Action\CheckSchedule(__CLASS__, 'checkSchedule'))
       ->setCheckPermissions($checkPermissions);
   }
 

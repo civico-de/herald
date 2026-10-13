@@ -5,6 +5,7 @@ routes:
   - civicrm/herald/form/civirulesaction/sendnotification
   - civicrm/herald/form/civirulesaction/senddigest
   - civicrm/herald/form/civirulescondition/fieldtransition
+  - civicrm/herald/form/civirulestrigger/schedule
 ---
 
 # Referenz
@@ -36,6 +37,21 @@ Bei einem Beitrags-Trigger enthalten die Variablen außerdem den Beitrag, den Fo
 ### Report senden
 
 Die Aktion „Herald: Send digest“ verschickt bei jedem Auslösen der Regel einen Report. Ihre Felder sind die Report-Einstellungen, beschrieben unter [Reporteinstellungen](digests.md#reporteinstellungen). Die Vorlagenliste bietet die Vorlagen an, deren Workflow-Name mit herald_contribution_digest_ beginnt, sowie „- Standard des Blocks -“. Das Formular prüft die Blöcke vor dem Speichern.
+
+## CiviRules-Trigger
+
+### Zeitplan
+
+Der Trigger „Herald: Schedule“ löst an den gewählten Wochentagen einmal zur vollen Stunde aus, in der Zeitzone von CiviCRM, und trägt keinen Kontakt. Er ist für Aktionen wie „Herald: Send digest“ gedacht, siehe [Geplante Reports](recipes.md#geplante-reports). Sein Formular hat zwei Felder:
+
+| Feld | Bedeutung |
+|---|---|
+| Wochentage | Beliebige von Montag bis Sonntag. Leer bedeutet jeden Tag. |
+| Uhrzeit | Die Stunde, von 00:00 bis 23:00. |
+
+Die Regelliste beschreibt den Zeitplan, zum Beispiel „Jeden Montag um 08:00“ oder „Täglich um 08:00“. Der Trigger speichert `weekdays` (ISO-Nummern, 1 für Montag bis 7 für Sonntag), `hour` und `since`, den Zeitpunkt, zu dem das Formular gespeichert wurde.
+
+Bei jedem Lauf des geplanten Jobs von CiviRules löst die Regel aus, wenn ihr jüngster Termin nicht älter ist als die Regel oder als `since` und das Regelprotokoll seit diesem Termin keinen Lauf enthält. Das Formular braucht die Berechtigung „administer CiviCRM“.
 
 ## CiviRules-Bedingungen
 
@@ -78,7 +94,8 @@ Die Entität `Herald` bietet diese Aktionen. Jede Aktion erfordert die Berechtig
 | send | channel, message, subject, format, config | Stellt eine fertige Nachricht über einen Kanal zu. Das ist der Einstiegspunkt für andere Extensions. Das Ergebnis listet `unknown_config_keys` auf. |
 | publish | topic, message oder template mit vars, format, amount | Stellt über die Route in `herald_topics` zu, siehe [Topics](delivery.md#topics). |
 | notify | actionParams, triggerContext | Wird von „Send notification“ aufgerufen. |
-| notifyDigest | actionParams, sendHour | Wird von „Send digest“ und von [Geplanten Reports](recipes.md#geplante-reports) aufgerufen. |
+| notifyDigest | actionParams, sendHour | Wird von „Send digest“ und von Skripten aufgerufen, siehe [Ohne Regel](recipes.md#ohne-regel). |
+| checkSchedule | ruleId, schedule | Wird von „Herald: Schedule“ aufgerufen. Gibt `due`, `slot`, `last_run` und `not_before` zurück. |
 | checkFieldTransition | entity, entityId, field, fromOperator, fromValue, toOperator, toValue, originalValue, hasOriginal | Wird von „Field transition“ aufgerufen. Gibt `matched` zurück. |
 | getChannels | channel, optional | Listet die Kanäle und die Schlüssel auf, die sie akzeptieren. |
 | getParkedAlerts | ids, optional | Listet [geparkte Meldungen](delivery.md#geparkte-meldungen) ohne ihre Nachrichtentexte auf. |
@@ -111,7 +128,7 @@ if (class_exists(\Civi\Api4\Herald::class)) {
 |---|---|---|---|
 | Herald: Sammelpuffer für Meldungen leeren | ja | Always (bei jedem Cron-Lauf) | Sendet die gesammelten Gruppen, deren Fenster abgelaufen ist. |
 | Herald: Check-Monitor ausführen | ja | Always (bei jedem Cron-Lauf) | Führt den [Check-Monitor](monitor.md) aus. |
-| Herald.notifyDigest | nein, legen Sie ihn selbst an | Hourly mit sendHour | Verschickt einen Report, siehe [Geplante Reports](recipes.md#geplante-reports). |
+| Herald.notifyDigest | nein, legen Sie ihn selbst an | Hourly mit sendHour | Verschickt einen Report ohne Regel, siehe [Ohne Regel](recipes.md#ohne-regel). |
 
 Beide mitgelieferten Jobs setzen eine Sperre, ein Lauf, der sich mit einem anderen überschneidet, sendet also nicht doppelt.
 

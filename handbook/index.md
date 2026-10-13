@@ -14,17 +14,18 @@ herald delivers through six channels: Telegram, a generic webhook for Slack, Dis
 
 Messages come from CiviCRM message templates, so admins can edit the wording under Mailings, Message Templates. herald ships templates for contributions, ticket sales, events, memberships, group signups, digests and health checks. The templates are in English, and a German translation is included.
 
-herald adds three CiviRules building blocks:
+herald adds four CiviRules building blocks:
 
 - the action "Herald: Send notification (generic)", which renders a template with the data of the trigger
 - the action "Herald: Send digest", which sends a summary
+- the trigger "Herald: Schedule", which fires once at a set hour on chosen weekdays
 - the condition "Herald: Field transition", which compares a field's value before and after an edit, such as a contribution moving from Pending to Completed
 
 A notification can go to one recipient, to every contact who subscribed to that kind of notification, to the members of a group, or to a list of email addresses. Each contact can choose their own channel. Alerts that come in bursts can be collected and sent as one message per time window. See [Delivery](delivery.md).
 
 Scripts and other extensions can publish to a named topic such as ops. A setting decides which channel and recipient each topic reaches, so the publisher never needs to know a chat ID or a URL.
 
-A digest sums up contributions for a period, lists the rows of a SearchKit saved search, or includes numbers another extension provides. Digests usually run as a daily or weekly scheduled job. See [Digests](digests.md).
+A digest sums up contributions for a period, lists the rows of a SearchKit saved search, or includes numbers another extension provides. Digests usually go out daily or weekly, from a rule on the trigger "Herald: Schedule". See [Digests](digests.md).
 
 The check monitor runs health checks that extensions contribute. It reports when a check starts failing and when it recovers, and reminds you about checks that keep failing. A healthy site stays quiet. See [Check monitor](monitor.md).
 
@@ -72,5 +73,5 @@ The other channels are configured the same way. [Channels](channels.md) lists th
 - [Delivery](delivery.md) explains recipients, subscriptions, topics, aggregation and what happens when a delivery fails.
 - [Digests](digests.md) describes digest blocks, their filters and their template variables.
 - [Check monitor](monitor.md) shows how to contribute a health check and how to tune the alerts.
-- [Reference](reference.md) lists the CiviRules actions and conditions, the API, the scheduled jobs, the templates, the settings and the hooks.
+- [Reference](reference.md) lists the CiviRules actions, triggers and conditions, the API, the scheduled jobs, the templates, the settings and the hooks.
 - [Deployment](deploy.md) explains how to update herald without breaking the writes its rules run in.

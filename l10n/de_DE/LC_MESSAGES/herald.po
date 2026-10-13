@@ -975,3 +975,51 @@ msgstr "Herald: Report-Block aus einer gespeicherten Suche"
 #: managed/MessageTemplate.mgd.php
 msgid "nothing found"
 msgstr "nichts gefunden"
+
+#: Civi/Herald/Schedule/ScheduleText.php
+msgid "Daily at %1"
+msgstr "Täglich um %1"
+
+#: Civi/Herald/Schedule/ScheduleText.php
+msgid "%1 and %2"
+msgstr "%1 und %2"
+
+#: Civi/Herald/Schedule/ScheduleText.php
+msgid "Every %1 at %2"
+msgstr "Jeden %1 um %2"
+
+#: Civi/Herald/Schedule/ScheduleText.php
+msgid "Not configured: %1"
+msgstr "Nicht eingerichtet: %1"
+
+#: CRM/Herald/CivirulesAdapter/Trigger/Schedule.php
+msgid "Rule"
+msgstr "Regel"
+
+#: CRM/Herald/CivirulesAdapter/Trigger/Schedule.php
+msgid "Fires once at a set hour on the chosen weekdays, without a contact. For actions such as \"Herald: Send digest\"."
+msgstr "Löst einmal zu einer festen Stunde an den gewählten Wochentagen aus, ohne Kontakt. Für Aktionen wie „Herald: Send digest“."
+
+#: CRM/Herald/CivirulesAdapter/Trigger/Schedule.php
+msgid "The rule fires once at the full hour on each chosen weekday, in CiviCRM's timezone. If cron misses that hour, the next cron run catches up. Only the latest slot is sent, never a backlog, and never one from before the schedule was saved."
+msgstr "Die Regel löst an jedem gewählten Wochentag einmal zur vollen Stunde aus, in der Zeitzone von CiviCRM. Verpasst Cron diese Stunde, holt der nächste Cron-Lauf sie nach. Verschickt wird nur der jüngste Termin, nie ein Rückstau und nie einer von vor dem Speichern des Zeitplans."
+
+#: CRM/Herald/CivirulesAdapter/Form/Schedule.php
+msgid "Weekdays"
+msgstr "Wochentage"
+
+#: CRM/Herald/CivirulesAdapter/Form/Schedule.php
+msgid "- every day -"
+msgstr "- jeden Tag -"
+
+#: CRM/Herald/CivirulesAdapter/Form/Schedule.php
+msgid "Time"
+msgstr "Uhrzeit"
+
+#: templates/CRM/Herald/CivirulesAdapter/Form/Schedule.tpl
+msgid "Leave empty to send every day."
+msgstr "Leer lassen, um jeden Tag zu senden."
+
+#: templates/CRM/Herald/CivirulesAdapter/Form/Schedule.tpl
+msgid "In CiviCRM's timezone."
+msgstr "In der Zeitzone von CiviCRM."

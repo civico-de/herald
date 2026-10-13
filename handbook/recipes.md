@@ -98,54 +98,38 @@ Signups arrive in bursts after a mailing or an import. An aggregation window of 
 
 ## Scheduled digests
 
-A digest that goes out once a day is a scheduled job, not a rule. The scheduled triggers of CiviRules fire once for each matching contact or record, and CiviRules has no plain time-of-day trigger.
+A digest that goes out at a fixed time is a CiviRules rule with the trigger "Herald: Schedule" and the action "Herald: Send digest". The trigger fires once at the chosen hour and carries no contact, so the rule sends one digest, not one per record.
 
-Add the job under Administer, System Settings, Scheduled Jobs:
+A weekly contribution digest every Monday at 8:00:
 
-| Field | Value |
-|---|---|
-| API entity | Herald |
-| API action | notifyDigest |
-| Run frequency | Hourly |
-| Parameters | see below |
+1. Create a CiviRules rule and choose the trigger "Herald: Schedule".
+2. In the trigger's form, choose Monday under Weekdays and 08:00 under Time. Leave Weekdays empty to send every day. The time is in CiviCRM's timezone.
+3. Add the action "Herald: Send digest" with the template "Herald: Weekly contribution digest" and the period "Last 7 days", then set the channel and, for Telegram, the chat ID.
 
-```json
-{
-  "version": 4,
-  "checkPermissions": false,
-  "sendHour": 8,
-  "actionParams": {
-    "template": "herald_contribution_digest_daily",
-    "period": "yesterday",
-    "campaign_id": 2,
-    "chat_id": "-1001234567890"
-  }
-}
-```
+The rule list shows the schedule as "Every Monday at 08:00". For a daily digest, leave Weekdays empty and use the template "Herald: Daily contribution digest" with the period "Yesterday".
 
-- `"version": 4` runs the job through APIv4.
-- `"checkPermissions": false` lets it run without a logged-in user, as cron does.
-- `sendHour` makes the hourly job send only during that hour, in CiviCRM's timezone.
+The trigger is checked each time CiviRules' scheduled job runs, so the digest goes out with the first cron run after the full hour. Whether a slot has been sent is read from the rule's own log:
 
-For a weekly digest, use the template `herald_contribution_digest_weekly` with `"period": "last_7_days"`. To run a digest by hand, use "Execute now" on a copy of the job without `sendHour`, or call `Herald.notifyDigest` directly.
+- If cron misses the hour, the next run catches up. With cron every 15 minutes, a run at 7:45 followed by one at 9:00 sends the 8 o'clock digest at 9:00.
+- After a longer outage, only the latest slot is sent. Three missed Mondays give one digest, not three.
+- A new rule, or one whose schedule was just saved, never sends for a slot from before that moment.
+- A run counts even when the send fails, for example because the channel is not configured. The error is logged, and the next digest goes out at the next slot.
 
-CiviCRM runs scheduled jobs only in the Production environment. On a test site, add `"runInNonProductionEnvironment": true` next to `"version": 4`.
+CiviCRM runs scheduled jobs, the CiviRules job included, only in the Production environment.
 
 All digest settings and the block types are described in [Digests](digests.md).
 
-### Choosing the run frequency
+### Without a rule
 
-CiviCRM schedules an Hourly job one hour after the start of its previous run, and a Daily job one day after it. The job then runs at the first cron run after that moment. So the run time slowly moves later, by up to one cron interval at a time.
-
-A Daily job therefore drifts through the day. An Hourly job with `sendHour` keeps the hour on most days. When the drift carries it across a full hour, though, that hour gets no run, and on that day the digest is not sent. With cron every 15 minutes, a run at 7:45 followed by one at 9:00 skips 8 o'clock.
-
-If the digest must go out every day, run it from the server's crontab instead of a CiviCRM scheduled job, at a fixed time and without `sendHour`:
+Scripts and the server's crontab can call `Herald.notifyDigest` directly, at a fixed time:
 
 ```
-0 8 * * * cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "actionParams": {"template": "herald_contribution_digest_daily", "period": "yesterday"}}'
+0 8 * * 1 cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "actionParams": {"template": "herald_contribution_digest_weekly", "period": "last_7_days", "chat_id": "-1001234567890"}}'
 ```
 
 This call is not limited to the Production environment.
+
+A CiviCRM scheduled job of `Herald.notifyDigest`, set to Hourly with `"sendHour": 8` in its parameters, also works, but it cannot pick weekdays and it can skip a day: CiviCRM moves each job's next run later by up to one cron interval, and when that drift carries the job across the whole hour, no run falls into it.
 
 ## Notifications for each person
 

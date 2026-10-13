@@ -100,54 +100,38 @@ Anmeldungen kommen nach einem Mailing oder einem Import gehäuft. Ein Sammelfens
 
 ## Geplante Reports
 
-Ein Report, der einmal täglich verschickt wird, ist ein geplanter Job und keine Regel. Die zeitgesteuerten Trigger von CiviRules lösen für jeden passenden Kontakt oder Datensatz einzeln aus, und einen einfachen Trigger für eine Uhrzeit hat CiviRules nicht.
+Ein Report, der zu einer festen Zeit verschickt wird, ist eine CiviRules-Regel mit dem Trigger „Herald: Schedule“ und der Aktion „Herald: Send digest“. Der Trigger löst einmal zur gewählten Stunde aus und trägt keinen Kontakt, die Regel verschickt also einen Report und nicht einen pro Datensatz.
 
-Legen Sie den Job unter „Administer, System Settings, Scheduled Jobs“ (Administrieren, Systemeinstellungen, geplante Jobs) an:
+Ein wöchentlicher Beitragsreport jeden Montag um 8:00 Uhr:
 
-| Feld | Wert |
-|---|---|
-| API entity | Herald |
-| API action | notifyDigest |
-| Run frequency (Ausführungshäufigkeit) | Hourly (stündlich) |
-| Parameters | siehe unten |
+1. Legen Sie eine CiviRules-Regel an und wählen Sie den Trigger „Herald: Schedule“.
+2. Wählen Sie im Formular des Triggers unter „Wochentage“ den Montag und unter „Uhrzeit“ 08:00. Bleibt „Wochentage“ leer, geht der Report jeden Tag hinaus. Die Uhrzeit gilt in der Zeitzone von CiviCRM.
+3. Fügen Sie die Aktion „Herald: Send digest“ mit der Vorlage „Herald: Wöchentlicher Beitragsreport“ und dem Zeitraum „Letzte 7 Tage“ hinzu, und setzen Sie den Kanal und bei Telegram die Chat-ID.
 
-```json
-{
-  "version": 4,
-  "checkPermissions": false,
-  "sendHour": 8,
-  "actionParams": {
-    "template": "herald_contribution_digest_daily",
-    "period": "yesterday",
-    "campaign_id": 2,
-    "chat_id": "-1001234567890"
-  }
-}
-```
+Die Regelliste zeigt den Zeitplan als „Jeden Montag um 08:00“. Für einen täglichen Report lassen Sie „Wochentage“ leer und nehmen die Vorlage „Herald: Täglicher Beitragsreport“ mit dem Zeitraum „Gestern“.
 
-- `"version": 4` führt den Job über APIv4 aus.
-- `"checkPermissions": false` lässt ihn ohne Anmeldung laufen, so wie Cron ihn startet.
-- `sendHour` sorgt dafür, dass der stündliche Job nur in dieser Stunde sendet, in der Zeitzone von CiviCRM.
+Der Trigger wird bei jedem Lauf des geplanten Jobs von CiviRules geprüft, der Report geht also mit dem ersten Cron-Lauf nach der vollen Stunde hinaus. Ob ein Termin schon verschickt wurde, steht im Protokoll der Regel selbst:
 
-Für einen wöchentlichen Report verwenden Sie die Vorlage `herald_contribution_digest_weekly` mit `"period": "last_7_days"`. Um einen Report von Hand auszulösen, nutzen Sie „Execute now“ (jetzt ausführen) an einer Kopie des Jobs ohne `sendHour` oder rufen `Herald.notifyDigest` direkt auf.
+- Verpasst Cron die Stunde, holt der nächste Lauf sie nach. Läuft Cron alle 15 Minuten und folgt auf einen Lauf um 7:45 Uhr einer um 9:00 Uhr, geht der Report für 8 Uhr um 9:00 Uhr hinaus.
+- Nach einem längeren Ausfall wird nur der jüngste Termin verschickt. Drei verpasste Montage ergeben einen Report, nicht drei.
+- Eine neue Regel oder eine, deren Zeitplan gerade gespeichert wurde, verschickt nie einen Termin von vor diesem Zeitpunkt.
+- Ein Lauf zählt auch, wenn das Senden fehlschlägt, etwa weil der Kanal nicht eingerichtet ist. Der Fehler wird protokolliert, und der nächste Report geht zum nächsten Termin hinaus.
 
-CiviCRM führt geplante Jobs nur in der Umgebung Production aus. Auf einer Testsite ergänzen Sie `"runInNonProductionEnvironment": true` neben `"version": 4`.
+CiviCRM führt geplante Jobs, auch den von CiviRules, nur in der Umgebung Production aus.
 
 Alle Report-Einstellungen und die Blocktypen beschreibt die Seite [Reports](digests.md).
 
-### Die Ausführungshäufigkeit wählen
+### Ohne Regel
 
-CiviCRM plant einen Job mit Hourly eine Stunde nach dem Start seines vorigen Laufs ein, einen Job mit Daily einen Tag danach. Der Job läuft dann beim ersten Cron-Lauf nach diesem Zeitpunkt. Die Laufzeit verschiebt sich dadurch langsam nach hinten, jeweils um bis zu ein Cron-Intervall.
-
-Ein Job mit Daily wandert deshalb durch den Tag. Ein Job mit Hourly und `sendHour` hält die Stunde an den meisten Tagen. Trägt ihn die Verschiebung jedoch über eine volle Stunde hinweg, fällt in dieser Stunde kein Lauf an, und an diesem Tag wird der Report nicht verschickt. Läuft Cron alle 15 Minuten, überspringt ein Lauf um 7:45 Uhr, auf den einer um 9:00 Uhr folgt, die 8-Uhr-Stunde.
-
-Wenn der Report wirklich jeden Tag verschickt werden muss, starten Sie ihn statt über einen geplanten Job von CiviCRM aus der Crontab des Servers, zu einer festen Uhrzeit und ohne `sendHour`:
+Skripte und die Crontab des Servers können `Herald.notifyDigest` direkt aufrufen, zu einer festen Uhrzeit:
 
 ```
-0 8 * * * cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "actionParams": {"template": "herald_contribution_digest_daily", "period": "yesterday"}}'
+0 8 * * 1 cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "actionParams": {"template": "herald_contribution_digest_weekly", "period": "last_7_days", "chat_id": "-1001234567890"}}'
 ```
 
 Dieser Aufruf ist nicht auf die Umgebung Production beschränkt.
+
+Ein geplanter Job von CiviCRM für `Herald.notifyDigest`, auf Hourly (stündlich) gestellt und mit `"sendHour": 8` in den Parametern, funktioniert ebenfalls. Er kann aber keine Wochentage wählen und kann einen Tag auslassen: CiviCRM schiebt den nächsten Lauf jedes Jobs um bis zu ein Cron-Intervall nach hinten, und trägt diese Verschiebung den Job über die ganze Stunde hinweg, fällt kein Lauf in sie.
 
 ## Benachrichtigungen pro Person
 

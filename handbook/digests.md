@@ -17,9 +17,9 @@ A digest without blocks is a single contribution block. Its settings are given a
 
 ## Ways to send a digest
 
-- A scheduled job that runs the API action `Herald.notifyDigest` sends daily or weekly summaries. CiviRules has no time-of-day trigger, so regular summaries belong in a job. [Scheduled digests](recipes.md#scheduled-digests) shows the setup.
-- The CiviRules action "Herald: Send digest" sends a digest when the rule's trigger fires.
-- Scripts can call `Herald.notifyDigest` directly.
+- A CiviRules rule with the trigger "Herald: Schedule" and the action "Herald: Send digest" sends daily or weekly summaries at a set hour. [Scheduled digests](recipes.md#scheduled-digests) shows the setup.
+- The action "Herald: Send digest" works with any other trigger too, and sends a digest each time that trigger fires.
+- Scripts and the server's crontab can call the API action `Herald.notifyDigest` directly.
 
 All three support every [delivery mode](delivery.md#delivery-modes).
 
@@ -39,7 +39,7 @@ In the CiviRules action, each setting has a form field. For `Herald.notifyDigest
 
 A block takes nothing from the top level except the period.
 
-`Herald.notifyDigest` also takes `sendHour`, outside `actionParams`. With it, the digest goes out only during that hour of the day, from 0 to 23 in CiviCRM's timezone. In any other hour the call returns `skipped` and sends nothing. Leave it out when you run a digest by hand.
+`Herald.notifyDigest` also takes `sendHour`, outside `actionParams`. With it, the digest goes out only during that hour of the day, from 0 to 23 in CiviCRM's timezone. In any other hour the call returns `skipped` and sends nothing, and a value outside 0 to 23 is an error. Leave it out when you run a digest by hand. A rule sets its hour in the "Herald: Schedule" trigger instead.
 
 ## Block types
 
