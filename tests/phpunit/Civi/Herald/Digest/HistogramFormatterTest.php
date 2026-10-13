@@ -58,6 +58,44 @@ class HistogramFormatterTest extends TestCase {
     $this->assertGreaterThanOrEqual(max($amounts), end($buckets)['high']);
   }
 
+  public function testLinearModeSplitsTheRangeIntoEqualSteps(): void {
+    $amounts = [
+      10,
+      10,
+      15,
+      20,
+      20,
+      20,
+      25,
+      25,
+      25,
+      25,
+      30,
+      30,
+      35,
+      40,
+      50,
+      50,
+      50,
+      50,
+      50,
+      60,
+      75,
+      80,
+      100,
+      100,
+      100,
+      120,
+      150,
+      200,
+      250,
+    ];
+    $buckets = HistogramFormatter::compute($amounts);
+
+    $this->assertSame(['10–50', '50–100', '100–150', '150–200', '200–250'], array_column($buckets, 'label'));
+    $this->assertSame([14, 8, 4, 1, 2], array_column($buckets, 'count'));
+  }
+
   public function testMidRangeUsesLogMode(): void {
     // €1-€500, n=150 — logSpan ~2.7 → log mode, finer granularity
     $amounts = $this->logUniform(150, 1, 500, 42);

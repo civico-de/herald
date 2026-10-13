@@ -109,24 +109,23 @@ class HistogramFormatter {
   }
 
   /**
+   * Equal steps of a 1-2-5 size, at most $count buckets; the first edge is the
+   * nice floor of $min, the others are multiples of the step.
+   *
    * @return float[]
    */
   private static function linearEdges(float $min, float $max, int $count): array {
     $low = self::niceFloor($min);
-    $high = self::niceCeiling($max);
-    $step = ($high - $low) / $count;
+    $step = self::niceCeiling(($max - $low) / $count);
+    while ((int) ceil((($max - $low) / $step) - 1e-9) > $count) {
+      $step = self::niceCeiling($step * 1.01);
+    }
 
     $edges = [$low];
-    $last = $low;
-    for ($i = 1; $i < $count; $i++) {
-      $raw = $low + ($step * $i);
-      $nice = self::niceCeiling($raw);
-      if ($nice > $last && $nice < $high) {
-        $edges[] = $nice;
-        $last = $nice;
-      }
+    for ($edge = (floor($low / $step) + 1) * $step; $edge < ($max - 1e-9); $edge += $step) {
+      $edges[] = $edge;
     }
-    $edges[] = $high;
+    $edges[] = (float) (ceil(($max / $step) - 1e-9) * $step);
     return $edges;
   }
 
