@@ -39,6 +39,28 @@ To get a message for every completed contribution, create a CiviRules rule:
 2. Condition "Contribution Status is (not) one of" with Completed.
 3. Action "Herald: Send notification (generic)" with the template "Herald: New completed contribution" and the channel Telegram.
 
+A weekly summary with an amount histogram is a rule on herald's own trigger:
+
+1. Trigger "Herald: Schedule" with Monday under Weekdays and 08:00 under Time.
+2. Action "Herald: Send digest" with the template "Herald: Weekly contribution digest", the period "Last 7 days" and the channel Telegram.
+
+Every Monday at 8:00 the chat gets the total, a line per contribution source and the histogram. herald picks the buckets from the amounts. Each bar counts contributions, and the bracket holds their sum:
+
+```
+📈 Weekly report last 7 days
+
+Received: $1,815.00 (29)
+• Bank transfer: $595.00 (10)
+• Website: $1,220.00 (19)
+10–50   ████████████ 14 (330)
+50–100  ███████ 8 (465)
+100–150 ███ 4 (420)
+150–200 █ 1 (150)
+200–250 ██ 2 (450)
+```
+
+A digest can also combine blocks, such as the contributions of one campaign and the rows of a SearchKit saved search. See [Digests](https://civico-de.github.io/herald/digests/).
+
 Scripts and other extensions can publish to a named topic, and the setting `herald_topics` decides where it goes:
 
 ```bash
