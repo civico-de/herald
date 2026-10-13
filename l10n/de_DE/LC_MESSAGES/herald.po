@@ -398,11 +398,11 @@ msgstr "Rolle"
 
 #: managed/MessageTemplate.mgd.php
 msgid "New event"
-msgstr "Neuer Workshop"
+msgstr "Neues Event"
 
 #: managed/MessageTemplate.mgd.php
 msgid "Event deactivated"
-msgstr "Workshop abgeschaltet"
+msgstr "Event deaktiviert"
 
 #: managed/MessageTemplate.mgd.php
 msgid "Event registration cancelled"
@@ -410,7 +410,7 @@ msgstr "Storno Event-Anmeldung"
 
 #: managed/MessageTemplate.mgd.php
 msgid "Event deleted"
-msgstr "Workshop gelöscht"
+msgstr "Event gelöscht"
 
 #: managed/MessageTemplate.mgd.php
 msgid "no receipts"
