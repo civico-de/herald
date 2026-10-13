@@ -58,15 +58,18 @@ cv api4 Herald.publish topic=ops message='Import finished'
 
 ## Development
 
-herald uses the [civikitchen](https://github.com/civico-de/civikitchen) stack. From a civikitchen checkout next to this repository:
+The dev stack and every CI gate run in the [civikitchen](https://github.com/civico-de/civikitchen) Docker image. herald needs its `vendor/` directory first, so run `composer install` (PHP 8.3 or later), then:
 
 ```bash
-../civikitchen/scaffold/ckup          # start the dev stack and print its URL
-../civikitchen/scaffold/ckx ck ci     # run every CI gate
-../civikitchen/scaffold/ckx phpunit   # run the test suite alone
+cd .docker
+docker compose up -d     # CiviCRM on http://localhost:8080, admin/admin
+docker compose exec -u www-data -w /var/www/html/ext/herald app ck ci        # every CI gate
+docker compose exec -u www-data -w /var/www/html/ext/herald app ckphpunit    # the test suite alone
 ```
 
-`ckup` runs `composer install`, starts the stack and installs CiviCRM, CiviRules and herald on the first boot. The tests install themselves into a separate test database, so the dev site stays untouched. CI runs the same gates on the same image. The coverage floor is `coverage.minimum` in `civikitchen.yaml`.
+With a civikitchen checkout next to this repository, `../civikitchen/scaffold/ckup` does the `composer install` in the image, starts the stack on free host ports and prints its URL. `../civikitchen/scaffold/ckx ck ci` runs a command in it.
+
+The first boot installs CiviCRM, CiviRules and herald. The tests install themselves into a separate test database, so the dev site stays untouched. CI runs the same gates on the same image. The coverage floor is `coverage.minimum` in `civikitchen.yaml`.
 
 ## License
 
