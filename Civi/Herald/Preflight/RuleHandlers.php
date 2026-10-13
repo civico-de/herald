@@ -11,15 +11,15 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * The handler classes CiviRules would load, keyed "kind:class", from herald's
- * manifests or from rules; loads no class. CiviRules looks up rules only through
+ * managed declarations or from rules; loads no class. CiviRules looks up rules only through
  * an active trigger, so a rule whose trigger is missing or inactive loads none.
  */
 final class RuleHandlers {
 
-  private const MANIFESTS = [
-    'civirules_conditions.json' => 'condition',
-    'civirules_actions.json' => 'action',
-    'civirules_triggers.json' => 'trigger',
+  private const KINDS = [
+    'CiviRulesCondition' => 'condition',
+    'CiviRulesAction' => 'action',
+    'CiviRulesTrigger' => 'trigger',
   ];
 
   /**
@@ -27,13 +27,13 @@ final class RuleHandlers {
    */
   public static function registered(): array {
     $handlers = [];
-    foreach (self::MANIFESTS as $manifest => $kind) {
-      $entries = json_decode((string) file_get_contents(dirname(__DIR__, 3) . '/' . $manifest), TRUE);
-      foreach (is_array($entries) ? $entries : [] as $entry) {
-        $class = Cast::toString(is_array($entry) ? $entry['class_name'] ?? NULL : NULL);
-        if ($class !== '') {
-          $handlers[$kind . ':' . $class] = ['kind' => $kind, 'class' => $class, 'rule_ids' => [], 'problem' => NULL];
-        }
+    /** @var list<array{entity: string, params: array{values: array{class_name: string}}}> $declarations */
+    $declarations = require dirname(__DIR__, 3) . '/managed/CiviRules.mgd.php';
+    foreach ($declarations as $declaration) {
+      $kind = self::KINDS[$declaration['entity']] ?? NULL;
+      $class = $declaration['params']['values']['class_name'];
+      if ($kind !== NULL) {
+        $handlers[$kind . ':' . $class] = ['kind' => $kind, 'class' => $class, 'rule_ids' => [], 'problem' => NULL];
       }
     }
     return $handlers;

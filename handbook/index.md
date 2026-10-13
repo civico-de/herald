@@ -14,7 +14,7 @@ herald delivers through six channels: Telegram, a generic webhook for Slack, Dis
 
 Messages come from CiviCRM message templates, so admins can edit the wording under Mailings, Message Templates. herald ships templates for contributions, ticket sales, events, memberships, group signups, digests and health checks. The templates are in English, and a German translation is included.
 
-herald adds four CiviRules building blocks:
+With CiviRules installed, herald adds four building blocks to it:
 
 - the action "Herald: Send notification (generic)", which renders a template with the data of the trigger
 - the action "Herald: Send digest", which sends a summary
@@ -31,7 +31,7 @@ The check monitor runs health checks that extensions contribute. It reports when
 
 ## Requirements
 
-herald needs CiviRules and SearchKit. SearchKit ships with CiviCRM. The supported CiviCRM and PHP versions are listed in the extension's `info.xml`.
+herald needs SearchKit, which ships with CiviCRM. CiviRules is optional. herald registers its rule building blocks whether you install CiviRules before or after herald. Without CiviRules, the API, scheduled jobs, topics and the check monitor still work. The supported CiviCRM and PHP versions are listed in the extension's `info.xml`.
 
 ## Install
 

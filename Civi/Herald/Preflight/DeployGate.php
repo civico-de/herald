@@ -38,6 +38,9 @@ final class DeployGate {
    * @throws \CRM_Core_Exception naming every gating failure and how to re-enable herald's rules
    */
   public static function run($notes): int {
+    if (!self::civirulesInstalled($notes)) {
+      return 0;
+    }
     $marked = self::markedRuleIds();
     $gating = RuleHandlers::ofRules($marked) + RuleHandlers::registered();
     $dormant = RuleHandlers::dormant($marked);
@@ -73,6 +76,9 @@ final class DeployGate {
    * @param resource $notes
    */
   public static function noteOthers($notes): int {
+    if (!self::civirulesInstalled($notes)) {
+      return 0;
+    }
     $others = array_diff_key(RuleHandlers::active(), RuleHandlers::registered());
     $noted = self::broken($others);
     if ($noted !== []) {
@@ -82,6 +88,19 @@ final class DeployGate {
       );
     }
     return count($others);
+  }
+
+  /**
+   * Without CiviRules no rule can load a handler; says so on $notes.
+   *
+   * @param resource $notes
+   */
+  private static function civirulesInstalled($notes): bool {
+    if (\CRM_Herald_CivirulesAdapter_Availability::isInstalled()) {
+      return TRUE;
+    }
+    fwrite($notes, "[herald preflight] note: CiviRules is not installed, so there are no rule handlers to check\n");
+    return FALSE;
   }
 
   /**

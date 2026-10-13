@@ -7,7 +7,12 @@ declare(strict_types = 1);
  * the active rules backed by a herald condition, action or trigger class for the gate.
  */
 
-// DeployGate::marker(), spelled out: this runs before the swap, against the old classes.
+// Spelled out, like DeployGate::marker() below: this runs before the swap, against the old classes.
+if (CRM_Extension_System::singleton()->getManager()->getStatus('org.civicoop.civirules') !== 'installed') {
+  echo "[herald deploy] CiviRules is not installed; no rule to disable\n";
+  return;
+}
+
 $marker = Civi::paths()->getPath('[civicrm.private]/herald_deploy_disabled_rules');
 if (!is_string($marker)) {
   throw new RuntimeException('[herald deploy] cannot resolve the marker path; no rule was disabled');

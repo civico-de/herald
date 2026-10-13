@@ -7,7 +7,7 @@ order: 70
 
 Diese Seite erklärt, wie Sie herald auf einer laufenden Site aktualisieren, ohne dass während des Codewechsels etwas kaputtgeht.
 
-Die CiviRules-Aktionen und -Bedingungen von herald laufen innerhalb des Speichervorgangs jedes Datensatzes, auf den ihre Regeln reagieren. Lässt sich eine ihrer Klassen nicht laden, schlägt dieser Speichervorgang fehl: Verloren geht dann der Beitrag, die Registrierung oder die Änderung am Event, nicht nur die Meldung. Die Skripte im Verzeichnis bin von herald schalten die Regeln von herald deshalb ab, während sich der Code ändert. Sie schalten die Regeln erst wieder ein, wenn sich jeder Handler laden lässt.
+Die CiviRules-Aktionen und -Bedingungen von herald laufen innerhalb des Speichervorgangs jedes Datensatzes, auf den ihre Regeln reagieren. Lässt sich eine ihrer Klassen nicht laden, schlägt dieser Speichervorgang fehl: Verloren geht dann der Beitrag, die Registrierung oder die Änderung am Event, nicht nur die Meldung. Die Skripte im Verzeichnis bin von herald schalten die Regeln von herald deshalb ab, während sich der Code ändert. Sie schalten die Regeln erst wieder ein, wenn sich jeder Handler laden lässt. Auf einer Site ohne CiviRules vermerkt jedes Skript, dass es nichts zu prüfen gibt, und läuft erfolgreich durch.
 
 ## Schritte
 

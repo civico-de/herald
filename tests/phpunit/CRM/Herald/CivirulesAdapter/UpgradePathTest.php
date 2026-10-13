@@ -76,21 +76,24 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
       [1 => [self::OLD_CLASS, 'String'], 2 => [$actionId, 'Integer']],
     );
 
-    // The manifests match on `name`, so re-registering is enough on its own.
-    CRM_Herald_CivirulesAdapter_Registrar::register(dirname(__DIR__, 5));
+    // The managed declaration sets class_name on every reconcile.
+    CRM_Herald_Upgrader_Reconcile::run();
 
     self::assertSame(self::NEW_CLASS, $this->classNameOf($actionId));
   }
 
   /**
-   * 0.7.0 regression: manifests and managed entities added in a release must
+   * 0.7.0 regression: handlers and managed entities added in a release must
    * reach EXISTING installs via the upgrader, not only via install/enable.
    * upgrade_1003 delegates to CRM_Herald_Upgrader_Reconcile::run(); this exercises that path against a
    * DB missing the 0.7.0 additions.
    */
-  public function testReconcileRegistersManifestAdditionsOnExistingInstalls(): void {
+  public function testReconcileRegistersHandlerAdditionsOnExistingInstalls(): void {
     \CRM_Core_DAO::executeQuery(
       "DELETE FROM civirule_condition WHERE name = 'herald_field_transition'",
+    );
+    \CRM_Core_DAO::executeQuery(
+      "DELETE FROM civicrm_managed WHERE module = 'herald' AND name = 'herald_civirules_herald_field_transition'",
     );
     \CRM_Core_DAO::executeQuery(
       "DELETE FROM civicrm_managed WHERE module = 'herald'
@@ -102,7 +105,7 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
        WHERE og.name = 'herald_subscription_type' AND ov.name = 'weekly_digest'",
     );
 
-    CRM_Herald_Upgrader_Reconcile::run(dirname(__DIR__, 5));
+    CRM_Herald_Upgrader_Reconcile::run();
 
     self::assertSame(
       'CRM_Herald_CivirulesAdapter_Condition_FieldTransition',
@@ -119,6 +122,30 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
          WHERE og.name = 'herald_subscription_type' AND ov.name = 'weekly_digest'",
       ),
       'upgrade reconcile did not restore the managed option value',
+    );
+  }
+
+  /**
+   * Releases before the managed declarations inserted the handler rows without a
+   * civicrm_managed record; the upgrade adopts those rows instead of adding twins.
+   */
+  public function testReconcileAdoptsHandlerRowsOfEarlierReleases(): void {
+    $actionId = $this->actionIdByName('herald_send');
+    \CRM_Core_DAO::executeQuery(
+      "DELETE FROM civicrm_managed WHERE module = 'herald' AND entity_type LIKE 'CiviRules%'",
+    );
+
+    CRM_Herald_Upgrader_Reconcile::run();
+
+    self::assertSame(
+      1,
+      (int) \CRM_Core_DAO::singleValueQuery("SELECT COUNT(*) FROM civirule_action WHERE name = 'herald_send'"),
+    );
+    self::assertSame(
+      $actionId,
+      (int) \CRM_Core_DAO::singleValueQuery(
+        "SELECT entity_id FROM civicrm_managed WHERE module = 'herald' AND name = 'herald_civirules_herald_send'",
+      ),
     );
   }
 

@@ -1,6 +1,8 @@
 {
   "description": "Dev and CI data for herald: dependencies, config, seed records, scripts and API users applied at first boot.",
-  "dependencies": [],
+  "dependencies": [
+    { "name": "org.civicoop.civirules", "registry": true, "enable": true }
+  ],
   "scripts": [
     "scripts/10-herald-demo.php"
   ]

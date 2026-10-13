@@ -8,8 +8,8 @@ Documentation: https://civico-de.github.io/herald/
 
 ## Requirements
 
-- CiviRules
 - SearchKit, which ships with CiviCRM
+- CiviRules, optional: it provides the rule actions, the schedule trigger and the field condition. herald registers them whether CiviRules is installed before or after it. Without CiviRules, the API, scheduled jobs, topics and the check monitor still work.
 
 The supported CiviCRM and PHP versions are listed in `info.xml`.
 

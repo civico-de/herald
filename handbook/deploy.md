@@ -7,7 +7,7 @@ order: 70
 
 This page explains how to update herald on a live site without breaking anything while the code changes.
 
-herald's CiviRules actions and conditions run inside the save of every record their rules fire on. If one of their classes cannot load, that save fails: the contribution, the registration or the event edit is lost, not only the alert. The scripts in herald's bin directory therefore switch herald's rules off while the code changes. They switch the rules back on only once every handler loads.
+herald's CiviRules actions and conditions run inside the save of every record their rules fire on. If one of their classes cannot load, that save fails: the contribution, the registration or the event edit is lost, not only the alert. The scripts in herald's bin directory therefore switch herald's rules off while the code changes. They switch the rules back on only once every handler loads. On a site without CiviRules, each script notes that there is nothing to check and succeeds.
 
 ## Steps
 

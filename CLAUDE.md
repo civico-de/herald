@@ -1,7 +1,7 @@
 # herald
 
 Channel-pluggable notification + digest layer for CiviCRM, fired via CiviRules
-actions (no bespoke cron for alerts).
+actions (no bespoke cron for alerts). CiviRules is optional, not in `<requires>`.
 
 ## Contracts to preserve
 
@@ -68,8 +68,17 @@ actions (no bespoke cron for alerts).
   but unpack `TriggerData` and call `Herald.notify*` / `Herald.check*` via
   APIv4. Domain logic belongs in `Civi\Herald\*`; phpstan's phpat rule fails
   the build on any CiviRules reference outside that directory.
+- CiviRules is optional: every adapter class sits behind a
+  `// ckconform-optional civirules` `class_exists()` guard, because the
+  scan-classes mixin loads each file and a missing parent is a fatal
+  (`WithoutCiviRulesTest`). Handlers register as managed entities in
+  `managed/CiviRules.mgd.php`, declared only while CiviRules is installed, so
+  installing it later registers them on its reconcile; cleanup `always`, as
+  CiviRules prescribes. `RuleHandlers::registered()` reads that file, and the
+  deploy scripts note a missing CiviRules and succeed. phpstan scans the dev
+  profile's CiviRules checkout; its runtime aliases are stubbed in `phpstan-stubs/`.
 - Handler class names live in `civirule_action.class_name`, so renaming one is
-  a data migration — the manifests plus
+  a data migration — `managed/CiviRules.mgd.php` plus
   `CRM_Herald_CivirulesAdapter_Registrar::migrateRenamedClasses()`.
 - A class that fails to load (e.g. an unimplemented abstract method) is a
   PHP fatal: the scan-classes mixin loads every `CRM/` and `Civi/` file on a

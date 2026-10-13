@@ -23,11 +23,11 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
 
   /**
    * The CiviRules handlers moved into CRM/Herald/CivirulesAdapter/; re-register
-   * both manifests and rewrite any class_name still naming an old class.
+   * them and rewrite any class_name still naming an old class.
    */
   public function upgrade_1002(): bool {
     $this->ctx->log->info('herald: migrating CiviRules handler classes to the adapter namespace');
-    CRM_Herald_CivirulesAdapter_Registrar::register($this->extensionDir);
+    CRM_Core_ManagedEntities::singleton(fresh: TRUE)->reconcile(['herald']);
     $migrated = CRM_Herald_CivirulesAdapter_Registrar::migrateRenamedClasses();
     $this->ctx->log->info("herald: rewrote {$migrated} CiviRules handler class name(s)");
     return TRUE;
@@ -39,8 +39,8 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
    * (re)registered on install/enable, so existing installs need a reconcile.
    */
   public function upgrade_1003(): bool {
-    $this->ctx->log->info('herald: re-registering CiviRules manifests and reconciling managed entities');
-    CRM_Herald_Upgrader_Reconcile::run($this->extensionDir);
+    $this->ctx->log->info('herald: re-registering CiviRules handlers and reconciling managed entities');
+    CRM_Herald_Upgrader_Reconcile::run();
     return TRUE;
   }
 
@@ -60,7 +60,7 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
    */
   public function upgrade_1007(): bool {
     $this->ctx->log->info('herald: moving rules onto the generic handlers');
-    CRM_Herald_CivirulesAdapter_Registrar::register($this->extensionDir);
+    CRM_Core_ManagedEntities::singleton(fresh: TRUE)->reconcile(['herald']);
     $migrated = CRM_Herald_CivirulesAdapter_RetiredHandlers::migrate();
     $this->ctx->log->info("herald: moved {$migrated} rule action(s) and condition(s)");
     $jobs = CRM_Herald_Upgrader_DigestJobs::migrate();
@@ -93,7 +93,7 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
    */
   public function upgrade_1010(): bool {
     $this->ctx->log->info('herald: registering the Herald: Schedule CiviRules trigger');
-    CRM_Herald_Upgrader_Reconcile::run($this->extensionDir);
+    CRM_Herald_Upgrader_Reconcile::run();
     return TRUE;
   }
 
@@ -105,14 +105,14 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
     if (in_array('installing', $processes, TRUE)) {
       return;
     }
-    CRM_Herald_Upgrader_Reconcile::run($this->extensionDir);
+    CRM_Herald_Upgrader_Reconcile::run();
   }
 
   public function postInstall(): void {
     // An uninstall by an older release left the buffer table in place, and
     // CREATE TABLE IF NOT EXISTS keeps it as it was.
     CRM_Herald_Upgrader_BufferTable::sync();
-    CRM_Herald_Upgrader_Reconcile::run($this->extensionDir);
+    CRM_Herald_Upgrader_Reconcile::run();
     CRM_Herald_Upgrader_PreferencesProfile::ensure();
   }
 

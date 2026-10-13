@@ -34,18 +34,21 @@ parameters:
 			- tests (?)
 		analyseAndScan:
 			- phpstanBootstrap.php
+			# loaded as scanFiles below
+			- phpstan-stubs
 			- vendor (?)
 			- node_modules (?)
 			- build (?)
 			- .civikitchen-siblings (?)
 	scanFiles:
 		- herald.civix.php
-	# scanDirectories:
-	#	# phpstanBootstrap.php already autoloads core's own ext packages and
-	#	# every extension in info.xml <requires>. Add here what neither
-	#	# covers: an extension this repo does not <require>, or a package
-	#	# whose classes sit off the civix layout, e.g.:
-	#	# - /var/www/html/core/ext/flexmailer/src
+		- phpstan-stubs/CRM_Civirules_DAO_Base.php
+		- phpstan-stubs/CRM_Civirules_DAO_RuleCondition.php
+	# phpstanBootstrap.php already autoloads core's own ext packages and
+	# every extension in info.xml <requires>. CiviRules is optional, so the
+	# dev profile fetches it and its classes are scanned from there.
+	scanDirectories:
+		- /var/www/html/ext/org.civicoop.civirules
 	bootstrapFiles:
 		- phpstanBootstrap.php
 	civikitchen:
@@ -62,6 +65,12 @@ parameters:
 	# <requires> means its checkout was not found beside this repo — mount
 	# it (sibling_repo in CI); it is not an ignoreErrors case.
 	ignoreErrors:
+		# CiviRules is optional, so it is not in <requires>; the adapter is the
+		# one place that extends and calls its classes, each behind a class guard.
+		-
+			identifier: phpat.testOnlyCoreAndOwnCivicrmDependencies
+			paths:
+				- CRM/Herald/CivirulesAdapter/*
 		# CiviRules opens its action and condition parameter screens as QuickForm
 		# forms by route; the exception is confined to the adapter forms.
 		-

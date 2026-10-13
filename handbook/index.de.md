@@ -14,7 +14,7 @@ herald stellt über sechs Kanäle zu: Telegram, einen generischen Webhook für S
 
 Die Nachrichten stammen aus CiviCRM-Nachrichtenvorlagen, sodass Admins den Wortlaut unter „Mailings, Message Templates“ (Mailings, Nachrichtenvorlagen) anpassen können. herald bringt Vorlagen für Beiträge, Ticketverkäufe, Events, Mitgliedschaften, Gruppenanmeldungen, Reports und Health-Checks mit. Die Vorlagen sind auf Englisch geschrieben, eine deutsche Übersetzung liegt bei.
 
-herald ergänzt CiviRules um vier Bausteine:
+Ist CiviRules installiert, ergänzt herald es um vier Bausteine:
 
 - die Aktion „Herald: Send notification (generic)“, die eine Vorlage mit den Daten des Triggers rendert
 - die Aktion „Herald: Send digest“, die einen Report verschickt
@@ -31,7 +31,7 @@ Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet
 
 ## Voraussetzungen
 
-herald benötigt CiviRules und SearchKit. SearchKit ist Teil von CiviCRM. Die unterstützten Versionen von CiviCRM und PHP stehen in der `info.xml` der Extension.
+herald benötigt SearchKit, das Teil von CiviCRM ist. CiviRules ist optional. herald registriert seine Regel-Bausteine, egal ob Sie CiviRules vor oder nach herald installieren. Ohne CiviRules funktionieren die API, die geplanten Jobs, die Topics und der Check-Monitor weiterhin. Die unterstützten Versionen von CiviCRM und PHP stehen in der `info.xml` der Extension.
 
 ## Installation
 

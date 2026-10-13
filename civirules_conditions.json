@@ -1,7 +1,0 @@
-[
-  {
-    "name": "herald_field_transition",
-    "label": "Herald: Field transition (entity field changed from/to value)",
-    "class_name": "CRM_Herald_CivirulesAdapter_Condition_FieldTransition"
-  }
-]

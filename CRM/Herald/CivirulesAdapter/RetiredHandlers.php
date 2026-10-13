@@ -71,12 +71,12 @@ final class CRM_Herald_CivirulesAdapter_RetiredHandlers {
 
   /**
    * Moves rules off the retired handlers, then deletes the retired handler
-   * rows. Needs the Registrar to have registered the generic handlers.
+   * rows. Needs the generic handlers of managed/CiviRules.mgd.php reconciled.
    *
    * @return int Number of rule actions and conditions rewritten.
    */
   public static function migrate(): int {
-    if (!\CRM_Core_DAO::checkTableExists('civirule_rule_action')) {
+    if (!CRM_Herald_CivirulesAdapter_Availability::isInstalled()) {
       return 0;
     }
     $migrated = self::moveRuleRows('action', self::RETIRED_ACTIONS);

@@ -27,10 +27,8 @@
     <ver>8.3</ver>
     <ver>8.4</ver>
   </php_compatibility>
-  <comments>Requires CiviRules.</comments>
+  <comments>CiviRules is optional: with it, rules send notifications and scheduled digests.</comments>
   <requires>
-    <!-- CivirulesActions/Conditions extend CiviRules base classes; bin/preflight-rules.php checks them on deploy. -->
-    <ext>org.civicoop.civirules</ext>
     <!-- The parked-alerts list ships as a SearchKit display. -->
     <ext>org.civicrm.search_kit</ext>
   </requires>
