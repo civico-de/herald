@@ -63,8 +63,8 @@ The dev stack and every CI gate run in the [civikitchen](https://github.com/civi
 ```bash
 cd .docker
 docker compose up -d     # CiviCRM on http://localhost:8080, admin/admin
-docker compose exec -u www-data -w /var/www/html/ext/herald app ck ci        # every CI gate
-docker compose exec -u www-data -w /var/www/html/ext/herald app ckphpunit    # the test suite alone
+docker compose exec -w /var/www/html/ext/herald app ck ci        # every CI gate
+docker compose exec -w /var/www/html/ext/herald app ckphpunit    # the test suite alone
 ```
 
 With a civikitchen checkout next to this repository, `../civikitchen/scaffold/ckup` does the `composer install` in the image, starts the stack on free host ports and prints its URL. `../civikitchen/scaffold/ckx ck ci` runs a command in it.
