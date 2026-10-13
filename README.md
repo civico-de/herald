@@ -1,140 +1,72 @@
 # herald
 
-A notification and digest layer for CiviCRM. CiviRules rules, scheduled jobs, other
-extensions and scripts hand herald a message or a template; herald renders it and
-delivers it through the channel the site configured.
+herald is a CiviCRM extension that sends notifications and digests. CiviRules rules, scheduled jobs, other extensions and scripts hand it a message or a template. herald renders it and delivers it to Telegram, a webhook such as Slack or Discord, ntfy, Pushover, email or an assigned CiviCRM activity.
 
-- **Channels:** Telegram, generic webhook (Slack, Discord, Mattermost, custom), ntfy,
-  Pushover, email through CiviCRM's outbound mailer, and assigned CiviCRM activities.
-  A new channel implements `Civi\Herald\Channel\ChannelInterface`.
-- **Templates:** `MessageTemplate` workflows rendered as Smarty strings, shipped for
-  contributions, tickets, events, memberships, group signups, digests and the check
-  monitor.
-- **CiviRules:** two actions (send notification, send digest) and one
-  condition (field transition: a field's value before and after an edit), fired by
-  CiviRules triggers instead of a bespoke cron. On a Contribution trigger the
-  notification also carries the contribution, its campaign's progress and the status
-  change.
-- **Delivery:** to one recipient, to every contact subscribed to a notification kind,
-  to the members of a group, or to a list of addresses. Alerts can be aggregated into one
-  message per time window.
-- **Topics:** publishers name a topic such as `ops`; the `herald_topics` setting decides
-  channel and recipient.
-- **Check monitor:** extensions contribute health checks; herald reports the ok → fail and
-  fail → ok transitions and reminds about checks that keep failing.
+It ships templates for contributions, ticket sales, events, memberships and group signups. It adds CiviRules actions to send notifications and digests, and a condition that compares a field before and after an edit. Notifications can go to one recipient, to subscribed contacts on their own channels, to a group or to a list of addresses, and bursts can be collected into one message. A check monitor reports when the health checks of your extensions start failing and when they recover.
 
-Requires CiviRules (`org.civicoop.civirules`). Supported CiviCRM and PHP versions are
-declared in `info.xml`.
+Documentation: https://civico-de.github.io/herald/
+
+## Requirements
+
+- CiviRules
+- SearchKit, which ships with CiviCRM
+
+The supported CiviCRM and PHP versions are listed in `info.xml`.
 
 ## Install
+
+Download the archive from the [releases page](https://github.com/civico-de/herald/releases), unpack it into your extensions directory and enable it:
 
 ```bash
 cv ext:enable herald
 ```
 
-The release archive carries `vendor/`. A git checkout needs `composer install --no-dev`
-first: `herald.php` loads `vendor/autoload.php`, so without it every request of a site
-with herald enabled fails.
+A git checkout has no `vendor/` directory. Run `composer install --no-dev` in it first. Without it, every request fails once herald is enabled.
 
-Then configure the channels you use, on the admin screen `civicrm/admin/setting/herald`
-or with `cv setting:set`. Array settings such as topic routes have no form field. The
-full list is in [docs/reference.md](docs/reference.md#settings).
+## Example
+
+Store a Telegram bot token and a chat, then send a test message:
 
 ```bash
-# Telegram
 cv setting:set herald_telegram_bot_token=<bot-token>
 cv setting:set herald_telegram_default_chat_id=<chat-id>
-
-# Webhook
-cv setting:set herald_webhook_default_url=<https://hooks.slack.com/...>
-cv setting:set herald_webhook_default_auth_token=<bearer-token>      # optional
-cv setting:set herald_webhook_allowed_hosts='["hooks.slack.com"]'     # optional allowlist
-
-# ntfy (public ntfy.sh or self-hosted)
-cv setting:set herald_ntfy_server=https://ntfy.sh                     # default
-cv setting:set herald_ntfy_default_topic=<topic>
-cv setting:set herald_ntfy_token=<bearer-token>                       # protected topics only
-
-# Pushover
-cv setting:set herald_pushover_app_token=<app-token>
-cv setting:set herald_pushover_default_user_key=<user-or-group-key>
-
-# Email: no credentials, both optional
-cv setting:set herald_email_from='Herald <noreply@example.org>'       # empty → site default
-cv setting:set herald_email_default_to=<fallback-recipient>
+cv api4 Herald.testTelegram message='<b>herald works</b>'
 ```
 
-The activity channel needs no settings.
+To get a message for every completed contribution, create a CiviRules rule:
 
-## Smoke test
+1. Trigger "Contribution is added".
+2. Condition "Contribution Status is (not) one of" with Completed.
+3. Action "Herald: Send notification (generic)" with the template "Herald: New completed contribution" and the channel Telegram.
+
+Scripts and other extensions can publish to a named topic, and the setting `herald_topics` decides where it goes:
 
 ```bash
-# A real message through the configured Telegram channel
-cv api4 Herald.testTelegram message='<b>herald smoke test</b>'
-
-# Render a workflow template without sending it
-cv api4 Herald.renderTemplate workflow=herald_contribution_alert_completed \
-    vars='{"contribution":{"total_amount":42.5,"source":"Stripe"}}'
-
-# A pre-rendered message through one channel
-cv api4 Herald.send channel=activity message='Three bank transactions need review' \
-    subject='Review bank import' format=text \
-    config='{"activity_assignee_contact_id":42}'
-
-# Publish to a topic; herald_topics decides where it lands
-cv api4 Herald.publish topic=ops message='disk almost full'
+cv api4 Herald.publish topic=ops message='Import finished'
 ```
-
-`cv scr bin/test-telegram.php` does what `Herald.testTelegram` does, without the API;
-`HERALD_TEST_MESSAGE` and `HERALD_TEST_CHAT_ID` override its defaults.
-
-## First rule
-
-A Telegram message for every completed contribution:
-
-1. Administer → CiviRules → New rule, trigger **Contribution is added**.
-2. Condition **Contribution Status is (not) one of**: Completed.
-3. Action **Herald: Send notification (generic)**, template "Herald: New completed
-   contribution", channel Telegram. Leave the chat ID empty to use the default.
-
-[docs/recipes.md](docs/recipes.md) builds on this: bank-transfer matching, ticket sales
-with aggregation, event lifecycle alerts, signups and scheduled digests.
 
 ## Documentation
 
-| Document | Covers |
-|---|---|
-| [docs/recipes.md](docs/recipes.md) | End-to-end CiviRules setups and scheduled digests |
-| [docs/channels.md](docs/channels.md) | Every channel: settings, per-call keys, limits, troubleshooting |
-| [docs/delivery.md](docs/delivery.md) | Delivery modes, subscriber preferences, topics, aggregation, parked alerts |
-| [docs/digests.md](docs/digests.md) | Digests: contribution, saved-search and section blocks, source normalisation |
-| [docs/monitor.md](docs/monitor.md) | Check monitor: contributing checks, tuning, herald's own checks |
-| [docs/reference.md](docs/reference.md) | CiviRules actions and conditions, APIv4, jobs, templates and their variables, settings, hooks |
-| [docs/deploy.md](docs/deploy.md) | Deploying without breaking writes: the rule gate scripts |
+- [Getting started](https://civico-de.github.io/herald/)
+- [Recipes](https://civico-de.github.io/herald/recipes/): donations, ticket sales, events, signups and scheduled digests
+- [Channels](https://civico-de.github.io/herald/channels/): settings, options and limits of each channel
+- [Delivery](https://civico-de.github.io/herald/delivery/): recipients, subscriptions, topics, aggregation and parked alerts
+- [Digests](https://civico-de.github.io/herald/digests/): contribution, saved search and section blocks
+- [Check monitor](https://civico-de.github.io/herald/monitor/): contributing health checks and tuning the alerts
+- [Reference](https://civico-de.github.io/herald/reference/): CiviRules actions and conditions, API, jobs, templates, settings and hooks
+- [Deployment](https://civico-de.github.io/herald/deploy/): updating herald without breaking the writes its rules run in
 
 ## Development
 
-herald uses the [civikitchen](https://github.com/jfilter/civikitchen) template
-stack in `.docker/`. From a civikitchen checkout next to the repo:
+herald uses the [civikitchen](https://github.com/civico-de/civikitchen) stack. From a civikitchen checkout next to this repository:
 
 ```bash
-../civikitchen/scaffold/ckup            # dev stack on free host ports, prints the URL
-../civikitchen/scaffold/ckx ck ci       # every CI gate: lint, format, tests with coverage, phpstan, …
-../civikitchen/scaffold/ckx phpunit     # the test suite alone
+../civikitchen/scaffold/ckup          # start the dev stack and print its URL
+../civikitchen/scaffold/ckx ck ci     # run every CI gate
+../civikitchen/scaffold/ckx phpunit   # run the test suite alone
 ```
 
-`ckup` writes the host ports to `.docker/.env`, runs `composer install` on the
-checkout and starts the stack; the first boot installs CiviCRM, enables herald
-and installs CiviRules from its `<requires>`. `composer install` also builds
-`vendor/`: Strauss rewrites the bundled `civico-de/stdlib` into herald's own
-`Civi\Herald\Vendor\` namespace.
-
-The headless suite installs itself into the separate `civicrm_test` database
-the image creates, so the dev site stays untouched and no `ext:enable` or
-environment variables are needed. The bootstrap refuses to run unless cv's
-configuration points the tests at a `*_test` database. CI runs the same gates
-on the same image (`.github/workflows/ci.yml`); the coverage floor is
-`coverage.minimum` in `civikitchen.yaml`.
+`ckup` runs `composer install`, starts the stack and installs CiviCRM, CiviRules and herald on the first boot. The tests install themselves into a separate test database, so the dev site stays untouched. CI runs the same gates on the same image. The coverage floor is `coverage.minimum` in `civikitchen.yaml`.
 
 ## License
 

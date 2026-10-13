@@ -1,0 +1,25 @@
+# The handbook/ pages: shown by the handbook extension inside CiviCRM and
+# published as the documentation site.
+name: Docs
+
+on:
+  push:
+    branches: [main]
+    paths: ['handbook/**', 'info.xml', '.github/workflows/docs.yml']
+  pull_request:
+    paths: ['handbook/**', 'info.xml', '.github/workflows/docs.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docs:
+    uses: civico-de/civikitchen/.github/workflows/extension-docs.yml@v1
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    with:
+      languages: en de
+      deploy: ${{ github.event_name != 'pull_request' }}

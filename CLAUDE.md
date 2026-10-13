@@ -106,6 +106,6 @@ actions (no bespoke cron for alerts). Live in production.
 
 Headless tests self-install into the isolated `civicrm_test` DB — no prior
 `ext:enable`, no env vars. Smoke-test real sends with `cv api4 Herald.testTelegram` /
-`Herald.renderTemplate` (see README). User docs live in `docs/`
+`Herald.renderTemplate` (see README). User docs live in `handbook/`
 (recipes, channels, delivery, digests, monitor, reference, deploy); keep them
 in step with code changes.

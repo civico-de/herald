@@ -34,7 +34,7 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  *     from the hook as a failure (extension disabled?) instead of dropping it.
  *
  * Runs inside the instance, so a hard-down site cannot report itself; pair
- * with an external poller on the pulse endpoint.
+ * with an external uptime monitor.
  */
 class Monitor {
 
