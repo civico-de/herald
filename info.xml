@@ -19,7 +19,7 @@
   </urls>
   <releaseDate>2026-10-12</releaseDate>
   <version>0.10.0</version>
-  <develStage>alpha</develStage>
+  <develStage>beta</develStage>
   <compatibility>
     <ver>6.18</ver>
   </compatibility>
