@@ -43,6 +43,8 @@ cv ext:enable herald
 
 Ein Git-Checkout enthält kein Verzeichnis `vendor/`. Führen Sie darin `composer install --no-dev` aus, bevor Sie die Extension aktivieren. Ohne `vendor/` schlägt jede Seite der Site fehl, sobald herald aktiviert ist.
 
+Beim Deinstallieren entfernt herald seine CiviRules-Bausteine, und CiviRules entfernt sie aus jeder Regel, die sie nutzt. Eine Regel ohne ihre herald-Bedingung würde danach öfter auslösen als vorher. Deshalb schaltet herald zuerst jede aktive Regel ab, die einen seiner Trigger, eine seiner Bedingungen oder Aktionen nutzt. Das CiviCRM-Log nennt die IDs dieser Regeln.
+
 ## Erste Schritte
 
 Legen Sie mit @BotFather einen Telegram-Bot an, fügen Sie ihn einem Chat hinzu und notieren Sie die Chat-ID. Speichern Sie dann beides unter „Administer » Herald » Settings“ (Administrieren » Herald » Einstellungen) oder mit cv:

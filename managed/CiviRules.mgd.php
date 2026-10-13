@@ -5,8 +5,9 @@ declare(strict_types = 1);
 /**
  * herald's CiviRules handlers, declared only while CiviRules is installed, so
  * installing CiviRules later registers them on its own reconcile. `match` adopts
- * rows an earlier release created. Cleanup `always`, as CiviRules prescribes: a
- * handler whose class is gone would fatal every rule that uses it.
+ * rows an earlier release created; `is_active` undoes core's disable on re-enable.
+ * Cleanup `always`, as CiviRules prescribes: a handler whose class is gone would
+ * fatal every rule that uses it.
  */
 if (!CRM_Herald_CivirulesAdapter_Availability::isInstalled()) {
   return [];
@@ -19,7 +20,7 @@ $handler = static fn (string $entity, string $name, string $label, string $class
   'update' => 'always',
   'params' => [
     'version' => 4,
-    'values' => ['name' => $name, 'label' => $label, 'class_name' => $class] + $extra,
+    'values' => ['name' => $name, 'label' => $label, 'class_name' => $class, 'is_active' => TRUE] + $extra,
     'match' => ['name'],
   ],
 ];

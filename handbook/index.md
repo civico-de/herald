@@ -43,6 +43,8 @@ cv ext:enable herald
 
 A git checkout has no `vendor/` directory. Run `composer install --no-dev` in it before you enable the extension. Without `vendor/`, every page of the site fails once herald is enabled.
 
+Uninstalling herald removes its CiviRules building blocks, and CiviRules removes them from every rule that uses them. A rule that lost a herald condition would then fire more often than before, so herald first switches off every active rule that uses one of its triggers, conditions or actions. The CiviCRM log lists the IDs of those rules.
+
 ## First steps
 
 Create a Telegram bot with @BotFather, add it to a chat and note the chat ID. Then store both on Administer » Herald » Settings, or with cv:

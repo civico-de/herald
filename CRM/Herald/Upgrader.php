@@ -108,6 +108,15 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
     CRM_Herald_Upgrader_Reconcile::run();
   }
 
+  public function uninstall(): void {
+    $ids = CRM_Herald_CivirulesAdapter_DependentRules::disable();
+    if ($ids !== []) {
+      Civi::log('herald')->warning(
+        'herald: switched off CiviRules rules that used its handlers: ' . implode(',', $ids),
+      );
+    }
+  }
+
   public function postInstall(): void {
     // An uninstall by an older release left the buffer table in place, and
     // CREATE TABLE IF NOT EXISTS keeps it as it was.

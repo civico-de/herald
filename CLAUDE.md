@@ -74,7 +74,9 @@ actions (no bespoke cron for alerts). CiviRules is optional, not in `<requires>`
   (`WithoutCiviRulesTest`). Handlers register as managed entities in
   `managed/CiviRules.mgd.php`, declared only while CiviRules is installed, so
   installing it later registers them on its reconcile; cleanup `always`, as
-  CiviRules prescribes. `RuleHandlers::registered()` reads that file, and the
+  CiviRules prescribes, and `is_active` declared so a re-enable undoes core's
+  disable. That cleanup cascades to rule conditions, so `uninstall()` first
+  switches off the rules using a herald handler (`DependentRules`). `RuleHandlers::registered()` reads that file, and the
   deploy scripts note a missing CiviRules and succeed. phpstan scans the dev
   profile's CiviRules checkout; its runtime aliases are stubbed in `phpstan-stubs/`.
 - Handler class names live in `civirule_action.class_name`, so renaming one is
