@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Channel;
 
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+use CRM_Herald_ExtensionUtil as E;
 use GuzzleHttp\ClientInterface;
 
 /**
@@ -140,23 +141,27 @@ class PushoverChannel implements ChannelInterface {
    */
   public function getConfigSchema(): array {
     return [
-      'pushover_user_key' => ['label' => 'User/group key (override default)', 'required' => FALSE, 'type' => 'string'],
-      'pushover_title' => ['label' => 'Title', 'required' => FALSE, 'type' => 'string'],
-      'pushover_priority' => ['label' => 'Priority (-2…2)', 'required' => FALSE, 'type' => 'int'],
+      'pushover_user_key' => [
+        'label' => E::ts('User/group key (override default)'),
+        'required' => FALSE,
+        'type' => 'string',
+      ],
+      'pushover_title' => ['label' => E::ts('Title'), 'required' => FALSE, 'type' => 'string'],
+      'pushover_priority' => ['label' => E::ts('Priority (-2…2)'), 'required' => FALSE, 'type' => 'int'],
       'pushover_retry' => [
-        'label' => 'Emergency retry interval in seconds (priority 2 only)',
+        'label' => E::ts('Emergency retry interval in seconds (priority 2 only)'),
         'required' => FALSE,
         'type' => 'int',
       ],
       'pushover_expire' => [
-        'label' => 'Emergency expiry in seconds (priority 2 only)',
+        'label' => E::ts('Emergency expiry in seconds (priority 2 only)'),
         'required' => FALSE,
         'type' => 'int',
       ],
-      'pushover_sound' => ['label' => 'Sound', 'required' => FALSE, 'type' => 'string'],
-      'pushover_url' => ['label' => 'Supplementary URL', 'required' => FALSE, 'type' => 'string'],
-      'pushover_url_title' => ['label' => 'URL label', 'required' => FALSE, 'type' => 'string'],
-      'pushover_html' => ['label' => 'Body is HTML', 'required' => FALSE, 'type' => 'bool'],
+      'pushover_sound' => ['label' => E::ts('Sound'), 'required' => FALSE, 'type' => 'string'],
+      'pushover_url' => ['label' => E::ts('Supplementary URL'), 'required' => FALSE, 'type' => 'string'],
+      'pushover_url_title' => ['label' => E::ts('URL label'), 'required' => FALSE, 'type' => 'string'],
+      'pushover_html' => ['label' => E::ts('Body is HTML'), 'required' => FALSE, 'type' => 'bool'],
     ];
   }
 

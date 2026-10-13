@@ -21,6 +21,11 @@ namespace Civi\Api4;
  * Buffer dead letter — buffered alerts the flush job could not deliver:
  *   cv api4 Herald.getParkedAlerts / Herald.reactivateParkedAlerts
  *
+ * Admin screen saves, validated writes of the array settings (Setting.set
+ * stays the unchecked bulk path):
+ *   cv api4 Herald.saveTopic / deleteTopic / saveSourceRules / saveAllowedHosts
+ *   cv api4 Herald.getMonitorChecks / saveMonitorChecks
+ *
  * Diagnostics:
  *   cv api4 Herald.testTelegram   — send a test message via the channel
  *   cv api4 Herald.renderTemplate — render a workflow template with sample vars
@@ -89,6 +94,36 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
 
   public static function renderTemplate(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\RenderTemplate {
     return (new \Civi\Herald\Api4\Action\RenderTemplate(__CLASS__, 'renderTemplate'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function saveTopic(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\SaveTopic {
+    return (new \Civi\Herald\Api4\Action\SaveTopic(__CLASS__, 'saveTopic'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function deleteTopic(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\DeleteTopic {
+    return (new \Civi\Herald\Api4\Action\DeleteTopic(__CLASS__, 'deleteTopic'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function saveSourceRules(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\SaveSourceRules {
+    return (new \Civi\Herald\Api4\Action\SaveSourceRules(__CLASS__, 'saveSourceRules'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function saveAllowedHosts(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\SaveAllowedHosts {
+    return (new \Civi\Herald\Api4\Action\SaveAllowedHosts(__CLASS__, 'saveAllowedHosts'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function getMonitorChecks(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\GetMonitorChecks {
+    return (new \Civi\Herald\Api4\Action\GetMonitorChecks(__CLASS__, 'getMonitorChecks'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function saveMonitorChecks(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\SaveMonitorChecks {
+    return (new \Civi\Herald\Api4\Action\SaveMonitorChecks(__CLASS__, 'saveMonitorChecks'))
       ->setCheckPermissions($checkPermissions);
   }
 

@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Channel;
 
+use CRM_Herald_ExtensionUtil as E;
+
 /**
  * Internal CiviCRM activity channel.
  *
@@ -80,40 +82,40 @@ class ActivityChannel implements ChannelInterface {
   public function getConfigSchema(): array {
     return [
       'activity_assignee_contact_id' => [
-        'label' => 'Assignee contact ID',
+        'label' => E::ts('Assignee contact ID'),
         'required' => TRUE,
         'type' => 'int',
       ],
       'activity_source_contact_id' => [
-        'label' => 'Added-by contact ID',
+        'label' => E::ts('Added-by contact ID'),
         'required' => FALSE,
         'type' => 'int',
-        'help' => 'Defaults to the assignee contact.',
+        'help' => E::ts('Defaults to the assignee contact.'),
       ],
       'activity_target_contact_id' => [
-        'label' => 'Related contact ID',
+        'label' => E::ts('Related contact ID'),
         'required' => FALSE,
         'type' => 'int',
       ],
       'activity_type' => [
-        'label' => 'Activity type name',
+        'label' => E::ts('Activity type name'),
         'required' => FALSE,
         'type' => 'string',
         'default' => 'herald_notification',
       ],
       'activity_status' => [
-        'label' => 'Activity status name',
+        'label' => E::ts('Activity status name'),
         'required' => FALSE,
         'type' => 'string',
         'default' => 'Scheduled',
       ],
       'activity_subject' => [
-        'label' => 'Subject',
+        'label' => E::ts('Subject'),
         'required' => FALSE,
         'type' => 'string',
       ],
       'activity_format' => [
-        'label' => 'Body format',
+        'label' => E::ts('Body format'),
         'required' => FALSE,
         'type' => 'enum',
         'options' => ['html', 'text'],

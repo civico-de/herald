@@ -3,6 +3,7 @@ title: Kanäle
 order: 20
 routes:
   - civicrm/admin/setting/herald
+  - civicrm/admin/herald
 ---
 
 # Kanäle
@@ -20,7 +21,7 @@ Ein Kanal stellt eine Nachricht an genau ein Ziel zu: einen Chat, ein Smartphone
 
 ## Einen Kanal konfigurieren
 
-Zugangsdaten und Ersatzempfänger sind Einstellungen. Die meisten davon finden Sie auf der Einstellungsseite von herald unter `civicrm/admin/setting/herald`. Die Seite hat keinen Menüeintrag, rufen Sie sie also über ihren Pfad auf. Sie können die Einstellungen auch mit cv setzen:
+Zugangsdaten und Ersatzempfänger sind Einstellungen. Die meisten davon finden Sie auf der Einstellungsseite von herald, „Administer » Herald » Settings“ (Administrieren » Herald » Einstellungen). Sie können die Einstellungen auch mit cv setzen:
 
 ```bash
 cv setting:set herald_telegram_bot_token=<bot-token>
@@ -125,7 +126,7 @@ herald prüft jede URL vor dem Senden:
 - Standardmäßig darf sie nicht auf eine private, reservierte, link-lokale oder Cloud-Metadaten-Adresse auflösen.
 - Anfragen folgen keinen Weiterleitungen, geben Sie also die endgültige URL an.
 
-Um die Zustellung auf bekannte Dienste zu beschränken, tragen Sie deren Hostnamen in `herald_webhook_allowed_hosts` ein, zum Beispiel `["hooks.slack.com"]`. Subdomains eines eingetragenen Hosts sind ebenfalls erlaubt. Sobald die Liste nicht leer ist, werden nur diese Hosts erreicht, und sie dürfen auch interne Adressen haben.
+Um die Zustellung auf bekannte Dienste zu beschränken, tragen Sie deren Hostnamen unter „Administer » Herald » Webhook allowed hosts“ (Erlaubte Webhook-Hosts) ein, einen pro Zeile. Beim Speichern werden Einträge mit `https://`, einem Pfad oder einem Port und ungültige Hostnamen abgelehnt. Mit cv setzen Sie `herald_webhook_allowed_hosts`, zum Beispiel `["hooks.slack.com"]`. Subdomains eines eingetragenen Hosts sind ebenfalls erlaubt. Sobald die Liste nicht leer ist, werden nur diese Hosts erreicht, und sie dürfen auch interne Adressen haben.
 
 ## ntfy
 
@@ -192,6 +193,21 @@ Der Aktivitätskanal hält eine Benachrichtigung als Aktivität, die einem Konta
 | `activity_format` | `html` ist der Standard, `text` die Alternative. |
 
 Typ und Status sind Optionsnamen, keine Zahlen, und müssen auf der Site aktiv sein.
+
+## Testnachricht
+
+„Administer » Herald » Test message“ (Administrieren » Herald » Testnachricht) sendet eine echte Nachricht. „Einen Kanal“ sendet über einen Kanal an den Empfänger und mit den Optionen, die Sie auf der Seite eintragen; leere Felder übernehmen die Standardwerte der Einstellungsseite. „Eine Topic-Route“ veröffentlicht über eine Route, wie eine Meldung sie nehmen würde. Eine Route, die sammelt, puffert die Nachricht bis zum nächsten Flush, und die Seite sagt das.
+
+Eingabefehler listet die Seite auf. Einen Zustellfehler des Kanals selbst sehen Benutzer:innen mit der Berechtigung „view debug output“ vollständig. Alle anderen sehen eine Fehler-ID, unter der das CiviCRM-Protokoll die Meldung enthält.
+
+Mit cv tun `Herald.send` und `Herald.publish` dasselbe:
+
+```bash
+cv api4 Herald.send channel=ntfy message='herald works' config='{"ntfy_topic": "my-topic"}'
+cv api4 Herald.publish topic=ops message='herald works'
+```
+
+„Administer » Herald » Template preview“ (Vorlagenvorschau) rendert eine herald-Vorlage mit Beispielwerten als JSON-Objekt und sendet nichts, wie `Herald.renderTemplate`.
 
 ## Fehler
 

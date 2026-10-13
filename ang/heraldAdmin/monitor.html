@@ -1,0 +1,54 @@
+<div class="herald-admin">
+  <h1 crm-page-title>{{:: $ctrl.ts('Monitor checks') }}</h1>
+  <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
+  <p>
+    {{:: $ctrl.ts('Extensions contribute these checks; the monitor job reports when one starts failing or recovers. An expected check that disappears counts as failing. A snoozed check sends no failure alerts until the time set.') }}
+  </p>
+  <div ng-include="'~/heraldAdmin/messages.html'"></div>
+  <form name="monitorForm" ng-if="$ctrl.loaded" ng-submit="$ctrl.save(monitorForm)" novalidate>
+    <table class="display" ng-if="$ctrl.rows.length">
+      <caption class="sr-only">{{:: $ctrl.ts('Monitor checks') }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{:: $ctrl.ts('Check') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Last reported status') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Failed / ok runs in a row') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Last failure alert') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Expected') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Snoozed until') }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="row in $ctrl.rows">
+          <th scope="row">
+            <code>{{ row.name }}</code>
+            <span ng-if="!row.provided" class="description"><br />{{:: $ctrl.ts('not offered by any enabled extension') }}</span>
+          </th>
+          <td>{{ $ctrl.statusText(row) }}</td>
+          <td>{{ row.status ? row.consecutive_fails + ' / ' + row.consecutive_oks : '' }}</td>
+          <td>{{ row.lastNotifiedDate ? (row.lastNotifiedDate | date:'medium') : '' }}</td>
+          <td>
+            <input type="checkbox" id="herald-expected-{{ $index }}" ng-model="row.expected" />
+            <label for="herald-expected-{{ $index }}"><span class="sr-only">{{ row.name }}: </span>{{:: $ctrl.ts('Expected') }}</label>
+          </td>
+          <td>
+            <label class="sr-only" for="herald-snooze-{{ $index }}">{{ $ctrl.ts('Snooze %1 until', {1: row.name}) }}</label>
+            <input type="datetime-local" class="crm-form-text" id="herald-snooze-{{ $index }}" name="snooze{{ $index }}" ng-model="row.snoozeInput" />
+            <button type="button" class="btn btn-xs btn-secondary" ng-if="row.snoozeInput" ng-click="$ctrl.clearSnooze(row, $index)">
+              {{:: $ctrl.ts('Clear') }}<span class="sr-only"> {{ $ctrl.ts('snooze of %1', {1: row.name}) }}</span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p ng-if="!$ctrl.rows.length">{{:: $ctrl.ts('No extension offers a check, and none is expected.') }}</p>
+    <div class="herald-admin-field">
+      <label for="herald-expected-new">{{:: $ctrl.ts('Expect another check by name') }}</label>
+      <input type="text" class="crm-form-text" id="herald-expected-new" ng-model="$ctrl.newName" aria-describedby="herald-expected-new-help" />
+      <button type="button" class="btn btn-secondary" ng-click="$ctrl.addExpected()">{{:: $ctrl.ts('Add') }}</button>
+      <p class="description" id="herald-expected-new-help">{{:: $ctrl.ts('For a check whose extension is not enabled yet.') }}</p>
+    </div>
+    <p class="description">{{:: $ctrl.ts('Times are shown and entered in the time zone of this browser.') }}</p>
+    <button type="submit" class="btn btn-primary" ng-disabled="$ctrl.saving">{{:: $ctrl.ts('Save') }}</button>
+  </form>
+</div>

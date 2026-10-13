@@ -20,17 +20,6 @@ use CRM_Herald_ExtensionUtil as E;
 abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_CivirulesActions_Form_Form {
 
   /**
-   * @var array<string, string> Friendly labels for registered channels. */
-  private const CHANNEL_LABELS = [
-    'telegram' => 'Telegram',
-    'webhook' => 'Generic webhook (Slack/Discord/Mattermost/custom)',
-    'ntfy' => 'ntfy.sh',
-    'pushover' => 'Pushover',
-    'email' => 'Email',
-    'activity' => 'CiviCRM activity',
-  ];
-
-  /**
    * Workflow templates this action supports. Subclasses can narrow.
    * @return array<string, string> workflow_name => label
    */
@@ -241,15 +230,14 @@ abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_Civirul
   }
 
   /**
-   * Resolve the channel dropdown from ChannelRegistry::default(). Channels
-   * that don't have a label fall back to their key.
+   * Resolve the channel dropdown from ChannelRegistry::default().
    *
    * @return array<string, string>
    */
   protected function getChannelOptions(): array {
     $opts = [];
     foreach (ChannelRegistry::default()->listKeys() as $key) {
-      $opts[$key] = self::CHANNEL_LABELS[$key] ?? $key;
+      $opts[$key] = ChannelRegistry::label($key);
     }
     return $opts ?: ['telegram' => 'Telegram'];
   }

@@ -1,0 +1,51 @@
+<div class="herald-admin">
+  <h1 crm-page-title>{{:: $ctrl.ts('Test message') }}</h1>
+  <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
+  <p>{{:: $ctrl.ts('Sends a real message: through one channel with the recipient entered here, or through a topic route as an alert would go.') }}</p>
+  <div ng-include="'~/heraldAdmin/messages.html'"></div>
+  <form ng-if="$ctrl.loaded" ng-submit="$ctrl.send()" novalidate>
+    <fieldset>
+      <legend>{{:: $ctrl.ts('Send through') }}</legend>
+      <input type="radio" id="herald-test-target-channel" name="target" value="channel" ng-model="$ctrl.target" />
+      <label for="herald-test-target-channel">{{:: $ctrl.ts('A channel') }}</label>
+      <input type="radio" id="herald-test-target-topic" name="target" value="topic" ng-model="$ctrl.target" />
+      <label for="herald-test-target-topic">{{:: $ctrl.ts('A topic route') }}</label>
+    </fieldset>
+    <div ng-if="$ctrl.target === 'channel'">
+      <div class="herald-admin-field">
+        <label for="herald-test-channel">{{:: $ctrl.ts('Channel') }}</label>
+        <select id="herald-test-channel" class="crm-form-select" ng-model="$ctrl.channel" ng-change="$ctrl.channelChanged()" ng-options="c.key as c.label for c in $ctrl.channels">
+          <option value="">{{:: $ctrl.ts('- select -') }}</option>
+        </select>
+      </div>
+      <fieldset ng-if="$ctrl.selected()">
+        <legend>{{ $ctrl.ts('%1 options', {1: $ctrl.selected().label}) }}</legend>
+        <p class="description">{{:: $ctrl.ts('Empty fields fall back to the channel defaults on the settings form.') }}</p>
+        <herald-fields fields="$ctrl.selected().fields" inputs="$ctrl.inputs" prefix="herald-test-"></herald-fields>
+      </fieldset>
+      <div class="herald-admin-field">
+        <label for="herald-test-subject">{{:: $ctrl.ts('Subject') }}</label>
+        <input type="text" id="herald-test-subject" class="crm-form-text" ng-model="$ctrl.subject" aria-describedby="herald-test-subject-help" />
+        <p class="description" id="herald-test-subject-help">{{:: $ctrl.ts('Used by channels with a subject or title; a subject field above takes precedence.') }}</p>
+      </div>
+    </div>
+    <div class="herald-admin-field" ng-if="$ctrl.target === 'topic'">
+      <label for="herald-test-topic">{{:: $ctrl.ts('Topic') }}</label>
+      <select id="herald-test-topic" class="crm-form-select" ng-model="$ctrl.topic" ng-options="t as t for t in $ctrl.topics">
+        <option value="">{{:: $ctrl.ts('- select -') }}</option>
+      </select>
+    </div>
+    <div class="herald-admin-field">
+      <label for="herald-test-format">{{:: $ctrl.ts('Message format') }}</label>
+      <select id="herald-test-format" class="crm-form-select" ng-model="$ctrl.format">
+        <option value="text">{{:: $ctrl.ts('Plain text') }}</option>
+        <option value="html">{{:: $ctrl.ts('HTML') }}</option>
+      </select>
+    </div>
+    <div class="herald-admin-field">
+      <label for="herald-test-message">{{:: $ctrl.ts('Message') }}</label>
+      <textarea id="herald-test-message" class="crm-form-textarea herald-admin-code" rows="5" ng-model="$ctrl.message"></textarea>
+    </div>
+    <button type="submit" class="btn btn-primary" ng-disabled="$ctrl.sending || !$ctrl.message">{{:: $ctrl.ts('Send test message') }}</button>
+  </form>
+</div>

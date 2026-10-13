@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Channel;
 
+use CRM_Herald_ExtensionUtil as E;
+
 class ChannelRegistry {
 
   /**
@@ -29,6 +31,21 @@ class ChannelRegistry {
    * @return string[] */
   public function listKeys(): array {
     return array_keys($this->channels);
+  }
+
+  /**
+   * Human-readable channel name; a channel without one is shown by its key.
+   */
+  public static function label(string $key): string {
+    return match ($key) {
+      'telegram' => 'Telegram',
+      'webhook' => E::ts('Generic webhook (Slack/Discord/Mattermost/custom)'),
+      'ntfy' => 'ntfy.sh',
+      'pushover' => 'Pushover',
+      'email' => E::ts('Email'),
+      'activity' => E::ts('CiviCRM activity'),
+      default => $key,
+    };
   }
 
   // @mago-expect lint:halstead

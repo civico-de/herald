@@ -6,6 +6,7 @@ routes:
   - civicrm/herald/form/civirulesaction/senddigest
   - civicrm/herald/form/civirulescondition/fieldtransition
   - civicrm/herald/form/civirulestrigger/schedule
+  - civicrm/admin/herald
 ---
 
 # Reference
@@ -101,7 +102,15 @@ The entity `Herald` offers these actions. Every action needs the permission "adm
 | getParkedAlerts | ids, optional | Lists [Parked alerts](delivery.md#parked-alerts) without their bodies. |
 | reactivateParkedAlerts | ids, optional | Puts parked alerts back into the buffer. Without ids, all of them. |
 | renderTemplate | workflow, vars | Renders a template without sending it. |
+| saveTopic | topic, route, previousName | Validates one route and stores it in `herald_topics`; with previousName it renames that topic in place. What the Topic routes screen calls. |
+| deleteTopic | topic | Removes one route from `herald_topics`. |
+| saveSourceRules | rules | Validates and stores `herald_source_normalization`. Errors name the rule. |
+| saveAllowedHosts | hosts | Validates and stores `herald_webhook_allowed_hosts`. Blank entries are skipped. |
+| getMonitorChecks | none | Lists every offered, expected, snoozed or tracked check with its stored state, without details and without running the checks. |
+| saveMonitorChecks | expected, snooze | Validates and stores `herald_monitor_expected` and `herald_monitor_snooze`. A snooze must end in the future unless it is unchanged. |
 | testTelegram | message, chatId, channel | Sends a test message. The channel defaults to telegram. |
+
+The save actions store the same shape as `Setting.set`, which keeps working. They reject invalid input with a list of every problem and store nothing in that case.
 
 `send` needs a channel and a message. `publish` needs exactly one of message and template. Both reject a format other than text or html. For `publish`, the format applies to a message only, because a rendered template is always HTML.
 
@@ -199,7 +208,7 @@ The digest variables are listed in [Template variables](digests.md#template-vari
 
 ## Settings
 
-Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value'`. Settings that hold a list or a map take JSON. The plain settings are also on the Herald settings screen at `civicrm/admin/setting/herald`, which needs "administer CiviCRM". The list and map settings are not on the screen.
+Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value'`. Settings that hold a list or a map take JSON. The plain settings are also on the Herald settings screen, Administer » Herald » Settings (`civicrm/admin/setting/herald`). The list and map settings have their own screens on `civicrm/admin/herald`: Topic routes, Contribution source names, Webhook allowed hosts and Monitor checks. The settings screen links to them. All of them need "administer CiviCRM".
 
 | Setting | Default | Meaning |
 |---|---|---|

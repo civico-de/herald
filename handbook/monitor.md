@@ -1,6 +1,8 @@
 ---
 title: Check monitor
 order: 50
+routes:
+  - civicrm/admin/herald
 ---
 
 # Check monitor
@@ -66,11 +68,15 @@ All settings are optional. By default herald reports the first failing run and t
 | `herald_monitor_renotify_hours` | 24 | Send a reminder when a check has kept failing for this many hours. 0 turns reminders off. |
 | `herald_monitor_topic` | ops | The topic the alerts are published to. |
 
-These four are on the Herald settings screen at `civicrm/admin/setting/herald`. Snoozing and expected checks are set with cv.
+These four are on the Herald settings screen, Administer » Herald » Settings. Snoozes and expected checks are on Administer » Herald » Monitor checks.
+
+That screen lists every check an enabled extension offers, every expected or snoozed check and every check the monitor has a state for. Each row shows the last reported status in words, the failing and healthy runs in a row, the last failure alert and whether an enabled extension still offers the check. The screen does not run the checks and does not show their details.
 
 ### Snoozing a check
 
-To silence a check during planned work, snooze it until a date and time:
+To silence a check during planned work, snooze it until a date and time. On the Monitor checks screen, enter the end in the check's "Snoozed until" field and save. Times are shown and entered in the browser's time zone and stored with their offset. "Clear" removes a snooze. An end that is not in the future is rejected.
+
+With cv:
 
 ```bash
 cv api4 Setting.set +v 'herald_monitor_snooze={"myext.disk": "2026-10-12T08:00:00"}'
@@ -80,7 +86,9 @@ While a check is snoozed, herald sends no failure alert and no reminder for it. 
 
 ### Expected checks
 
-When an extension is disabled, its checks disappear from the hook, and herald forgets them quietly. To be told instead, list the checks that must always be there:
+When an extension is disabled, its checks disappear from the hook, and herald forgets them quietly. To be told instead, mark the checks that must always be there. On the Monitor checks screen, tick "Expected" for a listed check, or add the name of a check whose extension is not enabled yet, and save.
+
+With cv:
 
 ```bash
 cv api4 Setting.set +v 'herald_monitor_expected=["myext.queue", "myext.disk"]'

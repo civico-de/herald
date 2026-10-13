@@ -7,7 +7,7 @@ namespace Civi\Api4;
 /**
  * Read-only view of the alert buffer, for SearchKit. Rows are written and
  * drained by Civi\Herald\Buffer\AlertBuffer; parked rows return to circulation
- * only through Herald.reactivateParkedAlerts.
+ * only through Herald.reactivateParkedAlerts, which `reactivate` calls.
  */
 final class HeraldBufferedAlert extends Generic\AbstractEntity {
 
@@ -17,6 +17,11 @@ final class HeraldBufferedAlert extends Generic\AbstractEntity {
    */
   public static function get($checkPermissions = TRUE) {
     return (new Generic\DAOGetAction(__CLASS__, __FUNCTION__))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function reactivate(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\ReactivateBufferedAlerts {
+    return (new \Civi\Herald\Api4\Action\ReactivateBufferedAlerts(__CLASS__, __FUNCTION__))
       ->setCheckPermissions($checkPermissions);
   }
 

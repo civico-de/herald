@@ -1,0 +1,60 @@
+.herald-admin .herald-admin-field {
+  margin: 0 0 1em;
+}
+
+.herald-admin .herald-admin-field > label {
+  display: block;
+  font-weight: bold;
+}
+
+.herald-admin .herald-admin-field .description {
+  margin: 0.25em 0 0;
+}
+
+.herald-admin textarea.herald-admin-code {
+  font-family: monospace;
+  width: 100%;
+  max-width: 60em;
+}
+
+.herald-admin fieldset {
+  margin: 0 0 1em;
+}
+
+/* Links inside text need more than colour to stand out (WCAG 1.4.1). */
+.herald-admin p a,
+.herald-admin li a {
+  text-decoration: underline;
+}
+
+/* Theme marker red falls below 4.5:1 on light backgrounds. */
+.herald-admin .crm-marker {
+  color: #a4161a;
+}
+
+/* The theme's dark buttons put white on #919297 (3.1:1). */
+@media (prefers-color-scheme: dark) {
+  .herald-admin .crm-marker {
+    color: #ff8a80;
+  }
+
+  .herald-admin .btn,
+  .herald-admin .btn:focus {
+    color: #fff;
+    background-color: #55565b;
+    border-color: #55565b;
+  }
+
+  .herald-admin .btn:hover {
+    color: #fff;
+    background-color: #67686d;
+    border-color: #67686d;
+  }
+}
+
+.herald-admin .herald-admin-preview {
+  width: 100%;
+  min-height: 20em;
+  border: 1px solid currentColor;
+  background: #fff;
+}

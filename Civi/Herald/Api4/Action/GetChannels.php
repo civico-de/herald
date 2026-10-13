@@ -32,6 +32,7 @@ class GetChannels extends AbstractAction {
       $channel = $registry->get($key);
       $rows[] = [
         'key' => $channel->getKey(),
+        'label' => ChannelRegistry::label($channel->getKey()),
         'config_schema' => $channel->getConfigSchema(),
         'semantic_fields' => $channel->getSemanticFields(),
       ];

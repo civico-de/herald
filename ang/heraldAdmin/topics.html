@@ -1,0 +1,41 @@
+<div class="herald-admin">
+  <h1 crm-page-title>{{:: $ctrl.ts('Topic routes') }}</h1>
+  <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
+  <p>
+    {{:: $ctrl.ts('Publishers name a topic; its route decides the channel and recipients. The topic entry is merged over the "default" entry, so a topic only needs what differs.') }}
+  </p>
+  <div ng-include="'~/heraldAdmin/messages.html'"></div>
+  <p class="messages warning" ng-if="$ctrl.loaded && !$ctrl.hasDefault">
+    {{:: $ctrl.ts('There is no "default" route: publishing to a topic without its own route fails.') }}
+  </p>
+  <p>
+    <a class="btn btn-primary" href="#/topics/new"><i class="crm-i fa-plus" aria-hidden="true"></i> {{:: $ctrl.ts('Add topic') }}</a>
+  </p>
+  <table class="display" ng-if="$ctrl.loaded && $ctrl.rows.length">
+    <caption class="sr-only">{{:: $ctrl.ts('Topic routes') }}</caption>
+    <thead>
+      <tr>
+        <th scope="col">{{:: $ctrl.ts('Topic') }}</th>
+        <th scope="col">{{:: $ctrl.ts('Channel') }}</th>
+        <th scope="col">{{:: $ctrl.ts('Delivery mode') }}</th>
+        <th scope="col">{{:: $ctrl.ts('Aggregate window in minutes') }}</th>
+        <th scope="col"><span class="sr-only">{{:: $ctrl.ts('Actions') }}</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="row in $ctrl.rows">
+        <th scope="row">{{ row.name }}</th>
+        <td>{{ row.channel || row.fallback }}</td>
+        <td>{{ row.mode || row.fallback }}</td>
+        <td>{{ row.aggregate || row.fallback }}</td>
+        <td>
+          <a class="btn btn-xs btn-secondary" ng-href="{{ row.href }}">{{:: $ctrl.ts('Edit') }}<span class="sr-only"> {{ row.name }}</span></a>
+          <button type="button" class="btn btn-xs btn-danger" ng-click="$ctrl.remove(row)">
+            {{:: $ctrl.ts('Delete') }}<span class="sr-only"> {{ row.name }}</span>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <p ng-if="$ctrl.loaded && !$ctrl.rows.length">{{:: $ctrl.ts('No topic routes yet.') }}</p>
+</div>

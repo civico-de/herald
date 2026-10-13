@@ -1,0 +1,58 @@
+<div class="herald-admin">
+  <h1 crm-page-title>{{:: $ctrl.ts('Contribution source names') }}</h1>
+  <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
+  <p>
+    {{:: $ctrl.ts('Digests group contributions by their source. These rules give differently written sources one name; the first matching rule wins.') }}
+  </p>
+  <div ng-include="'~/heraldAdmin/messages.html'"></div>
+  <form ng-if="$ctrl.loaded" ng-submit="$ctrl.save()" novalidate>
+    <table class="display" ng-if="$ctrl.rules.length">
+      <caption class="sr-only">{{:: $ctrl.ts('Source rules, in the order they are tried') }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{:: $ctrl.ts('Position') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Source text') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Match') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Name to show') }}</th>
+          <th scope="col"><span class="sr-only">{{:: $ctrl.ts('Actions') }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="rule in $ctrl.rules">
+          <td>{{ $index + 1 }}</td>
+          <td>
+            <label class="sr-only" for="herald-rule-match-{{ $index }}">{{ $ctrl.ts('Source text of rule %1', {1: $index + 1}) }}</label>
+            <input type="text" class="crm-form-text" id="herald-rule-match-{{ $index }}" ng-model="rule.match" />
+          </td>
+          <td>
+            <label class="sr-only" for="herald-rule-type-{{ $index }}">{{ $ctrl.ts('Match of rule %1', {1: $index + 1}) }}</label>
+            <select class="crm-form-select" id="herald-rule-type-{{ $index }}" ng-model="rule.type" ng-options="t.value as t.label for t in $ctrl.types"></select>
+          </td>
+          <td>
+            <label class="sr-only" for="herald-rule-label-{{ $index }}">{{ $ctrl.ts('Name to show for rule %1', {1: $index + 1}) }}</label>
+            <input type="text" class="crm-form-text" id="herald-rule-label-{{ $index }}" ng-model="rule.label" />
+          </td>
+          <td>
+            <button type="button" class="btn btn-xs btn-secondary" id="herald-rule-up-{{ $index }}" ng-if="!$first" ng-click="$ctrl.move($index, -1)">
+              <i class="crm-i fa-arrow-up" aria-hidden="true"></i><span class="sr-only">{{ $ctrl.ts('Move rule %1 up', {1: $index + 1}) }}</span>
+            </button>
+            <button type="button" class="btn btn-xs btn-secondary" id="herald-rule-down-{{ $index }}" ng-if="!$last" ng-click="$ctrl.move($index, 1)">
+              <i class="crm-i fa-arrow-down" aria-hidden="true"></i><span class="sr-only">{{ $ctrl.ts('Move rule %1 down', {1: $index + 1}) }}</span>
+            </button>
+            <button type="button" class="btn btn-xs btn-danger" ng-click="$ctrl.remove($index)">
+              {{:: $ctrl.ts('Remove') }}<span class="sr-only"> {{ $ctrl.ts('rule %1', {1: $index + 1}) }}</span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p ng-if="!$ctrl.rules.length">{{:: $ctrl.ts('No rules: digests show every source as written.') }}</p>
+    <p class="description">
+      {{:: $ctrl.ts('A regular expression uses PHP syntax with delimiters, for example /^SEPA/i. It is checked when you save.') }}
+    </p>
+    <p>
+      <button type="button" class="btn btn-secondary" id="herald-rule-add" ng-click="$ctrl.add()"><i class="crm-i fa-plus" aria-hidden="true"></i> {{:: $ctrl.ts('Add rule') }}</button>
+      <button type="submit" class="btn btn-primary" ng-disabled="$ctrl.saving">{{:: $ctrl.ts('Save') }}</button>
+    </p>
+  </form>
+</div>

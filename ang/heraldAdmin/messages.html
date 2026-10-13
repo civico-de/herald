@@ -1,0 +1,9 @@
+<div role="alert" aria-atomic="true">
+  <div class="messages crm-error" ng-if="$ctrl.errors.length">
+    <p>{{:: $ctrl.ts('That did not work:') }}</p>
+    <ul>
+      <li ng-repeat="error in $ctrl.errors track by $index">{{ error }}</li>
+    </ul>
+  </div>
+</div>
+<p role="status" aria-live="polite" class="herald-admin-status">{{ $ctrl.status }}</p>

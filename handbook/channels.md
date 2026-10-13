@@ -3,6 +3,7 @@ title: Channels
 order: 20
 routes:
   - civicrm/admin/setting/herald
+  - civicrm/admin/herald
 ---
 
 # Channels
@@ -20,7 +21,7 @@ A channel delivers a message to one place: a chat, a phone, an inbox or a CiviCR
 
 ## Configuring a channel
 
-Credentials and fallback recipients are settings. Most of them are on the Herald settings screen at `civicrm/admin/setting/herald`. The screen has no menu entry, so open it by its path. You can also set them with cv:
+Credentials and fallback recipients are settings. Most of them are on the Herald settings screen, Administer » Herald » Settings. You can also set them with cv:
 
 ```bash
 cv setting:set herald_telegram_bot_token=<bot-token>
@@ -125,7 +126,7 @@ herald checks every URL before it sends:
 - By default it must not resolve to a private, reserved, link-local or cloud metadata address.
 - Requests do not follow redirects, so give the final URL.
 
-To lock delivery to known services, list their host names in `herald_webhook_allowed_hosts`, for example `["hooks.slack.com"]`. Subdomains of a listed host are allowed too. Once the list is not empty, only those hosts are reached, and they may be internal addresses.
+To lock delivery to known services, list their host names under Administer » Herald » Webhook allowed hosts, one per line. Saving rejects an entry with `https://`, a path or a port and an invalid host name. With cv, set `herald_webhook_allowed_hosts`, for example `["hooks.slack.com"]`. Subdomains of a listed host are allowed too. Once the list is not empty, only those hosts are reached, and they may be internal addresses.
 
 ## ntfy
 
@@ -192,6 +193,21 @@ The activity channel keeps a notification inside CiviCRM as an activity assigned
 | `activity_format` | `html` is the default, `text` the alternative. |
 
 Type and status are option names, not numbers, and must be active on the site.
+
+## Test message
+
+Administer » Herald » Test message sends a real message. "A channel" sends through one channel to the recipient and options entered on the screen; empty fields fall back to the defaults on the settings screen. "A topic route" publishes through a route, as an alert would go. A route that aggregates buffers the message until the next flush, and the screen says so.
+
+Input errors are listed on the screen. A delivery error from the channel itself is shown in full to users with the permission "view debug output". Others see an error ID, and the CiviCRM log holds the message under that ID.
+
+With cv, `Herald.send` and `Herald.publish` do the same:
+
+```bash
+cv api4 Herald.send channel=ntfy message='herald works' config='{"ntfy_topic": "my-topic"}'
+cv api4 Herald.publish topic=ops message='herald works'
+```
+
+Administer » Herald » Template preview renders a herald template with sample values given as a JSON object and sends nothing, like `Herald.renderTemplate`.
 
 ## Errors
 

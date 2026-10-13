@@ -1,6 +1,8 @@
 ---
 title: Delivery
 order: 30
+routes:
+  - civicrm/admin/herald
 ---
 
 # Delivery
@@ -92,6 +94,10 @@ A preference record without a scope receives everything it subscribed to. A scop
 
 With topics, a publisher names a topic and the setting `herald_topics` decides the channel, the recipient and the aggregation. A script or another extension never needs to know a chat ID or a URL.
 
+The routes are under Administer » Herald » Topic routes. The list shows each topic with its channel, its delivery mode and its aggregation window. "Add topic" and "Edit" open a form with the delivery fields and the options of the channel the topic ends up using, as the channel declares them. Keys without a field, such as `channel_config`, go into "Other parameters" as a JSON object. Saving checks the route and stores nothing when it finds a problem: an unregistered channel, a value of the wrong type, a delivery mode without its required parameter or a topic name that is taken. Renaming a topic keeps its place in the list. "Delete" asks first; publishers of a deleted topic then use the default route.
+
+To set all routes at once with cv:
+
 ```bash
 cv api4 Setting.set +v 'herald_topics={
   "default": {"channel": "telegram"},
@@ -133,7 +139,9 @@ A value above 0 stores the rendered alert in the table `civicrm_herald_buffer`. 
 
 A waiting group whose delivery fails stays in the buffer and is retried on the next cron run. After `herald_buffer_max_attempts` failed tries, 5 by default, herald parks it. A group that has nobody to send to is parked at once, because retrying cannot help. Nothing is dropped. Parked alerts stay in the table until someone reactivates them.
 
-To list and reactivate parked alerts:
+Administer » Herald » Parked alerts lists them. It is a SearchKit display on the read-only entity `HeraldBufferedAlert`. To reactivate alerts, select their rows and choose "Reactivate parked alerts" from the actions menu; the confirmation names the number of alerts. Neither the display nor `Herald.getParkedAlerts` shows message bodies or delivery parameters, because they can contain contact data.
+
+To list and reactivate parked alerts with cv:
 
 ```bash
 cv api4 Herald.getParkedAlerts
@@ -141,8 +149,6 @@ cv api4 Herald.reactivateParkedAlerts '{"ids": [12, 13]}'
 ```
 
 The list shows each alert's ID, the reason it was parked, the number of attempts, the last error and its dates. Without `ids`, `reactivateParkedAlerts` reactivates every parked alert.
-
-The same list is under Administer, System Settings, Herald parked alerts. It is a SearchKit display on the read-only entity `HeraldBufferedAlert`. Neither the display nor `Herald.getParkedAlerts` shows message bodies or delivery parameters, because they can contain contact data.
 
 Reactivated alerts get a fresh set of attempts. They keep the parameters stored when they were buffered. Fixing the rule or the route therefore does not repair a wrong recipient that was set on the action. Subscriber and group recipients are looked up again at delivery, so fixing a contact's preferences does help.
 

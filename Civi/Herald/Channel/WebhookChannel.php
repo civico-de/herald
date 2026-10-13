@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Channel;
 
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+use CRM_Herald_ExtensionUtil as E;
 use GuzzleHttp\ClientInterface;
 
 /**
@@ -336,25 +337,29 @@ class WebhookChannel implements ChannelInterface {
    */
   public function getConfigSchema(): array {
     return [
-      'webhook_url' => ['label' => 'URL', 'required' => TRUE, 'type' => 'string'],
+      'webhook_url' => ['label' => E::ts('URL'), 'required' => TRUE, 'type' => 'string'],
       'webhook_method' => [
-        'label' => 'Method',
+        'label' => E::ts('Method'),
         'required' => FALSE,
         'type' => 'enum',
         'options' => ['POST' => 'POST', 'PUT' => 'PUT'],
         'default' => 'POST',
       ],
       'webhook_body_format' => [
-        'label' => 'Body format',
+        'label' => E::ts('Body format'),
         'required' => FALSE,
         'type' => 'enum',
         'options' => ['text' => 'text', 'json' => 'json', 'slack' => 'slack', 'discord' => 'discord'],
         'default' => 'text',
       ],
-      'webhook_body_key' => ['label' => 'JSON key (when body_format=json)', 'required' => FALSE, 'type' => 'string'],
-      'webhook_headers' => ['label' => 'Extra headers', 'required' => FALSE, 'type' => 'object'],
+      'webhook_body_key' => [
+        'label' => E::ts('JSON key (when body_format=json)'),
+        'required' => FALSE,
+        'type' => 'string',
+      ],
+      'webhook_headers' => ['label' => E::ts('Extra headers'), 'required' => FALSE, 'type' => 'object'],
       'webhook_auth_token' => [
-        'label' => 'Bearer token (Authorization header)',
+        'label' => E::ts('Bearer token (Authorization header)'),
         'required' => FALSE,
         'type' => 'string',
       ],

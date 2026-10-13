@@ -1,0 +1,15 @@
+<div class="herald-admin">
+  <h1 crm-page-title>{{:: $ctrl.ts('Webhook allowed hosts') }}</h1>
+  <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
+  <div ng-include="'~/heraldAdmin/messages.html'"></div>
+  <form ng-if="$ctrl.loaded" ng-submit="$ctrl.save()" novalidate>
+    <div class="herald-admin-field">
+      <label for="herald-hosts">{{:: $ctrl.ts('Allowed hosts, one per line') }}</label>
+      <textarea id="herald-hosts" class="crm-form-textarea herald-admin-code" rows="8" ng-model="$ctrl.text" aria-describedby="herald-hosts-help"></textarea>
+      <p class="description" id="herald-hosts-help">
+        {{:: $ctrl.ts('When the list is not empty, the webhook channel only calls URLs on these hosts or their subdomains: example.org also allows hooks.example.org. Enter host names or IP addresses without https:// or a path. An empty list allows every public address and blocks private ones.') }}
+      </p>
+    </div>
+    <button type="submit" class="btn btn-primary" ng-disabled="$ctrl.saving">{{:: $ctrl.ts('Save') }}</button>
+  </form>
+</div>

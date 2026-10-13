@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Channel;
 
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+use CRM_Herald_ExtensionUtil as E;
 use GuzzleHttp\ClientInterface;
 
 /**
@@ -116,12 +117,12 @@ class NtfyChannel implements ChannelInterface {
    */
   public function getConfigSchema(): array {
     return [
-      'ntfy_topic' => ['label' => 'Topic', 'required' => TRUE, 'type' => 'string'],
-      'ntfy_title' => ['label' => 'Title', 'required' => FALSE, 'type' => 'string'],
-      'ntfy_priority' => ['label' => 'Priority (1-5)', 'required' => FALSE, 'type' => 'int'],
-      'ntfy_tags' => ['label' => 'Tags (comma-separated)', 'required' => FALSE, 'type' => 'string'],
-      'ntfy_click' => ['label' => 'Click URL', 'required' => FALSE, 'type' => 'string'],
-      'ntfy_markdown' => ['label' => 'Render body as Markdown', 'required' => FALSE, 'type' => 'bool'],
+      'ntfy_topic' => ['label' => E::ts('Topic'), 'required' => TRUE, 'type' => 'string'],
+      'ntfy_title' => ['label' => E::ts('Title'), 'required' => FALSE, 'type' => 'string'],
+      'ntfy_priority' => ['label' => E::ts('Priority (1-5)'), 'required' => FALSE, 'type' => 'int'],
+      'ntfy_tags' => ['label' => E::ts('Tags (comma-separated)'), 'required' => FALSE, 'type' => 'string'],
+      'ntfy_click' => ['label' => E::ts('Click URL'), 'required' => FALSE, 'type' => 'string'],
+      'ntfy_markdown' => ['label' => E::ts('Render body as Markdown'), 'required' => FALSE, 'type' => 'bool'],
     ];
   }
 

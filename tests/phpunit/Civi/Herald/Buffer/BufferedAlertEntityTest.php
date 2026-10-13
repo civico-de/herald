@@ -83,12 +83,13 @@ class BufferedAlertEntityTest extends TestCase implements HeadlessInterface, Tra
     }
   }
 
-  public function testTheEntityOffersNoWrites(): void {
+  public function testTheEntityOffersNoWritesBesidesReactivate(): void {
     $actions = array_column(
       HeraldBufferedAlert::getActions(checkPermissions: FALSE)->execute()->getArrayCopy(),
       'name',
     );
     $this->assertContains('get', $actions);
+    $this->assertContains('reactivate', $actions);
     $this->assertSame([], array_values(array_intersect(['create', 'update', 'save', 'delete', 'replace'], $actions)));
   }
 

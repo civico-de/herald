@@ -1,6 +1,8 @@
 ---
 title: Reports
 order: 40
+routes:
+  - civicrm/admin/herald
 ---
 
 # Reports
@@ -127,6 +129,10 @@ Vier Blöcke: die Spenden einer Kampagne, Ticketverkäufe nach Position, Mitglie
 
 Beitragsquellen sind oft technisch, etwa die Referenz eines Zahlungsanbieters oder das Transaktionspräfix eines Bankimports. Die Einstellung `herald_source_normalization` ordnet ihnen lesbare Bezeichnungen zu. Die Bezeichnungen erscheinen in der Aufschlüsselung des Reports und als Quelle in Beitragsbenachrichtigungen. Standardmäßig ist die Einstellung leer, und die Quellen bleiben, wie sie sind.
 
+Die Regeln finden Sie unter „Administer » Herald » Contribution source names“ (Administrieren » Herald » Namen der Beitragsquellen). Jede Zeile enthält den Quelltext, die Art des Vergleichs und den anzuzeigenden Namen. Die Pfeil-Schaltflächen ändern die Reihenfolge, in der die Regeln geprüft werden. Beim Speichern werden eine unvollständige Regel und ein regulärer Ausdruck, der sich nicht kompilieren lässt, abgelehnt, mit der Nummer der Regel.
+
+Mit cv:
+
 ```bash
 cv api4 Setting.set +v 'herald_source_normalization=[
   {"match": "Bank TX", "type": "contains", "label": "Bank transfer"},
@@ -138,7 +144,7 @@ cv api4 Setting.set +v 'herald_source_normalization=[
 - Die Regeln werden der Reihe nach geprüft, und der erste Treffer gewinnt.
 - Der Typ ist contains, prefix oder regex. Bei contains und prefix zählt die Groß- und Kleinschreibung.
 - Ein regulärer Ausdruck verwendet die preg-Syntax von PHP, einschließlich der Begrenzungszeichen.
-- Eine fehlerhafte Regel wird ignoriert, sodass ein Tippfehler keine Meldung kaputt machen kann.
+- Eine fehlerhafte Regel, die in die Einstellung gelangt, wird ignoriert, sodass ein Tippfehler keine Meldung kaputt machen kann. Die Seite und `Herald.saveSourceRules` lehnen sie ab, bevor sie gespeichert wird.
 - Im Report werden Quellen mit derselben Bezeichnung zu einer Zeile addiert.
 
 ## Vorlagenvariablen

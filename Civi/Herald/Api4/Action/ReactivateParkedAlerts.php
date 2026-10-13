@@ -14,6 +14,8 @@ use Civi\Herald\Buffer\DeadLetter;
  *
  * Example:
  *   cv api4 Herald.reactivateParkedAlerts '{"ids": [12, 13]}'
+ *
+ * @method $this setIds(list<int> $ids)
  */
 class ReactivateParkedAlerts extends AbstractAction {
 

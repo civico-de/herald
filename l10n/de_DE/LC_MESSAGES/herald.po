@@ -1023,3 +1023,867 @@ msgstr "Leer lassen, um jeden Tag zu senden."
 #: templates/CRM/Herald/CivirulesAdapter/Form/Schedule.tpl
 msgid "In CiviCRM's timezone."
 msgstr "In der Zeitzone von CiviCRM."
+
+#: Civi/Herald/Admin/AdminScreens.php ang/heraldAdmin/index.html ang/heraldAdmin/topic.html ang/heraldAdmin/topics.html
+msgid "Topic routes"
+msgstr "Topic-Routen"
+
+#: Civi/Herald/Admin/AdminScreens.php ang/heraldAdmin/index.html ang/heraldAdmin/sources.html
+msgid "Contribution source names"
+msgstr "Namen der Beitragsquellen"
+
+#: Civi/Herald/Admin/AdminScreens.php ang/heraldAdmin/hosts.html ang/heraldAdmin/index.html
+msgid "Webhook allowed hosts"
+msgstr "Erlaubte Webhook-Hosts"
+
+#: Civi/Herald/Admin/AdminScreens.php ang/heraldAdmin/index.html ang/heraldAdmin/monitor.html
+msgid "Monitor checks"
+msgstr "Monitor-Checks"
+
+#: Civi/Herald/Admin/AdminScreens.php ang/heraldAdmin/index.html ang/heraldAdmin/test.html
+msgid "Test message"
+msgstr "Testnachricht"
+
+#: Civi/Herald/Admin/AdminScreens.php ang/heraldAdmin/index.html ang/heraldAdmin/preview.html
+msgid "Template preview"
+msgstr "Vorlagenvorschau"
+
+#: Civi/Herald/Admin/AdminScreens.php ang/heraldAdmin/index.html managed/Navigation.mgd.php
+msgid "Parked alerts"
+msgstr "Geparkte Meldungen"
+
+#: Civi/Herald/Admin/AdminScreens.php
+msgid "Lists and maps of these settings are edited on their own screens:"
+msgstr "Listen und Zuordnungen dieser Einstellungen werden auf eigenen Seiten bearbeitet:"
+
+#: Civi/Herald/Admin/AdminScreens.php
+msgid "Reactivate parked alerts"
+msgstr "Geparkte Meldungen reaktivieren"
+
+#: Civi/Herald/Admin/AdminScreens.php
+msgid "Send %1 %2 back to the flush job with a fresh retry budget?"
+msgstr "%1 %2 mit neuem Kontingent an Versuchen an den Flush-Job zurückgeben?"
+
+#: Civi/Herald/Admin/AdminScreens.php
+msgid "Reactivating %1 %2..."
+msgstr "%1 %2 werden reaktiviert …"
+
+#: Civi/Herald/Admin/AdminScreens.php
+msgid "Reactivated %1 %2."
+msgstr "%1 %2 reaktiviert."
+
+#: Civi/Herald/Admin/AdminScreens.php
+msgid "An error occurred while reactivating %1 %2."
+msgstr "Beim Reaktivieren von %1 %2 ist ein Fehler aufgetreten."
+
+#: Civi/Herald/Admin/AllowedHosts.php
+msgid "Each host must be text."
+msgstr "Jeder Host muss Text sein."
+
+#: Civi/Herald/Admin/AllowedHosts.php
+msgid "\"%1\": enter only the host name, without \"https://\"."
+msgstr "„%1“: nur den Hostnamen eingeben, ohne „https://“."
+
+#: Civi/Herald/Admin/AllowedHosts.php
+msgid "\"%1\": enter only the host name, without a path."
+msgstr "„%1“: nur den Hostnamen eingeben, ohne Pfad."
+
+#: Civi/Herald/Admin/AllowedHosts.php
+msgid "\"%1\": enter the host name without a port."
+msgstr "„%1“: den Hostnamen ohne Port eingeben."
+
+#: Civi/Herald/Admin/AllowedHosts.php
+msgid "\"%1\" is not a valid host name."
+msgstr "„%1“ ist kein gültiger Hostname."
+
+#: Civi/Herald/Admin/MonitorSettings.php
+msgid "Enter every expected check name without leading or trailing spaces."
+msgstr "Jeden erwarteten Check-Namen ohne Leerzeichen am Anfang oder Ende eingeben."
+
+#: Civi/Herald/Admin/MonitorSettings.php
+msgid "The snooze of \"%1\" is not a date and time."
+msgstr "Die Stummschaltung von „%1“ ist kein Datum mit Uhrzeit."
+
+#: Civi/Herald/Admin/MonitorSettings.php
+msgid "The snooze of \"%1\" must end in the future."
+msgstr "Die Stummschaltung von „%1“ muss in der Zukunft enden."
+
+#: Civi/Herald/Admin/SourceRule.php
+msgid "enter the text to match."
+msgstr "den zu suchenden Text eingeben."
+
+#: Civi/Herald/Admin/SourceRule.php
+msgid "choose how to match: contains, starts with or regular expression."
+msgstr "die Art des Vergleichs wählen: enthält, beginnt mit oder regulärer Ausdruck."
+
+#: Civi/Herald/Admin/SourceRule.php
+msgid "enter the name to show."
+msgstr "den anzuzeigenden Namen eingeben."
+
+#: Civi/Herald/Admin/SourceRule.php
+msgid "the regular expression is invalid: %1"
+msgstr "der reguläre Ausdruck ist ungültig: %1"
+
+#: Civi/Herald/Admin/SourceRules.php
+msgid "Rule %1: %2"
+msgstr "Regel %1: %2"
+
+#: Civi/Herald/Api4/Action/DeleteTopic.php ang/heraldAdmin/topic.js
+msgid "The topic \"%1\" does not exist."
+msgstr "Das Topic „%1“ existiert nicht."
+
+#: Civi/Herald/Api4/Action/SaveTopic.php
+msgid "The topic \"%1\" no longer exists. Reload the page."
+msgstr "Das Topic „%1“ existiert nicht mehr. Die Seite neu laden."
+
+#: Civi/Herald/Api4/Action/SaveTopic.php
+msgid "A topic named \"%1\" already exists."
+msgstr "Ein Topic namens „%1“ existiert bereits."
+
+#: Civi/Herald/Channel/ActivityChannel.php
+msgid "Assignee contact ID"
+msgstr "Kontakt-ID der zugewiesenen Person"
+
+#: Civi/Herald/Channel/ActivityChannel.php
+msgid "Added-by contact ID"
+msgstr "Kontakt-ID der erstellenden Person"
+
+#: Civi/Herald/Channel/ActivityChannel.php
+msgid "Defaults to the assignee contact."
+msgstr "Standard ist der zugewiesene Kontakt."
+
+#: Civi/Herald/Channel/ActivityChannel.php
+msgid "Related contact ID"
+msgstr "Kontakt-ID des Bezugskontakts"
+
+#: Civi/Herald/Channel/ActivityChannel.php
+msgid "Activity type name"
+msgstr "Name des Aktivitätstyps"
+
+#: Civi/Herald/Channel/ActivityChannel.php
+msgid "Activity status name"
+msgstr "Name des Aktivitätsstatus"
+
+#: Civi/Herald/Channel/ActivityChannel.php Civi/Herald/Channel/EmailChannel.php ang/heraldAdmin/test.html
+msgid "Subject"
+msgstr "Betreff"
+
+#: Civi/Herald/Channel/ActivityChannel.php Civi/Herald/Channel/EmailChannel.php Civi/Herald/Channel/WebhookChannel.php
+msgid "Body format"
+msgstr "Format des Inhalts"
+
+#: Civi/Herald/Channel/ChannelRegistry.php
+msgid "Generic webhook (Slack/Discord/Mattermost/custom)"
+msgstr "Allgemeiner Webhook (Slack/Discord/Mattermost/eigener)"
+
+#: Civi/Herald/Channel/ChannelRegistry.php
+msgid "Email"
+msgstr "E-Mail"
+
+#: Civi/Herald/Channel/ChannelRegistry.php
+msgid "CiviCRM activity"
+msgstr "CiviCRM-Aktivität"
+
+#: Civi/Herald/Channel/EmailChannel.php
+msgid "Recipient address"
+msgstr "Empfängeradresse"
+
+#: Civi/Herald/Channel/EmailChannel.php
+msgid "Recipient name"
+msgstr "Empfängername"
+
+#: Civi/Herald/Channel/EmailChannel.php
+msgid "CC (comma-separated)"
+msgstr "CC (durch Kommas getrennt)"
+
+#: Civi/Herald/Channel/EmailChannel.php
+msgid "BCC (comma-separated)"
+msgstr "BCC (durch Kommas getrennt)"
+
+#: Civi/Herald/Channel/NtfyChannel.php ang/heraldAdmin/test.html ang/heraldAdmin/topic.html ang/heraldAdmin/topics.html
+msgid "Topic"
+msgstr "Topic"
+
+#: Civi/Herald/Channel/NtfyChannel.php Civi/Herald/Channel/PushoverChannel.php
+msgid "Title"
+msgstr "Titel"
+
+#: Civi/Herald/Channel/NtfyChannel.php
+msgid "Priority (1-5)"
+msgstr "Priorität (1–5)"
+
+#: Civi/Herald/Channel/NtfyChannel.php
+msgid "Tags (comma-separated)"
+msgstr "Tags (durch Kommas getrennt)"
+
+#: Civi/Herald/Channel/NtfyChannel.php
+msgid "Click URL"
+msgstr "Klick-URL"
+
+#: Civi/Herald/Channel/NtfyChannel.php
+msgid "Render body as Markdown"
+msgstr "Inhalt als Markdown darstellen"
+
+#: Civi/Herald/Channel/PushoverChannel.php
+msgid "User/group key (override default)"
+msgstr "Benutzer-/Gruppenschlüssel (ersetzt den Standard)"
+
+#: Civi/Herald/Channel/PushoverChannel.php
+msgid "Priority (-2…2)"
+msgstr "Priorität (-2…2)"
+
+#: Civi/Herald/Channel/PushoverChannel.php
+msgid "Emergency retry interval in seconds (priority 2 only)"
+msgstr "Wiederholungsintervall im Notfall in Sekunden (nur Priorität 2)"
+
+#: Civi/Herald/Channel/PushoverChannel.php
+msgid "Emergency expiry in seconds (priority 2 only)"
+msgstr "Ablauf im Notfall in Sekunden (nur Priorität 2)"
+
+#: Civi/Herald/Channel/PushoverChannel.php
+msgid "Sound"
+msgstr "Ton"
+
+#: Civi/Herald/Channel/PushoverChannel.php
+msgid "Supplementary URL"
+msgstr "Zusätzliche URL"
+
+#: Civi/Herald/Channel/PushoverChannel.php
+msgid "URL label"
+msgstr "Beschriftung der URL"
+
+#: Civi/Herald/Channel/PushoverChannel.php
+msgid "Body is HTML"
+msgstr "Inhalt ist HTML"
+
+#: Civi/Herald/Channel/WebhookChannel.php
+msgid "URL"
+msgstr "URL"
+
+#: Civi/Herald/Channel/WebhookChannel.php
+msgid "Method"
+msgstr "Methode"
+
+#: Civi/Herald/Channel/WebhookChannel.php
+msgid "JSON key (when body_format=json)"
+msgstr "JSON-Schlüssel (bei body_format=json)"
+
+#: Civi/Herald/Channel/WebhookChannel.php
+msgid "Extra headers"
+msgstr "Zusätzliche Header"
+
+#: Civi/Herald/Channel/WebhookChannel.php
+msgid "Bearer token (Authorization header)"
+msgstr "Bearer-Token (Authorization-Header)"
+
+#: Civi/Herald/Topic/RouteFields.php ang/heraldAdmin/test.html ang/heraldAdmin/topic.html ang/heraldAdmin/topics.html
+msgid "Channel"
+msgstr "Kanal"
+
+#: Civi/Herald/Topic/RouteFields.php ang/heraldAdmin.js
+msgid "Subscription type"
+msgstr "Abo-Typ"
+
+#: Civi/Herald/Topic/RouteFields.php ang/heraldAdmin.js
+msgid "Email addresses"
+msgstr "E-Mail-Adressen"
+
+#: Civi/Herald/Topic/RouteFields.php ang/heraldAdmin.js
+msgid "Respect communication suspension"
+msgstr "Kommunikationssperre beachten"
+
+#: Civi/Herald/Topic/RouteFields.php
+msgid "Email location type"
+msgstr "Adressart der E-Mail"
+
+#: Civi/Herald/Topic/RouteFields.php ang/heraldAdmin.js ang/heraldAdmin/topics.html
+msgid "Aggregate window in minutes"
+msgstr "Sammelfenster in Minuten"
+
+#: Civi/Herald/Topic/RouteFields.php
+msgid "Other parameters"
+msgstr "Weitere Parameter"
+
+#: Civi/Herald/Topic/RouteRules.php
+msgid "\"%1\" must be at least %2."
+msgstr "„%1“ muss mindestens %2 sein."
+
+#: Civi/Herald/Topic/RouteRules.php
+msgid "The delivery mode \"%1\" needs \"%2\"."
+msgstr "Der Zustellmodus „%1“ braucht „%2“."
+
+#: Civi/Herald/Topic/RouteValidator.php
+msgid "Enter a topic name without leading or trailing spaces."
+msgstr "Einen Topic-Namen ohne Leerzeichen am Anfang oder Ende eingeben."
+
+#: Civi/Herald/Topic/RouteValidator.php
+msgid "The channel \"%1\" is not registered."
+msgstr "Der Kanal „%1“ ist nicht registriert."
+
+#: Civi/Herald/Topic/ValueType.php
+msgid "\"%1\" must be a whole number."
+msgstr "„%1“ muss eine ganze Zahl sein."
+
+#: Civi/Herald/Topic/ValueType.php
+msgid "\"%1\" must be yes or no."
+msgstr "„%1“ muss ja oder nein sein."
+
+#: Civi/Herald/Topic/ValueType.php
+msgid "\"%1\" must be one of: %2."
+msgstr "„%1“ muss einer dieser Werte sein: %2."
+
+#: Civi/Herald/Topic/ValueType.php
+msgid "\"%1\" must be a JSON object."
+msgstr "„%1“ muss ein JSON-Objekt sein."
+
+#: Civi/Herald/Topic/ValueType.php
+msgid "\"%1\" must be text."
+msgstr "„%1“ muss Text sein."
+
+#: ang/heraldAdmin/fields.html ang/heraldAdmin/topic.html
+msgid "(required)"
+msgstr "(Pflichtfeld)"
+
+#: ang/heraldAdmin/fields.html ang/heraldAdmin/topics.js
+msgid "(not set)"
+msgstr "(nicht gesetzt)"
+
+#: ang/heraldAdmin/fields.html
+msgid "A JSON object of names and values."
+msgstr "Ein JSON-Objekt aus Namen und Werten."
+
+#: ang/heraldAdmin/hosts.html ang/heraldAdmin/index.html ang/heraldAdmin/monitor.html ang/heraldAdmin/preview.html ang/heraldAdmin/sources.html ang/heraldAdmin/test.html ang/heraldAdmin/topics.html
+msgid "Herald administration"
+msgstr "Herald-Verwaltung"
+
+#: ang/heraldAdmin/hosts.html
+msgid "Allowed hosts, one per line"
+msgstr "Erlaubte Hosts, einer pro Zeile"
+
+#: ang/heraldAdmin/hosts.html
+msgid "When the list is not empty, the webhook channel only calls URLs on these hosts or their subdomains: example.org also allows hooks.example.org. Enter host names or IP addresses without https:// or a path. An empty list allows every public address and blocks private ones."
+msgstr "Ist die Liste nicht leer, ruft der Webhook-Kanal nur URLs auf diesen Hosts oder ihren Subdomains auf: example.org erlaubt auch hooks.example.org. Hostnamen oder IP-Adressen ohne https:// und ohne Pfad eingeben. Eine leere Liste erlaubt jede öffentliche Adresse und sperrt private."
+
+#: ang/heraldAdmin/hosts.js ang/heraldAdmin/monitor.js ang/heraldAdmin/sources.js ang/heraldAdmin/topic.js
+msgid "Saving..."
+msgstr "Wird gespeichert …"
+
+#: ang/heraldAdmin/hosts.js
+msgid "Allowed hosts saved."
+msgstr "Erlaubte Hosts gespeichert."
+
+#: ang/heraldAdmin/hosts.js
+msgid "Allowed hosts saved: %1."
+msgstr "Erlaubte Hosts gespeichert: %1."
+
+#: ang/heraldAdmin/hosts.js
+msgid "The allowlist is empty: webhooks may call any public address."
+msgstr "Die Liste ist leer: Webhooks dürfen jede öffentliche Adresse aufrufen."
+
+#: ang/heraldAdmin/index.html
+msgid "The settings form holds the single values; the lists and maps are edited here."
+msgstr "Das Einstellungsformular enthält die Einzelwerte; Listen und Zuordnungen werden hier bearbeitet."
+
+#: ang/heraldAdmin/index.html managed/Navigation.mgd.php
+msgid "Settings"
+msgstr "Einstellungen"
+
+#: ang/heraldAdmin/index.html
+msgid "where each topic is delivered."
+msgstr "wohin jedes Topic zugestellt wird."
+
+#: ang/heraldAdmin/index.html
+msgid "how digests group contribution sources."
+msgstr "wie Reports Beitragsquellen zusammenfassen."
+
+#: ang/heraldAdmin/index.html
+msgid "which hosts the webhook channel may call."
+msgstr "welche Hosts der Webhook-Kanal aufrufen darf."
+
+#: ang/heraldAdmin/index.html
+msgid "expected checks and snoozes."
+msgstr "erwartete Checks und Stummschaltungen."
+
+#: ang/heraldAdmin/index.html
+msgid "send a message through a channel or a topic."
+msgstr "eine Nachricht über einen Kanal oder ein Topic senden."
+
+#: ang/heraldAdmin/index.html
+msgid "render a herald template with sample values."
+msgstr "eine herald-Vorlage mit Beispielwerten darstellen."
+
+#: ang/heraldAdmin/index.html
+msgid "alerts the flush job could not deliver, and their reactivation."
+msgstr "Meldungen, die der Flush-Job nicht zustellen konnte, und ihre Reaktivierung."
+
+#: ang/heraldAdmin/messages.html
+msgid "That did not work:"
+msgstr "Das hat nicht geklappt:"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Extensions contribute these checks; the monitor job reports when one starts failing or recovers. An expected check that disappears counts as failing. A snoozed check sends no failure alerts until the time set."
+msgstr "Extensions stellen diese Checks bereit; der Monitor-Job meldet, wenn einer zu scheitern beginnt oder sich erholt. Ein erwarteter Check, der verschwindet, gilt als gescheitert. Ein stummgeschalteter Check sendet bis zum gesetzten Zeitpunkt keine Fehlermeldungen."
+
+#: ang/heraldAdmin/monitor.html
+msgid "Check"
+msgstr "Check"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Last reported status"
+msgstr "Zuletzt gemeldeter Status"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Failed / ok runs in a row"
+msgstr "Gescheiterte / erfolgreiche Läufe in Folge"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Last failure alert"
+msgstr "Letzte Fehlermeldung"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Expected"
+msgstr "Erwartet"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Snoozed until"
+msgstr "Stumm bis"
+
+#: ang/heraldAdmin/monitor.html
+msgid "not offered by any enabled extension"
+msgstr "von keiner aktivierten Extension angeboten"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Snooze %1 until"
+msgstr "%1 stummschalten bis"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Clear"
+msgstr "Leeren"
+
+#: ang/heraldAdmin/monitor.html
+msgid "snooze of %1"
+msgstr "Stummschaltung von %1"
+
+#: ang/heraldAdmin/monitor.html
+msgid "No extension offers a check, and none is expected."
+msgstr "Keine Extension bietet einen Check an, und keiner wird erwartet."
+
+#: ang/heraldAdmin/monitor.html
+msgid "Expect another check by name"
+msgstr "Einen weiteren Check per Name erwarten"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Add"
+msgstr "Hinzufügen"
+
+#: ang/heraldAdmin/monitor.html
+msgid "For a check whose extension is not enabled yet."
+msgstr "Für einen Check, dessen Extension noch nicht aktiviert ist."
+
+#: ang/heraldAdmin/monitor.html
+msgid "Times are shown and entered in the time zone of this browser."
+msgstr "Zeiten werden in der Zeitzone dieses Browsers angezeigt und eingegeben."
+
+#: ang/heraldAdmin/monitor.js
+msgid "Failing"
+msgstr "Gestört"
+
+#: ang/heraldAdmin/monitor.js
+msgid "OK"
+msgstr "OK"
+
+#: ang/heraldAdmin/monitor.js
+msgid "Not observed yet"
+msgstr "Noch nicht beobachtet"
+
+#: ang/heraldAdmin/monitor.js
+msgid "Snooze of \"%1\" cleared; save to apply."
+msgstr "Stummschaltung von „%1“ geleert; zum Übernehmen speichern."
+
+#: ang/heraldAdmin/monitor.js
+msgid "Enter the name of the check to expect."
+msgstr "Den Namen des zu erwartenden Checks eingeben."
+
+#: ang/heraldAdmin/monitor.js
+msgid "\"%1\" is marked as expected; save to apply."
+msgstr "„%1“ ist als erwartet markiert; zum Übernehmen speichern."
+
+#: ang/heraldAdmin/monitor.js
+msgid "Enter each snooze as a complete date and time, or clear it."
+msgstr "Jede Stummschaltung als vollständiges Datum mit Uhrzeit eingeben oder leeren."
+
+#: ang/heraldAdmin/monitor.js
+msgid "Monitor checks saved."
+msgstr "Monitor-Checks gespeichert."
+
+#: ang/heraldAdmin/preview.html
+msgid "Renders a herald message template with sample values. Nothing is sent."
+msgstr "Stellt eine herald-Nachrichtenvorlage mit Beispielwerten dar. Es wird nichts gesendet."
+
+#: ang/heraldAdmin/preview.html
+msgid "Template"
+msgstr "Vorlage"
+
+#: ang/heraldAdmin/preview.html ang/heraldAdmin/test.html
+msgid "- select -"
+msgstr "- auswählen -"
+
+#: ang/heraldAdmin/preview.html
+msgid "Sample values (JSON)"
+msgstr "Beispielwerte (JSON)"
+
+#: ang/heraldAdmin/preview.html
+msgid "A JSON object of template variables; missing variables render empty."
+msgstr "Ein JSON-Objekt mit Vorlagenvariablen; fehlende Variablen bleiben leer."
+
+#: ang/heraldAdmin/preview.html
+msgid "Render"
+msgstr "Darstellen"
+
+#: ang/heraldAdmin/preview.html
+msgid "Result"
+msgstr "Ergebnis"
+
+#: ang/heraldAdmin/preview.html
+msgid "Rendered template"
+msgstr "Dargestellte Vorlage"
+
+#: ang/heraldAdmin/preview.html
+msgid "HTML source"
+msgstr "HTML-Quelltext"
+
+#: ang/heraldAdmin/preview.js
+msgid "Sample values: %1"
+msgstr "Beispielwerte: %1"
+
+#: ang/heraldAdmin/preview.js
+msgid "Sample values: enter a JSON object."
+msgstr "Beispielwerte: ein JSON-Objekt eingeben."
+
+#: ang/heraldAdmin/preview.js
+msgid "Choose a template."
+msgstr "Eine Vorlage auswählen."
+
+#: ang/heraldAdmin/preview.js
+msgid "Template rendered."
+msgstr "Vorlage dargestellt."
+
+#: ang/heraldAdmin/sources.html
+msgid "Digests group contributions by their source. These rules give differently written sources one name; the first matching rule wins."
+msgstr "Reports gruppieren Beiträge nach ihrer Quelle. Diese Regeln geben unterschiedlich geschriebenen Quellen einen Namen; die erste passende Regel gilt."
+
+#: ang/heraldAdmin/sources.html
+msgid "Source rules, in the order they are tried"
+msgstr "Quellregeln in der Reihenfolge, in der sie geprüft werden"
+
+#: ang/heraldAdmin/sources.html
+msgid "Position"
+msgstr "Position"
+
+#: ang/heraldAdmin/sources.html
+msgid "Source text"
+msgstr "Quelltext"
+
+#: ang/heraldAdmin/sources.html
+msgid "Match"
+msgstr "Vergleich"
+
+#: ang/heraldAdmin/sources.html
+msgid "Name to show"
+msgstr "Anzuzeigender Name"
+
+#: ang/heraldAdmin/sources.html ang/heraldAdmin/topics.html
+msgid "Actions"
+msgstr "Aktionen"
+
+#: ang/heraldAdmin/sources.html
+msgid "Source text of rule %1"
+msgstr "Quelltext von Regel %1"
+
+#: ang/heraldAdmin/sources.html
+msgid "Match of rule %1"
+msgstr "Vergleich von Regel %1"
+
+#: ang/heraldAdmin/sources.html
+msgid "Name to show for rule %1"
+msgstr "Anzuzeigender Name für Regel %1"
+
+#: ang/heraldAdmin/sources.html
+msgid "Move rule %1 up"
+msgstr "Regel %1 nach oben verschieben"
+
+#: ang/heraldAdmin/sources.html
+msgid "Move rule %1 down"
+msgstr "Regel %1 nach unten verschieben"
+
+#: ang/heraldAdmin/sources.html
+msgid "Remove"
+msgstr "Entfernen"
+
+#: ang/heraldAdmin/sources.html
+msgid "rule %1"
+msgstr "Regel %1"
+
+#: ang/heraldAdmin/sources.html
+msgid "No rules: digests show every source as written."
+msgstr "Keine Regeln: Reports zeigen jede Quelle so, wie sie geschrieben ist."
+
+#: ang/heraldAdmin/sources.html
+msgid "A regular expression uses PHP syntax with delimiters, for example /^SEPA/i. It is checked when you save."
+msgstr "Ein regulärer Ausdruck nutzt PHP-Syntax mit Begrenzern, zum Beispiel /^SEPA/i. Er wird beim Speichern geprüft."
+
+#: ang/heraldAdmin/sources.html
+msgid "Add rule"
+msgstr "Regel hinzufügen"
+
+#: ang/heraldAdmin/sources.js
+msgid "contains"
+msgstr "enthält"
+
+#: ang/heraldAdmin/sources.js
+msgid "starts with"
+msgstr "beginnt mit"
+
+#: ang/heraldAdmin/sources.js
+msgid "regular expression"
+msgstr "regulärer Ausdruck"
+
+#: ang/heraldAdmin/sources.js
+msgid "Rule %1 removed."
+msgstr "Regel %1 entfernt."
+
+#: ang/heraldAdmin/sources.js
+msgid "Rule moved to position %1."
+msgstr "Regel auf Position %1 verschoben."
+
+#: ang/heraldAdmin/sources.js
+msgid "Source rules saved."
+msgstr "Quellregeln gespeichert."
+
+#: ang/heraldAdmin/test.html
+msgid "Sends a real message: through one channel with the recipient entered here, or through a topic route as an alert would go."
+msgstr "Sendet eine echte Nachricht: über einen Kanal an den hier eingetragenen Empfänger oder über eine Topic-Route, wie eine Meldung sie nehmen würde."
+
+#: ang/heraldAdmin/test.html
+msgid "Send through"
+msgstr "Senden über"
+
+#: ang/heraldAdmin/test.html
+msgid "A channel"
+msgstr "Einen Kanal"
+
+#: ang/heraldAdmin/test.html
+msgid "A topic route"
+msgstr "Eine Topic-Route"
+
+#: ang/heraldAdmin/test.html
+msgid "%1 options"
+msgstr "Optionen für %1"
+
+#: ang/heraldAdmin/test.html
+msgid "Empty fields fall back to the channel defaults on the settings form."
+msgstr "Leere Felder übernehmen die Kanal-Standardwerte aus dem Einstellungsformular."
+
+#: ang/heraldAdmin/test.html
+msgid "Used by channels with a subject or title; a subject field above takes precedence."
+msgstr "Für Kanäle mit Betreff oder Titel; ein Betreff-Feld oben hat Vorrang."
+
+#: ang/heraldAdmin/test.html
+msgid "Message format"
+msgstr "Nachrichtenformat"
+
+#: ang/heraldAdmin/test.html
+msgid "HTML"
+msgstr "HTML"
+
+#: ang/heraldAdmin/test.html
+msgid "Message"
+msgstr "Nachricht"
+
+#: ang/heraldAdmin/test.html
+msgid "Send test message"
+msgstr "Testnachricht senden"
+
+#: ang/heraldAdmin/test.js
+msgid "Test message from Herald."
+msgstr "Testnachricht von Herald."
+
+#: ang/heraldAdmin/test.js
+msgid "Choose a topic."
+msgstr "Ein Topic auswählen."
+
+#: ang/heraldAdmin/test.js
+msgid "Buffered for topic \"%1\": its route aggregates alerts, so the message goes out with the next flush."
+msgstr "Für das Topic „%1“ gepuffert: seine Route sammelt Meldungen, daher geht die Nachricht mit dem nächsten Flush hinaus."
+
+#: ang/heraldAdmin/test.js
+msgid "Sent to topic \"%1\" through %2."
+msgstr "An das Topic „%1“ über %2 gesendet."
+
+#: ang/heraldAdmin/test.js
+msgid "Choose a channel."
+msgstr "Einen Kanal auswählen."
+
+#: ang/heraldAdmin/test.js
+msgid "Sent through %1."
+msgstr "Über %1 gesendet."
+
+#: ang/heraldAdmin/test.js
+msgid "Sending..."
+msgstr "Wird gesendet …"
+
+#: ang/heraldAdmin/topic.html
+msgid "Add topic route"
+msgstr "Topic-Route hinzufügen"
+
+#: ang/heraldAdmin/topic.html
+msgid "Edit topic route"
+msgstr "Topic-Route bearbeiten"
+
+#: ang/heraldAdmin/topic.html
+msgid "The name publishers use, for example ops. The topic named default backs every other topic."
+msgstr "Der Name, den Absender verwenden, zum Beispiel ops. Das Topic default dient allen anderen Topics als Grundlage."
+
+#: ang/heraldAdmin/topic.html
+msgid "Delivery"
+msgstr "Zustellung"
+
+#: ang/heraldAdmin/topic.html
+msgid "(not set: Telegram)"
+msgstr "(nicht gesetzt: Telegram)"
+
+#: ang/heraldAdmin/topic.html
+msgid "(from the default route)"
+msgstr "(aus der Route default)"
+
+#: ang/heraldAdmin/topic.html
+msgid "The fields below follow the channel this topic ends up using."
+msgstr "Die Felder unten richten sich nach dem Kanal, den dieses Topic am Ende nutzt."
+
+#: ang/heraldAdmin/topic.html
+msgid "(not set: direct)"
+msgstr "(nicht gesetzt: direkt)"
+
+#: ang/heraldAdmin/topic.html
+msgid "Channel options"
+msgstr "Kanaloptionen"
+
+#: ang/heraldAdmin/topic.html
+msgid "In the subscriber and group modes, recipients and credentials come from the preferences of each contact; only presentation options are used from here."
+msgstr "Im Abonnent:innen- und im Gruppenmodus kommen Empfänger und Zugangsdaten aus den Einstellungen jedes Kontakts; von hier werden nur Darstellungsoptionen übernommen."
+
+#: ang/heraldAdmin/topic.html
+msgid "This channel has no options."
+msgstr "Dieser Kanal hat keine Optionen."
+
+#: ang/heraldAdmin/topic.html
+msgid "Other parameters (JSON)"
+msgstr "Weitere Parameter (JSON)"
+
+#: ang/heraldAdmin/topic.html
+msgid "Parameters without a field above, such as channel_config or options of another channel, as a JSON object."
+msgstr "Parameter ohne eigenes Feld oben, etwa channel_config oder Optionen eines anderen Kanals, als JSON-Objekt."
+
+#: ang/heraldAdmin/topic.js
+msgid "enter a JSON object"
+msgstr "ein JSON-Objekt eingeben"
+
+#: ang/heraldAdmin/topic.js
+msgid "Other parameters: %1"
+msgstr "Weitere Parameter: %1"
+
+#: ang/heraldAdmin/topic.js
+msgid "Other parameters: \"%1\" is already set by a field above."
+msgstr "Weitere Parameter: „%1“ ist bereits durch ein Feld oben gesetzt."
+
+#: ang/heraldAdmin/topic.js
+msgid "Topic route saved."
+msgstr "Topic-Route gespeichert."
+
+#: ang/heraldAdmin/topics.html
+msgid "Publishers name a topic; its route decides the channel and recipients. The topic entry is merged over the \"default\" entry, so a topic only needs what differs."
+msgstr "Absender nennen ein Topic; seine Route bestimmt Kanal und Empfänger. Der Eintrag des Topics wird über den Eintrag „default“ gelegt, ein Topic braucht also nur, was abweicht."
+
+#: ang/heraldAdmin/topics.html
+msgid "There is no \"default\" route: publishing to a topic without its own route fails."
+msgstr "Es gibt keine Route „default“: Veröffentlichen an ein Topic ohne eigene Route schlägt fehl."
+
+#: ang/heraldAdmin/topics.html
+msgid "Add topic"
+msgstr "Topic hinzufügen"
+
+#: ang/heraldAdmin/topics.html
+msgid "Edit"
+msgstr "Bearbeiten"
+
+#: ang/heraldAdmin/topics.html
+msgid "Delete"
+msgstr "Löschen"
+
+#: ang/heraldAdmin/topics.html
+msgid "No topic routes yet."
+msgstr "Noch keine Topic-Routen."
+
+#: ang/heraldAdmin/topics.js
+msgid "(from default)"
+msgstr "(aus default)"
+
+#: ang/heraldAdmin/topics.js
+msgid "Deleted the route of topic \"%1\"."
+msgstr "Die Route des Topics „%1“ wurde gelöscht."
+
+#: ang/heraldAdmin/topics.js
+msgid "Delete topic \"%1\""
+msgstr "Topic „%1“ löschen"
+
+#: ang/heraldAdmin/topics.js
+msgid "Publishers of this topic then use the default route, if there is one."
+msgstr "Absender dieses Topics nutzen dann die Route default, sofern es sie gibt."
+
+#: ang/heraldAdmin.js
+msgid "\"%1\" is not valid JSON: %2"
+msgstr "„%1“ ist kein gültiges JSON: %2"
+
+#: ang/heraldAdmin.js
+msgid "The request failed."
+msgstr "Die Anfrage ist fehlgeschlagen."
+
+#: ang/heraldAdmin.js
+msgid "Direct: the recipient set on the route"
+msgstr "Direkt: der in der Route gesetzte Empfänger"
+
+#: ang/heraldAdmin.js
+msgid "Subscribers of a notification type"
+msgstr "Abonnent:innen eines Abo-Typs"
+
+#: ang/heraldAdmin.js
+msgid "Members of a group"
+msgstr "Mitglieder einer Gruppe"
+
+#: ang/heraldAdmin.js
+msgid "A list of email addresses"
+msgstr "Eine Liste von E-Mail-Adressen"
+
+#: ang/heraldAdmin.js
+msgid "Name of the notification type contacts subscribe to."
+msgstr "Name des Abo-Typs, den Kontakte abonnieren."
+
+#: ang/heraldAdmin.js
+msgid "Group ID"
+msgstr "Gruppen-ID"
+
+#: ang/heraldAdmin.js
+msgid "Separate the addresses with commas, semicolons or line breaks."
+msgstr "Die Adressen durch Kommas, Semikolons oder Zeilenumbrüche trennen."
+
+#: ang/heraldAdmin.js
+msgid "Email location type ID"
+msgstr "ID der Adressart der E-Mail"
+
+#: ang/heraldAdmin.js
+msgid "0 sends each alert at once; a window collects alerts and sends them together."
+msgstr "0 sendet jede Meldung sofort; ein Fenster sammelt Meldungen und sendet sie gemeinsam."
+
+#: managed/Navigation.mgd.php
+msgid "Herald"
+msgstr "Herald"

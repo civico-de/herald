@@ -7,6 +7,12 @@
     <access_arguments>administer CiviCRM</access_arguments>
   </item>
   <item>
+    <path>civicrm/admin/herald</path>
+    <page_callback>\Civi\Angular\Page\Main</page_callback>
+    <title>Herald</title>
+    <access_arguments>administer CiviCRM</access_arguments>
+  </item>
+  <item>
     <path>civicrm/herald/form/civirulesaction/sendnotification</path>
     <page_callback>CRM_Herald_CivirulesAdapter_Form_SendNotification</page_callback>
     <title>herald: Send Notification</title>

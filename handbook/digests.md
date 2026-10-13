@@ -1,6 +1,8 @@
 ---
 title: Digests
 order: 40
+routes:
+  - civicrm/admin/herald
 ---
 
 # Digests
@@ -127,6 +129,10 @@ Four blocks: donations of one campaign, ticket sales by item, members by type an
 
 Contribution sources are often technical, such as a payment processor's reference or the transaction prefix of a bank import. The setting `herald_source_normalization` maps them to readable labels. The labels appear in the digest breakdown and in the source of contribution notifications. The setting is empty by default, which leaves sources as they are.
 
+The rules are under Administer » Herald » Contribution source names. Each row holds the source text, how it is matched and the name to show. The arrow buttons change the order in which the rules are tried. Saving rejects an incomplete rule and a regular expression that does not compile, and names the rule.
+
+With cv:
+
 ```bash
 cv api4 Setting.set +v 'herald_source_normalization=[
   {"match": "Bank TX", "type": "contains", "label": "Bank transfer"},
@@ -138,7 +144,7 @@ cv api4 Setting.set +v 'herald_source_normalization=[
 - The rules are tried in order, and the first match wins.
 - The type is contains, prefix or regex. Contains and prefix are case-sensitive.
 - A regex uses PHP's preg syntax, including the delimiters.
-- A malformed rule is ignored, so a typo cannot break an alert.
+- A malformed rule that reaches the setting is ignored, so a typo cannot break an alert. The screen and `Herald.saveSourceRules` reject it before it is stored.
 - In the digest, sources with the same label are added up into one line.
 
 ## Template variables

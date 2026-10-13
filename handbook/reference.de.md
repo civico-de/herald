@@ -6,6 +6,7 @@ routes:
   - civicrm/herald/form/civirulesaction/senddigest
   - civicrm/herald/form/civirulescondition/fieldtransition
   - civicrm/herald/form/civirulestrigger/schedule
+  - civicrm/admin/herald
 ---
 
 # Referenz
@@ -101,7 +102,15 @@ Die Entität `Herald` bietet diese Aktionen. Jede Aktion erfordert die Berechtig
 | getParkedAlerts | ids, optional | Listet [geparkte Meldungen](delivery.md#geparkte-meldungen) ohne ihre Nachrichtentexte auf. |
 | reactivateParkedAlerts | ids, optional | Legt geparkte Meldungen zurück in den Puffer. Ohne ids alle. |
 | renderTemplate | workflow, vars | Rendert eine Vorlage, ohne sie zu senden. |
+| saveTopic | topic, route, previousName | Prüft eine Route und speichert sie in `herald_topics`; mit previousName wird dieses Topic an seinem Platz umbenannt. Das ruft die Seite „Topic-Routen“ auf. |
+| deleteTopic | topic | Entfernt eine Route aus `herald_topics`. |
+| saveSourceRules | rules | Prüft und speichert `herald_source_normalization`. Fehler nennen die Regel. |
+| saveAllowedHosts | hosts | Prüft und speichert `herald_webhook_allowed_hosts`. Leere Einträge werden übersprungen. |
+| getMonitorChecks | keine | Listet jeden angebotenen, erwarteten, stummgeschalteten oder verfolgten Check mit seinem gespeicherten Zustand, ohne Details und ohne die Checks auszuführen. |
+| saveMonitorChecks | expected, snooze | Prüft und speichert `herald_monitor_expected` und `herald_monitor_snooze`. Eine Stummschaltung muss in der Zukunft enden, sofern sie nicht unverändert ist. |
 | testTelegram | message, chatId, channel | Sendet eine Testnachricht. Der Kanal ist standardmäßig telegram. |
+
+Die Speicheraktionen speichern dieselbe Form wie `Setting.set`, das weiter funktioniert. Ungültige Eingaben lehnen sie mit einer Liste aller Probleme ab und speichern dann nichts.
 
 `send` braucht einen Kanal und eine Nachricht. `publish` braucht genau eines von message und template. Beide lehnen ein anderes Format als text oder html ab. Bei `publish` gilt das Format nur für eine Nachricht, denn eine gerenderte Vorlage ist immer HTML.
 
@@ -201,7 +210,7 @@ Die Report-Variablen stehen unter [Vorlagenvariablen](digests.md#vorlagenvariabl
 
 ## Einstellungen
 
-Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'name=value'`. Einstellungen, die eine Liste oder eine Zuordnung enthalten, nehmen JSON auf. Die einfachen Einstellungen finden Sie auch auf der Einstellungsseite von herald unter `civicrm/admin/setting/herald`, die „administer CiviCRM“ erfordert. Die Listen- und Zuordnungseinstellungen stehen nicht auf dieser Seite.
+Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'name=value'`. Einstellungen, die eine Liste oder eine Zuordnung enthalten, nehmen JSON auf. Die einfachen Einstellungen finden Sie auch auf der Einstellungsseite von herald, „Administer » Herald » Settings“ (`civicrm/admin/setting/herald`). Die Listen- und Zuordnungseinstellungen haben eigene Seiten unter `civicrm/admin/herald`: Topic-Routen, Namen der Beitragsquellen, Erlaubte Webhook-Hosts und Monitor-Checks. Die Einstellungsseite verlinkt sie. Alle erfordern „administer CiviCRM“.
 
 | Einstellung | Standard | Bedeutung |
 |---|---|---|

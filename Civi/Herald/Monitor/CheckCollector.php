@@ -17,17 +17,33 @@ class CheckCollector {
    * @return array<string, array{status: string, detail: string}> Observations by check name.
    */
   public function observe(): array {
-    $observations = [];
-    foreach ($this->contributedChecks() as $name => $callable) {
-      if (!is_string($name) || !is_callable($callable)) {
-        continue;
-      }
-      $observations[$name] = $this->observeOne($callable);
-    }
-
+    $observations = array_map($this->observeOne(...), $this->checks());
     $this->addMissingExpected($observations);
 
     return $observations;
+  }
+
+  /**
+   * Names of the checks the hook offers, without running any of them.
+   *
+   * @return list<string>
+   */
+  public function names(): array {
+    return array_map('strval', array_keys($this->checks()));
+  }
+
+  /**
+   * @return array<string, callable>
+   */
+  private function checks(): array {
+    $checks = [];
+    foreach ($this->contributedChecks() as $name => $check) {
+      if (!is_string($name) || !is_callable($check)) {
+        continue;
+      }
+      $checks[$name] = $check;
+    }
+    return $checks;
   }
 
   /**

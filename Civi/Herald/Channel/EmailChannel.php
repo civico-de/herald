@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Channel;
 
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+use CRM_Herald_ExtensionUtil as E;
 
 /**
  * Email channel — delivers the rendered body through CiviCRM's configured
@@ -105,17 +106,17 @@ class EmailChannel implements ChannelInterface {
    */
   public function getConfigSchema(): array {
     return [
-      'email_to' => ['label' => 'Recipient address', 'required' => TRUE, 'type' => 'string'],
-      'email_to_name' => ['label' => 'Recipient name', 'required' => FALSE, 'type' => 'string'],
-      'email_subject' => ['label' => 'Subject', 'required' => FALSE, 'type' => 'string'],
+      'email_to' => ['label' => E::ts('Recipient address'), 'required' => TRUE, 'type' => 'string'],
+      'email_to_name' => ['label' => E::ts('Recipient name'), 'required' => FALSE, 'type' => 'string'],
+      'email_subject' => ['label' => E::ts('Subject'), 'required' => FALSE, 'type' => 'string'],
       'email_format' => [
-        'label' => 'Body format',
+        'label' => E::ts('Body format'),
         'required' => FALSE,
         'type' => 'enum',
         'options' => ['html', 'text'],
       ],
-      'email_cc' => ['label' => 'CC (comma-separated)', 'required' => FALSE, 'type' => 'string'],
-      'email_bcc' => ['label' => 'BCC (comma-separated)', 'required' => FALSE, 'type' => 'string'],
+      'email_cc' => ['label' => E::ts('CC (comma-separated)'), 'required' => FALSE, 'type' => 'string'],
+      'email_bcc' => ['label' => E::ts('BCC (comma-separated)'), 'required' => FALSE, 'type' => 'string'],
     ];
   }
 

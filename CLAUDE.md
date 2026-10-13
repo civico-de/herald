@@ -31,7 +31,9 @@ actions (no bespoke cron for alerts).
   rows stay in the table, are listed by `Herald.getParkedAlerts` and the
   SearchKit display on the read-only `HeraldBufferedAlert` entity (never
   `body`/`delivery` — contact data), and only
-  `Herald.reactivateParkedAlerts` puts them back in circulation. The table's
+  `Herald.reactivateParkedAlerts` puts them back in circulation (the display's
+  task calls it through `HeraldBufferedAlert.reactivate`, the entity's one
+  write action). The table's
   shape lives in `schema/`; upgrade steps add columns from that spec.
   Uninstall drops the table (AutomaticUpgrader) — the one sanctioned loss.
 - The monitor publishes only ok→fail / fail→ok transitions to the
@@ -92,6 +94,12 @@ actions (no bespoke cron for alerts).
   `created_date` with PHP's wall clock, so they are read back in PHP's
   timezone. `Herald.notifyDigest` with `sendHour` stays for scripts and
   crontab; there is no APIv3 job wrapper.
+- The admin screens (`civicrm/admin/herald`, Angular module `heraldAdmin`)
+  edit the array settings through validating `Herald.save*` actions that store
+  exactly the shape `Setting.set` takes; Setting.set stays unchecked. Channel
+  fields are rendered from `Herald.getChannels`, never listed per channel.
+  New UI is Angular/SearchKit: phpat and mago forbid QuickForm/page bases outside
+  the CiviRules adapter forms.
 - Post-hook payloads of partial updates carry only the written fields; code
   reading an entity payload completes it from the stored row.
 - Bundled packages (`civico-de/stdlib`) are prefixed into `Civi\Herald\Vendor\`

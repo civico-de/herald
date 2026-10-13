@@ -1,6 +1,8 @@
 ---
 title: Check-Monitor
 order: 50
+routes:
+  - civicrm/admin/herald
 ---
 
 # Check-Monitor
@@ -68,11 +70,15 @@ Alle Einstellungen sind optional. Standardmäßig meldet herald den ersten fehlg
 | `herald_monitor_renotify_hours` | 24 | Eine Erinnerung senden, wenn ein Check so viele Stunden lang fehlschlägt. 0 schaltet Erinnerungen ab. |
 | `herald_monitor_topic` | ops | Das Topic, in das die Meldungen veröffentlicht werden. |
 
-Diese vier finden Sie auf der Einstellungsseite von herald unter `civicrm/admin/setting/herald`. Stummschaltungen und erwartete Checks setzen Sie mit cv.
+Diese vier finden Sie auf der Einstellungsseite von herald, „Administer » Herald » Settings“ (Administrieren » Herald » Einstellungen). Stummschaltungen und erwartete Checks stehen unter „Administer » Herald » Monitor checks“ (Monitor-Checks).
+
+Diese Seite listet jeden Check, den eine aktivierte Extension anbietet, jeden erwarteten oder stummgeschalteten Check und jeden Check, für den der Monitor einen Zustand gespeichert hat. Jede Zeile zeigt den zuletzt gemeldeten Status in Worten, die gescheiterten und erfolgreichen Läufe in Folge, die letzte Fehlermeldung und ob eine aktivierte Extension den Check noch anbietet. Die Seite führt die Checks nicht aus und zeigt ihre Details nicht.
 
 ### Einen Check stummschalten
 
-Um einen Check während geplanter Arbeiten ruhigzustellen, schalten Sie ihn bis zu einem Datum und einer Uhrzeit stumm:
+Um einen Check während geplanter Arbeiten ruhigzustellen, schalten Sie ihn bis zu einem Datum und einer Uhrzeit stumm. Tragen Sie auf der Seite „Monitor-Checks“ das Ende im Feld „Stumm bis“ des Checks ein und speichern Sie. Zeiten werden in der Zeitzone des Browsers angezeigt und eingegeben und mit ihrem Versatz gespeichert. „Leeren“ entfernt eine Stummschaltung. Ein Ende, das nicht in der Zukunft liegt, wird abgelehnt.
+
+Mit cv:
 
 ```bash
 cv api4 Setting.set +v 'herald_monitor_snooze={"myext.disk": "2026-10-12T08:00:00"}'
@@ -82,7 +88,9 @@ Solange ein Check stummgeschaltet ist, sendet herald für ihn weder eine Fehlerm
 
 ### Erwartete Checks
 
-Wenn eine Extension deaktiviert wird, verschwinden ihre Checks aus dem Hook, und herald vergisst sie stillschweigend. Wenn Sie stattdessen benachrichtigt werden möchten, listen Sie die Checks auf, die immer vorhanden sein müssen:
+Wenn eine Extension deaktiviert wird, verschwinden ihre Checks aus dem Hook, und herald vergisst sie stillschweigend. Wenn Sie stattdessen benachrichtigt werden möchten, markieren Sie die Checks, die immer vorhanden sein müssen. Kreuzen Sie auf der Seite „Monitor-Checks“ bei einem aufgelisteten Check „Erwartet“ an, oder fügen Sie den Namen eines Checks hinzu, dessen Extension noch nicht aktiviert ist, und speichern Sie.
+
+Mit cv:
 
 ```bash
 cv api4 Setting.set +v 'herald_monitor_expected=["myext.queue", "myext.disk"]'

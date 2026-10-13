@@ -6,7 +6,8 @@ use CRM_Herald_ExtensionUtil as E;
 
 /**
  * Admin list of parked alerts. Bodies and delivery params can carry contact
- * data, so the search selects neither; Herald.reactivateParkedAlerts sends rows back.
+ * data, so the search selects neither. The reactivate task sends selected rows back
+ * (HeraldBufferedAlert.reactivate); the menu item sits in Navigation.mgd.php.
  */
 return [
   [
@@ -43,7 +44,7 @@ return [
         'saved_search_id.name' => 'Herald_Parked_Alerts',
         'type' => 'table',
         'settings' => [
-          'actions' => FALSE,
+          'actions' => ['herald_reactivate'],
           'limit' => 50,
           'pager' => ['show_count' => TRUE, 'expose_limit' => TRUE],
           'sort' => [['parked_at', 'DESC'], ['id', 'DESC']],
@@ -61,25 +62,6 @@ return [
         ],
       ],
       'match' => ['name'],
-    ],
-  ],
-  [
-    'name' => 'Navigation_Herald_Parked_Alerts',
-    'entity' => 'Navigation',
-    'cleanup' => 'unused',
-    'update' => 'unmodified',
-    'params' => [
-      'version' => 4,
-      'values' => [
-        'name' => 'herald_parked_alerts',
-        'label' => E::ts('Herald parked alerts'),
-        'url' => 'civicrm/search#/display/Herald_Parked_Alerts/Herald_Parked_Alerts_Table',
-        'permission' => 'administer CiviCRM',
-        'parent_id.name' => 'System Settings',
-        'is_active' => TRUE,
-        'domain_id' => 'current_domain',
-      ],
-      'match' => ['name', 'domain_id'],
     ],
   ],
 ];

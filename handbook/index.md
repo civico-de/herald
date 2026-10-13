@@ -45,14 +45,14 @@ A git checkout has no `vendor/` directory. Run `composer install --no-dev` in it
 
 ## First steps
 
-Create a Telegram bot with @BotFather, add it to a chat and note the chat ID. Then store both:
+Create a Telegram bot with @BotFather, add it to a chat and note the chat ID. Then store both on Administer » Herald » Settings, or with cv:
 
 ```bash
 cv setting:set herald_telegram_bot_token=<bot-token>
 cv setting:set herald_telegram_default_chat_id=<chat-id>
 ```
 
-Send a test message:
+Send a test message from Administer » Herald » Test message: choose "A channel", then Telegram, and send. Or with cv:
 
 ```bash
 cv api4 Herald.testTelegram message='<b>herald works</b>'

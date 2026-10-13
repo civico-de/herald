@@ -1,0 +1,28 @@
+<div class="herald-admin">
+  <h1 crm-page-title>{{:: $ctrl.ts('Template preview') }}</h1>
+  <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
+  <p>{{:: $ctrl.ts('Renders a herald message template with sample values. Nothing is sent.') }}</p>
+  <div ng-include="'~/heraldAdmin/messages.html'"></div>
+  <form ng-if="$ctrl.loaded" ng-submit="$ctrl.render()" novalidate>
+    <div class="herald-admin-field">
+      <label for="herald-preview-template">{{:: $ctrl.ts('Template') }}</label>
+      <select id="herald-preview-template" class="crm-form-select" ng-model="$ctrl.workflow" ng-options="t.workflow_name as t.msg_title for t in $ctrl.templates">
+        <option value="">{{:: $ctrl.ts('- select -') }}</option>
+      </select>
+    </div>
+    <div class="herald-admin-field">
+      <label for="herald-preview-vars">{{:: $ctrl.ts('Sample values (JSON)') }}</label>
+      <textarea id="herald-preview-vars" class="crm-form-textarea herald-admin-code" rows="6" ng-model="$ctrl.vars" aria-describedby="herald-preview-vars-help"></textarea>
+      <p class="description" id="herald-preview-vars-help">{{:: $ctrl.ts('A JSON object of template variables; missing variables render empty.') }}</p>
+    </div>
+    <button type="submit" class="btn btn-primary">{{:: $ctrl.ts('Render') }}</button>
+  </form>
+  <section ng-if="$ctrl.body !== undefined" aria-labelledby="herald-preview-result">
+    <h2 id="herald-preview-result">{{:: $ctrl.ts('Result') }}</h2>
+    <iframe class="herald-admin-preview" sandbox="" title="{{:: $ctrl.ts('Rendered template') }}" srcdoc="{{ $ctrl.trusted }}"></iframe>
+    <details>
+      <summary>{{:: $ctrl.ts('HTML source') }}</summary>
+      <pre>{{ $ctrl.body }}</pre>
+    </details>
+  </section>
+</div>
