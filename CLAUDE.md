@@ -1,14 +1,13 @@
 # herald
 
 Channel-pluggable notification + digest layer for CiviCRM, fired via CiviRules
-actions (no bespoke cron for alerts). Live in production.
+actions (no bespoke cron for alerts).
 
 ## Contracts to preserve
 
 - Scope boundary: herald is transport and monitor framework, not a source of
-  health checks. Checks themselves belong in `pulse` (database/cron/system/
-  updates/jobs/disk/queues/payments); herald consumes them via
-  `hook_civicrm_heraldChecks` and only reports ok↔fail transitions.
+  health checks. Other extensions contribute checks via
+  `hook_civicrm_heraldChecks`; herald only reports ok↔fail transitions.
 - Channels implement `Civi\Herald\Channel\ChannelInterface` and register in
   `ChannelRegistry`. `getConfigSchema()` is the single source of truth for a
   channel's config keys; `getSemanticFields()` maps the channel-agnostic
@@ -99,10 +98,16 @@ actions (no bespoke cron for alerts). Live in production.
 
 ## Verify
 
+`composer install` first (vendor/ is not committed), then in the civikitchen
+image:
+
 ```bash
-../civikitchen/scaffold/ckup          # template stack in .docker/, free host ports
-../civikitchen/scaffold/ckx ck ci     # every CI gate, as CI runs them
+cd .docker && docker compose up -d
+docker compose exec -w /var/www/html/ext/herald app ck ci   # every CI gate, as CI runs them
 ```
+
+With a civikitchen checkout alongside, `../civikitchen/scaffold/ckup` and
+`ckx ck ci` do the same on free host ports.
 
 Headless tests self-install into the isolated `civicrm_test` DB — no prior
 `ext:enable`, no env vars. Smoke-test real sends with `cv api4 Herald.testTelegram` /
