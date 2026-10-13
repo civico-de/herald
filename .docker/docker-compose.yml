@@ -25,10 +25,10 @@ name: herald
 
 services:
   app:
-    image: ${CIVIKITCHEN_IMAGE:-ghcr.io/jfilter/civikitchen:v1}
+    image: ${CIVIKITCHEN_IMAGE:-ghcr.io/civico-de/civikitchen:v1}
     # :v1 is the released contract image, matching the @v1 CI pin. Override
     # CIVIKITCHEN_IMAGE to pin a specific CiviCRM minor (e.g.
-    # ghcr.io/jfilter/civikitchen:standalone-6.15) for this extension. Always
+    # ghcr.io/civico-de/civikitchen:standalone-6.15) for this extension. Always
     # pull so a stale local layer doesn't mask entrypoint fixes.
     pull_policy: always
     depends_on:

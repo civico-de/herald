@@ -1,4 +1,4 @@
-$schema: https://raw.githubusercontent.com/jfilter/civikitchen/main/packages/civikitchen-scenario-schema/scenario.schema.json
+$schema: https://raw.githubusercontent.com/civico-de/civikitchen/main/packages/civikitchen-scenario-schema/scenario.schema.json
 version: 1
 policy:
   # Expected values for ckconform (the checker lives in the public civikitchen

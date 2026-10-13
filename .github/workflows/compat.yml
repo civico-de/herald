@@ -13,12 +13,12 @@ permissions:
 
 jobs:
   compat:
-    uses: jfilter/civikitchen/.github/workflows/extension-ci.yml@v1
+    uses: civico-de/civikitchen/.github/workflows/extension-ci.yml@v1
     with:
       key: herald
       composer_install: true
       # The 6.18 floor from info.xml, next to the default image.
-      matrix_images: ghcr.io/jfilter/civikitchen:standalone-6.18
+      matrix_images: ghcr.io/civico-de/civikitchen:standalone-6.18
       lifecycle: true
       upgrade_from_last_release: true
       schema_parity: true

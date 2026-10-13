@@ -23,7 +23,7 @@ jobs:
   release:
     permissions:
       contents: write        # a called workflow can only narrow this
-    uses: jfilter/civikitchen/.github/workflows/extension-release.yml@v1
+    uses: civico-de/civikitchen/.github/workflows/extension-release.yml@v1
 # END CIVIKITCHEN MANAGED caller
     with:
       # vendor/ is not committed; the archive carries the prefixed production
