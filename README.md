@@ -58,7 +58,7 @@ cv api4 Herald.publish topic=ops message='Import finished'
 
 ## Development
 
-The dev stack and every CI gate run in the [civikitchen](https://github.com/civico-de/civikitchen) Docker image. herald needs its `vendor/` directory first, so run `composer install` (PHP 8.3 or later), then:
+The dev stack and every CI gate run in the [civikitchen](https://github.com/civico-de/civikitchen) Docker image. herald needs its `vendor/` directory first, so run `composer install` (PHP 8.2 or later), then:
 
 ```bash
 cd .docker

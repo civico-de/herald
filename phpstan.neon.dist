@@ -10,7 +10,7 @@ parameters:
 	level: 10
 	# Analyse for the floor composer.json promises, not for whatever PHP the
 	# image runs — keep the two in step (ckconform: php-version-coherence).
-	phpVersion: 80300
+	phpVersion: 80200
 	# PHPDoc array shapes (APIv4 rows, decoded JSON) describe what the data
 	# IS, but defensive runtime checks (is_array on decoded JSON) must not be
 	# reported as redundant because of them. Also: PEAR-era signatures lie in
