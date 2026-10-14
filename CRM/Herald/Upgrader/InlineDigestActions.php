@@ -70,7 +70,14 @@ final class CRM_Herald_Upgrader_InlineDigestActions {
     if ($serialized === '') {
       return [];
     }
-    $params = unserialize($serialized, ['allowed_classes' => FALSE]);
+    // A malformed string makes unserialize() raise a notice besides returning FALSE.
+    set_error_handler(static fn (): bool => TRUE);
+    try {
+      $params = unserialize($serialized, ['allowed_classes' => FALSE]);
+    }
+    finally {
+      restore_error_handler();
+    }
     if (is_array($params)) {
       return Cast::namedOnly($params);
     }

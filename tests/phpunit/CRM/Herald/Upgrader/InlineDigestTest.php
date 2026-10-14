@@ -442,6 +442,83 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
     );
   }
 
+  public function testRuleActionsThatCannotMoveStayAsTheyWere(): void {
+    // A rule without a label, which only older forms could save.
+    \CRM_Core_DAO::executeQuery(
+      "INSERT INTO civirule_rule (name, label, trigger_id, is_active, created_date)
+       VALUES ('herald_test_stuck', '', (SELECT MIN(id) FROM civirule_trigger), 1, NOW())",
+    );
+    $ruleId = (int) \CRM_Core_DAO::singleValueQuery('SELECT LAST_INSERT_ID()');
+    $actionId = CiviRulesAction::get(checkPermissions: FALSE)
+      ->addWhere('name', '=', 'herald_digest')
+      ->execute()
+      ->single()['id'];
+    $create = static function (string $serialized) use ($ruleId, $actionId): int {
+      \CRM_Core_DAO::executeQuery(
+        'INSERT INTO civirule_rule_action (rule_id, action_id, action_params, is_active) VALUES (%1, %2, %3, 1)',
+        [1 => [$ruleId, 'Integer'], 2 => [$actionId, 'Integer'], 3 => [$serialized, 'String']],
+      );
+      return (int) \CRM_Core_DAO::singleValueQuery('SELECT LAST_INSERT_ID()');
+    };
+    $empty = $create('');
+    $unreadable = $create('not serialized');
+    $broken = serialize(['blocks' => '{"type": "search"']);
+    $neverRan = $create($broken);
+
+    $migrated = 0;
+    $warnings = $this->heraldWarnings(static function () use (&$migrated): void {
+      $migrated = CRM_Herald_Upgrader_InlineDigestActions::migrate();
+    });
+
+    self::assertSame(1, $migrated);
+    self::assertContains('herald: rule action params unreadable, digest left inline', $warnings);
+    $stored = static fn (int $id): string => (string) \CRM_Core_DAO::singleValueQuery(
+      'SELECT action_params FROM civirule_rule_action WHERE id = %1',
+      [1 => [$id, 'Integer']],
+    );
+    // CiviRules reads empty params as none, which sent the default digest.
+    self::assertSame(serialize(['digest' => "rule_action_{$empty}"]), $stored($empty));
+    self::assertSame("Rule action {$empty}", $this->stored("rule_action_{$empty}")['digest']['title']);
+    self::assertSame('not serialized', $stored($unreadable));
+    self::assertSame($broken, $stored($neverRan));
+  }
+
+  public function testAJobWithUnreadableParametersIsLeftAlone(): void {
+    $id = (int) Job::create(checkPermissions: FALSE)
+      ->setValues([
+        'name' => 'Broken digest',
+        'run_frequency' => 'Daily',
+        'api_entity' => 'Herald',
+        'api_action' => 'notifyDigest',
+        'parameters' => '{"version": 4,',
+      ])
+      ->execute()
+      ->single()['id'];
+    $neverRan = (int) Job::create(checkPermissions: FALSE)
+      ->setValues([
+        'name' => 'Broken blocks',
+        'run_frequency' => 'Daily',
+        'api_entity' => 'Herald',
+        'api_action' => 'notifyDigest',
+        'parameters' => json_encode(['version' => 4, 'actionParams' => ['blocks' => '{"type": "search"']]),
+      ])
+      ->execute()
+      ->single()['id'];
+
+    self::assertSame(0, CRM_Herald_Upgrader_InlineDigestJobs::migrate());
+
+    $parameters = Job::get(checkPermissions: FALSE)
+      ->addWhere('id', 'IN', [$id, $neverRan])
+      ->execute()
+      ->indexBy('id')
+      ->column('parameters');
+    self::assertSame('{"version": 4,', $parameters[$id]);
+    self::assertSame(
+      ['version' => 4, 'actionParams' => ['blocks' => '{"type": "search"']],
+      json_decode((string) $parameters[$neverRan], TRUE),
+    );
+  }
+
   public function testJobsNameTheDigestBesideTheirDelivery(): void {
     $id = (int) Job::create(checkPermissions: FALSE)
       ->setValues([
