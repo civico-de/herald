@@ -63,19 +63,9 @@ final class FieldValues {
 
   /**
    * APIv4 returns Money and Float as floats; a string cast keeps only 14 digits.
-   * The shortest form that reads back as the same float, whatever the precision ini.
    */
   private static function text(bool|float|int|string $value): string {
-    if (!is_float($value)) {
-      return Cast::toStoredString($value);
-    }
-    foreach ([15, 16] as $digits) {
-      $text = sprintf("%.{$digits}H", $value);
-      if ((float) $text === $value) {
-        return $text;
-      }
-    }
-    return sprintf('%.17H', $value);
+    return is_float($value) ? FloatText::of($value) : Cast::toStoredString($value);
   }
 
   /**

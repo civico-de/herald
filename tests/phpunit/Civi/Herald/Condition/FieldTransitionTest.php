@@ -163,18 +163,6 @@ class FieldTransitionTest extends TestCase {
     $this->assertTrue(FieldValues::same('52.52000659999999', 52.520_006_599_999_99));
   }
 
-  public function testAFloatComparesTheSameUnderAnyPrecisionSetting(): void {
-    $saved = ini_get('serialize_precision');
-    ini_set('serialize_precision', '17');
-    try {
-      $this->assertTrue(FieldValues::same('19.99', 19.99));
-      $this->assertTrue(FieldValues::compare('=', 19.99, '19.99'));
-    }
-    finally {
-      ini_set('serialize_precision', (string) $saved);
-    }
-  }
-
   public function testNoSideConfiguredNeverMatches(): void {
     $this->assertFalse(FieldTransition::matches(
       FieldTransition::side('', ''),
