@@ -11,6 +11,7 @@
     ],
     "require": {
         "php": ">=8.2",
+        "ext-bcmath": "*",
         "ext-ctype": "*",
         "ext-filter": "*",
         "ext-mbstring": "*",
