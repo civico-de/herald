@@ -51,6 +51,9 @@ services:
       # Outbound mail lands in maildev.
       CIVIKITCHEN_SMTP_HOST: maildev
       CIVIKITCHEN_SMTP_PORT: "1025"
+      # Core's German catalogue (about 100 MB, fetched on first boot): without
+      # it de_DE is no installed language and herald's own l10n/ stays unused.
+      CIVIKITCHEN_LOCALES: de_DE
     volumes:
       # Every extension mounted under ext/ is enabled on first boot, with its
       # info.xml <requires> resolved. Mount siblings the same way; use
