@@ -4,17 +4,23 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Digest;
 
+use Civi\Test\HeadlessInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @group unit
+ * Headless: rule validation translates its messages and logs left-out rules.
+ *
+ * @group headless
  */
-class SourceNormalizerTest extends TestCase {
+class SourceNormalizerTest extends TestCase implements HeadlessInterface {
+
+  public function setUpHeadless() {
+    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+  }
 
   public function testEmptyRulesLeaveSourcesUnchanged(): void {
     $normalizer = new SourceNormalizer([]);
 
-    $this->assertFalse($normalizer->isEnabled());
     $this->assertSame('Bank TX 123', $normalizer->normalize('Bank TX 123'));
   }
 

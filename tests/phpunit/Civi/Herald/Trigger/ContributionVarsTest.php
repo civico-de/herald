@@ -6,13 +6,20 @@ namespace Civi\Herald\Trigger;
 
 use Civi\Herald\Digest\ContributionStatsService;
 use Civi\Herald\Digest\SourceNormalizer;
+use Civi\Test\HeadlessInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Pure-logic tests for the contribution template variables.
- * @group unit
+ * The contribution template variables, with fake lookups. Headless: a
+ * failing campaign lookup is logged.
+ *
+ * @group headless
  */
-class ContributionVarsTest extends TestCase {
+class ContributionVarsTest extends TestCase implements HeadlessInterface {
+
+  public function setUpHeadless() {
+    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+  }
 
   /**
    * @var \ArrayObject<int, array<string, mixed>>
@@ -43,7 +50,7 @@ class ContributionVarsTest extends TestCase {
 
   /**
    * Resolver mapping: 1=Completed, 2=Pending, 3=Cancelled. */
-  private function statusResolver(): callable {
+  private function statusResolver(): \Closure {
     $map = [1 => 'Completed', 2 => 'Pending', 3 => 'Cancelled'];
     return static fn ($id) => $map[(int) $id] ?? '';
   }
@@ -51,7 +58,7 @@ class ContributionVarsTest extends TestCase {
   /**
    * @param array<int, array{title: string, goal: float}> $campaigns
    */
-  private function campaignResolver(array $campaigns): callable {
+  private function campaignResolver(array $campaigns): \Closure {
     return static fn (int $id): ?array => $campaigns[$id] ?? NULL;
   }
 
@@ -63,9 +70,12 @@ class ContributionVarsTest extends TestCase {
     return ContributionVars::build(
       $contribution,
       $previous,
-      $this->makeFakeStats(),
-      $this->statusResolver(),
-      $this->campaignResolver($campaigns),
+      new ContributionLookups(
+        $this->makeFakeStats(),
+        $this->statusResolver(),
+        $this->campaignResolver($campaigns),
+        new SourceNormalizer([]),
+      ),
     );
   }
 
@@ -90,12 +100,12 @@ class ContributionVarsTest extends TestCase {
     $vars = ContributionVars::build(
       ['id' => 1, 'source' => 'Bank TX 123', 'contribution_status_id' => 1],
       NULL,
-      $this->makeFakeStats(),
-      $this->statusResolver(),
-      $this->campaignResolver([]),
-      new SourceNormalizer([
-        ['match' => 'Bank TX', 'type' => 'contains', 'label' => 'Ueberweisung'],
-      ]),
+      new ContributionLookups(
+        $this->makeFakeStats(),
+        $this->statusResolver(),
+        $this->campaignResolver([]),
+        new SourceNormalizer([['match' => 'Bank TX', 'type' => 'contains', 'label' => 'Ueberweisung']]),
+      ),
     );
 
     $this->assertSame('Ueberweisung', $vars['contribution']['source']);
@@ -144,9 +154,11 @@ class ContributionVarsTest extends TestCase {
     $vars = ContributionVars::build(
       ['id' => 5, 'contribution_status_id' => 1, 'campaign_id' => 2],
       NULL,
-      $failingStats,
-      $this->statusResolver(),
-      $this->campaignResolver([2 => ['title' => 'Campaign 2026', 'goal' => 30_000.0]]),
+      new ContributionLookups(
+        $failingStats,
+        $this->statusResolver(),
+        $this->campaignResolver([2 => ['title' => 'Campaign 2026', 'goal' => 30_000.0]]),
+      ),
     );
     $this->assertSame(['title' => '', 'goal' => 0, 'total' => 0, 'count' => 0, 'percent' => 0], $vars['campaign']);
     $this->assertSame('Completed', $vars['to_status']);

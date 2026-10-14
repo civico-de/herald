@@ -4,13 +4,20 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Buffer;
 
+use Civi\Test\HeadlessInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Pure-logic tests for AggregateSummary::compose and AlertBuffer's narrowing helpers.
- * @group unit
+ * AggregateSummary::compose and AlertBuffer's narrowing helpers. Headless:
+ * the header is translated and the sum formatted by CiviCRM.
+ *
+ * @group headless
  */
-class AlertBufferTest extends TestCase {
+class AlertBufferTest extends TestCase implements HeadlessInterface {
+
+  public function setUpHeadless() {
+    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+  }
 
   public function testSingleBodyPassesThroughUnchanged(): void {
     $body = "🎟 Ticket verkauft: 60,00 €\nQuelle: Warenkorb";
