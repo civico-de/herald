@@ -72,6 +72,7 @@ class FieldTransitionTest extends TestCase {
       'equals empty on null' => ['=', NULL, '', TRUE],
       'equals empty on empty list' => ['=', [], ' ', TRUE],
       'not equals empty on null' => ['!=', NULL, '', FALSE],
+      'not equals empty on empty list' => ['!=', [], '', FALSE],
       'equals value on null' => ['=', NULL, 'x', FALSE],
       'equals empty on zero' => ['=', '0', '', FALSE],
     ];
