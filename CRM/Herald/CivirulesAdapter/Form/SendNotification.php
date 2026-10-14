@@ -16,7 +16,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
   class CRM_Herald_CivirulesAdapter_Form_SendNotification extends CRM_Herald_CivirulesAdapter_Form_AbstractSend {
 
     protected function getTemplateOptions(): array {
-      return CRM_Herald_CivirulesAdapter_Form_SendOptions::templates();
+      return CRM_Herald_CivirulesAdapter_SendOptions::templates();
     }
 
     protected function supportsScopeEntity(): bool {

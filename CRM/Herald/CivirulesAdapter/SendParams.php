@@ -9,7 +9,7 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 /**
  * The delivery params a send action form saves, and the checks they get first.
  */
-final class CRM_Herald_CivirulesAdapter_Form_SendParams {
+final class CRM_Herald_CivirulesAdapter_SendParams {
 
   /**
    * The checks of a topic route, on the submitted text; a blank field is unset.

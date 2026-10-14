@@ -68,20 +68,20 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
         'select',
         'delivery_mode',
         E::ts('Delivery mode'),
-        CRM_Herald_CivirulesAdapter_Form_SendOptions::deliveryModes(),
+        CRM_Herald_CivirulesAdapter_SendOptions::deliveryModes(),
         required: TRUE,
       );
       $this->add(
         'select',
         'subscription_type',
         E::ts('Subscription type (only used in subscriber mode)'),
-        CRM_Herald_CivirulesAdapter_Form_SendOptions::subscriptionTypes(),
+        CRM_Herald_CivirulesAdapter_SendOptions::subscriptionTypes(),
       );
       $this->add(
         'select',
         'group_id',
         E::ts('Group (only used in group mode)'),
-        CRM_Herald_CivirulesAdapter_Form_SendOptions::groups(),
+        CRM_Herald_CivirulesAdapter_SendOptions::groups(),
       );
       $this->add(
         'textarea',
@@ -98,7 +98,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
         'select',
         'email_location_type',
         E::ts('Preferred location type for email recipients (fallback: primary address)'),
-        CRM_Herald_CivirulesAdapter_Form_SendOptions::locationTypes(),
+        CRM_Herald_CivirulesAdapter_SendOptions::locationTypes(),
       );
       if ($this->supportsScopeEntity()) {
         $this->add(
@@ -119,7 +119,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
         'select',
         'channel',
         E::ts('Channel (direct mode only — subscribers use their own preferred channel)'),
-        CRM_Herald_CivirulesAdapter_Form_SendOptions::channels(),
+        CRM_Herald_CivirulesAdapter_SendOptions::channels(),
         required: TRUE,
       );
       // A digest's blocks bring their own templates.
@@ -167,7 +167,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
     private function errorsIn(array $values): array|bool {
       try {
         $this->getExtraValues($values);
-        $errors = CRM_Herald_CivirulesAdapter_Form_SendParams::errors($values);
+        $errors = CRM_Herald_CivirulesAdapter_SendParams::errors($values);
       }
       catch (\CRM_Core_Exception $e) {
         $errors = [$e->getMessage()];
@@ -195,7 +195,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
     public function postProcess(): void {
       /** @var array<string, mixed> $values */
       $values = $this->exportValues();
-      $params = CRM_Herald_CivirulesAdapter_Form_SendParams::of($values);
+      $params = CRM_Herald_CivirulesAdapter_SendParams::of($values);
       if (!$this->supportsScopeEntity()) {
         $params['scope_entity'] = '';
       }

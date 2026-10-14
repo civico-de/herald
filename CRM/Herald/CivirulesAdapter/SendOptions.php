@@ -9,7 +9,7 @@ use CRM_Herald_ExtensionUtil as E;
 /**
  * The option lists of herald's send action forms.
  */
-final class CRM_Herald_CivirulesAdapter_Form_SendOptions {
+final class CRM_Herald_CivirulesAdapter_SendOptions {
 
   /**
    * @return array<string, string>
