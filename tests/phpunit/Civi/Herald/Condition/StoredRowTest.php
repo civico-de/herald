@@ -42,10 +42,18 @@ class StoredRowTest extends TestCase implements HeadlessInterface, Transactional
     );
   }
 
-  public function testAnIdWithoutOptionIsKnownAndEmpty(): void {
+  /**
+   * APIv3 puts the label in place of an unpadded multi-value ID, so a value
+   * without an option cannot be told apart from such a label.
+   */
+  public function testAValueWithoutOptionIsUnknown(): void {
     $this->assertSame(
-      ['known' => TRUE, 'value' => NULL],
+      ['known' => FALSE, 'value' => NULL],
       StoredRow::value('Contact', 'gender_id:name', ['gender_id' => '999']),
+    );
+    $this->assertSame(
+      ['known' => FALSE, 'value' => NULL],
+      StoredRow::value('Contact', self::MULTI . ':name', [self::MULTI => 'Phone']),
     );
   }
 

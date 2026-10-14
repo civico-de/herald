@@ -16,7 +16,7 @@ final class StoredRow {
 
   /**
    * Serialized values and option suffixes such as :name resolve as APIv4 get
-   * resolves them, disabled options included.
+   * resolves them, disabled options included. A value without an option is unknown.
    *
    * @param array<array-key, mixed> $row
    * @return array{known: bool, value: mixed}
@@ -43,13 +43,13 @@ final class StoredRow {
         return ['known' => TRUE, 'value' => $raw];
       }
       $keys = is_array($raw) ? array_map(self::optionKey(...), $raw) : self::optionKey($raw);
-      return [
-        'known' => TRUE,
-        'value' => FormattingUtil::replacePseudoconstant(
-          FormattingUtil::getPseudoconstantList($spec, $field, $row),
-          $keys,
-        ),
-      ];
+      $value = FormattingUtil::replacePseudoconstant(
+        FormattingUtil::getPseudoconstantList($spec, $field, $row),
+        $keys,
+      );
+      // APIv3 returns the label for an unpadded multi-value ID; a miss is no answer.
+      $complete = is_array($keys) ? count((array) $value) === count($keys) : $value !== NULL;
+      return $complete ? ['known' => TRUE, 'value' => $value] : self::UNKNOWN;
     }
     catch (\CRM_Core_Exception) {
       return self::UNKNOWN;
