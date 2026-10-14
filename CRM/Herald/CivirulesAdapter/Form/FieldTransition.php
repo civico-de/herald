@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use Civi\Herald\Condition\EntityField;
 use Civi\Herald\Condition\FieldTransition;
 use Civi\Herald\Condition\FieldTransitionParams;
 use Civi\Herald\Condition\FieldTransitionWatchList;
@@ -48,20 +49,7 @@ if (class_exists('CRM_CivirulesConditions_Form_Form')) {
       catch (\CRM_Core_Exception $e) {
         return ['_qf_default' => $e->getMessage()];
       }
-      try {
-        $fields = civicrm_api4($params['entity'], 'getFields', [
-          'checkPermissions' => FALSE,
-          'where' => [['name', '=', $params['field']]],
-        ]);
-      }
-      catch (\CRM_Core_Exception $e) {
-        return ['entity' => E::ts('"%1" cannot be checked: %2', [1 => $params['entity'], 2 => $e->getMessage()])];
-      }
-      return (
-        $fields->count() > 0
-          ? TRUE
-          : ['field' => E::ts('%1 has no field "%2".', [1 => $params['entity'], 2 => $params['field']])]
-      );
+      return EntityField::errors($params['entity'], $params['field']) ?: TRUE;
     }
 
     /**

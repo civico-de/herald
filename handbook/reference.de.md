@@ -63,7 +63,7 @@ Die Bedingung „Herald: Field transition“ ist wahr, wenn der Wert eines Felde
 | Feld | Bedeutung |
 |---|---|
 | Entität | Der APIv4-Name der Entität, etwa Contribution. Kontakt-Untertypen zählen als Contact. |
-| Feld | Der APIv4-Feldname. Ein benutzerdefiniertes Feld schreiben Sie als group.field. |
+| Feld | Der APIv4-Feldname. Ein benutzerdefiniertes Feld schreiben Sie als group.field. Ein Auswahlfeld nimmt ein Suffix wie `:name`, dann wird der Name der Option statt ihrer ID verglichen, etwa bei `contribution_status_id:name`. |
 | Vorher: Operator, Vorher: Wert | Die Prüfung für den Wert vor der Änderung. |
 | Nachher: Operator, Nachher: Wert | Die Prüfung für den Wert nach der Änderung. |
 
@@ -75,7 +75,7 @@ Die Operatoren sind `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` und `not_empty`.
 - Ist nur eine Seite konfiguriert, muss sich der Wert außerdem geändert haben. Andere Änderungen an einem Datensatz, der bereits im Zielzustand ist, lösen daher nicht erneut aus.
 - Sind beide Seiten konfiguriert, entscheiden allein die beiden Prüfungen.
 
-Der Wert vor der Änderung stammt aus den Daten, die CiviRules vom Datensatz vor der Änderung aufbewahrt und die auch verzögerte Aktionen überdauern. Hat CiviRules keine, verwendet herald seine eigene Kopie, die direkt vor der Änderung entsteht. Ist der Wert dann noch unbekannt, ist die Bedingung falsch, denn eine verpasste Meldung ist besser als eine falsche. Der Wert nach der Änderung wird aus dem gespeicherten Datensatz gelesen, eine Teilaktualisierung, die das Feld nicht geschrieben hat, wird also nach seinem tatsächlichen Wert beurteilt.
+Der Wert vor der Änderung stammt aus den Daten, die CiviRules vom Datensatz vor der Änderung aufbewahrt und die auch verzögerte Aktionen überdauern. Hat CiviRules keine, verwendet herald seine eigene Kopie, die direkt vor der Änderung entsteht. Für ein Feld mit Suffix bewahrt CiviRules keinen Wert auf, dort ist die Kopie die einzige Quelle. Ist der Wert dann noch unbekannt, ist die Bedingung falsch, denn eine verpasste Meldung ist besser als eine falsche. Der Wert nach der Änderung wird aus dem gespeicherten Datensatz gelesen, eine Teilaktualisierung, die das Feld nicht geschrieben hat, wird also nach seinem tatsächlichen Wert beurteilt.
 
 herald kopiert nur Felder, die aktive Regeln beobachten. Ein lange laufender Queue- oder Kommandozeilen-Worker sieht ein neu konfiguriertes Feld erst nach einem Neustart.
 

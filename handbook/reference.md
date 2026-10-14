@@ -63,7 +63,7 @@ The condition "Herald: Field transition" is true when a field's value before and
 | Field | Meaning |
 |---|---|
 | Entity | The APIv4 entity name, such as Contribution. Contact subtypes count as Contact. |
-| Field | The APIv4 field name. A custom field is written as group.field. |
+| Field | The APIv4 field name. A custom field is written as group.field. An option field takes a suffix such as `:name` to compare the option's name instead of its ID, for example `contribution_status_id:name`. |
 | Before: operator, Before: value | The test for the value before the edit. |
 | After: operator, After: value | The test for the value after the edit. |
 
@@ -75,7 +75,7 @@ The operators are `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` and `not_empty`. "
 - With only one side configured, the value must also have changed. Unrelated edits of a record that is already in the target state therefore do not fire again.
 - With both sides configured, the two tests alone decide.
 
-The value before the edit comes from the data CiviRules keeps of the record before the change, which also survives delayed actions. When CiviRules has none, herald uses its own copy taken just before the edit. When the value is still unknown, the condition is false, because a missed alert is better than a false one. The value after the edit is read from the stored record, so a partial update that did not write the field is judged by its real value.
+The value before the edit comes from the data CiviRules keeps of the record before the change, which also survives delayed actions. When CiviRules has none, herald uses its own copy taken just before the edit. CiviRules keeps no value for a field with a suffix, so there the copy is the only source. When the value is still unknown, the condition is false, because a missed alert is better than a false one. The value after the edit is read from the stored record, so a partial update that did not write the field is judged by its real value.
 
 herald takes its copy only of fields that active rules watch. A long-running queue or command line worker sees a newly configured field only after a restart.
 

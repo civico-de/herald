@@ -74,6 +74,19 @@ class FieldTransitionSnapshotterTest extends TestCase implements HeadlessInterfa
     $this->assertNull(PreEditSnapshot::get('Contact', $id, 'no_such_field'));
   }
 
+  public function testAnOptionSuffixReadsTheOptionName(): void {
+    $id = $this->contactId();
+    $this->watch('Contact', 'contact_type:name');
+
+    FieldTransitionSnapshotter::capture('Organization', $id);
+
+    $this->assertSame('Organization', PreEditSnapshot::get('Contact', $id, 'contact_type:name'));
+    $this->assertSame(
+      ['known' => TRUE, 'value' => 'Organization'],
+      FieldTransitionSnapshotter::currentValue('Contact', $id, 'contact_type:name'),
+    );
+  }
+
   public function testUnreadableEntitySkipsTheSnapshot(): void {
     $this->watch('NoSuchEntity', 'status');
 

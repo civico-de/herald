@@ -319,6 +319,12 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     return [
       'unknown entity' => [['entity' => 'Membershipp'], 'entity', '"Membershipp" cannot be checked'],
       'unknown field' => [['field' => 'statusid'], 'field', 'Membership has no field "statusid".'],
+      'unknown suffix' => [['field' => 'status_id:nam'], 'field', 'Membership.status_id has no option suffix ":nam".'],
+      'suffix without options' => [
+        ['field' => 'join_date:name'],
+        'field',
+        'Membership.join_date has no option suffix ":name".',
+      ],
       'unknown operator' => [['to_operator' => '=='], '_qf_default', 'unknown field transition operator "=="'],
     ];
   }
@@ -336,9 +342,24 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     $this->assertStringContainsString($error, (string) ($form->_errors[$element] ?? ''));
   }
 
-  public function testACheckableTransitionPasses(): void {
+  /**
+   * @return array<string, array{array<string, string>}>
+   */
+  public static function checkableTransitions(): array {
+    return [
+      'core field' => [[]],
+      'option suffix' => [['field' => 'status_id:name', 'from_value' => 'Grace', 'to_value' => 'Expired']],
+      'custom field' => [['entity' => 'Contact', 'field' => 'herald_preferences.preferred_channel']],
+    ];
+  }
+
+  /**
+   * @dataProvider checkableTransitions
+   * @param array<string, string> $change
+   */
+  public function testACheckableTransitionPasses(array $change): void {
     $form = $this->transitionForm();
-    $form->_submitValues = self::TRANSITION;
+    $form->_submitValues = array_replace(self::TRANSITION, $change);
     $form->_flagSubmitted = TRUE;
 
     $this->assertTrue($form->validate(), json_encode($form->_errors, JSON_THROW_ON_ERROR));
