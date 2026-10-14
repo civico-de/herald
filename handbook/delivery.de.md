@@ -35,7 +35,7 @@ Zwei Optionen gelten für die Kontaktmodi, also Abonnent:innen und Gruppe:
 | `respect_suspension` | aus | Auch E-Mail-Empfänger:innen überspringen, die sich abgemeldet haben oder deren Adresse gesperrt ist. |
 | `email_location_type` | primär | An die E-Mail-Adresse des Kontakts mit diesem Adresstyp senden. Kontakte ohne eine solche Adresse erhalten die Nachricht an ihre primäre Adresse. |
 
-Kontakte, die wegen einer Sperre oder eines nicht passenden Bezugs übersprungen werden, zählt ein Info-Eintrag im CiviCRM-Protokoll. Im Abonnent:innen-Modus werden Kontakte ohne verwendbaren Kanal ohne Protokolleintrag ausgelassen.
+Ein Info-Eintrag im CiviCRM-Protokoll zählt die ausgelassenen Kontakte nach Grund: `suspended` (gesperrt), `scope_mismatch` (Bezug passt nicht), `no_channel` (kein Kanal gewählt) und `no_recipient` (keine Adresse, kein Chat, kein Topic für den Kanal).
 
 Schlägt die Zustellung an eine Empfänger:in fehl, hält das die übrigen nicht auf. herald protokolliert eine Warnung und macht mit dem nächsten Kontakt weiter. Die Zustellung als Ganzes schlägt nur fehl, wenn alle Empfänger:innen fehlgeschlagen sind oder wenn es niemanden gab, an den gesendet werden konnte: keine Abonnent:innen, eine leere Gruppe oder eine leere Adressliste. Sobald mindestens eine Empfänger:in die Nachricht erhalten hat, gilt die Zustellung als erledigt, und die fehlgeschlagenen Empfänger:innen werden nicht erneut versucht.
 

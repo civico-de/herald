@@ -35,7 +35,7 @@ Two options apply to the contact modes, subscribers and group:
 | `respect_suspension` | off | Also skip email recipients who opted out or whose address is on hold. |
 | `email_location_type` | primary | Send to the contact's email of this location type. Contacts without one get their primary address. |
 
-Contacts skipped because of a suspension or a scope that does not match are counted in an info entry of the CiviCRM log. In subscriber mode, contacts without a usable channel are left out without a log entry.
+An info entry in the CiviCRM log counts the contacts left out, by reason: `suspended`, `scope_mismatch`, `no_channel` (no channel chosen) and `no_recipient` (no address, chat or topic for the channel).
 
 One failing recipient does not stop the others. herald logs a warning and moves on to the next contact. The delivery as a whole fails only when every recipient failed, or when there was nobody to send to: no subscriber, an empty group or an empty address list. Once at least one recipient got the message, the delivery counts as done and the failed recipients are not retried.
 

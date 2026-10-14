@@ -7,7 +7,7 @@ namespace Civi\Herald\Subscribers;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Pure-logic tests for SubscriberLookup::mapRows / buildConfigForChannel.
+ * How SubscriberLookup maps query rows to recipients.
  * @group unit
  */
 class SubscriberLookupTest extends TestCase {
@@ -133,6 +133,25 @@ class SubscriberLookupTest extends TestCase {
     ]);
     $rows = [$row];
     $this->assertSame([], SubscriberLookup::mapRows($rows));
+  }
+
+  public function testEveryLeftOutContactIsCountedByReason(): void {
+    $rows = [
+      $this->row(['id' => 1]),
+      $this->row(['id' => 2, 'herald_preferences.preferred_channel' => 'telegram']),
+      $this->row(['id' => 3, 'herald_preferences.preferred_channel' => 'matrix']),
+      $this->row(['id' => 4, 'herald_preferences.preferred_channel' => 'email']),
+      $this->row([
+        'id' => 5,
+        'herald_preferences.preferred_channel' => 'email',
+        'email_primary.email' => 'a@example.org',
+        'do_not_email' => TRUE,
+      ]),
+    ];
+    $this->assertSame(
+      ['recipients' => [], 'skipped' => ['no_channel' => 1, 'no_recipient' => 3, 'suspended' => 1]],
+      SubscriberLookup::mapRowsDetailed($rows),
+    );
   }
 
   public function testUnknownChannelSkipped(): void {

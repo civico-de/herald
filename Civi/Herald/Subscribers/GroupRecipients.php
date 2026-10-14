@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Subscribers;
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+
 /**
  * Resolves the members of a CiviCRM group into dispatch instructions.
  *
@@ -17,34 +19,16 @@ class GroupRecipients {
 
   /**
    * @param int $groupId Static or smart group id (APIv4 "groups" semantics).
-   * @param array<string, mixed> $options Same options bag as SubscriberLookup:
-   *   respect_suspension, location_type_id.
+   * @param array<string, mixed> $options respect_suspension (bool),
+   *   location_type_id (int, 0 = primary).
    * @return array<int, array{contact_id: int, channel: string, config: array<string, mixed>}>
    */
   public function findByGroup(int $groupId, array $options = []): array {
     if ($groupId <= 0) {
       return [];
     }
-    $query = \Civi\Api4\Contact::get(checkPermissions: FALSE)
-      ->addSelect(
-        'id',
-        'herald_preferences.preferred_channel',
-        'herald_preferences.telegram_chat_id',
-        'herald_preferences.pushover_user_key',
-        'herald_preferences.ntfy_topic',
-        'herald_preferences.webhook_url',
-        'email_primary.email',
-        'email_primary.on_hold',
-        'do_not_email',
-        'is_opt_out',
-      )
-      ->addWhere('is_deleted', '=', value: FALSE)
-      ->addWhere('is_deceased', '=', value: FALSE)
-      ->addWhere('groups', 'IN', [$groupId]);
-    SubscriberLookup::addLocationEmailJoin($query, $options);
     /** @var array<int, array<string, mixed>> $rows */
-    $rows = $query->execute()->getArrayCopy();
-
+    $rows = ContactRows::query($options)->addWhere('groups', 'IN', [$groupId])->execute()->getArrayCopy();
     $mapped = self::mapGroupRows($rows, $options);
     if ($mapped['skipped'] !== []) {
       \Civi::log()->info('herald: group fan-out skipped recipients', [
@@ -72,25 +56,20 @@ class GroupRecipients {
     $bump = static function (string $reason) use (&$skipped): void {
       $skipped[$reason] = ($skipped[$reason] ?? 0) + 1;
     };
-    foreach (SubscriberLookup::groupRowsByContact($rows) as $contactRows) {
+    foreach (ContactRows::byContact($rows) as $contactRows) {
       // The location-email join can duplicate a contact (several addresses of
       // that location type); preference fields are identical on every row, so
       // the first speaks for the contact — but email deliverability must be
       // judged across ALL of a contact's rows, not just the first.
       $row = $contactRows[0];
-      $contactId = is_scalar($row['id'] ?? NULL) ? (int) $row['id'] : 0;
-      $channel = is_scalar($row['herald_preferences.preferred_channel'] ?? NULL)
-        ? (string) $row['herald_preferences.preferred_channel']
-        : '';
-      $config =
-        $channel !== '' && $channel !== 'email'
-          ? SubscriberLookup::buildConfigForChannel($channel, $row)
-          : NULL;
+      $contactId = Cast::toInt($row['id'] ?? 0);
+      $channel = Cast::toString($row['herald_preferences.preferred_channel'] ?? '');
+      $config = $channel !== 'email' ? ContactRows::channelConfig($channel, $row) : NULL;
       if ($config === NULL) {
         // Email path: preferred channel email, or the fallback for contacts
         // without (usable) preferences — their own resolved address.
         $channel = 'email';
-        $delivery = SubscriberLookup::resolveEmailDeliveryRows($contactRows, $options);
+        $delivery = EmailRecipient::of($contactRows, $options);
         if ($delivery['suspended']) {
           $bump('suspended');
           continue;
