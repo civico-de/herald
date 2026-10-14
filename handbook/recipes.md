@@ -107,7 +107,7 @@ A weekly contribution digest every Monday at 8:00:
 3. In the trigger's form, choose Monday under Weekdays and 08:00 under Time. Leave Weekdays empty to send every day. The time is in CiviCRM's timezone.
 4. Add the action "Herald: Send digest", pick the digest, and set the channel and, for Telegram, the chat ID.
 
-The rule list shows the schedule as "Every Monday at 08:00" and the action as "Sends the digest "Weekly contributions"". For a daily digest, leave Weekdays empty and give the digest the period "Yesterday" and the template "Herald: Daily contribution digest".
+The rule list shows the schedule as "Every Monday at 08:00" and the action as `Sends the digest "Weekly contributions".` For a daily digest, leave Weekdays empty and give the digest the period "Yesterday" and the template "Herald: Daily contribution digest".
 
 The trigger is checked each time CiviRules' scheduled job runs, so the digest goes out with the first cron run after the full hour. Whether a slot has been sent is read from the rule's own log:
 

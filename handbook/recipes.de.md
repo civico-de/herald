@@ -104,12 +104,12 @@ Ein Report, der zu einer festen Zeit verschickt wird, ist eine CiviRules-Regel m
 
 Ein wöchentlicher Beitragsreport jeden Montag um 8:00 Uhr:
 
-1. Legen Sie unter Administrieren » Herald » Reports einen Report mit dem Titel „Weekly contributions“, dem Namen `weekly_contributions`, dem Zeitraum „Letzte 7 Tage“ und einem Beitragsblock mit der Vorlage „Herald: Wöchentlicher Beitragsreport“.
+1. Legen Sie unter Administrieren » Herald » Reports einen Report mit dem Titel „Weekly contributions“, dem Namen `weekly_contributions`, dem Zeitraum „Letzte 7 Tage“ und einem Beitragsblock mit der Vorlage „Herald: Wöchentlicher Beitragsreport“ an.
 2. Legen Sie eine CiviRules-Regel an und wählen Sie den Trigger „Herald: Schedule“.
 3. Wählen Sie im Formular des Triggers unter „Wochentage“ den Montag und unter „Uhrzeit“ 08:00. Bleibt „Wochentage“ leer, geht der Report jeden Tag hinaus. Die Uhrzeit gilt in der Zeitzone von CiviCRM.
 4. Fügen Sie die Aktion „Herald: Send digest“ hinzu, wählen Sie den Report, und setzen Sie den Kanal und bei Telegram die Chat-ID.
 
-Die Regelliste zeigt den Zeitplan als „Jeden Montag um 08:00“ und die Aktion als „Verschickt den Report „Weekly contributions““. Für einen täglichen Report lassen Sie „Wochentage“ leer und geben dem Report den Zeitraum „Gestern“ und die Vorlage „Herald: Täglicher Beitragsreport“.
+Die Regelliste zeigt den Zeitplan als „Jeden Montag um 08:00“ und die Aktion als `Verschickt den Report „Weekly contributions“.` Für einen täglichen Report lassen Sie „Wochentage“ leer und geben dem Report den Zeitraum „Gestern“ und die Vorlage „Herald: Täglicher Beitragsreport“.
 
 Der Trigger wird bei jedem Lauf des geplanten Jobs von CiviRules geprüft, der Report geht also mit dem ersten Cron-Lauf nach der vollen Stunde hinaus. Ob ein Termin schon verschickt wurde, steht im Protokoll der Regel selbst:
 

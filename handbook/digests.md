@@ -7,7 +7,7 @@ routes:
 
 # Digests
 
-A digest sums up what happened over a period in one message: yesterday's donations, last week's new members, the seats another extension has booked. Each digest is a record with a name, and a list of blocks that are rendered one after another:
+A digest sums up a period in one message, for example yesterday's donations. Each digest is a record with a name, and a list of blocks that are rendered one after another:
 
 | Block type | Content | Default template |
 |---|---|---|
@@ -24,11 +24,19 @@ Digests are under Administer » Herald » Digests. "Add digest" opens the form, 
 - **Period** applies to every block that does not set its own: yesterday, today, the last 7 days or the last 30 days.
 - **Header** is an optional line above the blocks, inserted as HTML, for example `📊 <b>Daily report</b>`.
 
-Below these come the blocks, at least one, in the order they appear in the message. Every block has a type, a title, its own period if it needs one, and a template. Leave the template empty to use the block type's default. The other fields depend on the type and are described under [Block types](#block-types).
+Below these come the blocks, at least one, in the order they appear in the message. Every block has a type, a title and, if it needs one, its own period. Contribution and saved search blocks also take a template. Leave it empty to use the block type's default. The other fields depend on the type and are described under [Block types](#block-types).
 
-Saving checks the whole digest before anything is written. The form refuses a name that is taken or has the wrong characters, a saved search block without a search, a section block without a key, a bucket count below 1, and histogram edges that are not at least two numbers in ascending order. Each message names the block, for example "Block 2: a saved search block needs a saved search." Through APIv4 the same checks apply to each `HeraldDigest` and `HeraldDigestBlock` record. A digest saved there without blocks fails when it is sent.
+Saving checks the whole digest before anything is written. The form refuses:
 
-Scripts and deploys can create a digest with cv. The chain saves the blocks in the order given, and `--in=json` reads the JSON from standard input, because cv takes JSON on the command line only in one line:
+- a name that is taken or has the wrong characters,
+- a saved search block without a search,
+- a section block without a key,
+- a bucket count below 1,
+- histogram edges that are not at least two numbers in ascending order.
+
+A message about a block names it, for example "Block 2: a saved search block needs a saved search." Through APIv4 the same checks apply to each `HeraldDigest` and `HeraldDigestBlock` record. A digest saved there without blocks fails when it is sent.
+
+Scripts and deploys can create a digest with cv. The chain saves the blocks in the order given. JSON spread over several lines has to come through standard input, hence `--in=json`:
 
 ```bash
 cv api4 --in=json HeraldDigest.create <<'JSON'
@@ -47,19 +55,19 @@ JSON
 
 ### What a change breaks
 
-Rules and scripts name a digest. After you rename or delete one, they fail with "Digest "weekly_report" does not exist." until they name another. The rule list shows the same message in place of the digest's title, so a broken rule is easy to spot.
+Rules and scripts pick a digest by its name. After you change a digest's name or delete it, they fail with the message `Digest "weekly_report" does not exist.` until they name another. The rule list shows the same message in place of the digest's title. The title can change freely.
 
-A campaign or a financial type that a block filters on cannot be deleted while the block exists. Without its filter the block would count every contribution. Change or remove the block first.
+A campaign or a financial type that a block filters on cannot be deleted while the block exists, and the attempt ends in a database error. Without its filter the block would count every contribution. Change or remove the block first.
 
 A saved search can be deleted. The block that used it keeps no search, and the digest fails when it is sent, with the message the form would have shown. Pick another search or remove the block.
 
 ## Sending a digest
 
 - A CiviRules rule with the trigger "Herald: Schedule" and the action "Herald: Send digest" sends a daily or weekly digest at a set hour. [Scheduled digests](recipes.md#scheduled-digests) shows the setup.
-- The action "Herald: Send digest" works with any other trigger too, and sends the digest each time that trigger fires.
+- The action "Herald: Send digest" works with any other trigger too, and sends the digest each time that trigger fires. The action picks the digest from a list and holds the delivery settings.
 - Scripts and the server's crontab can call the API action `Herald.notifyDigest` directly.
 
-The action picks the digest from a list and holds the delivery settings. All three ways support every [delivery mode](delivery.md#delivery-modes).
+All three ways support every [delivery mode](delivery.md#delivery-modes).
 
 `Herald.notifyDigest` takes:
 
@@ -132,9 +140,9 @@ The answer is inserted as HTML, so the listener escapes its own data. An empty a
 
 ## Digests from older releases
 
-Older releases kept a digest inside the settings of its rule action or scheduled job. The upgrade turns each of them into a record and leaves only the delivery settings and the digest's name in the action. A rule action's digest is named `rule_action_<id>` and takes the rule's title, a job's digest is named `job_<id>` and takes the job's name. Rename them afterwards if you like, and update the jobs and scripts that name them.
+Older releases kept a digest inside the settings of its rule action or scheduled job. The upgrade turns each of them into a record and leaves only the delivery settings and the digest's name in the action. A rule action's digest is named `rule_action_<id>` and takes the rule's title, a job's digest is named `job_<id>` and takes the job's name. You can rename them afterwards. Then pick the digest again in each rule action that sent it, and update the jobs and scripts that name it.
 
-The upgrade keeps what the digest sent before. A period herald did not know was read as yesterday, and it still is. A digest that could never have run is left as it was, and the upgrade log has the warning "digest left inline, it cannot run until fixed" with the reason: a block list that is not valid JSON, a saved search, campaign or financial type that no longer exists, or a contribution status filter, which records no longer have. Such a rule fails until you pick a digest in its action.
+The upgrade keeps what the digest sent before. A period herald did not know was read as yesterday, and it still is. A digest that could never have run is left as it was, and the upgrade log has the warning "digest left inline, it cannot run until fixed" with the reason. Examples are a block list that is not a JSON array of objects, a block of unknown type, a section block without a key, a saved search, campaign or financial type that no longer exists, and a contribution status filter, which records no longer have. Such a rule or job fails until it names a digest.
 
 The digest form is an Afform, so herald needs the extension Form Core (`org.civicrm.afform`). Enable it before you upgrade herald on a site that does not have it yet.
 
@@ -147,11 +155,13 @@ The rules are under Administer » Herald » Contribution source names. Each row 
 With cv:
 
 ```bash
-cv api4 Setting.set +v 'herald_source_normalization=[
+cv api4 --in=json Setting.set <<'JSON'
+{"values": {"herald_source_normalization": [
   {"match": "Bank TX", "type": "contains", "label": "Bank transfer"},
   {"match": "Ueberweisung", "type": "prefix", "label": "Bank transfer"},
   {"match": "/^pi_[A-Za-z0-9]+$/", "type": "regex", "label": "Stripe"}
-]'
+]}}
+JSON
 ```
 
 - The rules are tried in order, and the first match wins.

@@ -41,7 +41,7 @@ To get a message for every completed contribution, create a CiviRules rule:
 
 A weekly summary with an amount histogram is a rule on herald's own trigger:
 
-1. Under Administer » Herald » Digests, a digest with the period "Last 7 days" and one contribution block with the template "Herald: Weekly contribution digest".
+1. Digest under Administer » Herald » Digests with the period "Last 7 days" and one contribution block with the template "Herald: Weekly contribution digest".
 2. Trigger "Herald: Schedule" with Monday under Weekdays and 08:00 under Time.
 3. Action "Herald: Send digest" with that digest and the channel Telegram.
 

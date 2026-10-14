@@ -99,11 +99,13 @@ The routes are under Administer » Herald » Topic routes. The list shows each t
 To set all routes at once with cv:
 
 ```bash
-cv api4 Setting.set +v 'herald_topics={
+cv api4 --in=json Setting.set <<'JSON'
+{"values": {"herald_topics": {
   "default": {"channel": "telegram"},
   "ops":     {"channel": "telegram", "chat_id": "-100…"},
   "revenue": {"channel": "telegram", "chat_id": "-100…", "aggregate_minutes": 5}
-}'
+}}}
+JSON
 ```
 
 Then publish:

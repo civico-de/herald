@@ -94,16 +94,18 @@ Ein Einstellungsdatensatz ohne Bezug erhält alles, was er abonniert hat. Ein Da
 
 Bei Topics nennt die veröffentlichende Stelle ein Topic, und die Einstellung `herald_topics` entscheidet über Kanal, Ziel und Sammeln. Ein Skript oder eine andere Extension muss also nie eine Chat-ID oder eine URL kennen.
 
-Die Routen finden Sie unter „Administer » Herald » Topic routes“ (Administrieren » Herald » Topic-Routen). Die Liste zeigt jedes Topic mit seinem Kanal, seinem Zustellmodus und seinem Sammelfenster. „Topic hinzufügen“ und „Bearbeiten“ öffnen ein Formular mit den Zustellfeldern und den Optionen des Kanals, den das Topic am Ende nutzt, so wie der Kanal sie deklariert. Schlüssel ohne eigenes Feld, etwa `channel_config`, gehören als JSON-Objekt in „Weitere Parameter“. Beim Speichern wird die Route geprüft, und bei einem Problem wird nichts gespeichert: ein nicht registrierter Kanal, ein Wert vom falschen Typ, ein Zustellmodus ohne seinen Pflichtparameter oder ein bereits vergebener Topic-Name. Ein umbenanntes Topic behält seinen Platz in der Liste. „Löschen“ fragt vorher nach; wer an ein gelöschtes Topic veröffentlicht, nutzt dann die Route default.
+Die Routen finden Sie unter Administrieren » Herald » Topic-Routen. Die Liste zeigt jedes Topic mit seinem Kanal, seinem Zustellmodus und seinem Sammelfenster. „Topic hinzufügen“ und „Bearbeiten“ öffnen ein Formular mit den Zustellfeldern und den Optionen des Kanals, den das Topic am Ende nutzt, so wie der Kanal sie deklariert. Schlüssel ohne eigenes Feld, etwa `channel_config`, gehören als JSON-Objekt in „Weitere Parameter“. Beim Speichern wird die Route geprüft, und bei einem Problem wird nichts gespeichert: ein nicht registrierter Kanal, ein Wert vom falschen Typ, ein Zustellmodus ohne seinen Pflichtparameter oder ein bereits vergebener Topic-Name. Ein umbenanntes Topic behält seinen Platz in der Liste. „Löschen“ fragt vorher nach; wer an ein gelöschtes Topic veröffentlicht, nutzt dann die Route default.
 
 So setzen Sie alle Routen auf einmal mit cv:
 
 ```bash
-cv api4 Setting.set +v 'herald_topics={
+cv api4 --in=json Setting.set <<'JSON'
+{"values": {"herald_topics": {
   "default": {"channel": "telegram"},
   "ops":     {"channel": "telegram", "chat_id": "-100…"},
   "revenue": {"channel": "telegram", "chat_id": "-100…", "aggregate_minutes": 5}
-}'
+}}}
+JSON
 ```
 
 Dann veröffentlichen Sie:
@@ -139,7 +141,7 @@ Ein Wert über 0 legt die gerenderte Meldung in der Tabelle `civicrm_herald_buff
 
 Eine wartende Gruppe, deren Zustellung fehlschlägt, bleibt im Puffer und wird beim nächsten Cron-Lauf erneut versucht. Nach `herald_buffer_max_attempts` fehlgeschlagenen Versuchen, standardmäßig 5, parkt herald sie. Eine Gruppe, für die es niemanden gibt, an den gesendet werden kann, wird sofort geparkt, weil ein weiterer Versuch nicht helfen kann. Verloren geht nichts. Geparkte Meldungen bleiben in der Tabelle, bis jemand sie wieder aktiviert.
 
-„Administer » Herald » Parked alerts“ (Administrieren » Herald » Geparkte Meldungen) listet sie auf. Die Liste ist eine SearchKit-Anzeige auf der schreibgeschützten Entität `HeraldBufferedAlert`. Um Meldungen wieder zu aktivieren, wählen Sie ihre Zeilen aus und im Aktionsmenü „Geparkte Meldungen reaktivieren“; die Rückfrage nennt die Anzahl der Meldungen. Weder die Anzeige noch `Herald.getParkedAlerts` zeigt Nachrichtentexte oder Zustellparameter, weil diese Kontaktdaten enthalten können.
+Die Seite Administrieren » Herald » Geparkte Meldungen listet sie auf. Die Liste ist eine SearchKit-Anzeige auf der schreibgeschützten Entität `HeraldBufferedAlert`. Um Meldungen wieder zu aktivieren, wählen Sie ihre Zeilen aus und im Aktionsmenü „Geparkte Meldungen reaktivieren“; die Rückfrage nennt die Anzahl der Meldungen. Weder die Anzeige noch `Herald.getParkedAlerts` zeigt Nachrichtentexte oder Zustellparameter, weil diese Kontaktdaten enthalten können.
 
 So listen Sie geparkte Meldungen mit cv auf und aktivieren sie wieder:
 

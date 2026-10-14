@@ -21,7 +21,7 @@ Ein Kanal stellt eine Nachricht an genau ein Ziel zu: einen Chat, ein Smartphone
 
 ## Einen Kanal konfigurieren
 
-Zugangsdaten und Ersatzempfänger sind Einstellungen. Die meisten davon finden Sie auf der Einstellungsseite von herald, „Administer » Herald » Settings“ (Administrieren » Herald » Einstellungen). Sie können die Einstellungen auch mit cv setzen:
+Zugangsdaten und Ersatzempfänger sind Einstellungen. Die meisten davon finden Sie auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen. Sie können die Einstellungen auch mit cv setzen:
 
 ```bash
 cv setting:set herald_telegram_bot_token=<bot-token>
@@ -126,7 +126,7 @@ herald prüft jede URL vor dem Senden:
 - Standardmäßig darf sie nicht auf eine private, reservierte, link-lokale oder Cloud-Metadaten-Adresse auflösen.
 - Anfragen folgen keinen Weiterleitungen, geben Sie also die endgültige URL an.
 
-Um die Zustellung auf bekannte Dienste zu beschränken, tragen Sie deren Hostnamen unter „Administer » Herald » Webhook allowed hosts“ (Erlaubte Webhook-Hosts) ein, einen pro Zeile. Beim Speichern werden Einträge mit `https://`, einem Pfad oder einem Port und ungültige Hostnamen abgelehnt. Mit cv setzen Sie `herald_webhook_allowed_hosts`, zum Beispiel `["hooks.slack.com"]`. Subdomains eines eingetragenen Hosts sind ebenfalls erlaubt. Sobald die Liste nicht leer ist, werden nur diese Hosts erreicht, und sie dürfen auch interne Adressen haben.
+Um die Zustellung auf bekannte Dienste zu beschränken, tragen Sie deren Hostnamen unter Administrieren » Herald » Erlaubte Webhook-Hosts ein, einen pro Zeile. Beim Speichern werden Einträge mit `https://`, einem Pfad oder einem Port und ungültige Hostnamen abgelehnt. Mit cv setzen Sie `herald_webhook_allowed_hosts`, zum Beispiel `["hooks.slack.com"]`. Subdomains eines eingetragenen Hosts sind ebenfalls erlaubt. Sobald die Liste nicht leer ist, werden nur diese Hosts erreicht, und sie dürfen auch interne Adressen haben.
 
 ## ntfy
 
@@ -196,7 +196,7 @@ Typ und Status sind Optionsnamen, keine Zahlen, und müssen auf der Site aktiv s
 
 ## Testnachricht
 
-„Administer » Herald » Test message“ (Administrieren » Herald » Testnachricht) sendet eine echte Nachricht. „Einen Kanal“ sendet über einen Kanal an den Empfänger und mit den Optionen, die Sie auf der Seite eintragen; leere Felder übernehmen die Standardwerte der Einstellungsseite. „Eine Topic-Route“ veröffentlicht über eine Route, wie eine Meldung sie nehmen würde. Eine Route, die sammelt, puffert die Nachricht bis zum nächsten Flush, und die Seite sagt das.
+Die Seite Administrieren » Herald » Testnachricht sendet eine echte Nachricht. „Einen Kanal“ sendet über einen Kanal an den Empfänger und mit den Optionen, die Sie auf der Seite eintragen; leere Felder übernehmen die Standardwerte der Einstellungsseite. „Eine Topic-Route“ veröffentlicht über eine Route, wie eine Meldung sie nehmen würde. Eine Route, die sammelt, puffert die Nachricht bis zum nächsten Flush, und die Seite sagt das.
 
 Eingabefehler listet die Seite auf. Einen Zustellfehler des Kanals selbst sehen Benutzer:innen mit der Berechtigung „view debug output“ vollständig. Alle anderen sehen eine Fehler-ID, unter der das CiviCRM-Protokoll die Meldung enthält.
 
@@ -207,7 +207,7 @@ cv api4 Herald.send channel=ntfy message='herald works' config='{"ntfy_topic": "
 cv api4 Herald.publish topic=ops message='herald works'
 ```
 
-„Administer » Herald » Template preview“ (Vorlagenvorschau) rendert eine herald-Vorlage mit Beispielwerten als JSON-Objekt und sendet nichts, wie `Herald.renderTemplate`.
+Die Seite Administrieren » Herald » Vorlagenvorschau rendert eine herald-Vorlage mit Beispielwerten als JSON-Objekt und sendet nichts, wie `Herald.renderTemplate`.
 
 ## Fehler
 

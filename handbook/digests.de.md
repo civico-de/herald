@@ -7,7 +7,7 @@ routes:
 
 # Reports
 
-Ein Report (im Code Digest genannt) fasst in einer Nachricht zusammen, was in einem Zeitraum passiert ist: die Spenden von gestern, die neuen Mitglieder der letzten Woche, die Plätze, die eine andere Extension gebucht hat. Jeder Report ist ein Datensatz mit einem Namen und einer Liste von Blöcken, die nacheinander gerendert werden:
+Ein Report (im Code Digest genannt) fasst einen Zeitraum in einer Nachricht zusammen, zum Beispiel die Spenden von gestern. Jeder Report ist ein Datensatz mit einem Namen und einer Liste von Blöcken, die nacheinander gerendert werden:
 
 | Blocktyp | Inhalt | Standardvorlage |
 |---|---|---|
@@ -24,11 +24,19 @@ Die Reports finden Sie unter Administrieren » Herald » Reports. „Report hinz
 - **Zeitraum** gilt für jeden Block, der keinen eigenen setzt: gestern, heute, die letzten 7 oder die letzten 30 Tage.
 - **Kopfzeile** ist eine optionale Zeile über den Blöcken. Sie wird als HTML eingefügt, zum Beispiel `📊 <b>Daily report</b>`.
 
-Darunter folgen die Blöcke, mindestens einer, in der Reihenfolge, in der sie in der Nachricht stehen. Jeder Block hat einen Typ, einen Titel, bei Bedarf einen eigenen Zeitraum und eine Vorlage. Bleibt die Vorlage leer, gilt die Standardvorlage des Blocktyps. Die übrigen Felder hängen vom Typ ab und sind unter [Blocktypen](#blocktypen) beschrieben.
+Darunter folgen die Blöcke, mindestens einer, in der Reihenfolge, in der sie in der Nachricht stehen. Jeder Block hat einen Typ, einen Titel und bei Bedarf einen eigenen Zeitraum. Beitrags- und Suchblöcke haben außerdem eine Vorlage. Bleibt sie leer, gilt die Standardvorlage des Blocktyps. Die übrigen Felder hängen vom Typ ab und sind unter [Blocktypen](#blocktypen) beschrieben.
 
-Beim Speichern wird der ganze Report geprüft, bevor etwas geschrieben wird. Das Formular lehnt einen Namen ab, der schon vergeben ist oder falsche Zeichen enthält, außerdem einen Suchblock ohne Suche, einen Abschnittsblock ohne Schlüssel, eine Klassenzahl unter 1 und Histogrammgrenzen, die nicht aus mindestens zwei aufsteigenden Zahlen bestehen. Jede Meldung nennt den Block, zum Beispiel „Block 2: ein Suchblock braucht eine gespeicherte Suche.“ Über APIv4 gelten dieselben Prüfungen für jeden Datensatz von `HeraldDigest` und `HeraldDigestBlock`. Ein dort ohne Blöcke gespeicherter Report scheitert beim Versand.
+Beim Speichern wird der ganze Report geprüft, bevor etwas geschrieben wird. Das Formular lehnt ab:
 
-Skripte und Deployments können einen Report mit cv anlegen. Die Verkettung speichert die Blöcke in der angegebenen Reihenfolge. `--in=json` liest das JSON von der Standardeingabe, denn auf der Befehlszeile nimmt cv JSON nur in einer Zeile an:
+- einen Namen, der schon vergeben ist oder falsche Zeichen enthält,
+- einen Suchblock ohne Suche,
+- einen Abschnittsblock ohne Schlüssel,
+- eine Klassenzahl unter 1,
+- Histogrammgrenzen, die nicht aus mindestens zwei aufsteigenden Zahlen bestehen.
+
+Eine Meldung zu einem Block nennt ihn, zum Beispiel „Block 2: ein Suchblock braucht eine gespeicherte Suche.“ Über APIv4 gelten dieselben Prüfungen für jeden Datensatz von `HeraldDigest` und `HeraldDigestBlock`. Ein dort ohne Blöcke gespeicherter Report scheitert beim Versand.
+
+Skripte und Deployments können einen Report mit cv anlegen. Die Verkettung speichert die Blöcke in der angegebenen Reihenfolge. JSON über mehrere Zeilen muss über die Standardeingabe kommen, daher `--in=json`:
 
 ```bash
 cv api4 --in=json HeraldDigest.create <<'JSON'
@@ -47,19 +55,19 @@ JSON
 
 ### Was eine Änderung kaputt macht
 
-Regeln und Skripte nennen einen Report beim Namen. Nachdem Sie einen umbenannt oder gelöscht haben, scheitern sie mit „Den Report „weekly_report“ gibt es nicht.“, bis sie einen anderen nennen. Die Regelliste zeigt dieselbe Meldung anstelle des Reporttitels, eine kaputte Regel fällt also auf.
+Regeln und Skripte wählen einen Report über seinen Namen. Nachdem Sie den Namen eines Reports geändert oder den Report gelöscht haben, scheitern sie mit der Meldung `Den Report „weekly_report“ gibt es nicht.`, bis sie einen anderen nennen. Die Regelliste zeigt dieselbe Meldung anstelle des Reporttitels. Den Titel können Sie jederzeit ändern.
 
-Eine Kampagne oder ein Finanztyp, nach dem ein Block filtert, lässt sich nicht löschen, solange der Block existiert. Ohne seinen Filter würde der Block jeden Beitrag zählen. Ändern oder entfernen Sie zuerst den Block.
+Eine Kampagne oder ein Finanztyp, nach dem ein Block filtert, lässt sich nicht löschen, solange der Block existiert, der Versuch endet mit einem Datenbankfehler. Ohne seinen Filter würde der Block jeden Beitrag zählen. Ändern oder entfernen Sie zuerst den Block.
 
 Eine gespeicherte Suche lässt sich löschen. Der Block, der sie verwendet hat, steht dann ohne Suche da, und der Report scheitert beim Versand mit der Meldung, die auch das Formular gezeigt hätte. Wählen Sie eine andere Suche oder entfernen Sie den Block.
 
 ## Einen Report verschicken
 
 - Eine CiviRules-Regel mit dem Trigger „Herald: Schedule“ und der Aktion „Herald: Send digest“ verschickt einen täglichen oder wöchentlichen Report zu einer festen Stunde. Die Einrichtung zeigt [Geplante Reports](recipes.md#geplante-reports).
-- Die Aktion „Herald: Send digest“ funktioniert auch mit jedem anderen Trigger und verschickt den Report dann bei jedem Auslösen.
+- Die Aktion „Herald: Send digest“ funktioniert auch mit jedem anderen Trigger und verschickt den Report dann bei jedem Auslösen. In der Aktion wählen Sie den Report aus einer Liste und legen die Zustelleinstellungen fest.
 - Skripte und die Crontab des Servers können die API-Aktion `Herald.notifyDigest` direkt aufrufen.
 
-Die Aktion wählt den Report aus einer Liste und enthält die Zustelleinstellungen. Alle drei Wege unterstützen jeden [Zustellmodus](delivery.md#zustellmodi).
+Alle drei Wege unterstützen jeden [Zustellmodus](delivery.md#zustellmodi).
 
 `Herald.notifyDigest` nimmt entgegen:
 
@@ -132,9 +140,9 @@ Die Antwort wird als HTML eingefügt, der Listener maskiert seine eigenen Daten 
 
 ## Reports aus älteren Versionen
 
-Ältere Versionen haben einen Report in den Einstellungen seiner Regelaktion oder seines geplanten Jobs abgelegt. Das Upgrade macht aus jedem einen Datensatz und lässt in der Aktion nur die Zustelleinstellungen und den Namen des Reports stehen. Der Report einer Regelaktion heißt `rule_action_<id>` und übernimmt den Titel der Regel, der Report eines Jobs heißt `job_<id>` und übernimmt den Namen des Jobs. Sie können sie danach umbenennen, passen Sie dann die Jobs und Skripte an, die sie nennen.
+Ältere Versionen haben einen Report in den Einstellungen seiner Regelaktion oder seines geplanten Jobs abgelegt. Das Upgrade macht aus jedem einen Datensatz und lässt in der Aktion nur die Zustelleinstellungen und den Namen des Reports stehen. Der Report einer Regelaktion heißt `rule_action_<id>` und übernimmt den Titel der Regel, der Report eines Jobs heißt `job_<id>` und übernimmt den Namen des Jobs. Sie können sie danach umbenennen. Wählen Sie den Report dann in jeder Regelaktion, die ihn verschickt hat, neu aus, und passen Sie die Jobs und Skripte an, die ihn nennen.
 
-Das Upgrade behält bei, was der Report bisher verschickt hat. Einen Zeitraum, den herald nicht kannte, hat es als gestern gelesen, und so bleibt es. Ein Report, der nie laufen konnte, bleibt, wie er war, und das Upgrade-Protokoll enthält die Warnung „digest left inline, it cannot run until fixed“ mit dem Grund: eine Blockliste, die kein gültiges JSON ist, eine gespeicherte Suche, Kampagne oder ein Finanztyp, die es nicht mehr gibt, oder ein Filter auf den Beitragsstatus, den die Datensätze nicht mehr kennen. Eine solche Regel scheitert, bis Sie in ihrer Aktion einen Report wählen.
+Das Upgrade behält bei, was der Report bisher verschickt hat. Einen Zeitraum, den herald nicht kannte, hat es als gestern gelesen, und so bleibt es. Ein Report, der nie laufen konnte, bleibt, wie er war, und das Upgrade-Protokoll enthält die Warnung „digest left inline, it cannot run until fixed“ mit dem Grund. Beispiele sind eine Blockliste, die kein JSON-Array aus Objekten ist, ein Block unbekannten Typs, ein Abschnittsblock ohne Schlüssel, eine gespeicherte Suche, Kampagne oder ein Finanztyp, die es nicht mehr gibt, und ein Filter auf den Beitragsstatus, den die Datensätze nicht mehr kennen. Eine solche Regel oder ein solcher Job scheitert, bis er einen Report nennt.
 
 Das Report-Formular ist ein Afform, herald braucht deshalb die Extension Form Core (`org.civicrm.afform`). Aktivieren Sie sie vor dem Upgrade von herald auf einer Seite, auf der sie noch fehlt.
 
@@ -142,16 +150,18 @@ Das Report-Formular ist ein Afform, herald braucht deshalb die Extension Form Co
 
 Beitragsquellen sind oft technisch, etwa die Referenz eines Zahlungsanbieters oder das Transaktionspräfix eines Bankimports. Die Einstellung `herald_source_normalization` ordnet ihnen lesbare Bezeichnungen zu. Die Bezeichnungen erscheinen in der Aufschlüsselung des Reports und als Quelle in Beitragsbenachrichtigungen. Standardmäßig ist die Einstellung leer, und die Quellen bleiben, wie sie sind.
 
-Die Regeln finden Sie unter „Administer » Herald » Contribution source names“ (Administrieren » Herald » Namen der Beitragsquellen). Jede Zeile enthält den Quelltext, die Art des Vergleichs und den anzuzeigenden Namen. Die Pfeil-Schaltflächen ändern die Reihenfolge, in der die Regeln geprüft werden. Beim Speichern werden eine unvollständige Regel und ein regulärer Ausdruck, der sich nicht kompilieren lässt, abgelehnt, mit der Nummer der Regel.
+Die Regeln finden Sie unter Administrieren » Herald » Namen der Beitragsquellen. Jede Zeile enthält den Quelltext, die Art des Vergleichs und den anzuzeigenden Namen. Die Pfeil-Schaltflächen ändern die Reihenfolge, in der die Regeln geprüft werden. Beim Speichern werden eine unvollständige Regel und ein regulärer Ausdruck, der sich nicht kompilieren lässt, abgelehnt, mit der Nummer der Regel.
 
 Mit cv:
 
 ```bash
-cv api4 Setting.set +v 'herald_source_normalization=[
+cv api4 --in=json Setting.set <<'JSON'
+{"values": {"herald_source_normalization": [
   {"match": "Bank TX", "type": "contains", "label": "Bank transfer"},
   {"match": "Ueberweisung", "type": "prefix", "label": "Bank transfer"},
   {"match": "/^pi_[A-Za-z0-9]+$/", "type": "regex", "label": "Stripe"}
-]'
+]}}
+JSON
 ```
 
 - Die Regeln werden der Reihe nach geprüft, und der erste Treffer gewinnt.

@@ -99,12 +99,14 @@ actions (no bespoke cron for alerts). CiviRules is optional, not in `<requires>`
   (`Definition` loads, `Composer` renders): contribution, saved search, hook
   section. Rules, jobs and scripts name it by `name`; their params carry only
   delivery settings. `DigestRules`/`BlockType` checks run on APIv4 validate
-  (`Validator`, per diff, merged with the stored row), on Afform submit
+  (`Validator`: blocks per diff merged with the stored row, digests on the
+  diff alone), on Afform submit
   (`FormValidator`, because Afform swallows save exceptions) and again at send,
   for a saved search deleted since. Block FKs to campaign and financial type
   are RESTRICT (a vanished filter would widen the block to every contribution);
   saved_search_id is SET NULL. Upgrade 1011 moves inline digests into records
-  (`CRM_Herald_Upgrader_Inline*`), reading their params as the old code did
+  (`CRM_Herald_Upgrader_Inline*`; rule actions through
+  `CRM_Herald_CivirulesAdapter_InlineDigests`), reading their params as the old code did
   (unknown periods are yesterday) and leaving unrunnable ones inline with a
   warning. Search blocks run the SavedSearch's `api_params`
   without permission checks — whoever configures a digest can report any search,

@@ -37,7 +37,7 @@ Bei einem Beitrags-Trigger enthalten die Variablen außerdem den Beitrag, den Fo
 
 ### Report senden
 
-Die Aktion „Herald: Send digest“ verschickt bei jedem Auslösen der Regel einen Report. Ihr Formular wählt einen der Reports, die unter Administrieren » Herald » Reports eingerichtet sind, siehe [Einen Report einrichten](digests.md#einen-report-einrichten), und hat die Zustellfelder von „Send notification“. Die Regelliste zeigt die Aktion als „Verschickt den Report „…““ oder, sobald der Report umbenannt oder gelöscht ist, als „Den Report „…“ gibt es nicht.“
+Die Aktion „Herald: Send digest“ verschickt bei jedem Auslösen der Regel einen Report. Ihr Formular wählt einen der Reports, die unter Administrieren » Herald » Reports eingerichtet sind, siehe [Einen Report einrichten](digests.md#einen-report-einrichten), und hat die Zustellfelder von „Send notification“. Die Regelliste zeigt die Aktion als `Verschickt den Report „…“.` oder, sobald sich der Name des Reports geändert hat oder der Report gelöscht ist, als `Den Report „…“ gibt es nicht.`
 
 ## CiviRules-Trigger
 
@@ -157,7 +157,7 @@ Die Vorlagen von herald sind CiviCRM-Nachrichtenvorlagen. Sie bearbeiten sie unt
 | Herald: Ticket-Überweisung eingegangen | herald_contribution_alert_ticket_paid | Eine eingegangene Ticket-Überweisung |
 | Herald: Täglicher Beitragsreport | herald_contribution_digest_daily | Den täglichen Report |
 | Herald: Wöchentlicher Beitragsreport | herald_contribution_digest_weekly | Den wöchentlichen Report |
-| Herald: Beitragsreport-Block (kombinierbar) | herald_contribution_digest_block | Einen Beitragsblock eines Reports mit Blöcken |
+| Herald: Beitragsreport-Block (kombinierbar) | herald_contribution_digest_block | Einen Beitragsblock eines Reports |
 | Herald: Report-Block aus einer gespeicherten Suche | herald_digest_search_block | Einen Suchblock eines Reports |
 | Herald: Neues Event angelegt | herald_event_created_alert | Ein neues Event |
 | Herald: Event deaktiviert | herald_event_deactivated_alert | Ein deaktiviertes Event |
@@ -212,7 +212,7 @@ Die Report-Variablen stehen unter [Vorlagenvariablen](digests.md#vorlagenvariabl
 
 ## Einstellungen
 
-Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'name=value'`. Einstellungen, die eine Liste oder eine Zuordnung enthalten, nehmen JSON auf. Die einfachen Einstellungen finden Sie auch auf der Einstellungsseite von herald, „Administer » Herald » Settings“ (`civicrm/admin/setting/herald`). Die Listen- und Zuordnungseinstellungen haben eigene Seiten unter `civicrm/admin/herald`: Topic-Routen, Namen der Beitragsquellen, Erlaubte Webhook-Hosts und Monitor-Checks. Die Einstellungsseite verlinkt sie. Alle erfordern „administer CiviCRM“.
+Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'name=value'`. Einstellungen, die eine Liste oder eine Zuordnung enthalten, nehmen JSON auf. Die einfachen Einstellungen finden Sie auch auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen (`civicrm/admin/setting/herald`). Die Listen- und Zuordnungseinstellungen haben eigene Seiten unter `civicrm/admin/herald`: Topic-Routen, Namen der Beitragsquellen, Erlaubte Webhook-Hosts und Monitor-Checks. Die Einstellungsseite verlinkt sie. Alle erfordern „administer CiviCRM“.
 
 | Einstellung | Standard | Bedeutung |
 |---|---|---|

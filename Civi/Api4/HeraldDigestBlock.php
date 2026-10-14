@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Api4;
 
 /**
- * The blocks of a HeraldDigest; validated on save by Civi\Herald\Digest\BlockValidator.
+ * The blocks of a HeraldDigest; validated on save by Civi\Herald\Digest\Validator.
  */
 final class HeraldDigestBlock extends Generic\DAOEntity {
 

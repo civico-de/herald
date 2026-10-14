@@ -47,14 +47,14 @@ Beim Deinstallieren entfernt herald seine CiviRules-Bausteine, und CiviRules ent
 
 ## Erste Schritte
 
-Legen Sie mit @BotFather einen Telegram-Bot an, fügen Sie ihn einem Chat hinzu und notieren Sie die Chat-ID. Speichern Sie dann beides unter „Administer » Herald » Settings“ (Administrieren » Herald » Einstellungen) oder mit cv:
+Legen Sie mit @BotFather einen Telegram-Bot an, fügen Sie ihn einem Chat hinzu und notieren Sie die Chat-ID. Speichern Sie dann beides unter Administrieren » Herald » Einstellungen oder mit cv:
 
 ```bash
 cv setting:set herald_telegram_bot_token=<bot-token>
 cv setting:set herald_telegram_default_chat_id=<chat-id>
 ```
 
-Senden Sie eine Testnachricht unter „Administer » Herald » Test message“ (Testnachricht): Wählen Sie „Einen Kanal“, dann Telegram, und senden Sie. Oder mit cv:
+Senden Sie eine Testnachricht unter Administrieren » Herald » Testnachricht: Wählen Sie „Einen Kanal“, dann Telegram, und senden Sie. Oder mit cv:
 
 ```bash
 cv api4 Herald.testTelegram message='<b>herald works</b>'

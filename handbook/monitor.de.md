@@ -70,7 +70,7 @@ Alle Einstellungen sind optional. Standardmäßig meldet herald den ersten fehlg
 | `herald_monitor_renotify_hours` | 24 | Eine Erinnerung senden, wenn ein Check so viele Stunden lang fehlschlägt. 0 schaltet Erinnerungen ab. |
 | `herald_monitor_topic` | ops | Das Topic, in das die Meldungen veröffentlicht werden. |
 
-Diese vier finden Sie auf der Einstellungsseite von herald, „Administer » Herald » Settings“ (Administrieren » Herald » Einstellungen). Stummschaltungen und erwartete Checks stehen unter „Administer » Herald » Monitor checks“ (Monitor-Checks).
+Diese vier finden Sie auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen. Stummschaltungen und erwartete Checks stehen unter Administrieren » Herald » Monitor-Checks.
 
 Diese Seite listet jeden Check, den eine aktivierte Extension anbietet, jeden erwarteten oder stummgeschalteten Check und jeden Check, für den der Monitor einen Zustand gespeichert hat. Jede Zeile zeigt den zuletzt gemeldeten Status in Worten, die gescheiterten und erfolgreichen Läufe in Folge, die letzte Fehlermeldung und ob eine aktivierte Extension den Check noch anbietet. Die Seite führt die Checks nicht aus und zeigt ihre Details nicht.
 

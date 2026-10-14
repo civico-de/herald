@@ -37,7 +37,7 @@ On a contribution trigger, the variables also include the contribution, its camp
 
 ### Send digest
 
-The action "Herald: Send digest" sends a digest each time the rule fires. Its form picks one of the digests set up under Administer » Herald » Digests, see [Setting up a digest](digests.md#setting-up-a-digest), and has the delivery fields of "Send notification". The rule list shows the action as "Sends the digest "…"", or as "Digest "…" does not exist." once the digest is renamed or deleted.
+The action "Herald: Send digest" sends a digest each time the rule fires. Its form picks one of the digests set up under Administer » Herald » Digests, see [Setting up a digest](digests.md#setting-up-a-digest), and has the delivery fields of "Send notification". The rule list shows the action as `Sends the digest "…".`, or as `Digest "…" does not exist.` once the digest's name has changed or the digest is deleted.
 
 ## CiviRules triggers
 
@@ -157,7 +157,7 @@ herald's templates are CiviCRM message templates. Edit them under Mailings, Mess
 | Herald: Ticket bank transfer received | herald_contribution_alert_ticket_paid | A ticket transfer received |
 | Herald: Daily contribution digest | herald_contribution_digest_daily | The daily digest |
 | Herald: Weekly contribution digest | herald_contribution_digest_weekly | The weekly digest |
-| Herald: Contribution digest block (composable) | herald_contribution_digest_block | A contribution block of a digest with blocks |
+| Herald: Contribution digest block (composable) | herald_contribution_digest_block | A contribution block of a digest |
 | Herald: Digest block from a saved search | herald_digest_search_block | A search block of a digest |
 | Herald: New event created | herald_event_created_alert | A new event |
 | Herald: Event deactivated | herald_event_deactivated_alert | A deactivated event |
