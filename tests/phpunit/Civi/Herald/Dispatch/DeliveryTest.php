@@ -38,6 +38,14 @@ class DeliveryTest extends TestCase {
     );
   }
 
+  /**
+   * Sent directly instead, a misspelt fan-out would reach one recipient only.
+   */
+  public function testAnUnknownModeFails(): void {
+    $this->expectExceptionMessage('herald: unknown delivery_mode "subscriber"');
+    Delivery::send('body', ['delivery_mode' => 'subscriber']);
+  }
+
   public function testGroupModeWithoutGroupIdThrows(): void {
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/group_id/');

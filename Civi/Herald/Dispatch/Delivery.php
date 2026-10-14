@@ -28,9 +28,13 @@ final class Delivery {
       ),
       'group' => FanOut::toRecipients($body, $params, self::group($params)),
       'addresses' => FanOut::toAddresses($body, $params),
-      default => ChannelRegistry::default()
+      'direct' => ChannelRegistry::default()
         ->get(Cast::toString($params['channel'] ?? 'telegram'))
         ->send($body, ChannelConfig::of($params)),
+      default => throw new \CRM_Core_Exception(sprintf(
+        'herald: unknown delivery_mode "%s"; use direct, subscribers, group or addresses.',
+        Cast::toString($params['delivery_mode']),
+      )),
     };
   }
 
