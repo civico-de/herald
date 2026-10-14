@@ -33,19 +33,7 @@ final class BlockType {
     }
     return (
       Options::problem(E::ts('period'), $block['period'] ?? NULL, Options::periods())
-      ?? ($type === 'contribution' ? self::contributionProblem($block) : NULL)
-    );
-  }
-
-  /**
-   * @param array<string, mixed> $block
-   */
-  private static function contributionProblem(array $block): ?string {
-    $tooFewBuckets = isset($block['bucket_count']) && Cast::toInt($block['bucket_count']) < 1;
-    return (
-      Options::problem(E::ts('grouping'), $block['group_by'] ?? NULL, Options::groupings())
-      ?? ($tooFewBuckets ? E::ts('the bucket count must be at least 1.') : NULL)
-      ?? BucketEdges::problem($block['bucket_edges'] ?? NULL)
+      ?? ($type === 'contribution' ? ContributionBlock::problem($block) : NULL)
     );
   }
 

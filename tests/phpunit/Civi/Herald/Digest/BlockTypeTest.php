@@ -27,6 +27,8 @@ class BlockTypeTest extends TestCase implements HeadlessInterface {
       'bucket_count' => 1,
       'bucket_edges' => '[0, 10.5, 100]',
     ]));
+    // Edges of a block without histogram are never used.
+    self::assertNull(BlockType::problem(['show_histogram' => FALSE, 'bucket_edges' => '[5]']));
     self::assertNull(BlockType::problem(['type' => 'search', 'saved_search_id' => 3]));
     self::assertNull(BlockType::problem(['type' => 'section', 'section_key' => 'myext.seats']));
   }
