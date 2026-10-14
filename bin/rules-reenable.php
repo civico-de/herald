@@ -16,7 +16,11 @@ if (!CRM_Herald_CivirulesAdapter_Availability::isInstalled()) {
 
 $ids = DeployGate::markedRuleIds();
 if ($ids !== []) {
-  CRM_Core_DAO::executeQuery('UPDATE civirule_rule SET is_active = 1 WHERE id IN (' . implode(',', $ids) . ')');
+  // ckconform-ignore raw-sql -- an APIv4 update marks a managed rule as modified, and its extension stops updating it
+  CRM_Core_DAO::executeQuery('UPDATE civirule_rule SET is_active = 1 WHERE id IN (%1)', [1 => [
+    implode(',', $ids),
+    'CommaSeparatedIntegers',
+  ]]);
 }
 if (is_file(DeployGate::marker())) {
   unlink(DeployGate::marker());

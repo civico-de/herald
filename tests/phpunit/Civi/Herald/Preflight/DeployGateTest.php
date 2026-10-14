@@ -10,6 +10,7 @@ use Civi\Api4\CiviRulesRule;
 use Civi\Api4\CiviRulesRuleAction;
 use Civi\Api4\CiviRulesRuleCondition;
 use Civi\Api4\CiviRulesTrigger;
+use Civi\Api4\Managed;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\TransactionalInterface;
 use CRM_Herald_ExtensionUtil as E;
@@ -63,6 +64,32 @@ class DeployGateTest extends TestCase implements HeadlessInterface, Transactiona
     self::assertStringContainsString("re-enabled 1 herald rule(s): {$rule}", $this->script('rules-reenable.php'));
     self::assertTrue($this->isActive($rule));
     self::assertFileDoesNotExist(DeployGate::marker());
+  }
+
+  /**
+   * Another extension's managed rule must still count as unmodified after the
+   * deploy switched it off and on, or reconcile stops updating it.
+   */
+  public function testTheDeployLeavesAManagedRuleUnmodified(): void {
+    $rule = $this->rule($this->triggerId('changed_event'), active: TRUE);
+    $this->addAction($rule, \CRM_Herald_CivirulesAdapter_Action_Notification::class);
+    $managed = (int) Managed::create(checkPermissions: FALSE)
+      ->setValues([
+        'module' => 'civicrm',
+        'name' => 'herald_test_managed_rule',
+        'entity_type' => 'CiviRulesRule',
+        'entity_id' => $rule,
+      ])
+      ->execute()
+      ->single()['id'];
+
+    $this->script('rules-disable.php');
+    $this->script('rules-reenable.php');
+
+    self::assertTrue($this->isActive($rule));
+    self::assertNull(
+      Managed::get(checkPermissions: FALSE)->addWhere('id', '=', $managed)->execute()->single()['entity_modified_date'],
+    );
   }
 
   public function testARuleOnHeraldsScheduleTriggerIsDisabledForTheSwap(): void {

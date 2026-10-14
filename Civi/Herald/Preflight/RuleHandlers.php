@@ -7,6 +7,7 @@ namespace Civi\Herald\Preflight;
 use Civi\Api4\CiviRulesRule;
 use Civi\Api4\CiviRulesRuleAction;
 use Civi\Api4\CiviRulesRuleCondition;
+use Civi\Herald\Api4\Rows;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
@@ -90,7 +91,7 @@ final class RuleHandlers {
       ->addWhere($field, $op, $value)
       ->addWhere('trigger_id.is_active', '=', value: TRUE)
       ->execute();
-    foreach (self::rows($rules) as $rule) {
+    foreach (Rows::of($rules) as $rule) {
       self::add($handlers, 'trigger', $rule['id'], ...HandlerContract::trigger($rule));
     }
     foreach ([
@@ -103,23 +104,11 @@ final class RuleHandlers {
         ->addWhere('rule_id.' . $field, $op, $value)
         ->addWhere('rule_id.trigger_id.is_active', '=', value: TRUE)
         ->execute();
-      foreach (self::rows($rows) as $row) {
+      foreach (Rows::of($rows) as $row) {
         self::add($handlers, $kind, $row['rule_id'], Cast::toString($row[$kind . '_id.class_name']));
       }
     }
     return $handlers;
-  }
-
-  /**
-   * @param iterable<mixed> $result
-   * @return list<array<array-key, mixed>>
-   */
-  private static function rows(iterable $result): array {
-    $rows = [];
-    foreach ($result as $row) {
-      $rows[] = is_array($row) ? $row : [];
-    }
-    return $rows;
   }
 
   /**

@@ -18,22 +18,32 @@ if (!is_string($marker)) {
   throw new RuntimeException('[herald deploy] cannot resolve the marker path; no rule was disabled');
 }
 
+$rows = [
+  ...\Civi\Api4\CiviRulesRule::get(checkPermissions: FALSE)
+    ->addSelect('id')
+    ->addWhere('is_active', '=', value: TRUE)
+    ->addWhere('trigger_id.class_name', 'LIKE', 'CRM_Herald%')
+    ->execute(),
+  ...\Civi\Api4\CiviRulesRuleCondition::get(checkPermissions: FALSE)
+    ->addSelect('rule_id')
+    ->addWhere('rule_id.is_active', '=', value: TRUE)
+    ->addWhere('condition_id.class_name', 'LIKE', 'CRM_Herald%')
+    ->execute(),
+  ...\Civi\Api4\CiviRulesRuleAction::get(checkPermissions: FALSE)
+    ->addSelect('rule_id')
+    ->addWhere('rule_id.is_active', '=', value: TRUE)
+    ->addWhere('action_id.class_name', 'LIKE', 'CRM_Herald%')
+    ->execute(),
+];
 $ids = [];
-/** @var CRM_Core_DAO&object{id: string} $dao */
-$dao = CRM_Core_DAO::executeQuery(
-  "SELECT DISTINCT r.id
-   FROM civirule_rule r
-   LEFT JOIN civirule_rule_action ra ON ra.rule_id = r.id
-   LEFT JOIN civirule_action a ON a.id = ra.action_id
-   LEFT JOIN civirule_rule_condition rc ON rc.rule_id = r.id
-   LEFT JOIN civirule_condition c ON c.id = rc.condition_id
-   LEFT JOIN civirule_trigger t ON t.id = r.trigger_id
-   WHERE r.is_active = 1
-     AND (a.class_name LIKE 'CRM_Herald%' OR c.class_name LIKE 'CRM_Herald%' OR t.class_name LIKE 'CRM_Herald%')",
-);
-while ($dao->fetch()) {
-  $ids[] = (int) $dao->id;
+// Plain PHP: the swap has not happened, so herald's newer helpers may be missing.
+foreach ($rows as $row) {
+  $id = is_array($row) ? $row['rule_id'] ?? $row['id'] ?? NULL : NULL;
+  $ids[] = is_numeric($id) ? (int) $id : 0;
 }
+$ids = array_filter($ids);
+$ids = array_values(array_unique($ids));
+sort($ids);
 
 // Keeps the ids of a previous deploy that failed its gate: those rules are still disabled.
 $existing = is_file($marker)
@@ -45,7 +55,11 @@ if (file_put_contents($marker, implode(',', $all)) === FALSE) {
 }
 
 if ($ids !== []) {
-  CRM_Core_DAO::executeQuery('UPDATE civirule_rule SET is_active = 0 WHERE id IN (' . implode(',', $ids) . ')');
+  // ckconform-ignore raw-sql -- an APIv4 update marks a managed rule as modified, and its extension stops updating it
+  CRM_Core_DAO::executeQuery('UPDATE civirule_rule SET is_active = 0 WHERE id IN (%1)', [1 => [
+    implode(',', $ids),
+    'CommaSeparatedIntegers',
+  ]]);
 }
 
 printf(

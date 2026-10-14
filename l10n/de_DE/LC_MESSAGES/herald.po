@@ -168,6 +168,14 @@ msgstr "Ein Deploy hat die Herald-CiviRules-Regeln %1 abgeschaltet und nicht wie
 msgid "Herald: rules disabled by a deploy"
 msgstr "Herald: Regeln durch einen Deploy abgeschaltet"
 
+#: Civi/Herald/Preflight/CiviRulesVersionCheck.php
+msgid "Herald needs CiviRules %1 or later, this site runs %2. Update CiviRules."
+msgstr "Herald braucht CiviRules %1 oder neuer, auf dieser Site läuft %2. Aktualisieren Sie CiviRules."
+
+#: Civi/Herald/Preflight/CiviRulesVersionCheck.php
+msgid "Herald: CiviRules too old"
+msgstr "Herald: CiviRules zu alt"
+
 #: managed/Job.mgd.php
 msgid "Herald: Flush alert aggregation buffer"
 msgstr "Herald: Sammelpuffer für Meldungen leeren"

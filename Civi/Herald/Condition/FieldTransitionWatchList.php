@@ -4,6 +4,9 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Condition;
 
+use Civi\Api4\CiviRulesRuleCondition;
+use Civi\Herald\Api4\Rows;
+
 /**
  * Which (entity, field) pairs hook_civicrm_pre must snapshot for the generic
  * field-transition condition.
@@ -62,23 +65,18 @@ final class FieldTransitionWatchList {
    * @return array<string, array<int, array{entity: string, field: string}>>
    */
   private static function load(): array {
-    if (
-      !\CRM_Core_DAO::checkTableExists('civirule_condition')
-      || !\CRM_Core_DAO::checkTableExists('civirule_rule_condition')
-    ) {
+    // A disabled CiviRules fires no rule, so nothing needs a snapshot.
+    if (!\CRM_Herald_CivirulesAdapter_Availability::isInstalled()) {
       return [];
     }
-    /** @var \CRM_Core_DAO&object{condition_params: ?string} $dao */
-    $dao = \CRM_Core_DAO::executeQuery(
-      'SELECT rc.condition_params FROM civirule_rule_condition rc
-       INNER JOIN civirule_condition c ON c.id = rc.condition_id
-       INNER JOIN civirule_rule r ON r.id = rc.rule_id
-       WHERE c.class_name = %1 AND r.is_active = 1',
-      [1 => [self::ADAPTER_CLASS, 'String']],
-    );
+    $conditions = CiviRulesRuleCondition::get(checkPermissions: FALSE)
+      ->addSelect('condition_params')
+      ->addWhere('condition_id.class_name', '=', self::ADAPTER_CLASS)
+      ->addWhere('rule_id.is_active', '=', value: TRUE)
+      ->execute();
     $list = [];
-    while ($dao->fetch()) {
-      $params = FieldTransitionParams::decode($dao->condition_params);
+    foreach (Rows::of($conditions) as $condition) {
+      $params = FieldTransitionParams::decode($condition['condition_params']);
       if ($params['entity'] === '' || $params['field'] === '') {
         continue;
       }
