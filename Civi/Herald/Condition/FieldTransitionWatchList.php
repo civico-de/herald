@@ -13,7 +13,6 @@ namespace Civi\Herald\Condition;
  * cheap, and rule edits take effect on the next request, which is fine.
  * Long-running workers (queue consumers, CLI loops) keep the stale list until
  * restart — accepted limitation.
- * @mago-expect lint:cyclomatic-complexity
  */
 final class FieldTransitionWatchList {
 
@@ -79,30 +78,17 @@ final class FieldTransitionWatchList {
     );
     $list = [];
     while ($dao->fetch()) {
-      $params = self::decode($dao->condition_params);
-      $entity = $params['entity'] ?? NULL;
-      $field = $params['field'] ?? NULL;
-      if (!is_string($entity) || !is_string($field) || trim($entity) === '' || $field === '') {
+      $params = FieldTransitionParams::decode($dao->condition_params);
+      if ($params['entity'] === '' || $params['field'] === '') {
         continue;
       }
-      $key = self::normalizeEntity($entity);
-      $pair = ['entity' => trim($entity), 'field' => $field];
+      $key = self::normalizeEntity($params['entity']);
+      $pair = ['entity' => $params['entity'], 'field' => $params['field']];
       if (!in_array($pair, $list[$key] ?? [], TRUE)) {
         $list[$key][] = $pair;
       }
     }
     return $list;
-  }
-
-  /**
-   * @return array<array-key, mixed>
-   */
-  private static function decode(?string $raw): array {
-    if ($raw === NULL || $raw === '') {
-      return [];
-    }
-    $decoded = unserialize($raw, ['allowed_classes' => FALSE]);
-    return is_array($decoded) ? $decoded : [];
   }
 
 }
