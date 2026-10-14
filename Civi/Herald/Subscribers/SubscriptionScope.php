@@ -12,8 +12,7 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  * A preference record may carry source_entity_type + source_entity_id
  * (e.g. Event 42): its subscriptions then only fire for notifications that
  * declare they concern that entity instance. An unscoped record (NULL/empty
- * fields) is global and matches everything — the historical behavior.
- * @mago-expect lint:cyclomatic-complexity
+ * fields) is global and matches everything.
  */
 final class SubscriptionScope {
 
@@ -34,11 +33,9 @@ final class SubscriptionScope {
     if ($entityType === '') {
       return NULL;
     }
-    $payload = $triggerContext[$entityType] ?? NULL;
-    $id = is_array($payload) ? Cast::toInt($payload['id'] ?? 0) : 0;
+    $id = self::id($triggerContext, $entityType, 'id');
     if ($id <= 0 && $entityType === 'Event') {
-      $participant = $triggerContext['Participant'] ?? NULL;
-      $id = is_array($participant) ? Cast::toInt($participant['event_id'] ?? 0) : 0;
+      $id = self::id($triggerContext, 'Participant', 'event_id');
     }
     return $id > 0 ? ['entity_type' => $entityType, 'entity_id' => $id] : NULL;
   }
@@ -63,6 +60,13 @@ final class SubscriptionScope {
       return FALSE;
     }
     return $rowType === $scope['entity_type'] && $rowId === $scope['entity_id'];
+  }
+
+  /**
+   * @param array<string, mixed> $triggerContext
+   */
+  private static function id(array $triggerContext, string $entity, string $field): int {
+    return Cast::toInt(((array) ($triggerContext[$entity] ?? []))[$field] ?? 0);
   }
 
 }
