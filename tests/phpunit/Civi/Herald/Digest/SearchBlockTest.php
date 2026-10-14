@@ -24,15 +24,16 @@ class SearchBlockTest extends TestCase implements HeadlessInterface, Transaction
   /**
    * @param array<string, mixed> $apiParams
    */
-  private function savedSearch(string $name, array $apiParams): void {
-    SavedSearch::create(checkPermissions: FALSE)
+  private function savedSearch(string $name, array $apiParams): int {
+    return SavedSearch::create(checkPermissions: FALSE)
       ->setValues([
         'name' => $name,
         'label' => $name,
         'api_entity' => 'Contact',
         'api_params' => ['version' => 4] + $apiParams,
       ])
-      ->execute();
+      ->execute()
+      ->single()['id'];
   }
 
   public function testGroupedSearchGivesOneRowPerGroup(): void {
@@ -41,13 +42,13 @@ class SearchBlockTest extends TestCase implements HeadlessInterface, Transaction
         ->setValues(['contact_type' => 'Organization', 'organization_name' => $name])
         ->execute();
     }
-    $this->savedSearch('herald_test_by_type', [
+    $id = $this->savedSearch('herald_test_by_type', [
       'select' => ['contact_type:label', 'COUNT(id) AS n'],
       'where' => [['organization_name', 'LIKE', 'Herald Test%']],
       'groupBy' => ['contact_type'],
     ]);
 
-    $vars = SearchBlock::vars('herald_test_by_type');
+    $vars = SearchBlock::vars($id);
 
     self::assertSame(1, $vars['count']);
     self::assertSame(['Organization', '2'], $vars['rows'][0]['cells']);
@@ -58,7 +59,7 @@ class SearchBlockTest extends TestCase implements HeadlessInterface, Transaction
     Contact::create(checkPermissions: FALSE)
       ->setValues(['contact_type' => 'Organization', 'organization_name' => 'Herald Test D'])
       ->execute();
-    $this->savedSearch('herald_test_unaliased', [
+    $id = $this->savedSearch('herald_test_unaliased', [
       'select' => ['contact_type', 'COUNT(id)'],
       'where' => [['organization_name', '=', 'Herald Test D']],
       'groupBy' => ['contact_type'],
@@ -66,7 +67,7 @@ class SearchBlockTest extends TestCase implements HeadlessInterface, Transaction
 
     self::assertSame(
       [['cells' => ['Organization', '1'], 'values' => ['contact_type' => 'Organization', 'COUNT_id' => '1']]],
-      SearchBlock::vars('herald_test_unaliased')['rows'],
+      SearchBlock::vars($id)['rows'],
     );
   }
 
@@ -74,21 +75,20 @@ class SearchBlockTest extends TestCase implements HeadlessInterface, Transaction
     Contact::create(checkPermissions: FALSE)
       ->setValues(['contact_type' => 'Organization', 'organization_name' => 'Herald Test C'])
       ->execute();
-    $this->savedSearch('herald_test_names', [
+    $id = $this->savedSearch('herald_test_names', [
       'select' => ['organization_name'],
       'where' => [['organization_name', '=', 'Herald Test C']],
     ]);
 
     self::assertSame(
       [['cells' => ['Herald Test C'], 'values' => ['organization_name' => 'Herald Test C']]],
-      SearchBlock::vars('herald_test_names')['rows'],
+      SearchBlock::vars($id)['rows'],
     );
   }
 
   public function testMissingSearchFails(): void {
-    self::assertStringContainsString('herald_test_missing', (string) SearchBlock::problem('herald_test_missing'));
-    $this->expectException(\CRM_Core_Exception::class);
-    SearchBlock::vars('herald_test_missing');
+    $this->expectExceptionMessage('saved search 999999 does not exist');
+    SearchBlock::vars(999_999);
   }
 
   public function testColumnsFollowTheSelect(): void {

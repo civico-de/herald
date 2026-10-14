@@ -164,14 +164,11 @@ class DigestVarsTest extends TestCase {
       $this->makeFakeStats(),
     );
     $this->assertSame('last 30 days', $varsMonth['period']['label']);
+  }
 
-    $varsUnknown = $this->build(
-      array_merge($this->baseParams(), ['period' => 'wat']),
-      $this->makeFakeStats(),
-    );
-    // unknown period falls back to yesterday
-    $yesterday = (new \DateTime('yesterday'))->format('Y-m-d');
-    $this->assertSame($yesterday, $varsUnknown['period']['label']);
+  public function testAnUnknownPeriodFails(): void {
+    $this->expectExceptionMessage('unknown digest period "wat"');
+    $this->build(array_merge($this->baseParams(), ['period' => 'wat']), $this->makeFakeStats());
   }
 
   public function testNoCampaignIdLeavesTheCampaignBlockEmpty(): void {

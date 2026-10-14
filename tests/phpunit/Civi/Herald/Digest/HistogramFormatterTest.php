@@ -229,22 +229,16 @@ class HistogramFormatterTest extends TestCase {
     return FALSE;
   }
 
-  /**
-   * The bucket_edges action parameter decodes the string '[]' to an empty array
-   * rather than NULL (empty('[]') is false), so an empty override reaches
-   * compute(); without the guard that is -1 buckets and undefined-key reads.
-   */
-  public function testAnEmptyEdgeOverrideFallsBackToAdaptiveEdges(): void {
-    $amounts = [10.0, 20.0, 30.0, 40.0];
-    $buckets = HistogramFormatter::compute($amounts, 4, []);
-    $this->assertSame(HistogramFormatter::compute($amounts, 4), $buckets);
-    $this->assertNotSame([], $buckets);
-  }
-
-  public function testASingleEdgeOverrideFallsBackToo(): void {
-    $amounts = [10.0, 20.0, 30.0, 40.0];
-    $buckets = HistogramFormatter::compute($amounts, 4, [100.0]);
-    $this->assertSame(HistogramFormatter::compute($amounts, 4), $buckets);
+  public function testFewerThanTwoEdgesAreRejected(): void {
+    foreach ([[], [100.0]] as $edges) {
+      try {
+        HistogramFormatter::compute([10.0, 20.0], 4, $edges);
+        $this->fail('accepted ' . json_encode($edges));
+      }
+      catch (\InvalidArgumentException $e) {
+        $this->assertStringContainsString('two histogram edges', $e->getMessage());
+      }
+    }
   }
 
   public function testATwoEdgeOverrideIsHonoured(): void {

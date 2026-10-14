@@ -1,0 +1,38 @@
+<af-form ctrl="afform">
+  <af-entity type="HeraldDigest" name="HeraldDigest1" label="Digest" actions="{create: true, update: true}" security="RBAC" url-autofill="1" />
+  <fieldset af-fieldset="HeraldDigest1" class="af-container">
+    <af-field name="title" />
+    <af-field name="name" defn="{help_post: 'Lowercase letters, digits and underscores. Rules and scripts pick the digest by this name.'}" />
+    <af-field name="period" defn="{required: true, afform_default: 'yesterday'}" />
+    <af-field name="header" defn="{help_post: 'HTML line above the blocks.'}" />
+    <fieldset class="af-container" af-title="Blocks">
+      <div af-join="HeraldDigestBlock" actions="{update: true, delete: true}" af-repeat="Add block" min="1" class="af-container af-container-style-pane">
+        <div herald-digest-block class="af-container">
+          <af-field name="type" />
+          <af-field name="title" />
+          <af-field name="period" defn="{input_attrs: {placeholder: 'Period of the digest'}}" />
+          <div herald-digest-block-type="contribution search" class="af-container">
+            <af-field name="template" defn="{input_attrs: {placeholder: 'Default of the block type'}}" />
+          </div>
+          <div herald-digest-block-type="contribution" class="af-container">
+            <af-field name="campaign_id" />
+            <af-field name="financial_type_id" />
+            <af-field name="source_pattern" defn="{help_post: 'SQL LIKE pattern on the contribution source, e.g. %Bank TX%.'}" />
+            <af-field name="group_by" defn="{required: true}" />
+            <af-field name="show_pending" />
+            <af-field name="show_histogram" />
+            <af-field name="bucket_count" defn="{required: true}" />
+            <af-field name="bucket_edges" defn="{help_post: 'JSON array of fixed edges, e.g. [0, 10, 50, 250]. Empty: adaptive buckets.'}" />
+          </div>
+          <div herald-digest-block-type="search" class="af-container">
+            <af-field name="saved_search_id" />
+          </div>
+          <div herald-digest-block-type="section" class="af-container">
+            <af-field name="section_key" defn="{help_post: 'Key an extension answers in hook_civicrm_heraldDigestSections, e.g. myext.seats.'}" />
+          </div>
+        </div>
+      </div>
+    </fieldset>
+  </fieldset>
+  <button class="af-button btn btn-primary" crm-icon="fa-check" ng-click="afform.submit()">Save</button>
+</af-form>

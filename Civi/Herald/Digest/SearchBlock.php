@@ -5,7 +5,6 @@ declare(strict_types = 1);
 namespace Civi\Herald\Digest;
 
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
-use CRM_Herald_ExtensionUtil as E;
 
 /**
  * Digest block from a SearchKit saved search: herald runs the search's query
@@ -14,17 +13,16 @@ use CRM_Herald_ExtensionUtil as E;
 final class SearchBlock {
 
   /**
-   * @param string $name SavedSearch name
    * @return array{rows: list<array{cells: list<string>, values: array<string, string>}>, count: int}
    */
-  public static function vars(string $name): array {
+  public static function vars(int $savedSearchId): array {
     $saved = \Civi\Api4\SavedSearch::get(checkPermissions: FALSE)
       ->addSelect('api_entity', 'api_params')
-      ->addWhere('name', '=', $name)
+      ->addWhere('id', '=', $savedSearchId)
       ->execute()
       ->first();
     if (!is_array($saved)) {
-      throw new \CRM_Core_Exception("herald: saved search \"{$name}\" does not exist");
+      throw new \CRM_Core_Exception("herald: saved search {$savedSearchId} does not exist");
     }
     $params = is_array($saved['api_params'] ?? NULL) ? $saved['api_params'] : [];
     unset($params['version']);
@@ -37,18 +35,6 @@ final class SearchBlock {
       $rows[] = self::row($row, $columns);
     }
     return ['rows' => $rows, 'count' => count($rows)];
-  }
-
-  /**
-   * Why the block cannot run, or NULL when the saved search exists.
-   */
-  public static function problem(string $name): ?string {
-    $found = \Civi\Api4\SavedSearch::get(checkPermissions: FALSE)
-      ->addWhere('name', '=', $name)
-      ->selectRowCount()
-      ->execute()
-      ->countMatched();
-    return $found > 0 ? NULL : E::ts('saved search "%1" does not exist.', [1 => $name]);
   }
 
   /**

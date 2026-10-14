@@ -64,14 +64,8 @@ final class CRM_Herald_Upgrader_DigestJobs {
     if (!$force && is_numeric($hour)) {
       $api['sendHour'] = (int) $hour;
     }
+    // Inline as before; upgrade_1011 moves the digest into a record and warns about broken ones.
     $api['actionParams'] = self::actionParams($params, $jobId);
-    $problems = \Civi\Herald\Digest\BlockList::problems($api['actionParams']);
-    if ($problems !== []) {
-      \Civi::log()->warning('herald: migrated digest job will fail until fixed', [
-        'job_id' => $jobId,
-        'problems' => $problems,
-      ]);
-    }
     return json_encode($api, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
   }
 

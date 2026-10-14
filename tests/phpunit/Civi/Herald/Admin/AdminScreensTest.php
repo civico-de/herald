@@ -51,12 +51,13 @@ class AdminScreensTest extends AdminTestCase {
         'herald_monitor',
         'herald_test',
         'herald_preview',
+        'herald_digests',
         'herald_parked_alerts',
       ],
       array_column($children, 'name'),
     );
     $this->assertSame(['administer CiviCRM'], array_values(array_unique(array_column($children, 'permission'))));
-    $screens = array_slice($children, 1, -1);
+    $screens = array_slice($children, 1, -2);
     $this->assertSame(array_values(AdminScreens::screens()), array_column($screens, 'label'));
     $this->assertSame(
       array_map(
@@ -65,7 +66,10 @@ class AdminScreensTest extends AdminTestCase {
       ),
       array_column($screens, 'url'),
     );
-    $this->assertSame(AdminScreens::PARKED_ALERTS_PATH, end($children)['url']);
+    $this->assertSame(
+      [AdminScreens::DIGESTS_PATH . '?reset=1', AdminScreens::PARKED_ALERTS_PATH],
+      array_column(array_slice($children, -2), 'url'),
+    );
   }
 
   public function testTheSettingsPageLinksTheScreens(): void {

@@ -22,7 +22,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
   abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_CivirulesActions_Form_Form {
 
     /**
-     * Workflow templates this action supports. Subclasses can narrow.
+     * Workflow templates this action supports; [] for an action without a template field.
      * @return array<string, string> workflow_name => label
      */
     abstract protected function getTemplateOptions(): array;
@@ -112,13 +112,11 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
         $this->getChannelOptions(),
         required: TRUE,
       );
-      $this->add(
-        'select',
-        'template',
-        E::ts('Message template'),
-        $this->getTemplateOptions(),
-        required: $this->templateRequired(),
-      );
+      // A digest's blocks bring their own templates.
+      $templates = $this->getTemplateOptions();
+      if ($templates !== []) {
+        $this->add('select', 'template', E::ts('Message template'), $templates, required: TRUE);
+      }
       $this->add('text', 'chat_id', E::ts('Telegram chat ID (optional, falls back to default setting)'), [
         'size' => 30,
       ]);
@@ -217,7 +215,6 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
         'email_location_type' => (int) self::toStringValue($values['email_location_type'] ?? ''),
         'scope_entity' => $this->supportsScopeEntity() ? self::toStringValue($values['scope_entity'] ?? '') : '',
         'channel' => $values['channel'] ?? 'telegram',
-        'template' => $values['template'] ?? '',
         'chat_id' => $values['chat_id'] ?? '',
         'parse_mode' => $values['parse_mode'] ?? 'HTML',
         'disable_notification' => !empty($values['disable_notification']),
@@ -225,6 +222,9 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
         'aggregate_minutes' => max(0, (int) self::toStringValue($values['aggregate_minutes'] ?? '')),
         'channel_config' => self::parseChannelConfig(self::toStringValue($values['channel_config'] ?? '')),
       ];
+      if ($this->elementExists('template')) {
+        $params['template'] = $values['template'] ?? '';
+      }
       $params = array_merge($params, $this->getExtraValues($values));
       $this->ruleAction->action_params = serialize($params);
       $this->ruleAction->save();
@@ -358,13 +358,6 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
         ]));
       }
       return $decoded;
-    }
-
-    /**
-     * Whether the action needs a template of its own; a digest's blocks bring theirs.
-     */
-    protected function templateRequired(): bool {
-      return TRUE;
     }
 
     /**

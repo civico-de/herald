@@ -227,40 +227,17 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
 
   public function testDigestForm(): void {
     [$submitted, $expected] = $this->sendFields();
-    // The first option is "block default" (''), which the shared resolution skips.
-    $submitted['template'] = 'herald_contribution_digest_daily';
-    $expected['template'] = 'herald_contribution_digest_daily';
+    // A digest's blocks bring their own templates.
+    unset($submitted['template'], $expected['template']);
+    \Civi\Api4\HeraldDigest::create(checkPermissions: FALSE)
+      ->setValues(['name' => 'herald_test_round_trip', 'title' => 'Round trip'])
+      ->execute();
     $this->assertRoundTrip(
       self::ACTION,
       CRM_Herald_CivirulesAdapter_Action_Digest::class,
       CRM_Herald_CivirulesAdapter_Form_SendDigest::class,
-      $submitted
-      + [
-        'period' => 'last_7_days',
-        'campaign_id' => '5',
-        'financial_type_id' => '2',
-        'source_pattern' => '%Web%',
-        'group_by' => 'line_item',
-        'show_pending' => '1',
-        'bucket_count' => '6',
-        'bucket_edges' => '[0, 10, 100]',
-        'blocks' => ' [{"type": "section", "key": "myext.seats"}] ',
-        'header' => '<b>Daily</b>',
-      ],
-      $expected
-      + [
-        'period' => 'last_7_days',
-        'campaign_id' => 5,
-        'financial_type_id' => 2,
-        'source_pattern' => '%Web%',
-        'group_by' => 'line_item',
-        'show_pending' => TRUE,
-        'show_histogram' => FALSE,
-        'bucket_count' => 6,
-        'bucket_edges' => '[0, 10, 100]',
-        'blocks' => '[{"type": "section", "key": "myext.seats"}]',
-        'header' => '<b>Daily</b>',
-      ],
+      $submitted + ['digest' => 'herald_test_round_trip'],
+      $expected + ['digest' => 'herald_test_round_trip'],
     );
   }
 

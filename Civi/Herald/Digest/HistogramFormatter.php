@@ -30,7 +30,7 @@ class HistogramFormatter {
    * @param float[] $amounts
    * @param int $bucketCount Target number of buckets. Actual count may be lower
    *   when several edges collapse to the same nice number.
-   * @param float[]|null $overrideEdges Caller-supplied edges (skips adaptation).
+   * @param float[]|null $overrideEdges Caller-supplied edges, at least two (skips adaptation).
    *
    * @return array<int, array{low: float, high: float, count: int, sum: float, label: string}>
    */
@@ -40,17 +40,10 @@ class HistogramFormatter {
       return [];
     }
 
-    // Fewer than two edges defines no bucket; the form decodes '[]' to an
-    // empty array, so treat that like an absent override.
-    if ($overrideEdges !== NULL && count($overrideEdges) >= 2) {
-      $edges = $overrideEdges;
+    if ($overrideEdges !== NULL && count($overrideEdges) < 2) {
+      throw new \InvalidArgumentException('herald: fewer than two histogram edges define no bucket');
     }
-    // @mago-expect lint:no-else-clause
-    else {
-      $edges = self::deriveEdges($amounts, $bucketCount);
-    }
-
-    return self::distribute($amounts, $edges);
+    return self::distribute($amounts, $overrideEdges ?? self::deriveEdges($amounts, $bucketCount));
   }
 
   /**

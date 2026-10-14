@@ -90,7 +90,7 @@ final class DigestVars {
     if (!isset($params['show_histogram']) || !empty($params['show_histogram'])) {
       $amounts = $stats->getAmountDistribution($filters, $period);
       $bucketCount = Cast::toInt($params['bucket_count'] ?? 8, 8);
-      $edges = self::decodeEdges($params['bucket_edges'] ?? NULL);
+      $edges = BucketEdges::parse($params['bucket_edges'] ?? NULL);
       $buckets = HistogramFormatter::compute($amounts, $bucketCount, $edges);
       $vars['histogram'] = HistogramFormatter::render($buckets);
     }
@@ -140,27 +140,13 @@ final class DigestVars {
     );
   }
 
-  /**
-   * @param mixed $raw Either an array of edges or a JSON-encoded array.
-   * @return list<float>|null
-   */
-  private static function decodeEdges(mixed $raw): ?array {
-    if (empty($raw)) {
-      return NULL;
-    }
-    $decoded = is_array($raw) ? $raw : json_decode(Cast::toString($raw), TRUE);
-    if (!is_array($decoded)) {
-      return NULL;
-    }
-    return array_values(array_map(Cast::toFloat(...), $decoded));
-  }
-
   public static function resolvePeriod(string $key): DateRange {
     return match ($key) {
       'today' => DateRange::today(),
       'last_7_days' => DateRange::lastDays(7),
       'last_30_days' => DateRange::lastDays(30),
-      default => DateRange::yesterday(),
+      'yesterday' => DateRange::yesterday(),
+      default => throw new \CRM_Core_Exception("herald: unknown digest period \"{$key}\""),
     };
   }
 

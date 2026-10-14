@@ -41,13 +41,22 @@ class CRM_Herald_CivirulesAdapter_ActionDelegationTest extends TestCase implemen
   }
 
   public function testSendDigestReachesTheDispatcher(): void {
+    $digestId = \Civi\Api4\HeraldDigest::create(checkPermissions: FALSE)
+      ->setValues(['name' => 'adapter_test', 'title' => 'Adapter test'])
+      ->execute()
+      ->single()['id'];
+    \Civi\Api4\HeraldDigestBlock::create(checkPermissions: FALSE)
+      ->setValues([
+        'digest_id' => $digestId,
+        'template' => 'herald_contribution_digest_daily',
+        'show_histogram' => FALSE,
+      ])
+      ->execute();
     $action = new CRM_Herald_CivirulesAdapter_Action_Digest();
     $action->setRuleActionData($this->ruleActionData([
+      'digest' => 'adapter_test',
       'channel' => 'telegram',
-      'template' => 'herald_contribution_digest_daily',
-      'period' => 'yesterday',
       'aggregate_minutes' => 15,
-      'show_histogram' => FALSE,
     ]));
 
     $action->processAction(new class() extends CRM_Civirules_TriggerData_TriggerData {});

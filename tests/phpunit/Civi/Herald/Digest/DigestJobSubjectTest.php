@@ -22,6 +22,10 @@ class DigestJobSubjectTest extends TestCase implements HeadlessInterface, HookIn
 
   private const WORKFLOW = 'herald_test_digest_subject';
 
+  private const DIGEST = 'herald_test_subject';
+
+  private const DELIVERY = ['channel' => 'email', 'email_to' => 'ops@example.org'];
+
   public function setUpHeadless() {
     return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
   }
@@ -46,6 +50,13 @@ class DigestJobSubjectTest extends TestCase implements HeadlessInterface, HookIn
       ->addValue('is_default', value: TRUE)
       ->addValue('is_active', value: TRUE)
       ->execute();
+    $digestId = \Civi\Api4\HeraldDigest::create(checkPermissions: FALSE)
+      ->setValues(['name' => self::DIGEST, 'title' => 'Herald test digest'])
+      ->execute()
+      ->single()['id'];
+    \Civi\Api4\HeraldDigestBlock::create(checkPermissions: FALSE)
+      ->setValues(['digest_id' => $digestId, 'template' => self::WORKFLOW])
+      ->execute();
   }
 
   /**
@@ -64,8 +75,8 @@ class DigestJobSubjectTest extends TestCase implements HeadlessInterface, HookIn
         'parameters' => json_encode([
           'version' => 4,
           'checkPermissions' => FALSE,
-          'actionParams' => $extra
-            + ['template' => self::WORKFLOW, 'channel' => 'email', 'email_to' => 'ops@example.org'],
+          'digest' => self::DIGEST,
+          'actionParams' => $extra + self::DELIVERY,
         ]),
       ])
       ->execute()
@@ -78,7 +89,8 @@ class DigestJobSubjectTest extends TestCase implements HeadlessInterface, HookIn
     $this->setClock('2030-01-07 07:59:00');
     $result = \Civi\Api4\Herald::notifyDigest(checkPermissions: FALSE)
       ->setSendHour(8)
-      ->setActionParams(['template' => self::WORKFLOW, 'channel' => 'email', 'email_to' => 'ops@example.org'])
+      ->setDigest(self::DIGEST)
+      ->setActionParams(self::DELIVERY)
       ->execute()
       ->single();
     $this->assertSame(['mode' => 'skipped', 'send_hour' => 8, 'current_hour' => 7], $result);
@@ -89,7 +101,8 @@ class DigestJobSubjectTest extends TestCase implements HeadlessInterface, HookIn
     $this->setClock('2030-01-07 08:59:00');
     $result = \Civi\Api4\Herald::notifyDigest(checkPermissions: FALSE)
       ->setSendHour(8)
-      ->setActionParams(['template' => self::WORKFLOW, 'channel' => 'email', 'email_to' => 'ops@example.org'])
+      ->setDigest(self::DIGEST)
+      ->setActionParams(self::DELIVERY)
       ->execute()
       ->single();
     $this->assertSame('sent', $result['mode']);
@@ -100,7 +113,8 @@ class DigestJobSubjectTest extends TestCase implements HeadlessInterface, HookIn
     $this->expectExceptionMessage('herald: sendHour must be an hour from 0 to 23, got 25');
     \Civi\Api4\Herald::notifyDigest(checkPermissions: FALSE)
       ->setSendHour(25)
-      ->setActionParams(['template' => self::WORKFLOW, 'channel' => 'email', 'email_to' => 'ops@example.org'])
+      ->setDigest(self::DIGEST)
+      ->setActionParams(self::DELIVERY)
       ->execute();
   }
 
@@ -113,12 +127,8 @@ class DigestJobSubjectTest extends TestCase implements HeadlessInterface, HookIn
 
   public function testAnAggregatedDigestCarriesNoAmount(): void {
     \Civi\Api4\Herald::notifyDigest(checkPermissions: FALSE)
-      ->setActionParams([
-        'template' => self::WORKFLOW,
-        'channel' => 'email',
-        'email_to' => 'ops@example.org',
-        'aggregate_minutes' => 5,
-      ])
+      ->setDigest(self::DIGEST)
+      ->setActionParams(self::DELIVERY + ['aggregate_minutes' => 5])
       ->execute();
     $this->assertSame(
       1,
@@ -150,6 +160,7 @@ class DigestJobSubjectTest extends TestCase implements HeadlessInterface, HookIn
       ->execute()
       ->single()['id'];
     \CRM_Herald_Upgrader_DigestJobs::migrate();
+    \CRM_Herald_Upgrader_InlineDigestJobs::migrate();
 
     (new \CRM_Core_JobManager())->executeJobById($id);
 

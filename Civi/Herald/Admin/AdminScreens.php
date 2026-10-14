@@ -9,14 +9,17 @@ use Civi\Core\Service\AutoService;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
- * The admin screens beside the settings form: their links on that form, and
- * the SearchKit task that reactivates parked alerts.
+ * The admin screens beside the settings form: their links on that form (the
+ * heraldAdmin screens, the digest list, parked alerts), and the SearchKit task
+ * that reactivates parked alerts.
  *
  * @service herald.admin_screens
  */
 final class AdminScreens extends AutoService implements HookInterface {
 
   public const BASE_PATH = 'civicrm/admin/herald';
+
+  public const DIGESTS_PATH = 'civicrm/admin/herald/digests';
 
   public const PARKED_ALERTS_PATH = 'civicrm/search#/display/Herald_Parked_Alerts/Herald_Parked_Alerts_Table';
 
@@ -45,6 +48,8 @@ final class AdminScreens extends AutoService implements HookInterface {
       $url = \CRM_Utils_System::url(self::BASE_PATH, '', FALSE, '/' . $route);
       $items .= '<li><a href="' . $url . '">' . htmlspecialchars($title) . '</a></li>';
     }
+    $digests = \CRM_Utils_System::url(self::DIGESTS_PATH, 'reset=1');
+    $items .= '<li><a href="' . $digests . '">' . htmlspecialchars(E::ts('Digests')) . '</a></li>';
     $parked = \CRM_Utils_System::url(
       'civicrm/search',
       '',

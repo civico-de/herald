@@ -30,8 +30,10 @@
   </php_compatibility>
   <comments>CiviRules is optional: with it, rules send notifications and scheduled digests.</comments>
   <requires>
-    <!-- The parked-alerts list ships as a SearchKit display. -->
+    <!-- The parked-alerts and digest lists ship as SearchKit displays. -->
     <ext>org.civicrm.search_kit</ext>
+    <!-- Digests are edited in an Afform. -->
+    <ext>org.civicrm.afform</ext>
   </requires>
   <classloader>
     <psr0 prefix="CRM_" path="."/>

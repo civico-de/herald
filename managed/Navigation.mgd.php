@@ -5,7 +5,7 @@ declare(strict_types = 1);
 use CRM_Herald_ExtensionUtil as E;
 
 /**
- * Administer » Herald: the settings form, the admin screens and the parked-alerts list.
+ * Administer » Herald: the settings form, the admin screens, the digests and the parked-alerts list.
  */
 $item = static fn (string $name, string $label, string $url, int $weight, string $parent = 'herald') => [
   'name' => 'Navigation_' . $name,
@@ -45,6 +45,7 @@ $weight = 2;
 foreach ($screens as $route => $title) {
   $items[] = $item('herald_' . $route, $title, 'civicrm/admin/herald#/' . $route, $weight++);
 }
+$items[] = $item('herald_digests', E::ts('Digests'), 'civicrm/admin/herald/digests?reset=1', $weight++);
 // Its managed name predates the scheme above; a new name would recreate the item.
 $parked = $item(
   'herald_parked_alerts',

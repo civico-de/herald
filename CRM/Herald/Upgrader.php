@@ -5,8 +5,8 @@ declare(strict_types = 1);
 use CRM_Herald_ExtensionUtil as E;
 
 /**
- * Install and uninstall of civicrm_herald_buffer run through the
- * AutomaticUpgrader from schema/; the steps here bring older tables up to it.
+ * Install and uninstall of the tables in schema/ run through the
+ * AutomaticUpgrader; the steps here bring older installs up to it.
  */
 class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
 
@@ -94,6 +94,19 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
   public function upgrade_1010(): bool {
     $this->ctx->log->info('herald: registering the Herald: Schedule CiviRules trigger');
     CRM_Herald_Upgrader_Reconcile::run();
+    return TRUE;
+  }
+
+  /**
+   * Digests move out of rule action and job parameters into HeraldDigest records.
+   */
+  public function upgrade_1011(): bool {
+    $this->ctx->log->info('herald: creating the digest tables');
+    E::schema()->createEntityTable('schema/HeraldDigest.entityType.php');
+    E::schema()->createEntityTable('schema/HeraldDigestBlock.entityType.php');
+    $actions = CRM_Herald_CivirulesAdapter_InlineDigests::migrate();
+    $jobs = CRM_Herald_Upgrader_InlineDigestJobs::migrate();
+    $this->ctx->log->info("herald: moved the digests of {$actions} rule action(s) and {$jobs} job(s) into records");
     return TRUE;
   }
 

@@ -188,15 +188,24 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
   }
 
   public function testDigestContract(): void {
+    $digestId = \Civi\Api4\HeraldDigest::create(checkPermissions: FALSE)
+      ->setValues(['name' => 'herald_test_contract', 'title' => 'Contract digest'])
+      ->execute()
+      ->single()['id'];
+    \Civi\Api4\HeraldDigestBlock::create(checkPermissions: FALSE)
+      ->setValues([
+        'digest_id' => $digestId,
+        'template' => 'herald_contribution_digest_daily',
+        'show_histogram' => FALSE,
+      ])
+      ->execute();
     $action = $this->action(CRM_Herald_CivirulesAdapter_Action_Digest::class, [
+      'digest' => 'herald_test_contract',
       'channel' => 'telegram',
-      'template' => 'herald_contribution_digest_daily',
-      'period' => 'yesterday',
       'aggregate_minutes' => 15,
-      'show_histogram' => FALSE,
     ]);
     self::assertStringContainsString('id=7', (string) $action->getExtraDataInputUrl(7));
-    self::assertIsString($action->userFriendlyConditionParams());
+    self::assertSame('Sends the digest &quot;Contract digest&quot;.', $action->userFriendlyConditionParams());
 
     // Cron triggers carry no entity at all; the digest must not need one.
     $action->processAction(new CRM_Civirules_TriggerData_Cron(NULL, 'Contribution', []));

@@ -81,12 +81,18 @@ class CRM_Herald_BufferSchemaUpgradeTest extends TestCase implements HeadlessInt
     $this->assertSame($fresh, $this->shape());
   }
 
-  public function testUninstallDropsTheTable(): void {
+  public function testUninstallDropsEveryTable(): void {
+    $schemas = [
+      'civicrm_herald_buffer' => self::SCHEMA,
+      'civicrm_herald_digest' => 'schema/HeraldDigest.entityType.php',
+      'civicrm_herald_digest_block' => 'schema/HeraldDigestBlock.entityType.php',
+    ];
     $this->upgrader()->notify('uninstall');
-    $dropped = !E::schema()->tableExists(self::TABLE);
-    E::schema()->createEntityTable(self::SCHEMA);
+    $left = array_filter(array_keys($schemas), static fn (string $table): bool => E::schema()->tableExists($table));
+    // In dependency order: blocks reference their digest.
+    array_map(static fn (string $schema) => E::schema()->createEntityTable($schema), $schemas);
 
-    $this->assertTrue($dropped, 'uninstall left civicrm_herald_buffer behind');
+    $this->assertSame([], $left, 'uninstall left tables behind');
   }
 
   private function upgrader(): CRM_Extension_Upgrader_Interface {

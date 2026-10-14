@@ -8,29 +8,45 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
- * The digest block types and the key each cannot do without.
+ * The digest block types, the HeraldDigestBlock field each cannot do without,
+ * and the checks a block passes before it is saved or sent.
  */
 final class BlockType {
 
-  public const REQUIRED = ['contribution' => NULL, 'search' => 'search', 'section' => 'key'];
+  public const REQUIRED = ['contribution' => NULL, 'search' => 'saved_search_id', 'section' => 'section_key'];
 
   /**
    * Why the block cannot run, or NULL.
    *
-   * @param array<string, mixed> $block
-   * @param callable(string): ?string $searchProblem
+   * @param array<string, mixed> $block HeraldDigestBlock values
    */
-  public static function problem(array $block, callable $searchProblem): ?string {
+  public static function problem(array $block): ?string {
     $type = Cast::toString($block['type'] ?? 'contribution');
     if (!array_key_exists($type, self::REQUIRED)) {
       return E::ts('unknown type "%1".', [1 => $type]);
     }
-    $key = self::REQUIRED[$type];
-    $value = $key === NULL ? NULL : trim(Cast::toString($block[$key] ?? ''));
-    if ($value === '') {
-      return E::ts('a %1 block needs "%2".', [1 => $type, 2 => $key]);
+    $field = self::REQUIRED[$type];
+    if ($field !== NULL && trim(Cast::toString($block[$field] ?? '')) === '') {
+      return $type === 'search'
+        ? E::ts('a saved search block needs a saved search.')
+        : E::ts('a section block needs a section key.');
     }
-    return $type === 'search' ? $searchProblem((string) $value) : NULL;
+    return (
+      Options::problem(E::ts('period'), $block['period'] ?? NULL, Options::periods())
+      ?? ($type === 'contribution' ? self::contributionProblem($block) : NULL)
+    );
+  }
+
+  /**
+   * @param array<string, mixed> $block
+   */
+  private static function contributionProblem(array $block): ?string {
+    $tooFewBuckets = isset($block['bucket_count']) && Cast::toInt($block['bucket_count']) < 1;
+    return (
+      Options::problem(E::ts('grouping'), $block['group_by'] ?? NULL, Options::groupings())
+      ?? ($tooFewBuckets ? E::ts('the bucket count must be at least 1.') : NULL)
+      ?? BucketEdges::problem($block['bucket_edges'] ?? NULL)
+    );
   }
 
 }

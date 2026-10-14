@@ -8,12 +8,12 @@ use Civi\Herald\Renderer\TemplateRenderer;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * Assembles a digest from its blocks (BlockList) into one body.
+ * Assembles a stored digest (Definition::load) into one body.
  *
  * Block types (`type`, default "contribution"):
  *   contribution — DigestVars filters, template herald_contribution_digest_block
- *   search       — `search`: SavedSearch name, template herald_digest_search_block
- *   section      — `key`: a section from hook_civicrm_heraldDigestSections, inserted as HTML
+ *   search       — `saved_search_id`, template herald_digest_search_block
+ *   section      — `section_key`: a section from hook_civicrm_heraldDigestSections, inserted as HTML
  */
 final class Composer {
 
@@ -23,12 +23,12 @@ final class Composer {
   ];
 
   /**
-   * @var \Closure(string): array<string, mixed>
+   * @var \Closure(int): array<string, mixed>
    */
   private \Closure $searchRunner;
 
   /**
-   * @param (callable(string): array<string, mixed>)|null $searchRunner SavedSearch name → block variables
+   * @param (callable(int): array<string, mixed>)|null $searchRunner SavedSearch id → block variables
    */
   public function __construct(
     private readonly ContributionStatsService $stats = new ContributionStatsService(),
@@ -39,17 +39,22 @@ final class Composer {
   }
 
   /**
-   * @param array<string, mixed> $params
+   * @param array{name: string, header: string, period: string, blocks: list<array<string, mixed>>} $digest
    * @return array{body: string, subject: ?string, blocks: int, count: int}
    */
-  public function compose(array $params): array {
-    $blocks = BlockList::parse($params);
-    // The header is HTML; a job saved through the form stores it input-encoded.
-    $parts = [trim(TemplateRenderer::decodeInput(Cast::toString($params['header'] ?? '')))];
+  public function compose(array $digest): array {
+    $blocks = $digest['blocks'];
+    // Blocks are checked on save; a saved search deleted since leaves its block without one.
+    $problems = DigestRules::blockProblems($digest['name'], $blocks);
+    if ($problems !== []) {
+      throw new \CRM_Core_Exception(implode(' ', $problems));
+    }
+    // The header is HTML; core's input encoding may have stored it encoded.
+    $parts = [trim(TemplateRenderer::decodeInput($digest['header']))];
     $subject = NULL;
     $count = 0;
     foreach ($blocks as $block) {
-      $rendered = $this->renderBlock($block + ['period' => $params['period'] ?? 'yesterday'], $params);
+      $rendered = $this->renderBlock($block + ['period' => $digest['period']], $digest['name']);
       $parts[] = $rendered['body'];
       $subject ??= $rendered['subject'];
       $count += $rendered['count'];
@@ -65,18 +70,21 @@ final class Composer {
 
   /**
    * @param array<string, mixed> $block
-   * @param array<string, mixed> $params The digest's own params, for section listeners
    * @return array{body: string, subject: ?string, count: int}
    */
-  private function renderBlock(array $block, array $params): array {
+  private function renderBlock(array $block, string $digestName): array {
     $type = Cast::toString($block['type'] ?? 'contribution');
     if ($type === 'section') {
-      $body = ExtraSections::answer(Cast::toString($block['key']), ['params' => $params, 'period' => $block['period']]);
-      return ['body' => $body, 'subject' => NULL, 'count' => 0];
+      $context = ['digest' => $digestName, 'period' => $block['period']];
+      return [
+        'body' => ExtraSections::answer(Cast::toString($block['section_key']), $context),
+        'subject' => NULL,
+        'count' => 0,
+      ];
     }
     $vars = match ($type) {
       'contribution' => DigestVars::build($block, $this->stats),
-      'search' => ($this->searchRunner)(Cast::toString($block['search'])),
+      'search' => ($this->searchRunner)(Cast::toInt($block['saved_search_id'])),
       default => throw new \CRM_Core_Exception("herald: unknown digest block type \"{$type}\""),
     };
     $vars['block_title'] = Cast::toString($block['title'] ?? '');

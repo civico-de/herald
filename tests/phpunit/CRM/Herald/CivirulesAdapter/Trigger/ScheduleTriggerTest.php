@@ -51,6 +51,7 @@ class CRM_Herald_CivirulesAdapter_Trigger_ScheduleTriggerTest extends TestCase i
       }
       CRM_Core_DAO::executeQuery('DELETE FROM civirule_rule WHERE id = %1', [1 => [$rule, 'Integer']]);
     }
+    \Civi\Api4\HeraldDigest::delete(checkPermissions: FALSE)->addWhere('name', '=', 'herald_test_weekly')->execute();
     parent::tearDown();
   }
 
@@ -103,14 +104,20 @@ class CRM_Herald_CivirulesAdapter_Trigger_ScheduleTriggerTest extends TestCase i
    */
   private function scheduledDigestRule(int $assignee, array $schedule): int {
     $rule = $this->scheduledRule($schedule);
+    $digestId = \Civi\Api4\HeraldDigest::create(checkPermissions: FALSE)
+      ->setValues(['name' => 'herald_test_weekly', 'title' => 'Weekly digest', 'period' => 'last_7_days'])
+      ->execute()
+      ->single()['id'];
+    \Civi\Api4\HeraldDigestBlock::create(checkPermissions: FALSE)
+      ->setValues(['digest_id' => $digestId, 'template' => 'herald_contribution_digest_weekly'])
+      ->execute();
     CiviRulesRuleAction::create(checkPermissions: FALSE)
       ->addValue('rule_id', $rule)
       ->addValue('action_id', $this->id(CiviRulesAction::get(checkPermissions: FALSE), 'herald_digest'))
       ->addValue('action_params', [
         'channel' => 'activity',
         'activity_assignee_contact_id' => $assignee,
-        'template' => 'herald_contribution_digest_weekly',
-        'period' => 'last_7_days',
+        'digest' => 'herald_test_weekly',
       ])
       ->addValue('is_active', TRUE)
       ->execute();
