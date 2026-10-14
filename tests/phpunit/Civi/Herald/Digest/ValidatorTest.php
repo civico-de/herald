@@ -57,8 +57,12 @@ class ValidatorTest extends TestCase implements HeadlessInterface, Transactional
       ])
       ->execute()
       ->single()['id'];
+    $display = \Civi\Api4\SearchDisplay::create(checkPermissions: FALSE)
+      ->setValues(['saved_search_id' => $search, 'label' => 'Members', 'type' => 'table', 'settings' => []])
+      ->execute()
+      ->single()['id'];
     $block = (int) HeraldDigestBlock::create(checkPermissions: FALSE)
-      ->setValues(['digest_id' => $id, 'type' => 'search', 'saved_search_id' => $search])
+      ->setValues(['digest_id' => $id, 'type' => 'search', 'search_display_id' => $display])
       ->execute()
       ->single()['id'];
     HeraldDigestBlock::update(checkPermissions: FALSE)
@@ -121,7 +125,7 @@ class ValidatorTest extends TestCase implements HeadlessInterface, Transactional
       ->execute()
       ->single()['id'];
     $this->assertRefused(
-      'A saved search block needs a saved search',
+      'A search block needs a search display',
       static fn () => HeraldDigestBlock::update(checkPermissions: FALSE)
         ->addWhere('id', '=', $block)
         ->addValue('type', 'search')
@@ -164,7 +168,7 @@ class ValidatorTest extends TestCase implements HeadlessInterface, Transactional
   }
 
   public function testTheFormRefusesABrokenBlockBeforeWritingTheDigest(): void {
-    $this->assertRefused('Block 2: a saved search block needs a saved search.', fn () => $this->submit(
+    $this->assertRefused('Block 2: a search block needs a search display.', fn () => $this->submit(
       ['name' => 'weekly', 'title' => 'Weekly', 'period' => 'yesterday'],
       [['type' => 'contribution'], ['type' => 'search']],
     ));

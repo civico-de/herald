@@ -77,7 +77,7 @@ $contributionFields = fn () => [
 
 /**
  * One block of a digest, in id order. `type` decides which fields apply:
- * contribution the filter and histogram fields, search `saved_search_id`,
+ * contribution the filter and histogram fields, search `search_display_id`,
  * section `section_key` (hook_civicrm_heraldDigestSections).
  */
 return [
@@ -87,7 +87,7 @@ return [
   'getInfo' => fn () => [
     'title' => E::ts('Herald Digest Block'),
     'title_plural' => E::ts('Herald Digest Blocks'),
-    'description' => E::ts('A contribution summary, saved search or extension section within a digest.'),
+    'description' => E::ts('A contribution summary, search display or extension section within a digest.'),
     'log' => FALSE,
     'label_field' => 'title',
   ],
@@ -143,12 +143,13 @@ return [
     ]
     + $contributionFields()
     + [
-      'saved_search_id' => [
-        'title' => E::ts('Saved Search'),
+      'search_display_id' => [
+        'title' => E::ts('Search Display'),
         'sql_type' => 'int unsigned',
         'input_type' => 'EntityRef',
+        'description' => E::ts('Its rows, columns, sort and limit make the block.'),
         'entity_reference' => [
-          'entity' => 'SavedSearch',
+          'entity' => 'SearchDisplay',
           'key' => 'id',
           'on_delete' => 'SET NULL',
         ],

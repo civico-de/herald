@@ -13,7 +13,7 @@ use CRM_Herald_ExtensionUtil as E;
  */
 final class BlockType {
 
-  public const REQUIRED = ['contribution' => NULL, 'search' => 'saved_search_id', 'section' => 'section_key'];
+  public const REQUIRED = ['contribution' => NULL, 'search' => 'search_display_id', 'section' => 'section_key'];
 
   /**
    * Why the block cannot run, or NULL.
@@ -28,7 +28,7 @@ final class BlockType {
     $field = self::REQUIRED[$type];
     if ($field !== NULL && trim(Cast::toString($block[$field] ?? '')) === '') {
       return $type === 'search'
-        ? E::ts('a saved search block needs a saved search.')
+        ? E::ts('a search block needs a search display.')
         : E::ts('a section block needs a section key.');
     }
     return (

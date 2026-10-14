@@ -60,7 +60,7 @@ Received: $1,815.00 (29)
 200–250 ██ 2 (450)
 ```
 
-A digest can also combine blocks, such as the contributions of one campaign and the rows of a SearchKit saved search. See [Digests](https://civico-de.github.io/herald/digests/).
+A digest can also combine blocks, such as the contributions of one campaign and the rows of a SearchKit display. See [Digests](https://civico-de.github.io/herald/digests/).
 
 Scripts and other extensions can publish to a named topic, and the setting `herald_topics` decides where it goes:
 
@@ -74,7 +74,7 @@ cv api4 Herald.publish topic=ops message='Import finished'
 - [Recipes](https://civico-de.github.io/herald/recipes/): donations, ticket sales, events, signups and scheduled digests
 - [Channels](https://civico-de.github.io/herald/channels/): settings, options and limits of each channel
 - [Delivery](https://civico-de.github.io/herald/delivery/): recipients, subscriptions, topics, aggregation and parked alerts
-- [Digests](https://civico-de.github.io/herald/digests/): contribution, saved search and section blocks
+- [Digests](https://civico-de.github.io/herald/digests/): contribution, search display and section blocks
 - [Check monitor](https://civico-de.github.io/herald/monitor/): contributing health checks and tuning the alerts
 - [Reference](https://civico-de.github.io/herald/reference/): CiviRules actions and conditions, API, jobs, templates, settings and hooks
 - [Deployment](https://civico-de.github.io/herald/deploy/): updating herald without breaking the writes its rules run in

@@ -96,21 +96,23 @@ actions (no bespoke cron for alerts). CiviRules is optional, not in `<requires>`
   `DisabledRulesCheck` warns while the marker exists and reads only that file.
   Every registered handler needs a contract scenario, with full and partial payloads.
 - A digest is a `HeraldDigest` record with ordered `HeraldDigestBlock` rows
-  (`Definition` loads, `Composer` renders): contribution, saved search, hook
-  section. Rules, jobs and scripts name it by `name`; their params carry only
+  (`Definition` loads, `Composer` renders): contribution, SearchKit display,
+  hook section. Rules, jobs and scripts name it by `name`; their params carry only
   delivery settings. `DigestRules`/`BlockType` checks run on APIv4 validate
   (`Validator`: blocks per diff merged with the stored row, digests on the
   diff alone), on Afform submit
   (`FormValidator`, because Afform swallows save exceptions) and again at send,
-  for a saved search deleted since. Block FKs to campaign and financial type
+  for a display deleted since. Block FKs to campaign and financial type
   are RESTRICT (a vanished filter would widen the block to every contribution);
-  saved_search_id is SET NULL. Upgrade 1011 moves inline digests into records
+  search_display_id is SET NULL. Upgrade 1011 moves inline digests into records
   (`CRM_Herald_Upgrader_Inline*`; rule actions through
-  `CRM_Herald_CivirulesAdapter_InlineDigests`), reading their params as the old code did
-  (unknown periods are yesterday) and leaving unrunnable ones inline with a
-  warning. Search blocks run the SavedSearch's `api_params`
-  without permission checks — whoever configures a digest can report any search,
-  the same trust as the contribution queries. Scheduled digests are rules on
+  `CRM_Herald_CivirulesAdapter_InlineDigests`, on the CiviRules tables so a
+  disabled or pre-3.36 CiviRules is covered), reading their params as the old
+  code did (unknown periods are yesterday) and leaving unrunnable ones inline
+  with a warning; an old search block gets a new table display with the
+  search's sort and limit (`CRM_Herald_Upgrader_InlineSearch`). Search blocks
+  run `SearchDisplay::run` with `acl_bypass` forced on — whoever configures a
+  digest can report any display, the same trust as the contribution queries. Scheduled digests are rules on
   the cron trigger "Herald: Schedule" (`Herald.checkSchedule`): a slot fires
   once, when the rule log has no run since it and it is not older than the
   rule's `created_date` or the trigger's `since` — never `modified_date`, which

@@ -4,10 +4,13 @@ declare(strict_types = 1);
 
 use Civi\Api4\CiviRulesAction;
 use Civi\Api4\CiviRulesRuleAction;
+use Civi\Api4\Contact;
 use Civi\Api4\HeraldDigest;
 use Civi\Api4\HeraldDigestBlock;
 use Civi\Api4\Job;
 use Civi\Api4\SavedSearch;
+use Civi\Api4\SearchDisplay;
+use Civi\Herald\Digest\SearchBlock;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
@@ -113,8 +116,48 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
       $blocks[0]['bucket_edges'],
       $blocks[0]['period'],
     ]);
-    self::assertSame($searchId, $blocks[1]['saved_search_id']);
+    self::assertSame(
+      ['id' => $blocks[1]['search_display_id'], 'saved_search_id' => $searchId, 'label' => 'Herald: Old blocks'],
+      SearchDisplay::get(checkPermissions: FALSE)
+        ->addSelect('saved_search_id', 'label')
+        ->addWhere('id', '=', $blocks[1]['search_display_id'])
+        ->execute()
+        ->single(),
+    );
     self::assertSame('myext.seats', $blocks[2]['section_key']);
+  }
+
+  public function testASearchBlockShowsTheRowsTheSearchGave(): void {
+    foreach (['Herald Test A', 'Herald Test B', 'Herald Test C'] as $name) {
+      Contact::create(checkPermissions: FALSE)
+        ->setValues(['contact_type' => 'Organization', 'organization_name' => $name])
+        ->execute();
+    }
+    SavedSearch::create(checkPermissions: FALSE)
+      ->setValues([
+        'name' => 'herald_test_names',
+        'label' => 'Names',
+        'api_entity' => 'Contact',
+        'api_params' => [
+          'version' => 4,
+          'select' => ['organization_name'],
+          'where' => [['organization_name', 'LIKE', 'Herald Test%']],
+          'orderBy' => ['organization_name' => 'DESC'],
+          'limit' => 2,
+        ],
+      ])
+      ->execute();
+    CRM_Herald_Upgrader_InlineDigest::extract(
+      ['blocks' => [['type' => 'search', 'search' => 'herald_test_names']]],
+      'old_names',
+      'Old names',
+    );
+
+    $displayId = (int) $this->stored('old_names')['blocks'][0]['search_display_id'];
+    self::assertSame(
+      [['Herald Test C'], ['Herald Test B']],
+      array_column(SearchBlock::vars($displayId)['rows'], 'cells'),
+    );
   }
 
   public function testPeriodsAreReadAsOlderReleasesReadThem(): void {

@@ -60,7 +60,7 @@ final class Options {
   public static function blockTypes(): array {
     return [
       'contribution' => E::ts('Contributions'),
-      'search' => E::ts('Saved search'),
+      'search' => E::ts('Search display'),
       'section' => E::ts('Section from an extension'),
     ];
   }

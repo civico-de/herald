@@ -25,7 +25,7 @@ Eine Benachrichtigung kann an ein einzelnes Ziel gehen, an alle Kontakte, die di
 
 Skripte und andere Extensions können in ein benanntes Topic wie ops veröffentlichen. Eine Einstellung legt fest, welchen Kanal und welches Ziel jedes Topic erreicht. Wer veröffentlicht, muss also nie eine Chat-ID oder eine URL kennen.
 
-Ein Report fasst die Beiträge eines Zeitraums zusammen, listet die Zeilen einer gespeicherten SearchKit-Suche auf oder enthält Zahlen, die eine andere Extension liefert. Sie richten sie unter Administrieren » Herald » Reports ein, und sie gehen meist täglich oder wöchentlich hinaus, über eine Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
+Ein Report fasst die Beiträge eines Zeitraums zusammen, listet die Zeilen einer SearchKit-Anzeige auf oder enthält Zahlen, die eine andere Extension liefert. Sie richten sie unter Administrieren » Herald » Reports ein, und sie gehen meist täglich oder wöchentlich hinaus, über eine Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
 
 Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet, wenn ein Check fehlschlägt und wenn er sich wieder erholt, und erinnert an Checks, die dauerhaft fehlschlagen. Auf einer gesunden Site bleibt es still. Siehe [Check-Monitor](monitor.md).
 

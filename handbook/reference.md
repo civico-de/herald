@@ -158,7 +158,7 @@ herald's templates are CiviCRM message templates. Edit them under Mailings, Mess
 | Herald: Daily contribution digest | herald_contribution_digest_daily | The daily digest |
 | Herald: Weekly contribution digest | herald_contribution_digest_weekly | The weekly digest |
 | Herald: Contribution digest block (composable) | herald_contribution_digest_block | A contribution block of a digest |
-| Herald: Digest block from a saved search | herald_digest_search_block | A search block of a digest |
+| Herald: Digest block from a search display | herald_digest_search_block | A search block of a digest |
 | Herald: New event created | herald_event_created_alert | A new event |
 | Herald: Event deactivated | herald_event_deactivated_alert | A deactivated event |
 | Herald: Event deleted | herald_event_deleted_alert | A deleted event |

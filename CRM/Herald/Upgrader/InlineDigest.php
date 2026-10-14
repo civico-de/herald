@@ -62,8 +62,12 @@ final class CRM_Herald_Upgrader_InlineDigest {
         ->addValue('period', CRM_Herald_Upgrader_InlinePeriod::read($params['period'] ?? NULL, $name))
         ->execute()
         ->single()['id'];
+      $label = "Herald: {$title}";
       \Civi\Api4\HeraldDigestBlock::save(checkPermissions: FALSE)
-        ->setRecords($blocks)
+        ->setRecords(array_map(static fn (array $block): array => CRM_Herald_Upgrader_InlineSearch::record(
+          $block,
+          $label,
+        ), $blocks))
         ->setDefaults(['digest_id' => $digestId])
         ->execute();
     });
@@ -76,7 +80,9 @@ final class CRM_Herald_Upgrader_InlineDigest {
    */
   private static function problems(array $blocks): array {
     $problems = array_map(
-      static fn (array $block): ?string => BlockType::problem($block) ?? self::missingReference($block),
+      static fn (array $block): ?string => (
+        BlockType::problem(CRM_Herald_Upgrader_InlineSearch::forCheck($block)) ?? self::missingReference($block)
+      ),
       $blocks,
     );
     return array_values(array_filter($problems));

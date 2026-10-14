@@ -12,7 +12,7 @@ Ein Report (im Code Digest genannt) fasst einen Zeitraum in einer Nachricht zusa
 | Blocktyp | Inhalt | Standardvorlage |
 |---|---|---|
 | Beiträge | Beiträge eines Zeitraums: die Summe, eine Aufschlüsselung nach Quelle, die offenen ausstehenden Beträge, der Fortschritt einer Kampagne und ein Histogramm der Beträge | Herald: Beitragsreport-Block (kombinierbar) |
-| Gespeicherte Suche | Die Zeilen einer gespeicherten SearchKit-Suche | Herald: Report-Block aus einer gespeicherten Suche |
+| Suchanzeige | Die Zeilen einer SearchKit-Anzeige | Herald: Report-Block aus einer Suchanzeige |
 | Abschnitt aus einer Extension | Text, den eine andere Extension über einen Hook liefert | keine |
 
 ## Einen Report einrichten
@@ -29,12 +29,12 @@ Darunter folgen die Blöcke, mindestens einer, in der Reihenfolge, in der sie in
 Beim Speichern wird der ganze Report geprüft, bevor etwas geschrieben wird. Das Formular lehnt ab:
 
 - einen Namen, der schon vergeben ist oder falsche Zeichen enthält,
-- einen Suchblock ohne Suche,
+- einen Suchblock ohne Anzeige,
 - einen Abschnittsblock ohne Schlüssel,
 - eine Klassenzahl unter 1,
 - Histogrammgrenzen, die nicht aus mindestens zwei aufsteigenden Zahlen bestehen.
 
-Eine Meldung zu einem Block nennt ihn, zum Beispiel „Block 2: ein Suchblock braucht eine gespeicherte Suche.“ Über APIv4 gelten dieselben Prüfungen für jeden Datensatz von `HeraldDigest` und `HeraldDigestBlock`. Ein dort ohne Blöcke gespeicherter Report scheitert beim Versand.
+Eine Meldung zu einem Block nennt ihn, zum Beispiel „Block 2: ein Suchblock braucht eine Suchanzeige.“ Über APIv4 gelten dieselben Prüfungen für jeden Datensatz von `HeraldDigest` und `HeraldDigestBlock`. Ein dort ohne Blöcke gespeicherter Report scheitert beim Versand.
 
 Skripte und Deployments können einen Report mit cv anlegen. Die Verkettung speichert die Blöcke in der angegebenen Reihenfolge. JSON über mehrere Zeilen muss über die Standardeingabe kommen, daher `--in=json`:
 
@@ -59,7 +59,7 @@ Regeln und Skripte wählen einen Report über seinen Namen. Nachdem Sie den Name
 
 Eine Kampagne oder ein Finanztyp, nach dem ein Block filtert, lässt sich nicht löschen, solange der Block existiert, der Versuch endet mit einem Datenbankfehler. Ohne seinen Filter würde der Block jeden Beitrag zählen. Ändern oder entfernen Sie zuerst den Block.
 
-Eine gespeicherte Suche lässt sich löschen. Der Block, der sie verwendet hat, steht dann ohne Suche da, und der Report scheitert beim Versand mit der Meldung, die auch das Formular gezeigt hätte. Wählen Sie eine andere Suche oder entfernen Sie den Block.
+Eine Suchanzeige lässt sich löschen, ebenso ihre gespeicherte Suche, die ihre Anzeigen mitnimmt. Der Block, der sie gezeigt hat, steht dann ohne Anzeige da, und der Report scheitert beim Versand mit der Meldung, die auch das Formular gezeigt hätte. Wählen Sie eine andere Anzeige oder entfernen Sie den Block.
 
 ## Einen Report verschicken
 
@@ -114,13 +114,13 @@ Ohne feste Grenzen wählt herald Klassengrenzen, die zu den Beträgen passen. Fe
 
 Der Fortschritt einer Kampagne übernimmt Titel und Ziel aus dem Kampagnendatensatz. Er zählt jeden abgeschlossenen Beitrag der Kampagne, der zu den Filtern auf Finanztyp und Quelle passt, unabhängig vom Zeitraum. Bei der Aufschlüsselung nach Positionen zählt er stattdessen die Positionen der Kampagne. Eine Kampagne ohne Ziel zeigt keine Fortschrittszeile.
 
-### Blöcke aus einer gespeicherten Suche
+### Suchblöcke
 
-Ein solcher Block zeigt die Zeilen einer gespeicherten SearchKit-Suche, die Sie im Feld „Gespeicherte Suche“ (`saved_search_id`) wählen. Um Anzahlen zu zeigen, gruppieren Sie die Suche, zum Beispiel Mitgliedschaften nach Typ.
+Ein Suchblock zeigt die Zeilen einer SearchKit-Anzeige, die Sie im Feld „Suchanzeige“ (`search_display_id`) wählen. Die Anzeige bauen Sie wie gewohnt in SearchKit. Um Anzahlen zu zeigen, gruppieren Sie die Suche, zum Beispiel Mitgliedschaften nach Typ.
 
-Die Standardvorlage gibt eine Zeile pro Ergebniszeile aus, mit den Spalten der Suche in ihrer Reihenfolge. Es zählt nur die Abfrage der Suche, ihre Anzeigen spielen keine Rolle. Geben Sie der Suche ein Limit, denn jede Zeile landet in der Nachricht, und nur Telegram kürzt eine zu lange Nachricht.
+Die Standardvorlage gibt eine Zeile pro Ergebniszeile aus. Was darin steht, bestimmt die Anzeige: ihre Wertspalten in ihrer Reihenfolge und so formatiert wie in der Anzeige, ein Ja/Nein-Feld also als „Ja“ und ein Datum im Datumsformat der Seite. Link-, Schaltflächen- und Menüspalten entfallen. Es gilt die Sortierung der Anzeige. Eine Anzeige ohne eigene Sortierung zeigt die Zeilen unsortiert, auch wenn die Suche eine Reihenfolge hat. Auch ihr Limit gilt, bei einer Anzeige mit Seitenumbruch die erste Seite. Geben Sie der Anzeige ein Limit, denn jede Zeile landet in der Nachricht, und nur Telegram kürzt eine zu lange Nachricht.
 
-herald führt die Suche ohne Berechtigungsprüfung aus, so wie seine eigenen Beitragsabfragen. Wer einen Report konfigurieren darf, kann deshalb die Zeilen jeder gespeicherten Suche an einen Kanal schicken.
+herald führt die Anzeige ohne Berechtigungsprüfung aus, so wie seine eigenen Beitragsabfragen. Wer einen Report konfigurieren darf, kann deshalb die Zeilen jeder Anzeige an einen Kanal schicken.
 
 ### Abschnitte aus anderen Extensions
 
@@ -142,7 +142,7 @@ Die Antwort wird als HTML eingefügt, der Listener maskiert seine eigenen Daten 
 
 Ältere Versionen haben einen Report in den Einstellungen seiner Regelaktion oder seines geplanten Jobs abgelegt. Das Upgrade macht aus jedem einen Datensatz und lässt in der Aktion nur die Zustelleinstellungen und den Namen des Reports stehen. Der Report einer Regelaktion heißt `rule_action_<id>` und übernimmt den Titel der Regel, der Report eines Jobs heißt `job_<id>` und übernimmt den Namen des Jobs. Sie können sie danach umbenennen. Wählen Sie den Report dann in jeder Regelaktion, die ihn verschickt hat, neu aus, und passen Sie die Jobs und Skripte an, die ihn nennen.
 
-Das Upgrade behält bei, was der Report bisher verschickt hat. Einen Zeitraum, den herald nicht kannte, hat es als gestern gelesen, und so bleibt es. Histogrammgrenzen, die keine aufsteigenden Zahlen sind, entfallen mit einer Warnung im Upgrade-Protokoll, und das Histogramm wählt seine Klassen selbst. Ein Report, der nie laufen konnte, bleibt, wie er war, und das Upgrade-Protokoll enthält die Warnung „digest left inline, it cannot run until fixed“ mit dem Grund. Beispiele sind eine Blockliste, die kein JSON-Array aus Objekten ist, ein Block unbekannten Typs, ein Abschnittsblock ohne Schlüssel, eine gespeicherte Suche, Kampagne oder ein Finanztyp, die es nicht mehr gibt, und ein Filter auf den Beitragsstatus, den die Datensätze nicht mehr kennen. Eine solche Regel oder ein solcher Job scheitert, bis er einen Report nennt.
+Das Upgrade behält bei, was der Report bisher verschickt hat. Einen Zeitraum, den herald nicht kannte, hat es als gestern gelesen, und so bleibt es. Histogrammgrenzen, die keine aufsteigenden Zahlen sind, entfallen mit einer Warnung im Upgrade-Protokoll, und das Histogramm wählt seine Klassen selbst. Ein Suchblock bekommt eine neue Tabellenanzeige seiner Suche mit der Bezeichnung „Herald: “ und dem Titel des Reports, mit den Spalten, der Sortierung und dem Limit der Suche und ohne Seitenumbruch. Seine Werte erscheinen nun formatiert, so wie die Anzeige sie zeigt. Ein Report, der nie laufen konnte, bleibt, wie er war, und das Upgrade-Protokoll enthält die Warnung „digest left inline, it cannot run until fixed“ mit dem Grund. Beispiele sind eine Blockliste, die kein JSON-Array aus Objekten ist, ein Block unbekannten Typs, ein Abschnittsblock ohne Schlüssel, eine gespeicherte Suche, Kampagne oder ein Finanztyp, die es nicht mehr gibt, und ein Filter auf den Beitragsstatus, den die Datensätze nicht mehr kennen. Eine solche Regel oder ein solcher Job scheitert, bis er einen Report nennt.
 
 Das Report-Formular ist ein Afform, herald braucht deshalb die Extension Form Core (`org.civicrm.afform`). Aktivieren Sie sie vor dem Upgrade von herald auf einer Seite, auf der sie noch fehlt.
 
@@ -186,6 +186,6 @@ Die Vorlagen für Beitragsblöcke sowie die Vorlagen für den täglichen und den
 | histogram | Das Histogramm als vorformatierter Text. Es ist leer, wenn das Histogramm ausgeschaltet ist. |
 | block_title | Der Titel des Blocks. |
 
-Vorlagen für Suchblöcke erhalten block_title, count, also die Anzahl der Zeilen, und rows. Jede Zeile hat cells, die Spaltenwerte in ihrer Reihenfolge, und values, dieselben Werte nach Spaltennamen. In den Schlüsseln wird jedes Zeichen, das kein Buchstabe, keine Ziffer und kein Unterstrich ist, zu einem Unterstrich. Die Spalte `contact_type:label` wird zu `contact_type_label`, und `COUNT(id) AS n` wird zu `n`.
+Vorlagen für Suchblöcke erhalten block_title, count, also die Anzahl der Zeilen, labels, die Spaltenüberschriften in ihrer Reihenfolge, und rows. Jede Zeile hat cells, die Spaltenwerte in ihrer Reihenfolge, und values, dieselben Werte nach dem Feld der Spalte. In den Schlüsseln wird jedes Zeichen, das kein Buchstabe, keine Ziffer und kein Unterstrich ist, zu einem Unterstrich. Die Spalte `contact_type:label` wird zu `contact_type_label`, und `COUNT(id) AS n` wird zu `n`.
 
 In einer Vorlage sind das Smarty-Variablen wie `{$totals.amount|crmMoney}`.

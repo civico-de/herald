@@ -158,7 +158,7 @@ Die Vorlagen von herald sind CiviCRM-Nachrichtenvorlagen. Sie bearbeiten sie unt
 | Herald: Täglicher Beitragsreport | herald_contribution_digest_daily | Den täglichen Report |
 | Herald: Wöchentlicher Beitragsreport | herald_contribution_digest_weekly | Den wöchentlichen Report |
 | Herald: Beitragsreport-Block (kombinierbar) | herald_contribution_digest_block | Einen Beitragsblock eines Reports |
-| Herald: Report-Block aus einer gespeicherten Suche | herald_digest_search_block | Einen Suchblock eines Reports |
+| Herald: Report-Block aus einer Suchanzeige | herald_digest_search_block | Einen Suchblock eines Reports |
 | Herald: Neues Event angelegt | herald_event_created_alert | Ein neues Event |
 | Herald: Event deaktiviert | herald_event_deactivated_alert | Ein deaktiviertes Event |
 | Herald: Event gelöscht | herald_event_deleted_alert | Ein gelöschtes Event |

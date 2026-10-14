@@ -276,9 +276,9 @@ $templates = [
       TPL,
   ],
   [
-    // Search block of a composed digest: one line per row of a saved search.
+    // Search block of a composed digest: one line per row of a search display.
     'workflow_name' => 'herald_digest_search_block',
-    'msg_title' => E::ts('Herald: Digest block from a saved search'),
+    'msg_title' => E::ts('Herald: Digest block from a search display'),
     'msg_subject' => '{$block_title}: {$count}',
     'msg_html' => <<<'TPL'
       {crmScope extensionKey='herald'}{if !empty($block_title)}<b>{$block_title}</b>{/if}{foreach from=$rows item=row}{"\n"}• {foreach from=$row.cells item=cell name=cells}{$cell}{if !$smarty.foreach.cells.last} · {/if}{/foreach}{foreachelse}{"\n"}<i>{ts}nothing found{/ts}</i>{/foreach}{/crmScope}

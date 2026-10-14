@@ -6,12 +6,13 @@ namespace Civi\Herald\Digest;
 
 use Civi\Api4\Contact;
 use Civi\Api4\SavedSearch;
+use Civi\Api4\SearchDisplay;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * A saved search runs as the system and yields its own columns only.
+ * A search display runs as the system and yields its formatted value columns.
  *
  * @group headless
  */
@@ -21,91 +22,106 @@ class SearchBlockTest extends TestCase implements HeadlessInterface, Transaction
     return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
   }
 
+  protected function setUp(): void {
+    parent::setUp();
+    foreach (['Herald Test A', 'Herald Test B', 'Herald Test C'] as $name) {
+      Contact::create(checkPermissions: FALSE)
+        ->setValues(['contact_type' => 'Organization', 'organization_name' => $name])
+        ->execute();
+    }
+    Contact::create(checkPermissions: FALSE)
+      ->setValues(['contact_type' => 'Household', 'household_name' => 'Herald Test H'])
+      ->execute();
+  }
+
   /**
    * @param array<string, mixed> $apiParams
+   * @param list<array<string, mixed>> $columns
+   * @param array<string, mixed> $settings
    */
-  private function savedSearch(string $name, array $apiParams): int {
-    return SavedSearch::create(checkPermissions: FALSE)
+  private function display(array $apiParams, array $columns, array $settings = []): int {
+    $search = SavedSearch::create(checkPermissions: FALSE)
       ->setValues([
-        'name' => $name,
-        'label' => $name,
+        'label' => 'Herald test search',
         'api_entity' => 'Contact',
-        'api_params' => ['version' => 4] + $apiParams,
+        'api_params' => ['version' => 4] + $apiParams + ['where' => [['display_name', 'LIKE', 'Herald Test%']]],
+      ])
+      ->execute()
+      ->single();
+    return SearchDisplay::create(checkPermissions: FALSE)
+      ->setValues([
+        'saved_search_id' => $search['id'],
+        'label' => 'Herald test display',
+        'type' => 'table',
+        'settings' => ['columns' => $columns, 'pager' => FALSE] + $settings,
       ])
       ->execute()
       ->single()['id'];
   }
 
-  public function testGroupedSearchGivesOneRowPerGroup(): void {
-    foreach (['Herald Test A', 'Herald Test B'] as $name) {
-      Contact::create(checkPermissions: FALSE)
-        ->setValues(['contact_type' => 'Organization', 'organization_name' => $name])
-        ->execute();
-    }
-    $id = $this->savedSearch('herald_test_by_type', [
-      'select' => ['contact_type:label', 'COUNT(id) AS n'],
-      'where' => [['organization_name', 'LIKE', 'Herald Test%']],
-      'groupBy' => ['contact_type'],
-    ]);
+  public function testGroupedDisplayGivesOneRowPerGroup(): void {
+    $id = $this->display(
+      ['select' => ['contact_type:label', 'COUNT(id) AS n'], 'groupBy' => ['contact_type']],
+      [
+        ['type' => 'field', 'key' => 'contact_type:label', 'label' => 'Type'],
+        ['type' => 'field', 'key' => 'n', 'label' => 'Contacts'],
+      ],
+      ['sort' => [['n', 'DESC']]],
+    );
 
     $vars = SearchBlock::vars($id);
 
-    self::assertSame(1, $vars['count']);
-    self::assertSame(['Organization', '2'], $vars['rows'][0]['cells']);
-    self::assertSame(['contact_type_label' => 'Organization', 'n' => '2'], $vars['rows'][0]['values']);
-  }
-
-  public function testUnaliasedAggregateKeepsItsCell(): void {
-    Contact::create(checkPermissions: FALSE)
-      ->setValues(['contact_type' => 'Organization', 'organization_name' => 'Herald Test D'])
-      ->execute();
-    $id = $this->savedSearch('herald_test_unaliased', [
-      'select' => ['contact_type', 'COUNT(id)'],
-      'where' => [['organization_name', '=', 'Herald Test D']],
-      'groupBy' => ['contact_type'],
-    ]);
-
+    self::assertSame(['Type', 'Contacts'], $vars['labels']);
+    self::assertSame(2, $vars['count']);
     self::assertSame(
-      [['cells' => ['Organization', '1'], 'values' => ['contact_type' => 'Organization', 'COUNT_id' => '1']]],
-      SearchBlock::vars($id)['rows'],
+      [
+        ['cells' => ['Organization', '3'], 'values' => ['contact_type_label' => 'Organization', 'n' => '3']],
+        ['cells' => ['Household', '1'], 'values' => ['contact_type_label' => 'Household', 'n' => '1']],
+      ],
+      $vars['rows'],
     );
   }
 
-  public function testUngroupedSearchLeavesTheAddedIdOut(): void {
-    Contact::create(checkPermissions: FALSE)
-      ->setValues(['contact_type' => 'Organization', 'organization_name' => 'Herald Test C'])
-      ->execute();
-    $id = $this->savedSearch('herald_test_names', [
-      'select' => ['organization_name'],
-      'where' => [['organization_name', '=', 'Herald Test C']],
-    ]);
+  public function testTheDisplaysLimitAndSortApply(): void {
+    $id = $this->display(
+      ['select' => ['display_name'], 'orderBy' => ['display_name' => 'ASC']],
+      [['type' => 'field', 'key' => 'display_name', 'label' => 'Name']],
+      ['sort' => [['display_name', 'DESC']], 'limit' => 2],
+    );
 
     self::assertSame(
-      [['cells' => ['Herald Test C'], 'values' => ['organization_name' => 'Herald Test C']]],
-      SearchBlock::vars($id)['rows'],
+      [['Herald Test H'], ['Herald Test C']],
+      array_column(SearchBlock::vars($id)['rows'], 'cells'),
     );
   }
 
-  public function testMissingSearchFails(): void {
-    $this->expectExceptionMessage('saved search 999999 does not exist');
+  public function testOnlyValueColumnsCount(): void {
+    $id = $this->display(
+      ['select' => ['display_name'], 'where' => [['display_name', '=', 'Herald Test A']]],
+      [
+        ['type' => 'field', 'key' => 'display_name', 'label' => 'Name'],
+        ['type' => 'links', 'label' => 'Links', 'links' => []],
+      ],
+    );
+
+    $vars = SearchBlock::vars($id);
+    self::assertSame(['Name'], $vars['labels']);
+    self::assertSame([['cells' => ['Herald Test A'], 'values' => ['display_name' => 'Herald Test A']]], $vars['rows']);
+  }
+
+  public function testTheDisplayRunsWithoutTheUsersPermissions(): void {
+    $id = $this->display(
+      ['select' => ['COUNT(id) AS n']],
+      [['type' => 'field', 'key' => 'n', 'label' => 'Contacts']],
+    );
+    \CRM_Core_Config::singleton()->userPermissionClass->permissions = [];
+
+    self::assertSame([['4']], array_column(SearchBlock::vars($id)['rows'], 'cells'));
+  }
+
+  public function testMissingDisplayFails(): void {
+    $this->expectExceptionMessage('search display 999999 does not exist');
     SearchBlock::vars(999_999);
-  }
-
-  public function testColumnsFollowTheSelect(): void {
-    self::assertSame(
-      ['a:label', 'total', 'COUNT:id', 'n', 'p'],
-      SearchBlock::columns(['a:label', 'SUM(x) AS total', 'COUNT(id)', 'COUNT(*) AS n', '(a * b) AS p']),
-    );
-    self::assertSame([], SearchBlock::columns(['*', 'a']));
-    self::assertSame([], SearchBlock::columns(['a', 'email.*']));
-    self::assertSame(
-      ['cells' => ['', '1'], 'values' => ['b' => '', 'a' => '1']],
-      SearchBlock::row(['id' => 9, 'a' => 1], ['b', 'a']),
-    );
-    self::assertSame(
-      ['cells' => ['x, y'], 'values' => ['tags' => 'x, y']],
-      SearchBlock::row(['tags' => ['x', 'y']], []),
-    );
   }
 
 }

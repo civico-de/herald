@@ -29,7 +29,7 @@ class BlockTypeTest extends TestCase implements HeadlessInterface {
     ]));
     // Edges of a block without histogram are never used.
     self::assertNull(BlockType::problem(['show_histogram' => FALSE, 'bucket_edges' => '[5]']));
-    self::assertNull(BlockType::problem(['type' => 'search', 'saved_search_id' => 3]));
+    self::assertNull(BlockType::problem(['type' => 'search', 'search_display_id' => 3]));
     self::assertNull(BlockType::problem(['type' => 'section', 'section_key' => 'myext.seats']));
   }
 
@@ -39,10 +39,10 @@ class BlockTypeTest extends TestCase implements HeadlessInterface {
   public static function brokenBlocks(): array {
     return [
       'unknown type' => [['type' => 'chart'], 'unknown type "chart"'],
-      'search without search' => [['type' => 'search'], 'needs a saved search'],
+      'search without search' => [['type' => 'search'], 'needs a search display'],
       'section with blank key' => [['type' => 'section', 'section_key' => ' '], 'needs a section key'],
       'unknown period' => [
-        ['type' => 'search', 'saved_search_id' => 3, 'period' => 'lastyear'],
+        ['type' => 'search', 'search_display_id' => 3, 'period' => 'lastyear'],
         'unknown period "lastyear"',
       ],
       'unknown grouping' => [['group_by' => 'campaign'], 'unknown grouping "campaign"'],

@@ -7,74 +7,74 @@ namespace Civi\Herald\Digest;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * Digest block from a SearchKit saved search: herald runs the search's query
- * as the system, like its own digest queries, and hands the rows to a template.
+ * Digest block from a SearchKit display: herald runs it as the system, like
+ * its own digest queries, and hands the formatted rows to a template.
  */
 final class SearchBlock {
 
   /**
-   * @return array{rows: list<array{cells: list<string>, values: array<string, string>}>, count: int}
+   * @return array{labels: list<string>, rows: list<array{cells: list<string>, values: array<string, string>}>, count: int}
    */
-  public static function vars(int $savedSearchId): array {
-    $saved = \Civi\Api4\SavedSearch::get(checkPermissions: FALSE)
-      ->addSelect('api_entity', 'api_params')
-      ->addWhere('id', '=', $savedSearchId)
+  public static function vars(int $displayId): array {
+    $display = \Civi\Api4\SearchDisplay::get(checkPermissions: FALSE)
+      ->addSelect('*', 'type:name', 'saved_search_id.name')
+      ->addWhere('id', '=', $displayId)
       ->execute()
       ->first();
-    if (!is_array($saved)) {
-      throw new \CRM_Core_Exception("herald: saved search {$savedSearchId} does not exist");
+    if (!is_array($display)) {
+      throw new \CRM_Core_Exception("herald: search display {$displayId} does not exist");
     }
-    $params = is_array($saved['api_params'] ?? NULL) ? $saved['api_params'] : [];
-    unset($params['version']);
-    $params['checkPermissions'] = FALSE;
-    $columns = self::columns(is_array($params['select'] ?? NULL) ? $params['select'] : []);
-    /** @var list<array<string, mixed>> $result */
-    $result = civicrm_api4(Cast::toString($saved['api_entity']), 'get', $params)->getArrayCopy();
-    $rows = [];
-    foreach ($result as $row) {
-      $rows[] = self::row($row, $columns);
-    }
-    return ['rows' => $rows, 'count' => count($rows)];
+    // A display applies the current user's ACLs unless it bypasses them.
+    $display['acl_bypass'] = TRUE;
+    /** @var list<array{columns: list<mixed>}> $result */
+    $result = \Civi\Api4\SearchDisplay::run(checkPermissions: FALSE)
+      ->setSavedSearch(Cast::toString($display['saved_search_id.name']))
+      ->setDisplay($display)
+      ->execute()
+      ->getArrayCopy();
+    $columns = self::columns($display);
+    return [
+      'labels' => array_values(array_map(static fn (array $column): string => Cast::toString(
+        $column['label'] ?? '',
+      ), $columns)),
+      'rows' => array_map(static fn (array $row): array => self::row($row['columns'], $columns), $result),
+      'count' => count($result),
+    ];
   }
 
   /**
-   * Result keys of the search's columns, in order, as APIv4 names them
-   * (an alias, else e.g. "COUNT:id"). [] for a wildcard select, which keeps every key.
+   * The display's value columns by position; links, buttons and menus carry no value.
    *
-   * @param array<array-key, mixed> $select
-   * @return list<string>
+   * @param array<array-key, mixed> $display
+   * @return array<array-key, array<array-key, mixed>>
    */
-  public static function columns(array $select): array {
-    $columns = [];
-    foreach ($select as $expression) {
-      $expression = trim(Cast::toString($expression));
-      if ($expression === '*' || str_ends_with($expression, '.*')) {
-        return [];
-      }
-      $columns[] = \Civi\Api4\Query\SqlExpression::convert($expression, parseAlias: TRUE)->getAlias();
-    }
-    return $columns;
+  private static function columns(array $display): array {
+    $settings = is_array($display['settings'] ?? NULL) ? $display['settings'] : [];
+    $columns = is_array($settings['columns'] ?? NULL) ? $settings['columns'] : [];
+    return array_filter(
+      $columns,
+      static fn (mixed $column): bool => (
+        is_array($column) && in_array($column['type'] ?? NULL, ['field', 'html'], TRUE)
+      ),
+    );
   }
 
   /**
-   * Cells keep the search's column order; values are keyed by the column
+   * Cells keep the display's column order; values are keyed by the column
    * with non-word characters as "_" (financial_type_id:label → financial_type_id_label).
-   * APIv4 adds `id` to ungrouped rows; only the search's own columns count.
    *
-   * @param array<array-key, mixed> $row
-   * @param list<string> $columns
+   * @param list<mixed> $formatted
+   * @param array<array-key, array<array-key, mixed>> $columns
    * @return array{cells: list<string>, values: array<string, string>}
    */
-  public static function row(array $row, array $columns): array {
-    if ($columns !== []) {
-      $row = array_merge(array_fill_keys($columns, NULL), array_intersect_key($row, array_flip($columns)));
-    }
+  private static function row(array $formatted, array $columns): array {
     $cells = [];
     $values = [];
-    foreach ($row as $key => $value) {
+    foreach ($columns as $index => $column) {
+      $value = is_array($formatted[$index] ?? NULL) ? $formatted[$index]['val'] ?? NULL : NULL;
       $text = is_array($value) ? implode(', ', array_map(Cast::toString(...), $value)) : Cast::toString($value);
       $cells[] = $text;
-      $values[(string) preg_replace('/\W/', '_', (string) $key)] = $text;
+      $values[(string) preg_replace('/\W/', '_', Cast::toString($column['key'] ?? ''))] = $text;
     }
     return ['cells' => $cells, 'values' => $values];
   }

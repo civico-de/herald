@@ -44,8 +44,8 @@ class ComposerTest extends TestCase implements HeadlessInterface, HookInterface 
     };
     $search = static fn (int $id): array => [
       'rows' => [
-        SearchBlock::row(['type' => 'Gold', 'n' => 2], []),
-        SearchBlock::row(['type' => 'Silver', 'n' => 5], []),
+        ['cells' => ['Gold', '2'], 'values' => ['type' => 'Gold', 'n' => '2']],
+        ['cells' => ['Silver', '5'], 'values' => ['type' => 'Silver', 'n' => '5']],
       ],
       'count' => 2,
     ];
@@ -64,7 +64,7 @@ class ComposerTest extends TestCase implements HeadlessInterface, HookInterface 
     $digest = $this->composer()->compose(self::digest(
       [
         ['type' => 'contribution', 'title' => 'Donations', 'show_histogram' => FALSE],
-        ['type' => 'search', 'saved_search_id' => 7, 'title' => 'Members'],
+        ['type' => 'search', 'search_display_id' => 7, 'title' => 'Members'],
         ['type' => 'section', 'section_key' => 'test.seats', 'period' => 'yesterday'],
       ],
       '📊 <b>Daily</b>',
@@ -83,7 +83,7 @@ class ComposerTest extends TestCase implements HeadlessInterface, HookInterface 
     self::assertSame(5, $digest['count']);
   }
 
-  public function testTheSearchRunnerGetsTheSavedSearchId(): void {
+  public function testTheSearchRunnerGetsTheDisplayId(): void {
     $asked = [];
     $composer = new Composer(
       new ContributionStatsService(),
@@ -93,7 +93,7 @@ class ComposerTest extends TestCase implements HeadlessInterface, HookInterface 
         return ['rows' => [], 'count' => 0];
       },
     );
-    $composer->compose(self::digest([['type' => 'search', 'saved_search_id' => '12']]));
+    $composer->compose(self::digest([['type' => 'search', 'search_display_id' => '12']]));
     self::assertSame([12], $asked);
   }
 
@@ -118,9 +118,12 @@ class ComposerTest extends TestCase implements HeadlessInterface, HookInterface 
     $composer = new Composer(
       new ContributionStatsService(),
       new TemplateRenderer(),
-      static fn (): array => ['rows' => [SearchBlock::row(['label' => '<script>x</script>'], [])], 'count' => 1],
+      static fn (): array => [
+        'rows' => [['cells' => ['<script>x</script>'], 'values' => ['label' => '<script>x</script>']]],
+        'count' => 1,
+      ],
     );
-    $digest = $composer->compose(self::digest([['type' => 'search', 'saved_search_id' => 1]]));
+    $digest = $composer->compose(self::digest([['type' => 'search', 'search_display_id' => 1]]));
     self::assertStringNotContainsString('<script>', $digest['body']);
     self::assertStringContainsString('&lt;script&gt;', $digest['body']);
   }
@@ -134,7 +137,7 @@ class ComposerTest extends TestCase implements HeadlessInterface, HookInterface 
       'unknown type' => [[['type' => 'chart']], 'Block 1: unknown type "chart".'],
       'search deleted since' => [
         [['type' => 'section', 'section_key' => 'test.seats'], ['type' => 'search']],
-        'Block 2: a saved search block needs a saved search.',
+        'Block 2: a search block needs a search display.',
       ],
     ];
   }

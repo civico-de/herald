@@ -12,7 +12,7 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  *
  * Block types (`type`, default "contribution"):
  *   contribution — DigestVars filters, template herald_contribution_digest_block
- *   search       — `saved_search_id`, template herald_digest_search_block
+ *   search       — `search_display_id`, template herald_digest_search_block
  *   section      — `section_key`: a section from hook_civicrm_heraldDigestSections, inserted as HTML
  */
 final class Composer {
@@ -28,7 +28,7 @@ final class Composer {
   private \Closure $searchRunner;
 
   /**
-   * @param (callable(int): array<string, mixed>)|null $searchRunner SavedSearch id → block variables
+   * @param (callable(int): array<string, mixed>)|null $searchRunner SearchDisplay id → block variables
    */
   public function __construct(
     private readonly ContributionStatsService $stats = new ContributionStatsService(),
@@ -44,7 +44,7 @@ final class Composer {
    */
   public function compose(array $digest): array {
     $blocks = $digest['blocks'];
-    // Blocks are checked on save; a saved search deleted since leaves its block without one.
+    // Blocks are checked on save; a display deleted since leaves its block without one.
     $problems = DigestRules::blockProblems($digest['name'], $blocks);
     if ($problems !== []) {
       throw new \CRM_Core_Exception(implode(' ', $problems));
@@ -84,7 +84,7 @@ final class Composer {
     }
     $vars = match ($type) {
       'contribution' => DigestVars::build($block, $this->stats),
-      'search' => ($this->searchRunner)(Cast::toInt($block['saved_search_id'])),
+      'search' => ($this->searchRunner)(Cast::toInt($block['search_display_id'])),
       default => throw new \CRM_Core_Exception("herald: unknown digest block type \"{$type}\""),
     };
     $vars['block_title'] = Cast::toString($block['title'] ?? '');

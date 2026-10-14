@@ -12,7 +12,7 @@ A digest sums up a period in one message, for example yesterday's donations. Eac
 | Block type | Content | Default template |
 |---|---|---|
 | Contributions | Contributions of a period: the total, a breakdown by source, the open pending amounts, campaign progress and an amount histogram | Herald: Contribution digest block (composable) |
-| Saved search | The rows of a SearchKit saved search | Herald: Digest block from a saved search |
+| Search display | The rows of a SearchKit display | Herald: Digest block from a search display |
 | Section from an extension | Text another extension provides through a hook | none |
 
 ## Setting up a digest
@@ -24,17 +24,17 @@ Digests are under Administer » Herald » Digests. "Add digest" opens the form, 
 - **Period** applies to every block that does not set its own: yesterday, today, the last 7 days or the last 30 days.
 - **Header** is an optional line above the blocks, inserted as HTML, for example `📊 <b>Daily report</b>`.
 
-Below these come the blocks, at least one, in the order they appear in the message. Every block has a type, a title and, if it needs one, its own period. Contribution and saved search blocks also take a template. Leave it empty to use the block type's default. The other fields depend on the type and are described under [Block types](#block-types).
+Below these come the blocks, at least one, in the order they appear in the message. Every block has a type, a title and, if it needs one, its own period. Contribution and search blocks also take a template. Leave it empty to use the block type's default. The other fields depend on the type and are described under [Block types](#block-types).
 
 Saving checks the whole digest before anything is written. The form refuses:
 
 - a name that is taken or has the wrong characters,
-- a saved search block without a search,
+- a search block without a display,
 - a section block without a key,
 - a bucket count below 1,
 - histogram edges that are not at least two numbers in ascending order.
 
-A message about a block names it, for example "Block 2: a saved search block needs a saved search." Through APIv4 the same checks apply to each `HeraldDigest` and `HeraldDigestBlock` record. A digest saved there without blocks fails when it is sent.
+A message about a block names it, for example "Block 2: a search block needs a search display." Through APIv4 the same checks apply to each `HeraldDigest` and `HeraldDigestBlock` record. A digest saved there without blocks fails when it is sent.
 
 Scripts and deploys can create a digest with cv. The chain saves the blocks in the order given. JSON spread over several lines has to come through standard input, hence `--in=json`:
 
@@ -59,7 +59,7 @@ Rules and scripts pick a digest by its name. After you change a digest's name or
 
 A campaign or a financial type that a block filters on cannot be deleted while the block exists, and the attempt ends in a database error. Without its filter the block would count every contribution. Change or remove the block first.
 
-A saved search can be deleted. The block that used it keeps no search, and the digest fails when it is sent, with the message the form would have shown. Pick another search or remove the block.
+A search display can be deleted, and so can its saved search, which takes its displays with it. The block that showed it keeps no display, and the digest fails when it is sent, with the message the form would have shown. Pick another display or remove the block.
 
 ## Sending a digest
 
@@ -114,13 +114,13 @@ Without fixed edges, herald picks bucket edges that fit the amounts. Fixed edges
 
 The campaign progress takes the title and the goal from the Campaign record. It counts every completed contribution of the campaign that matches the financial type and source filters, regardless of the period. With the line item breakdown it counts the campaign's items instead. A campaign without a goal shows no progress line.
 
-### Saved search blocks
+### Search blocks
 
-A saved search block shows the rows of a SearchKit saved search, picked in the field Saved Search (`saved_search_id`). To show counts, group the search, for example memberships by type.
+A search block shows the rows of a SearchKit display, picked in the field Search Display (`search_display_id`). Build the display in SearchKit as usual. To show counts, group the search, for example memberships by type.
 
-The default template prints one line per row, with the search's columns in order. Only the search's query counts. Its displays play no part. Give the search a limit, because every row goes into the message and only Telegram shortens a message that is too long.
+The default template prints one line per row. The display decides what goes into it: its value columns appear in their order and formatted as in the display, so a yes/no field reads "Yes" and a date reads as the site formats dates. Link, button and menu columns are left out. The display's sort applies. A display without a sort of its own shows the rows unsorted, even when the search has an order. Its limit applies too, and the first page if it has a pager. Give the display a limit, because every row goes into the message and only Telegram shortens a message that is too long.
 
-herald runs the search without permission checks, as it does with its own contribution queries. Whoever can configure a digest can therefore send the rows of any saved search to a channel.
+herald runs the display without permission checks, as it does with its own contribution queries. Whoever can configure a digest can therefore send the rows of any display to a channel.
 
 ### Section blocks
 
@@ -142,7 +142,7 @@ The answer is inserted as HTML, so the listener escapes its own data. An empty a
 
 Older releases kept a digest inside the settings of its rule action or scheduled job. The upgrade turns each of them into a record and leaves only the delivery settings and the digest's name in the action. A rule action's digest is named `rule_action_<id>` and takes the rule's title, a job's digest is named `job_<id>` and takes the job's name. You can rename them afterwards. Then pick the digest again in each rule action that sent it, and update the jobs and scripts that name it.
 
-The upgrade keeps what the digest sent before. A period herald did not know was read as yesterday, and it still is. Histogram edges that are not ascending numbers are dropped with a warning in the upgrade log, and the histogram picks its own buckets. A digest that could never have run is left as it was, and the upgrade log has the warning "digest left inline, it cannot run until fixed" with the reason. Examples are a block list that is not a JSON array of objects, a block of unknown type, a section block without a key, a saved search, campaign or financial type that no longer exists, and a contribution status filter, which records no longer have. Such a rule or job fails until it names a digest.
+The upgrade keeps what the digest sent before. A period herald did not know was read as yesterday, and it still is. Histogram edges that are not ascending numbers are dropped with a warning in the upgrade log, and the histogram picks its own buckets. A search block gets a new table display of its search, labelled "Herald: " and the digest's title, with the search's columns, sort and limit and no pager. Its values now appear formatted, as the display shows them. A digest that could never have run is left as it was, and the upgrade log has the warning "digest left inline, it cannot run until fixed" with the reason. Examples are a block list that is not a JSON array of objects, a block of unknown type, a section block without a key, a saved search, campaign or financial type that no longer exists, and a contribution status filter, which records no longer have. Such a rule or job fails until it names a digest.
 
 The digest form is an Afform, so herald needs the extension Form Core (`org.civicrm.afform`). Enable it before you upgrade herald on a site that does not have it yet.
 
@@ -186,6 +186,6 @@ Contribution block templates and the daily and weekly digest templates receive:
 | histogram | The histogram as preformatted text. It is empty when the histogram is off. |
 | block_title | The block's title. |
 
-Search block templates receive block_title, count, which is the number of rows, and rows. Each row has cells, the column values in order, and values, the same values keyed by column name. In the keys, every character that is not a letter, digit or underscore becomes an underscore. The column `contact_type:label` becomes `contact_type_label`, and `COUNT(id) AS n` becomes `n`.
+Search block templates receive block_title, count, which is the number of rows, labels, the column headings in order, and rows. Each row has cells, the column values in order, and values, the same values keyed by the column's field. In the keys, every character that is not a letter, digit or underscore becomes an underscore. The column `contact_type:label` becomes `contact_type_label`, and `COUNT(id) AS n` becomes `n`.
 
 In a template, these are Smarty variables such as `{$totals.amount|crmMoney}`.
