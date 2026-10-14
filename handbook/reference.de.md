@@ -67,7 +67,7 @@ Die Bedingung „Herald: Field transition“ ist wahr, wenn der Wert eines Felde
 | Vorher: Operator, Vorher: Wert | Die Prüfung für den Wert vor der Änderung. |
 | Nachher: Operator, Nachher: Wert | Die Prüfung für den Wert nach der Änderung. |
 
-Die Operatoren sind `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` und `not_empty`. „- beliebiger Wert -“ lässt diese Seite offen. Die Vergleichsoperatoren für größer und kleiner brauchen auf beiden Seiten Zahlen. `=` und `!=` vergleichen Zahlen, wenn beide Seiten Zahlen sind, und sonst Text ohne führende und folgende Leerzeichen.
+Die Operatoren sind `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` und `not_empty`. „- beliebiger Wert -“ lässt diese Seite offen. Die Vergleichsoperatoren für größer und kleiner brauchen auf beiden Seiten Zahlen. `=` und `!=` vergleichen Zahlen, wenn beide Seiten Zahlen sind, und sonst Text ohne führende und folgende Leerzeichen. Zahlen werden exakt verglichen, egal wie viele Stellen sie haben. Jeder andere Operator, den nur die API übergeben kann, lässt die Bedingung mit einem Fehler scheitern.
 
 - Sind beide Seiten offen, ist die Bedingung nie wahr.
 - Ist nur eine Seite konfiguriert, muss sich der Wert außerdem geändert haben. Andere Änderungen an einem Datensatz, der bereits im Zielzustand ist, lösen daher nicht erneut aus.

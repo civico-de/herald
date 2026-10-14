@@ -37,7 +37,6 @@ class FieldTransitionTest extends TestCase {
       'not_empty on value' => ['not_empty', 'x', '', TRUE],
       'not_empty on null' => ['not_empty', NULL, '', FALSE],
       'equals on array is false' => ['=', ['x'], 'x', FALSE],
-      'unknown operator' => ['~', '1', '1', FALSE],
       // Numeric equality only while float is lossless; huge integers must not
       // collapse (9007199254740992.0 === 9007199254740993.0 as floats).
       'huge ints not equal' => ['=', '9007199254740993', '9007199254740992', FALSE],
@@ -48,6 +47,8 @@ class FieldTransitionTest extends TestCase {
       'huge negative int ordering' => ['<', '-9007199254740993', '-9007199254740992', TRUE],
       'ordering with different lengths' => ['>', '10000000000000000', '999999999999999', TRUE],
       'leading zeros numeric compare' => ['=', '00123', '123', TRUE],
+      'huge decimals ordering' => ['>', '9007199254740993.5', '9007199254740993.4', TRUE],
+      'exponent notation' => ['=', '1e3', '1000', TRUE],
       'equals bool false vs 0' => ['=', FALSE, '0', TRUE],
       'equals bool true vs 1' => ['=', TRUE, '1', TRUE],
       'equals bool false vs 1' => ['=', FALSE, '1', FALSE],
@@ -60,7 +61,7 @@ class FieldTransitionTest extends TestCase {
    * @dataProvider compareCases
    */
   public function testCompare(string $operator, mixed $actual, string $expected, bool $result): void {
-    $this->assertSame($result, FieldTransition::compare($operator, $actual, $expected));
+    $this->assertSame($result, FieldValues::compare($operator, $actual, $expected));
   }
 
   public function testBothSidesConfiguredMustBothMatch(): void {
@@ -130,13 +131,13 @@ class FieldTransitionTest extends TestCase {
   }
 
   public function testSameValueUsesEqualitySemantics(): void {
-    $this->assertTrue(FieldTransition::sameValue('0', 0));
-    $this->assertTrue(FieldTransition::sameValue(' 2 ', '2.0'));
-    $this->assertFalse(FieldTransition::sameValue(NULL, '0'));
-    $this->assertTrue(FieldTransition::sameValue(NULL, NULL));
-    $this->assertTrue(FieldTransition::sameValue(a: FALSE, b: '0'));
-    $this->assertTrue(FieldTransition::sameValue(a: '1', b: TRUE));
-    $this->assertFalse(FieldTransition::sameValue('9007199254740993', '9007199254740992'));
+    $this->assertTrue(FieldValues::same('0', 0));
+    $this->assertTrue(FieldValues::same(' 2 ', '2.0'));
+    $this->assertFalse(FieldValues::same(NULL, '0'));
+    $this->assertTrue(FieldValues::same(NULL, NULL));
+    $this->assertTrue(FieldValues::same(a: FALSE, b: '0'));
+    $this->assertTrue(FieldValues::same(a: '1', b: TRUE));
+    $this->assertFalse(FieldValues::same('9007199254740993', '9007199254740992'));
   }
 
   public function testNoSideConfiguredNeverMatches(): void {
@@ -157,10 +158,22 @@ class FieldTransitionTest extends TestCase {
     ));
   }
 
-  public function testSideNormalisesUnknownOperatorToUnconfigured(): void {
-    $this->assertSame(['operator' => '', 'value' => 'x'], FieldTransition::side('DROP TABLE', 'x'));
+  public function testSideNormalisesItsOperatorAndValue(): void {
     $this->assertSame(['operator' => '>=', 'value' => '5'], FieldTransition::side(' >= ', 5));
     $this->assertSame(['operator' => '', 'value' => ''], FieldTransition::side(NULL, NULL));
+  }
+
+  /**
+   * An unknown operator read as "any value" would fire on every edit.
+   */
+  public function testAnUnknownOperatorFails(): void {
+    $this->expectExceptionMessage('herald: unknown field transition operator "DROP TABLE"');
+    FieldTransition::side('DROP TABLE', 'x');
+  }
+
+  public function testCompareFailsOnAnUnknownOperator(): void {
+    $this->expectExceptionMessage('herald: unknown comparison operator "~"');
+    FieldValues::compare('~', '1', '1');
   }
 
 }
