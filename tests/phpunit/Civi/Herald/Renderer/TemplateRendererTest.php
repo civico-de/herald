@@ -337,6 +337,20 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
     }
   }
 
+  /**
+   * CiviCRM stores an HTML field left empty as NULL, so the text body is used.
+   */
+  public function testAnEmptyHtmlBodyFallsBackToTheTextBody(): void {
+    $this->createTemplate('herald_test_empty_html', ['msg_html' => '', 'msg_text' => 'Hello {$name}']);
+    $this->assertSame('Hello A &amp; B', $this->renderer->render('herald_test_empty_html', ['name' => 'A & B']));
+  }
+
+  public function testATemplateWithoutAnyBodyFails(): void {
+    $this->createTemplate('herald_test_no_body', ['msg_html' => '', 'msg_text' => '']);
+    $this->expectExceptionMessage('herald: MessageTemplate "herald_test_no_body" has empty msg_html and msg_text.');
+    $this->renderer->render('herald_test_no_body', []);
+  }
+
   public function testThrowsOnMissingTemplate(): void {
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/not found/');
@@ -346,6 +360,15 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
   public function testRenderInlineUsesCallerSuppliedBody(): void {
     $body = $this->renderer->renderInline('Hello {$name}!', ['name' => 'World']);
     $this->assertSame('Hello World!', $body);
+  }
+
+  /**
+   * @param array<string, string> $bodies
+   */
+  private function createTemplate(string $workflowName, array $bodies): void {
+    \Civi\Api4\MessageTemplate::create(checkPermissions: FALSE)
+      ->setValues(['workflow_name' => $workflowName, 'msg_title' => $workflowName, 'is_default' => TRUE] + $bodies)
+      ->execute();
   }
 
 }
