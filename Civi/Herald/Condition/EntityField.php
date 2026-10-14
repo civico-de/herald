@@ -16,13 +16,15 @@ final class EntityField {
    * @return array<'entity'|'field', string> the error on the entity or the field; [] when readable
    */
   public static function errors(string $entity, string $field): array {
-    [$name, $suffix] = array_pad(explode(':', $field, 2), 2, NULL);
+    $parts = explode(':', $field, 2);
+    $name = $parts[0];
+    $suffix = $parts[1] ?? NULL;
     try {
-      $spec = civicrm_api4($entity, 'getFields', [
-        'checkPermissions' => FALSE,
-        'where' => [['name', '=', $name]],
-        'select' => ['name', 'type', 'suffixes'],
-      ])->first();
+      $join = FieldSpec::join($entity, $name);
+      if ($join !== NULL) {
+        return self::errors($join['entity'], $join['rest'] . ($suffix === NULL ? '' : ":{$suffix}"));
+      }
+      $spec = FieldSpec::get($entity, $name, ['name', 'type', 'suffixes']);
     }
     catch (\CRM_Core_Exception $e) {
       return ['entity' => E::ts('"%1" cannot be checked: %2', [1 => $entity, 2 => $e->getMessage()])];

@@ -27,11 +27,7 @@ final class StoredRow {
       return self::UNKNOWN;
     }
     try {
-      $spec = civicrm_api4($entity, 'getFields', [
-        'checkPermissions' => FALSE,
-        'where' => [['name', '=', $name]],
-        'select' => ['name', 'entity', 'serialize'],
-      ])->first();
+      $spec = FieldSpec::get($entity, $name, ['name', 'entity', 'serialize']);
       if (!is_array($spec)) {
         return self::UNKNOWN;
       }

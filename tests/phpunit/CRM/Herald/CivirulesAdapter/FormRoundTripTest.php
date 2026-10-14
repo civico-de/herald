@@ -326,6 +326,16 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
         'Membership.join_date has no option suffix ":name".',
       ],
       'wrong case' => [['field' => 'Status_ID'], 'field', 'Membership has no field "Status_ID".'],
+      'wrong case behind a join' => [
+        ['field' => 'contact_id.Contact_Type'],
+        'field',
+        'Contact has no field "Contact_Type".',
+      ],
+      'unknown suffix behind a join' => [
+        ['field' => 'contact_id.gender_id:nam'],
+        'field',
+        'Contact.gender_id has no option suffix ":nam".',
+      ],
       'search filter' => [
         ['entity' => 'Contact', 'field' => 'groups:name'],
         'field',
@@ -361,6 +371,14 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
       'core field' => [[]],
       'option suffix' => [['field' => 'status_id:name', 'from_value' => 'Grace', 'to_value' => 'Expired']],
       'custom field' => [['entity' => 'Contact', 'field' => 'herald_preferences.preferred_channel']],
+      'joined field' => [['field' => 'contact_id.contact_type']],
+      'joined option suffix' => [[
+        'field' => 'contact_id.gender_id:name',
+        'from_value' => 'Male',
+        'to_value' => 'Female',
+      ]],
+      'joined custom field' => [['field' => 'contact_id.herald_preferences.preferred_channel']],
+      'two joins' => [['field' => 'contact_id.employer_id.display_name']],
       'ordering with a number' => [['from_operator' => '>=', 'from_value' => ' 2 ']],
       'emptiness without a value' => [['to_operator' => 'not_empty', 'to_value' => '']],
     ];
