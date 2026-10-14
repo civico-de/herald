@@ -29,7 +29,6 @@ use GuzzleHttp\ClientInterface;
  * Settings:
  *   herald_pushover_app_token        — Pushover application token (required)
  *   herald_pushover_default_user_key — fallback user/group key
- * @mago-expect lint:cyclomatic-complexity
  */
 class PushoverChannel implements ChannelInterface {
 
@@ -63,7 +62,7 @@ class PushoverChannel implements ChannelInterface {
       );
     }
 
-    $form = self::buildForm($appToken, Cast::toString($userKey), $renderedBody, $config);
+    $form = PushoverForm::of($appToken, Cast::toString($userKey), $renderedBody, $config);
 
     $client = $this->httpClient ?? new \GuzzleHttp\Client();
     try {
@@ -90,50 +89,6 @@ class PushoverChannel implements ChannelInterface {
     if (!is_array($decoded) || Cast::toInt($decoded['status'] ?? 0) !== 1) {
       throw new \CRM_Core_Exception('herald: Pushover responded with status != 1. Body: ' . substr($body, 0, 500));
     }
-  }
-
-  /**
-   * Pure form-payload builder. Test-seam.
-   *
-   * @param array<string, mixed> $config
-   * @return array<string, scalar>
-   */
-  public static function buildForm(
-    #[\SensitiveParameter]
-    string $appToken,
-    string $userKey,
-    string $body,
-    array $config,
-  ): array {
-    $form = [
-      'token' => $appToken,
-      'user' => $userKey,
-      'message' => empty($config['pushover_html']) ? PlainText::fromHtml($body) : $body,
-    ];
-    if (!empty($config['pushover_title'])) {
-      $form['title'] = Cast::toString($config['pushover_title']);
-    }
-    if (isset($config['pushover_priority']) && $config['pushover_priority'] !== '') {
-      $form['priority'] = Cast::toInt($config['pushover_priority']);
-      if ($form['priority'] === 2) {
-        // Emergency priority requires retry/expire or the API rejects the call.
-        $form['retry'] = max(30, Cast::toInt($config['pushover_retry'] ?? 60));
-        $form['expire'] = min(10_800, max(1, Cast::toInt($config['pushover_expire'] ?? 3600)));
-      }
-    }
-    if (!empty($config['pushover_sound'])) {
-      $form['sound'] = Cast::toString($config['pushover_sound']);
-    }
-    if (!empty($config['pushover_url'])) {
-      $form['url'] = Cast::toString($config['pushover_url']);
-    }
-    if (!empty($config['pushover_url_title'])) {
-      $form['url_title'] = Cast::toString($config['pushover_url_title']);
-    }
-    if (!empty($config['pushover_html'])) {
-      $form['html'] = 1;
-    }
-    return $form;
   }
 
   /**

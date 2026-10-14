@@ -119,7 +119,7 @@ class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInt
   }
 
   public function testBuildFormPure(): void {
-    $form = PushoverChannel::buildForm('app', 'u', 'msg', ['pushover_priority' => -1, 'pushover_html' => TRUE]);
+    $form = PushoverForm::of('app', 'u', 'msg', ['pushover_priority' => -1, 'pushover_html' => TRUE]);
     $this->assertSame('app', $form['token']);
     $this->assertSame('u', $form['user']);
     $this->assertSame('msg', $form['message']);
@@ -130,14 +130,14 @@ class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInt
 
   public function testEmergencyPriorityAddsRetryAndExpire(): void {
     // Priority 2 without retry/expire is rejected by the Pushover API.
-    $form = PushoverChannel::buildForm('app', 'u', 'msg', ['pushover_priority' => 2]);
+    $form = PushoverForm::of('app', 'u', 'msg', ['pushover_priority' => 2]);
     $this->assertSame(2, $form['priority']);
     $this->assertSame(60, $form['retry']);
     $this->assertSame(3600, $form['expire']);
   }
 
   public function testEmergencyRetryAndExpireClampedToApiLimits(): void {
-    $form = PushoverChannel::buildForm('app', 'u', 'msg', [
+    $form = PushoverForm::of('app', 'u', 'msg', [
       'pushover_priority' => 2,
       'pushover_retry' => 5,
       'pushover_expire' => 99_999,
@@ -147,7 +147,7 @@ class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInt
   }
 
   public function testNonEmergencyPriorityHasNoRetryExpire(): void {
-    $form = PushoverChannel::buildForm('app', 'u', 'msg', ['pushover_priority' => 1]);
+    $form = PushoverForm::of('app', 'u', 'msg', ['pushover_priority' => 1]);
     $this->assertArrayNotHasKey('retry', $form);
     $this->assertArrayNotHasKey('expire', $form);
   }

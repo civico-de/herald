@@ -115,7 +115,7 @@ class PlainTextSinksTest extends TestCase {
       )['text'],
     );
     $this->assertSame($text, WebhookChannel::buildPayload($body, 'text')['data']);
-    $this->assertSame($text, PushoverChannel::buildForm('t', 'u', $body, [])['message']);
+    $this->assertSame($text, PushoverForm::of('t', 'u', $body, [])['message']);
   }
 
   public function testHtmlLineBreaksLeavePreAndBlockTagsAlone(): void {
@@ -140,9 +140,9 @@ class PlainTextSinksTest extends TestCase {
   }
 
   public function testPushoverSendsTextUnlessHtmlIsEnabled(): void {
-    $this->assertSame(self::TEXT, PushoverChannel::buildForm('t', 'u', self::BODY, [])['message']);
-    $this->assertSame(self::HEALTHY_TEXT, PushoverChannel::buildForm('t', 'u', self::HEALTHY_BODY, [])['message']);
-    $this->assertSame(self::BODY, PushoverChannel::buildForm('t', 'u', self::BODY, ['pushover_html' => 1])['message']);
+    $this->assertSame(self::TEXT, PushoverForm::of('t', 'u', self::BODY, [])['message']);
+    $this->assertSame(self::HEALTHY_TEXT, PushoverForm::of('t', 'u', self::HEALTHY_BODY, [])['message']);
+    $this->assertSame(self::BODY, PushoverForm::of('t', 'u', self::BODY, ['pushover_html' => 1])['message']);
   }
 
   public function testWebhookFormats(): void {
