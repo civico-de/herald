@@ -163,6 +163,18 @@ class FieldTransitionTest extends TestCase {
     $this->assertTrue(FieldValues::same('52.52000659999999', 52.520_006_599_999_99));
   }
 
+  /**
+   * APIv3 returns "" for a NULL column, APIv4 returns NULL or an empty list.
+   */
+  public function testEveryEmptyFormIsTheSameValue(): void {
+    $this->assertTrue(FieldValues::same('', NULL));
+    $this->assertTrue(FieldValues::same(NULL, ''));
+    $this->assertTrue(FieldValues::same([], NULL));
+    $this->assertTrue(FieldValues::same('', []));
+    $this->assertFalse(FieldValues::same('', '0'));
+    $this->assertFalse(FieldValues::same([], ['0']));
+  }
+
   public function testNoSideConfiguredNeverMatches(): void {
     $this->assertFalse(FieldTransition::matches(
       FieldTransition::side('', ''),

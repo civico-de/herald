@@ -12,11 +12,16 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  */
 final class FieldValues {
 
+  private const EMPTY = [NULL, '', []];
+
   /**
    * Are two field values the same, using the equality semantics of compare()?
-   * Non-scalar values (arrays, objects) fall back to strict comparison.
+   * NULL, "" and [] are one empty value; other non-scalars compare strictly.
    */
   public static function same(mixed $a, mixed $b): bool {
+    if (in_array($a, self::EMPTY, TRUE) || in_array($b, self::EMPTY, TRUE)) {
+      return in_array($a, self::EMPTY, TRUE) && in_array($b, self::EMPTY, TRUE);
+    }
     if (is_scalar($a) && is_scalar($b)) {
       return self::equals($a, self::text($b));
     }
@@ -29,7 +34,7 @@ final class FieldValues {
    * numeric, else as trimmed strings (APIv4/DAO values arrive stringly).
    */
   public static function compare(string $operator, mixed $actual, string $expected): bool {
-    $isEmpty = in_array($actual, [NULL, '', []], TRUE);
+    $isEmpty = in_array($actual, self::EMPTY, TRUE);
     return match ($operator) {
       'is_empty' => $isEmpty,
       'not_empty' => !$isEmpty,
@@ -49,7 +54,7 @@ final class FieldValues {
   private static function ordered(mixed $actual, string $expected, \Closure $holds): bool {
     $a = is_scalar($actual) ? trim(self::text($actual)) : '';
     $b = trim($expected);
-    return is_numeric($a) && is_numeric($b) && $holds(self::order($a, $b));
+    return is_numeric($a) && is_numeric($b) && $holds(NumericOrder::of($a, $b));
   }
 
   private static function equals(mixed $actual, string $expected): bool {
@@ -58,7 +63,7 @@ final class FieldValues {
     }
     $a = trim(self::text($actual));
     $b = trim($expected);
-    return is_numeric($a) && is_numeric($b) ? self::order($a, $b) === 0 : $a === $b;
+    return is_numeric($a) && is_numeric($b) ? NumericOrder::of($a, $b) === 0 : $a === $b;
   }
 
   /**
@@ -66,21 +71,6 @@ final class FieldValues {
    */
   private static function text(bool|float|int|string $value): string {
     return is_float($value) ? FloatText::of($value) : Cast::toStoredString($value);
-  }
-
-  /**
-   * Spaceship order of two numeric strings: exact in decimal notation of any
-   * length, as floats in exponent notation.
-   *
-   * @param numeric-string $a
-   * @param numeric-string $b
-   */
-  private static function order(string $a, string $b): int {
-    $decimal = '/^[+-]?(\d+\.?\d*|\.\d+)$/';
-    if (preg_match($decimal, $a) !== 1 || preg_match($decimal, $b) !== 1) {
-      return (float) $a <=> (float) $b;
-    }
-    return bccomp($a, $b, max(strlen(strrchr($a, '.') ?: ''), strlen(strrchr($b, '.') ?: '')));
   }
 
 }

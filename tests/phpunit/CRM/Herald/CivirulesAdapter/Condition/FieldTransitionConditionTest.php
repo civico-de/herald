@@ -194,6 +194,27 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransitionConditionTest extends
   }
 
   /**
+   * CiviRules' APIv3 copy holds "" where APIv4 reads the empty column as NULL.
+   */
+  public function testAnEmptyFieldThatStaysEmptyIsNoChange(): void {
+    $id = $this->createContribution(1);
+    $params = [
+      'entity' => 'Contribution',
+      'field' => 'check_number',
+      'from_operator' => '',
+      'from_value' => '',
+      'to_operator' => 'is_empty',
+      'to_value' => '',
+    ];
+    $this->assertFalse(
+      $this->condition($params)->isConditionValid($this->triggerDataWithOriginal($id, ['check_number' => ''])),
+    );
+    $this->assertTrue(
+      $this->condition($params)->isConditionValid($this->triggerDataWithOriginal($id, ['check_number' => '1234'])),
+    );
+  }
+
+  /**
    * Contact edits fire hook_civicrm_pre with objectName Individual/…, while
    * conditions are configured against the APIv4 entity "Contact" — the watch
    * list must fold the subtype names so the snapshot is still captured.
