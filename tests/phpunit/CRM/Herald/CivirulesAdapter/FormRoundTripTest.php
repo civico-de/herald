@@ -331,7 +331,7 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
         'field',
         'Contact.groups is a search filter and holds no value.',
       ],
-      'unknown operator' => [['to_operator' => '=='], 'to_value', 'Unknown operator "==".'],
+      'unknown operator' => [['to_operator' => '=='], 'to_operator', 'Unknown operator "==".'],
       'ordering without a number' => [
         ['from_operator' => '>=', 'from_value' => 'Pending'],
         'from_value',

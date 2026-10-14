@@ -31,26 +31,29 @@ final class FieldTransitionParams {
   }
 
   /**
-   * Sides that can never match, keyed by their value element.
+   * Sides that can never match, keyed by the element at fault.
    *
    * @param array{from_operator: string, from_value: string, to_operator: string, to_value: string} $params
    * @return array<string, string>
    */
   public static function sideErrors(array $params): array {
-    return array_filter([
-      'from_value' => self::sideError($params['from_operator'], $params['from_value']),
-      'to_value' => self::sideError($params['to_operator'], $params['to_value']),
-    ]);
+    return (
+      self::sideError('from', $params['from_operator'], $params['from_value'])
+      + self::sideError('to', $params['to_operator'], $params['to_value'])
+    );
   }
 
-  private static function sideError(string $operator, string $value): ?string {
+  /**
+   * @return array<string, string>
+   */
+  private static function sideError(string $side, string $operator, string $value): array {
     if (!in_array($operator, ['', ...FieldTransition::OPERATORS], TRUE)) {
-      return E::ts('Unknown operator "%1".', [1 => $operator]);
+      return ["{$side}_operator" => E::ts('Unknown operator "%1".', [1 => $operator])];
     }
     if (in_array($operator, ['>', '<', '>=', '<='], TRUE) && !is_numeric($value)) {
-      return E::ts('"%1" needs a number as its value.', [1 => $operator]);
+      return ["{$side}_value" => E::ts('"%1" needs a number as its value.', [1 => $operator])];
     }
-    return NULL;
+    return [];
   }
 
 }
