@@ -35,21 +35,16 @@ if (class_exists('CRM_CivirulesConditions_Form_Form')) {
     }
 
     /**
-     * A misspelt entity or field would leave the condition silently false.
+     * A misspelt entity or field, or a value an operator cannot compare, would leave the condition silently false.
      *
      * @param array<string, mixed> $values
      * @return array<string, string>|true
      */
     private function errorsIn(array $values): array|bool {
       $params = FieldTransitionParams::decode($values);
-      try {
-        FieldTransition::side($params['from_operator'], $params['from_value']);
-        FieldTransition::side($params['to_operator'], $params['to_value']);
-      }
-      catch (\CRM_Core_Exception $e) {
-        return ['_qf_default' => $e->getMessage()];
-      }
-      return EntityField::errors($params['entity'], $params['field']) ?: TRUE;
+      return (
+        FieldTransitionParams::sideErrors($params) + EntityField::errors($params['entity'], $params['field']) ?: TRUE
+      );
     }
 
     /**

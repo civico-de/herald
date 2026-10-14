@@ -2063,3 +2063,15 @@ msgstr "%1 hat kein Feld „%2“."
 #: Civi/Herald/Condition/EntityField.php
 msgid "%1.%2 has no option suffix \":%3\"."
 msgstr "%1.%2 hat kein Options-Suffix „:%3“."
+
+#: Civi/Herald/Condition/EntityField.php
+msgid "%1.%2 is a search filter and holds no value."
+msgstr "%1.%2 ist ein Suchfilter und hat keinen Wert."
+
+#: Civi/Herald/Condition/FieldTransitionParams.php
+msgid "Unknown operator \"%1\"."
+msgstr "Unbekannter Operator „%1“."
+
+#: Civi/Herald/Condition/FieldTransitionParams.php
+msgid "\"%1\" needs a number as its value."
+msgstr "„%1“ braucht eine Zahl als Wert."

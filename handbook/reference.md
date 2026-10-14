@@ -67,7 +67,7 @@ The condition "Herald: Field transition" is true when a field's value before and
 | Before: operator, Before: value | The test for the value before the edit. |
 | After: operator, After: value | The test for the value after the edit. |
 
-The form does not save an entity that does not exist or a field the entity does not have.
+The form does not save an entity that does not exist, a field the entity does not have, a suffix the field does not offer, or a search filter such as `groups`, which holds no value. Field names are case-sensitive. The form also refuses `>`, `<`, `>=` and `<=` with a value that is not a number.
 
 The operators are `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` and `not_empty`. "- any value -" leaves that side open. The ordering operators need numbers on both sides. `=` and `!=` compare numbers when both sides are numbers, and trimmed text otherwise. Numbers compare exactly, however many digits they have. A number with an exponent, such as `1e3`, compares as a floating-point number, which is exact to about 15 digits. Any other operator, which only the API can pass, fails the condition with an error.
 

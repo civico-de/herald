@@ -325,7 +325,18 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
         'field',
         'Membership.join_date has no option suffix ":name".',
       ],
-      'unknown operator' => [['to_operator' => '=='], '_qf_default', 'unknown field transition operator "=="'],
+      'wrong case' => [['field' => 'Status_ID'], 'field', 'Membership has no field "Status_ID".'],
+      'search filter' => [
+        ['entity' => 'Contact', 'field' => 'groups:name'],
+        'field',
+        'Contact.groups is a search filter and holds no value.',
+      ],
+      'unknown operator' => [['to_operator' => '=='], 'to_value', 'Unknown operator "==".'],
+      'ordering without a number' => [
+        ['from_operator' => '>=', 'from_value' => 'Pending'],
+        'from_value',
+        '">=" needs a number',
+      ],
     ];
   }
 
@@ -350,6 +361,8 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
       'core field' => [[]],
       'option suffix' => [['field' => 'status_id:name', 'from_value' => 'Grace', 'to_value' => 'Expired']],
       'custom field' => [['entity' => 'Contact', 'field' => 'herald_preferences.preferred_channel']],
+      'ordering with a number' => [['from_operator' => '>=', 'from_value' => ' 2 ']],
+      'emptiness without a value' => [['to_operator' => 'not_empty', 'to_value' => '']],
     ];
   }
 

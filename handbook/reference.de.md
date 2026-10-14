@@ -67,7 +67,7 @@ Die Bedingung „Herald: Field transition“ ist wahr, wenn der Wert eines Felde
 | Vorher: Operator, Vorher: Wert | Die Prüfung für den Wert vor der Änderung. |
 | Nachher: Operator, Nachher: Wert | Die Prüfung für den Wert nach der Änderung. |
 
-Das Formular speichert keine Entität, die es nicht gibt, und kein Feld, das die Entität nicht hat.
+Das Formular speichert keine Entität, die es nicht gibt, kein Feld, das die Entität nicht hat, kein Suffix, das das Feld nicht anbietet, und keinen Suchfilter wie `groups`, denn der hat keinen Wert. Bei Feldnamen zählt die Groß- und Kleinschreibung. Außerdem lehnt das Formular `>`, `<`, `>=` und `<=` ab, wenn der Wert keine Zahl ist.
 
 Die Operatoren sind `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` und `not_empty`. „- beliebiger Wert -“ lässt diese Seite offen. Die Vergleichsoperatoren für größer und kleiner brauchen auf beiden Seiten Zahlen. `=` und `!=` vergleichen Zahlen, wenn beide Seiten Zahlen sind, und sonst Text ohne führende und folgende Leerzeichen. Zahlen werden exakt verglichen, egal wie viele Stellen sie haben. Eine Zahl mit Exponent wie `1e3` wird als Gleitkommazahl verglichen und ist damit auf etwa 15 Stellen genau. Jeder andere Operator, den nur die API übergeben kann, lässt die Bedingung mit einem Fehler scheitern.
 

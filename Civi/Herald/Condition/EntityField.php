@@ -21,14 +21,18 @@ final class EntityField {
       $spec = civicrm_api4($entity, 'getFields', [
         'checkPermissions' => FALSE,
         'where' => [['name', '=', $name]],
-        'select' => ['suffixes'],
+        'select' => ['name', 'type', 'suffixes'],
       ])->first();
     }
     catch (\CRM_Core_Exception $e) {
       return ['entity' => E::ts('"%1" cannot be checked: %2', [1 => $entity, 2 => $e->getMessage()])];
     }
-    if (!is_array($spec)) {
+    // getFields matches names case-insensitively, a select does not.
+    if (!is_array($spec) || $spec['name'] !== $name) {
       return ['field' => E::ts('%1 has no field "%2".', [1 => $entity, 2 => $name])];
+    }
+    if ($spec['type'] === 'Filter') {
+      return ['field' => E::ts('%1.%2 is a search filter and holds no value.', [1 => $entity, 2 => $name])];
     }
     $suffixes = is_array($spec['suffixes'] ?? NULL) ? $spec['suffixes'] : [];
     return (
