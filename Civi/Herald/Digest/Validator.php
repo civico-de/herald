@@ -8,10 +8,12 @@ use Civi\Api4\Event\ValidateValuesEvent;
 use Civi\Core\HookInterface;
 use Civi\Core\Service\AutoService;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+use CRM_Herald_ExtensionUtil as E;
 
 /**
- * Refuses API saves of digests and blocks that could not be sent
- * (DigestRules, BlockType); the digest form is checked by FormValidator.
+ * Refuses API saves of digests and sources that could not be sent
+ * (DigestRules, SourceRules); the digest form is checked by FormValidator,
+ * template edits by TemplateValidator.
  *
  * @service herald.digest_validator
  */
@@ -20,7 +22,7 @@ final class Validator extends AutoService implements HookInterface {
   public function on_civi_api4_validate(ValidateValuesEvent $e): void {
     match ($e->getEntityName()) {
       'HeraldDigest' => self::validateDigests($e),
-      'HeraldDigestBlock' => self::validateBlocks($e),
+      'HeraldDigestSource' => self::validateSources($e),
       default => NULL,
     };
   }
@@ -30,8 +32,7 @@ final class Validator extends AutoService implements HookInterface {
    */
   private static function validateDigests(ValidateValuesEvent $e): void {
     foreach (self::diffs($e) as $r => [$new, $old]) {
-      $id = $old['id'] ?? NULL;
-      foreach (DigestRules::recordProblems($new, $id === NULL ? NULL : Cast::toInt($id)) as $field => $problem) {
+      foreach (DigestRules::recordProblems($new, Definition::idOf($old['id'] ?? NULL)) as $field => $problem) {
         $e->addError($r, $field, 'herald_digest', $problem);
       }
     }
@@ -40,21 +41,36 @@ final class Validator extends AutoService implements HookInterface {
   /**
    * An update is checked together with the stored values it keeps.
    */
-  private static function validateBlocks(ValidateValuesEvent $e): void {
+  private static function validateSources(ValidateValuesEvent $e): void {
     foreach (self::diffs($e) as $r => [$new, $old]) {
-      $block = $new + $old;
-      $problem = BlockType::problem($block) ?? SearchBlock::problem($block);
-      if ($problem !== NULL) {
-        $field = BlockType::REQUIRED[Cast::toString($block['type'] ?? 'contribution')] ?? 'type';
-        $e->addError($r, $field, 'herald_block', ucfirst($problem));
+      $source = $new + $old;
+      $problems = SourceRules::problems($source);
+      if ($problems === [] && (isset($new['name']) || isset($new['digest_id'])) && self::nameTaken($source)) {
+        $problems['name'] = E::ts('The digest has another source named %1.', [1 => Cast::toString($source['name'])]);
+      }
+      foreach ($problems as $field => $problem) {
+        $e->addError($r, $field, 'herald_source', $problem);
       }
     }
   }
 
   /**
+   * @param array<string, mixed> $source
+   */
+  private static function nameTaken(array $source): bool {
+    return \Civi\Api4\HeraldDigestSource::get(checkPermissions: FALSE)
+      ->selectRowCount()
+      ->addWhere('digest_id', '=', $source['digest_id'] ?? 0)
+      ->addWhere('name', '=', $source['name'])
+      ->addWhere('id', '!=', $source['id'] ?? 0)
+      ->execute()
+      ->countMatched() > 0;
+  }
+
+  /**
    * @return array<array-key, array{array<string, mixed>, array<string, mixed>}> record key => [new values, stored values]
    */
-  private static function diffs(ValidateValuesEvent $e): array {
+  public static function diffs(ValidateValuesEvent $e): array {
     $diffs = [];
     foreach ($e->diffs as $r => $diff) {
       $diff = self::values($diff);

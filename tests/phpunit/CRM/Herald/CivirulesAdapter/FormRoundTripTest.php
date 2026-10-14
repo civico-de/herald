@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use Civi\Herald\Digest\DigestFixture;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
@@ -318,17 +319,41 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
 
   public function testDigestForm(): void {
     [$submitted, $expected] = $this->sendFields();
-    // A digest's blocks bring their own templates.
+    // A digest brings its own template, subject included.
     unset($submitted['template'], $expected['template']);
-    \Civi\Api4\HeraldDigest::create(checkPermissions: FALSE)
-      ->setValues(['name' => 'herald_test_round_trip', 'title' => 'Round trip'])
-      ->execute();
+    $submitted['channel_config'] = '{"ntfy_title": "Hi"}';
+    $expected['channel_config'] = ['ntfy_title' => 'Hi'];
+    DigestFixture::create('herald_test_round_trip', 'Round trip');
     $this->assertRoundTrip(
       self::ACTION,
       CRM_Herald_CivirulesAdapter_Action_Digest::class,
       CRM_Herald_CivirulesAdapter_Form_SendDigest::class,
       $submitted + ['digest' => 'herald_test_round_trip'],
       $expected + ['digest' => 'herald_test_round_trip'],
+    );
+  }
+
+  public function testTheDigestFormRefusesASubjectOfItsOwn(): void {
+    DigestFixture::create('herald_test_subject', 'Subject');
+    $handlerId = (int) CRM_Core_DAO::singleValueQuery(
+      'SELECT id FROM civirule_action WHERE class_name = %1',
+      [1 => [CRM_Herald_CivirulesAdapter_Action_Digest::class, 'String']],
+    );
+    $id = $this->insert(self::ACTION, $handlerId, $this->rule('herald_test_digest_subject'));
+    $form = $this->open(
+      (string) (new CRM_Herald_CivirulesAdapter_Action_Digest())->getExtraDataInputUrl($id),
+      CRM_Herald_CivirulesAdapter_Form_SendDigest::class,
+    );
+    [$submitted] = $this->sendFields();
+    unset($submitted['template']);
+    $form->_submitValues = ['digest' => 'herald_test_subject'] + $submitted;
+    $form->_flagSubmitted = TRUE;
+
+    $this->assertSame('{"email_subject": "Hi"}', $submitted['channel_config']);
+    $this->assertFalse($form->validate());
+    $this->assertStringContainsString(
+      'takes its subject from its message template',
+      (string) ($form->_errors['_qf_default'] ?? ''),
     );
   }
 

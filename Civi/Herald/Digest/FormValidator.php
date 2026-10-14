@@ -11,7 +11,7 @@ use Civi\Core\Service\AutoService;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * Afform saves the blocks after the digest and only logs their exceptions,
+ * Afform saves the sources after the digest and only logs their exceptions,
  * so the digest form must fail here, before anything is written.
  *
  * @service herald.digest_form_validator
@@ -34,27 +34,28 @@ final class FormValidator extends AutoService implements HookInterface {
   }
 
   /**
+   * The fields, then the digest composed from the submitted sources with today's data.
+   *
    * @param array<string, mixed> $record Submitted `fields` and `joins` of one digest
    * @return list<string>
    */
   private static function problems(array $record, ?int $id): array {
     $fields = self::named($record['fields'] ?? NULL);
-    $blocks = array_map(
+    $sources = array_map(
       self::named(...),
-      self::list(self::named($record['joins'] ?? NULL)['HeraldDigestBlock'] ?? NULL),
+      self::list(self::named($record['joins'] ?? NULL)['HeraldDigestSource'] ?? NULL),
     );
-    return [
-      ...array_values(DigestRules::recordProblems($fields, $id)),
-      ...DigestRules::blockProblems(Cast::toString($fields['name'] ?? ''), $blocks),
-    ];
+    $digest = Definition::of($fields, $sources);
+    // A missing template is already the field's problem.
+    $composed = array_diff((new Composer())->check($digest)['problems'], [DigestRules::noTemplate($digest)]);
+    return array_values(array_unique([...array_values(DigestRules::recordProblems($fields, $id)), ...$composed]));
   }
 
   /**
    * An arg names the record as an id, or as a list with one record.
    */
   private static function id(mixed $arg): ?int {
-    $id = is_array($arg) ? $arg['id'] ?? NULL : $arg;
-    return $id === NULL || $id === '' ? NULL : Cast::toInt($id);
+    return Definition::idOf(is_array($arg) ? $arg['id'] ?? NULL : $arg);
   }
 
   /**

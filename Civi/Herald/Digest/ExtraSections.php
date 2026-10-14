@@ -5,32 +5,34 @@ declare(strict_types = 1);
 namespace Civi\Herald\Digest;
 
 use Civi\Core\Event\GenericHookEvent;
+use CRM_Herald_ExtensionUtil as E;
 
 /**
- * Digest sections contributed by other extensions: numbers no query of
- * herald's can answer belong to the extension that owns them. A digest block
- * of type "section" with the section key "myext.seats" asks for one; the
- * owning extension answers for its own key:
+ * Digest sections contributed by other extensions: numbers no search can
+ * answer belong to the extension that owns them. A digest source of type
+ * "section" with the key "myext.seats" asks for one; the owning extension
+ * answers for its own key with values, which the template formats:
  *
  *   function myext_civicrm_heraldDigestSections(array $keys, array $context, array &$sections): void {
  *     if (in_array('myext.seats', $keys, TRUE)) {
- *       $sections['myext.seats'] = "🪑 <b>Seats</b>\n138 booked";
+ *       $sections['myext.seats'] = ['booked' => 138, 'paid' => 120];
  *     }
  *   }
  *
- * $context carries the digest's name under 'digest' and the block's 'period'.
+ * $context carries the digest's name under 'digest'.
  */
 class ExtraSections {
 
   public const HOOK = 'hook_civicrm_heraldDigestSections';
 
   /**
-   * Ask the extensions for one section. An empty answer is a section with
-   * nothing to report; no answer at all is a configuration error.
+   * Ask the extensions for one section: named scalars, and lists of rows of named scalars.
    *
    * @param array<string, mixed> $context
+   * @return array<string, mixed>
+   * @throws DigestProblem when no extension answers or the answer is not values
    */
-  public static function answer(string $key, array $context): string {
+  public static function answer(string $key, array $context): array {
     /** @var array<array-key, mixed> $sections */
     $sections = [];
     \Civi::dispatcher()->dispatch(self::HOOK, GenericHookEvent::create([
@@ -38,41 +40,25 @@ class ExtraSections {
       'context' => $context,
       'sections' => &$sections,
     ]));
-    if (!is_array($sections) || !array_key_exists($key, $sections) || !is_scalar($sections[$key])) {
-      throw new \CRM_Core_Exception("herald: no extension answers the digest section \"{$key}\"");
+    if (!is_array($sections) || !array_key_exists($key, $sections)) {
+      throw new DigestProblem([E::ts('No extension answers the digest section "%1".', [1 => $key])]);
     }
-    return trim((string) $sections[$key]);
-  }
-
-  /**
-   * Parse a list of section keys: "a.b, c.d" or a JSON/PHP array.
-   *
-   * @param mixed $raw
-   * @return list<string>
-   */
-  public static function parseKeys($raw): array {
-    if (is_string($raw)) {
-      $trimmed = trim($raw);
-      if ($trimmed === '') {
-        return [];
-      }
-      $decoded = $trimmed[0] === '[' ? json_decode($trimmed, TRUE) : NULL;
-      $raw = is_array($decoded) ? $decoded : explode(',', $trimmed);
+    $answer = $sections[$key];
+    if (!is_array($answer)) {
+      throw new DigestProblem([E::ts(
+        'The digest section "%1" answered with text; a section returns values, e.g. [\'booked\' => 138].',
+        [1 => $key],
+      )]);
     }
-    if (!is_array($raw)) {
-      return [];
+    $problems = SectionRules::problems($answer);
+    if ($problems !== []) {
+      throw new DigestProblem(array_map(
+        static fn (string $problem): string => E::ts('Digest section "%1": %2', [1 => $key, 2 => $problem]),
+        $problems,
+      ));
     }
-    $keys = [];
-    foreach ($raw as $rawKey) {
-      if (!is_scalar($rawKey)) {
-        continue;
-      }
-      $key = trim((string) $rawKey);
-      if ($key !== '' && !in_array($key, $keys, TRUE)) {
-        $keys[] = $key;
-      }
-    }
-    return $keys;
+    /** @var array<string, mixed> $answer */
+    return $answer;
   }
 
 }

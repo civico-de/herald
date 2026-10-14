@@ -2,7 +2,7 @@
   <h1 crm-page-title>{{:: $ctrl.ts('Contribution source names') }}</h1>
   <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
   <p>
-    {{:: $ctrl.ts('Digests group contributions by their source. These rules give differently written sources one name; the first matching rule wins.') }}
+    {{:: $ctrl.ts('Contribution notifications show the source of a contribution. These rules give differently written sources one name; the first matching rule wins.') }}
   </p>
   <div ng-include="'~/heraldAdmin/messages.html'"></div>
   <form ng-if="$ctrl.loaded" ng-submit="$ctrl.save()" novalidate>
@@ -46,7 +46,7 @@
         </tr>
       </tbody>
     </table>
-    <p ng-if="!$ctrl.rules.length">{{:: $ctrl.ts('No rules: digests show every source as written.') }}</p>
+    <p ng-if="!$ctrl.rules.length">{{:: $ctrl.ts('No rules: notifications show every source as written.') }}</p>
     <p class="description">
       {{:: $ctrl.ts('A regular expression uses PHP syntax with delimiters, for example /^SEPA/i. It is checked when you save.') }}
     </p>

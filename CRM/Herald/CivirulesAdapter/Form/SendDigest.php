@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use Civi\Herald\Digest\DigestRules;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
@@ -37,6 +38,10 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
      * @return array<string, mixed>
      */
     protected function getExtraValues(array $submitted): array {
+      $problem = DigestRules::deliveryProblem($submitted);
+      if ($problem !== NULL) {
+        throw new \CRM_Core_Exception($problem);
+      }
       return ['digest' => Cast::toString($submitted['digest'] ?? '')];
     }
 

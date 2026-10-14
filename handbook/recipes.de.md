@@ -22,7 +22,7 @@ Drei Regeln begleiten eine Spende: sofort bezahlt, als Überweisung angekündigt
 | Sofort bezahlt | Contribution is added | Contribution Status is (not) one of: Completed | Herald: Neuer abgeschlossener Beitrag |
 | Überweisung angekündigt | Contribution is added | Contribution Status is (not) one of: Pending, und Contribution is (not) of Financial Type(s): Donation | Herald: Neuer ausstehender Beitrag |
 | Überweisung eingegangen | Contribution is changed | Herald: Field transition, siehe unten, und Contribution Status is (not) one of: Completed | Herald: Beitragsstatus geändert |
-| Tägliche Zusammenfassung | Herald: Schedule, siehe [Geplante Reports](#geplante-reports) | | Herald: Täglicher Beitragsreport, im Beitragsblock des Reports |
+| Tägliche Zusammenfassung | Herald: Schedule, siehe [Geplante Reports](#geplante-reports) | | Ein Report mit der Anzeige „Report: Beiträge gestern“ |
 
 Die ersten drei verwenden die Aktion „Herald: Send notification (generic)“, die tägliche Zusammenfassung „Herald: Send digest“.
 
@@ -55,7 +55,28 @@ Ein Bankimport, der Beiträge im Status Completed anlegt, würde für jede gebuc
 
 Dieselbe Quelle kann mit dem umgekehrten Operator auch eine eigene Regel steuern.
 
-Damit solche Quellen in Meldungen und Reports unter einer lesbaren Bezeichnung erscheinen, richten Sie die [Normalisierung der Quellen](digests.md#quellen-normalisieren) ein.
+### Quellen normalisieren
+
+Beitragsquellen sind oft technisch, etwa die Referenz eines Zahlungsanbieters oder das Transaktionspräfix eines Bankimports. Die Einstellung `herald_source_normalization` ordnet ihnen lesbare Bezeichnungen zu. Beitragsbenachrichtigungen zeigen sie als Quelle. Standardmäßig ist die Einstellung leer, und die Quellen bleiben, wie sie sind.
+
+Die Regeln finden Sie unter Administrieren » Herald » Namen der Beitragsquellen. Jede Zeile enthält den Quelltext, die Art des Vergleichs und den anzuzeigenden Namen. Die Pfeil-Schaltflächen ändern die Reihenfolge, in der die Regeln geprüft werden. Beim Speichern lehnt die Seite unvollständige Regeln und reguläre Ausdrücke ab, die sich nicht kompilieren lassen, und nennt die Nummer der Regel.
+
+Mit cv:
+
+```bash
+cv api4 --in=json Setting.set <<'JSON'
+{"values": {"herald_source_normalization": [
+  {"match": "Bank TX", "type": "contains", "label": "Bank transfer"},
+  {"match": "Ueberweisung", "type": "prefix", "label": "Bank transfer"},
+  {"match": "/^pi_[A-Za-z0-9]+$/", "type": "regex", "label": "Stripe"}
+]}}
+JSON
+```
+
+- Die Regeln werden der Reihe nach geprüft, und der erste Treffer gewinnt.
+- Der Typ ist contains, prefix oder regex. Bei contains und prefix zählt die Groß- und Kleinschreibung.
+- Ein regulärer Ausdruck verwendet die preg-Syntax von PHP, einschließlich der Begrenzungszeichen.
+- Eine fehlerhafte Regel, die in die Einstellung gelangt, wird ignoriert, sodass ein Tippfehler keine Meldung verhindern kann. Die Seite und `Herald.saveSourceRules` lehnen sie ab, bevor sie gespeichert wird.
 
 ## Ticketverkauf
 
@@ -104,12 +125,12 @@ Ein Report, der zu einer festen Zeit verschickt wird, ist eine CiviRules-Regel m
 
 Ein wöchentlicher Beitragsreport jeden Montag um 8:00 Uhr:
 
-1. Legen Sie unter Administrieren » Herald » Reports einen Report mit dem Titel „Weekly contributions“, dem Namen `weekly_contributions`, dem Zeitraum „Letzte 7 Tage“ und einem Beitragsblock mit der Vorlage „Herald: Wöchentlicher Beitragsreport“ an.
+1. Legen Sie unter Mailings » Nachrichtenvorlagen im Reiter „User-driven Messages“ eine Vorlage „Wöchentliche Beiträge“ an. Legen Sie unter Administrieren » Herald » Reports einen Report mit dem Titel „Wöchentliche Beiträge“, dem Namen `weekly_contributions` und dieser Vorlage an. Geben Sie ihm eine Quelle `spenden` mit der Anzeige „Report: Beiträge letzte Woche“, kopieren Sie den Textbaustein aus dem Formular in die Vorlage und prüfen Sie die Vorschau.
 2. Legen Sie eine CiviRules-Regel an und wählen Sie den Trigger „Herald: Schedule“.
 3. Wählen Sie im Formular des Triggers unter „Wochentage“ den Montag und unter „Uhrzeit“ 08:00. Bleibt „Wochentage“ leer, wird der Report jeden Tag verschickt. Die Uhrzeit gilt in der Zeitzone von CiviCRM.
 4. Fügen Sie die Aktion „Herald: Send digest“ hinzu, wählen Sie den Report, und setzen Sie den Kanal und bei Telegram die Chat-ID.
 
-Die Regelliste zeigt den Zeitplan als „Jeden Montag um 08:00“ und die Aktion als `Verschickt den Report „Weekly contributions“.` Für einen täglichen Report lassen Sie „Wochentage“ leer, geben dem Report den Zeitraum „Gestern“ und seinem Beitragsblock die Vorlage „Herald: Täglicher Beitragsreport“.
+Die Regelliste zeigt den Zeitplan als „Jeden Montag um 08:00“ und die Aktion als `Verschickt den Report „Wöchentliche Beiträge“.` Für einen täglichen Report lassen Sie „Wochentage“ leer und verwenden die Anzeige „Report: Beiträge gestern“.
 
 CiviRules prüft den Trigger bei jedem Lauf seines geplanten Jobs. Der Report wird also mit dem ersten Cron-Lauf nach der vollen Stunde verschickt. Ob ein Termin schon verschickt wurde, steht im Protokoll der Regel selbst:
 
@@ -120,7 +141,7 @@ CiviRules prüft den Trigger bei jedem Lauf seines geplanten Jobs. Der Report wi
 
 CiviCRM führt geplante Jobs, auch den von CiviRules, nur in der Umgebung Production aus.
 
-Wie Sie einen Report und seine Blöcke einrichten, beschreibt die Seite [Reports](digests.md).
+Wie Sie einen Report und seine Quellen einrichten, beschreibt die Seite [Reports](digests.md).
 
 ### Ohne Regel
 

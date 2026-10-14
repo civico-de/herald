@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use Civi\Herald\Digest\DigestProblem;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
@@ -31,15 +32,22 @@ final class CRM_Herald_Upgrader_InlineDigestActions {
       ->fetchAll();
     $migrated = 0;
     foreach ($actions as $action) {
-      CRM_Core_Transaction::create()->run(static function () use ($action, &$migrated): void {
-        $migrated += self::rewrite($action);
-      });
+      try {
+        CRM_Core_Transaction::create()->run(static function () use ($action, &$migrated): void {
+          $migrated += self::rewrite($action);
+        });
+      }
+      catch (CRM_Core_Exception $e) {
+        CRM_Herald_Upgrader_InlineDigest::warn('rule_action_' . Cast::toInt($action['id']), self::problems($e));
+      }
     }
     return $migrated;
   }
 
   /**
    * The digest and the action that names it are written together, so a failed upgrade can run again.
+   *
+   * @throws CRM_Core_Exception when the digest does not compose
    *
    * @param array<string, mixed> $action
    */
@@ -51,9 +59,6 @@ final class CRM_Herald_Upgrader_InlineDigestActions {
     }
     $title = Cast::toString($action['label'] ?? '') ?: "Rule action {$id}";
     $delivery = CRM_Herald_Upgrader_InlineDigest::extract($params, "rule_action_{$id}", $title);
-    if ($delivery === NULL) {
-      return 0;
-    }
     CRM_Core_DAO::executeQuery(
       'UPDATE civirule_rule_action SET action_params = %1 WHERE id = %2',
       [1 => [serialize($delivery), 'String'], 2 => [$id, 'Integer']],
@@ -83,6 +88,13 @@ final class CRM_Herald_Upgrader_InlineDigestActions {
     }
     \Civi::log('herald')->warning('herald: rule action params unreadable, digest left inline', ['rule_action' => $id]);
     return NULL;
+  }
+
+  /**
+   * @return list<string>
+   */
+  public static function problems(CRM_Core_Exception $e): array {
+    return $e instanceof DigestProblem ? $e->problems() : [$e->getMessage()];
   }
 
 }

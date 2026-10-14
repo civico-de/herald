@@ -5,8 +5,8 @@ declare(strict_types = 1);
 use CRM_Herald_ExtensionUtil as E;
 
 /**
- * A digest: a header and the blocks (HeraldDigestBlock) composed into one
- * message. Rules and Herald.notifyDigest name it by `name`.
+ * A digest: one message template filled from its sources (HeraldDigestSource).
+ * Rules and Herald.notifyDigest name it by `name`.
  */
 return [
   'name' => 'HeraldDigest',
@@ -15,7 +15,7 @@ return [
   'getInfo' => fn () => [
     'title' => E::ts('Herald Digest'),
     'title_plural' => E::ts('Herald Digests'),
-    'description' => E::ts('A summary message composed of contribution, search and section blocks.'),
+    'description' => E::ts('A summary message: one message template filled from searches and extension sections.'),
     'log' => FALSE,
     'label_field' => 'title',
   ],
@@ -52,20 +52,21 @@ return [
       'input_type' => 'Text',
       'required' => TRUE,
     ],
-    'header' => [
-      'title' => E::ts('Header'),
-      'sql_type' => 'text',
-      'input_type' => 'TextArea',
-      'description' => E::ts('HTML line above the blocks.'),
-    ],
-    'period' => [
-      'title' => E::ts('Period'),
-      'sql_type' => 'varchar(32)',
-      'input_type' => 'Select',
-      'required' => TRUE,
-      'default' => 'yesterday',
-      'description' => E::ts('Period of every block that sets none of its own.'),
-      'pseudoconstant' => ['callback' => [\Civi\Herald\Digest\Options::class, 'periods']],
+    // Required on save (DigestRules); a deleted template leaves the digest to fail at send.
+    'message_template_id' => [
+      'title' => E::ts('Message Template'),
+      'sql_type' => 'int unsigned',
+      'input_type' => 'EntityRef',
+      'description' => E::ts('Subject and text of the digest, with the values of its sources as placeholders.'),
+      // User-driven templates only; autocomplete drops a NULL `filter`.
+      'input_attrs' => [
+        'where' => [['workflow_name', 'IS NULL']],
+      ],
+      'entity_reference' => [
+        'entity' => 'MessageTemplate',
+        'key' => 'id',
+        'on_delete' => 'SET NULL',
+      ],
     ],
   ],
 ];

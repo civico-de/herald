@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use Civi\Herald\Digest\DigestFixture;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
@@ -41,17 +42,7 @@ class CRM_Herald_CivirulesAdapter_ActionDelegationTest extends TestCase implemen
   }
 
   public function testSendDigestReachesTheDispatcher(): void {
-    $digestId = \Civi\Api4\HeraldDigest::create(checkPermissions: FALSE)
-      ->setValues(['name' => 'adapter_test', 'title' => 'Adapter test'])
-      ->execute()
-      ->single()['id'];
-    \Civi\Api4\HeraldDigestBlock::create(checkPermissions: FALSE)
-      ->setValues([
-        'digest_id' => $digestId,
-        'template' => 'herald_contribution_digest_daily',
-        'show_histogram' => FALSE,
-      ])
-      ->execute();
+    DigestFixture::create('adapter_test', 'Adapter test');
     $action = new CRM_Herald_CivirulesAdapter_Action_Digest();
     $action->setRuleActionData($this->ruleActionData([
       'digest' => 'adapter_test',

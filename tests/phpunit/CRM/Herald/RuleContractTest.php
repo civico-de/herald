@@ -6,6 +6,7 @@ use Civi\Api4\Contact;
 use Civi\Api4\Contribution;
 use Civi\Api4\Event;
 use Civi\Api4\Participant;
+use Civi\Herald\Digest\DigestFixture;
 use Civi\Herald\PreEditSnapshot;
 use Civi\Herald\Preflight\HandlerContract;
 use Civi\Herald\Preflight\RuleHandlers;
@@ -188,17 +189,7 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
   }
 
   public function testDigestContract(): void {
-    $digestId = \Civi\Api4\HeraldDigest::create(checkPermissions: FALSE)
-      ->setValues(['name' => 'herald_test_contract', 'title' => 'Contract digest'])
-      ->execute()
-      ->single()['id'];
-    \Civi\Api4\HeraldDigestBlock::create(checkPermissions: FALSE)
-      ->setValues([
-        'digest_id' => $digestId,
-        'template' => 'herald_contribution_digest_daily',
-        'show_histogram' => FALSE,
-      ])
-      ->execute();
+    DigestFixture::create('herald_test_contract', 'Contract digest');
     $action = $this->action(CRM_Herald_CivirulesAdapter_Action_Digest::class, [
       'digest' => 'herald_test_contract',
       'channel' => 'telegram',

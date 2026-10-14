@@ -6,7 +6,7 @@ namespace Civi\Herald\Digest;
 
 /**
  * Amounts counted and summed per bucket between edges. Amounts outside
- * caller-supplied edges land in extra "<low" and "≥high" buckets rather than
+ * caller-supplied edges land in extra "0–low" and "≥high" buckets rather than
  * vanishing; derived edges always cover the data.
  */
 final class HistogramBuckets {
@@ -52,7 +52,9 @@ final class HistogramBuckets {
    */
   private static function ranges(array $edges): array {
     $last = count($edges) - 1;
-    $ranges = [-1 => [0.0, $edges[0], '<' . NiceNumber::label($edges[0])]];
+    // Amounts are positive, so below the edges is 0–edge. No label holds <, > or &: the
+    // herald_histogram modifier output goes unescaped into HTML and text alike.
+    $ranges = [-1 => [0.0, $edges[0], '0–' . NiceNumber::label($edges[0])]];
     for ($i = 0; $i < $last; $i++) {
       $ranges[$i] = [
         $edges[$i],

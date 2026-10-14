@@ -126,4 +126,22 @@ class CRM_Herald_Upgrader_DigestJobsTest extends TestCase implements HeadlessInt
     self::assertSame('notifyDigest', $this->stored($good)['api_action']);
   }
 
+  public function testSectionKeysAreReadFromACommaSeparatedString(): void {
+    self::assertSame(['a.b', 'c.d'], CRM_Herald_Upgrader_SectionKeys::parse(' a.b , c.d '));
+  }
+
+  public function testSectionKeysAreReadFromAJsonArray(): void {
+    self::assertSame(['a.b', 'c.d'], CRM_Herald_Upgrader_SectionKeys::parse('["a.b", "c.d"]'));
+  }
+
+  public function testSectionKeysDropEmptyAndDuplicateEntries(): void {
+    self::assertSame(['a.b'], CRM_Herald_Upgrader_SectionKeys::parse('a.b, , a.b'));
+    self::assertSame([], CRM_Herald_Upgrader_SectionKeys::parse(''));
+    self::assertSame([], CRM_Herald_Upgrader_SectionKeys::parse(NULL));
+  }
+
+  public function testSectionKeysSkipNonScalarEntries(): void {
+    self::assertSame(['a.b'], CRM_Herald_Upgrader_SectionKeys::parse(['a.b', ['nested'], NULL]));
+  }
+
 }

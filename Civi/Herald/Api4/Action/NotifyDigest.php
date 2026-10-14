@@ -6,14 +6,19 @@ namespace Civi\Herald\Api4\Action;
 
 use Civi\Api4\Generic\AbstractScheduledJob;
 use Civi\Api4\Generic\Result;
+use Civi\Herald\Channel\PlainText;
 use Civi\Herald\Digest\Composer;
 use Civi\Herald\Digest\Definition;
+use Civi\Herald\Digest\DigestProblem;
+use Civi\Herald\Digest\DigestRules;
 use Civi\Herald\Dispatch\Dispatcher;
 use Civi\Herald\Schedule\Clock;
 use Civi\Herald\Schedule\ScheduleParams;
+use CRM_Herald_ExtensionUtil as E;
 
 /**
- * Compose and deliver a digest. Needs no trigger entity. Rules send on a schedule
+ * Compose and deliver a digest; if it cannot be composed, its recipients get
+ * a short notice and the error is rethrown. Needs no trigger entity. Rules send on a schedule
  * via the "Herald: Schedule" trigger; scripts, crontab and APIv4 jobs call this.
  *
  * @method $this setDigest(string $digest)
@@ -53,10 +58,47 @@ class NotifyDigest extends AbstractScheduledJob {
       $result[] = ['mode' => 'skipped', 'send_hour' => $sendHour, 'current_hour' => $hour];
       return;
     }
-    $digest = (new Composer())->compose(Definition::load($this->digest));
-    // No amount: summing the period totals of buffered digests would double-count.
-    $mode = (new Dispatcher())->dispatchRendered($this->actionParams, $digest['body'], $digest['subject'], NULL);
-    $result[] = ['mode' => $mode, 'blocks' => $digest['blocks'], 'count' => $digest['count']];
+    $dispatcher = new Dispatcher();
+    $title = $this->digest;
+    try {
+      $problem = DigestRules::deliveryProblem($this->actionParams);
+      if ($problem !== NULL) {
+        throw new DigestProblem([$problem]);
+      }
+      $digest = Definition::load($this->digest);
+      $title = $digest['title'];
+      $message = (new Composer())->compose($digest);
+    }
+    catch (\Throwable $e) {
+      $this->notifyFailure($dispatcher, $title, $e);
+      throw $e;
+    }
+    // No amount: summing the totals of buffered digests would double-count.
+    $mode = $dispatcher->dispatchRendered($this->actionParams, $message['body'], $message['subject'], NULL);
+    $result[] = ['mode' => $mode, 'sources' => $message['sources']];
+  }
+
+  /**
+   * Tells the recipients that the digest is missing. Only herald's own
+   * problems are quoted; other errors may carry data and stay in the log.
+   */
+  private function notifyFailure(Dispatcher $dispatcher, string $title, \Throwable $e): void {
+    $reason = $e instanceof DigestProblem ? $e->getMessage() : E::ts('an unexpected error, see the CiviCRM log.');
+    $text = E::ts('⚠️ Digest "%1" could not be composed: %2', [1 => $title, 2 => $reason]);
+    try {
+      $dispatcher->dispatchRendered(
+        $this->actionParams,
+        PlainText::toHtml($text),
+        E::ts('Digest "%1" failed', [1 => $title]),
+        NULL,
+      );
+    }
+    catch (\Throwable $sendError) {
+      \Civi::log()->error('herald: the failure notice of digest {digest} was not delivered: {error}', [
+        'digest' => $this->digest,
+        'error' => $sendError->getMessage(),
+      ]);
+    }
   }
 
 }

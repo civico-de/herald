@@ -27,40 +27,6 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
     $this->renderer = new TemplateRenderer();
   }
 
-  public function testRendersShippedDigestTemplate(): void {
-    $body = $this->renderer->render('herald_contribution_digest_daily', [
-      'period' => ['label' => '2026-05-06'],
-      'totals' => ['amount' => 1234.5, 'count' => 7],
-      'by_source' => [['source' => 'Stripe', 'total' => 1234.5, 'count' => 7]],
-      'pending' => ['amount' => 0, 'count' => 0],
-      'campaign' => ['title' => '', 'goal' => 0, 'total' => 0, 'count' => 0, 'percent' => 0],
-      'histogram' => '5–10 ████ 3 (15)',
-    ]);
-
-    // Source string, not the de_DE rendering — the test env has no German
-    // locale; translation correctness lives in l10n/de_DE, not here.
-    $this->assertStringContainsString('Daily report 2026-05-06', $body);
-    $this->assertStringContainsString('Stripe', $body);
-    $this->assertStringContainsString('<pre>5–10 ████ 3 (15)</pre>', $body);
-    // No campaign block when goal=0
-    $this->assertStringNotContainsString('Campaign', $body);
-  }
-
-  public function testCampaignBlockAppearsWhenGoalSet(): void {
-    $body = $this->renderer->render('herald_contribution_digest_daily', [
-      'period' => ['label' => '2026-05-06'],
-      'totals' => ['amount' => 100, 'count' => 1],
-      'by_source' => [],
-      'pending' => ['amount' => 0, 'count' => 0],
-      'campaign' => ['title' => 'Campaign 2026', 'goal' => 30_000, 'total' => 25_000, 'count' => 50, 'percent' => 83.3],
-      'histogram' => '',
-    ]);
-
-    $this->assertStringContainsString('Campaign', $body);
-    $this->assertStringContainsString('Campaign 2026', $body);
-    $this->assertStringContainsString('83.3%', $body);
-  }
-
   public function testRendersAlertTemplate(): void {
     $body = $this->renderer->render('herald_contribution_alert_completed', [
       'contribution' => ['total_amount' => 42.5, 'source' => 'Stripe'],
@@ -283,40 +249,6 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
   }
 
   /**
-   * DigestVars always sets every key; a goal without campaign_title and a
-   * digest without histogram leave no empty markup behind.
-   */
-  public function testDigestWithoutCampaignTitleOrHistogramLeavesNoEmptyMarkup(): void {
-    foreach (['herald_contribution_digest_daily', 'herald_contribution_digest_weekly'] as $workflow) {
-      [$parts, $warnings] = $this->renderQuietly($workflow, [
-        'period' => ['label' => '2026-05-06'],
-        'totals' => ['amount' => 100, 'count' => 1],
-        'by_source' => [],
-        'pending' => ['amount' => 0, 'count' => 0],
-        'campaign' => ['title' => '', 'goal' => 1000, 'total' => 100, 'count' => 1, 'percent' => 10],
-        'histogram' => '',
-      ]);
-      $this->assertSame([], $warnings);
-      $this->assertStringNotContainsString('<pre>', $parts['body']);
-      $this->assertStringNotContainsString('<b></b>', $parts['body']);
-      $this->assertStringContainsString('Campaign: 10%', $parts['body']);
-    }
-
-    [$parts, $warnings] = $this->renderQuietly('herald_contribution_digest_block', [
-      'block_title' => '',
-      'totals' => ['amount' => 0, 'count' => 0],
-      'by_item' => [],
-      'by_source' => [],
-      'pending' => ['amount' => 0, 'count' => 0],
-      'pending_items' => [],
-      'campaign' => ['title' => '', 'goal' => 0, 'total' => 0, 'count' => 0, 'percent' => 0],
-      'histogram' => '',
-    ]);
-    $this->assertSame([], $warnings);
-    $this->assertSame('<i>no receipts</i>', trim($parts['body']));
-  }
-
-  /**
    * @param array<string, mixed> $vars
    * @return array{array{subject: ?string, body: string}, list<string>}
    */
@@ -360,6 +292,32 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
   public function testRenderInlineUsesCallerSuppliedBody(): void {
     $body = $this->renderer->renderInline('Hello {$name}!', ['name' => 'World']);
     $this->assertSame('Hello World!', $body);
+  }
+
+  public function testRenderInlineRefusesCoreApiCalls(): void {
+    $this->expectExceptionMessage("Tag 'crmAPI' is not allowed");
+    $this->renderer->renderInline('{crmAPI entity="Domain" action="getcount" var="n"}{$n}', []);
+  }
+
+  public function testThePolicyIsOffAgainAfterARender(): void {
+    $this->renderer->renderInline('x', []);
+    self::assertFalse(self::policyOn());
+  }
+
+  public function testAPolicyTheCallerEnabledStaysOn(): void {
+    $policy = \Civi::service('civi.smarty.userContent');
+    $policy->enable();
+    try {
+      $this->renderer->renderInline('x', []);
+      self::assertTrue(self::policyOn());
+    }
+    finally {
+      $policy->disable();
+    }
+  }
+
+  private static function policyOn(): bool {
+    return \CRM_Core_Smarty::singleton()->security_policy !== NULL;
   }
 
   /**

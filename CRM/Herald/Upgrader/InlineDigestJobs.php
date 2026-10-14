@@ -29,9 +29,14 @@ final class CRM_Herald_Upgrader_InlineDigestJobs {
         continue;
       }
       $name = Cast::toString($job['name'] ?? '');
-      CRM_Core_Transaction::create()->run(static function () use ($api, $id, $name, &$migrated): void {
-        $migrated += self::rewrite($api, $id, $name);
-      });
+      try {
+        CRM_Core_Transaction::create()->run(static function () use ($api, $id, $name, &$migrated): void {
+          $migrated += self::rewrite($api, $id, $name);
+        });
+      }
+      catch (CRM_Core_Exception $e) {
+        CRM_Herald_Upgrader_InlineDigest::warn("job_{$id}", CRM_Herald_Upgrader_InlineDigestActions::problems($e));
+      }
     }
     return $migrated;
   }
@@ -55,6 +60,8 @@ final class CRM_Herald_Upgrader_InlineDigestJobs {
   /**
    * The digest and the job that names it are written together, so a failed upgrade can run again.
    *
+   * @throws CRM_Core_Exception when the digest does not compose
+   *
    * @param array<string, mixed> $api
    */
   private static function rewrite(array $api, int $id, string $name): int {
@@ -75,6 +82,8 @@ final class CRM_Herald_Upgrader_InlineDigestJobs {
   /**
    * The job's API parameters with `digest` beside `actionParams`, or NULL to leave them.
    *
+   * @throws CRM_Core_Exception when the digest does not compose
+   *
    * @param array<string, mixed> $api
    * @return array<string, mixed>|null
    */
@@ -90,9 +99,6 @@ final class CRM_Herald_Upgrader_InlineDigestJobs {
     }
     $params = Cast::namedOnly($params);
     $delivery = CRM_Herald_Upgrader_InlineDigest::extract($params, "job_{$id}", $name !== '' ? $name : "Job {$id}");
-    if ($delivery === NULL) {
-      return NULL;
-    }
     $api['digest'] = $delivery['digest'];
     unset($delivery['digest']);
     $api['actionParams'] = $delivery;

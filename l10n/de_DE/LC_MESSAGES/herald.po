@@ -69,7 +69,7 @@ msgstr "Sammelfenster in Minuten (0 = sofort senden; > 0 sammelt Meldungen und s
 msgid "Channel-specific config (JSON, optional)"
 msgstr "Kanalspezifische Konfiguration (JSON, optional)"
 
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/Form/Schedule.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, Civi/Api4/Herald.php, Civi/Herald/Api4/Action/SaveAllowedHosts.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Api4/Action/SaveTopic.php, Civi/Herald/Digest/Composer.php, Civi/Herald/Digest/Options.php, Civi/Herald/Digest/SearchBlock.php, ang/afformHeraldDigest.aff.html, ang/heraldAdmin/hosts.html, ang/heraldAdmin/monitor.html, ang/heraldAdmin/sources.html, ang/heraldAdmin/topic.html, managed/Digests.mgd.php, managed/ParkedAlerts.mgd.php, schema/HeraldDigestBlock.entityType.php
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/Form/Schedule.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, Civi/Api4/Herald.php, Civi/Herald/Api4/Action/SaveAllowedHosts.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Api4/Action/SaveTopic.php, Civi/Herald/Digest/Composer.php, ang/afformHeraldDigest.aff.html, ang/heraldAdmin/hosts.html, ang/heraldAdmin/monitor.html, ang/heraldAdmin/sources.html, ang/heraldAdmin/topic.html, managed/Digests.mgd.php, managed/ParkedAlerts.mgd.php
 msgid "Save"
 msgstr "Speichern"
 
@@ -93,36 +93,9 @@ msgstr "— keine —"
 msgid "Channel-specific config must be a JSON object: %1"
 msgstr "Die kanalspezifische Konfiguration muss ein JSON-Objekt sein: %1"
 
-#: Civi/Herald/Digest/ContributionStatsService.php, Civi/Herald/Digest/DigestVars.php, ang/afformHeraldDigest.aff.html, managed/Digests.mgd.php, schema/HeraldDigest.entityType.php, schema/HeraldDigestBlock.entityType.php
-
-msgid "Period"
-msgstr "Zeitraum"
-
-#: Civi/Herald/Digest/DateRange.php, Civi/Herald/Digest/Options.php
-msgid "Yesterday"
-msgstr "Gestern"
-
-#: Civi/Herald/Digest/Options.php
-msgid "Today"
-msgstr "Heute"
-
-#: Civi/Herald/Digest/Options.php
-msgid "Last 7 days"
-msgstr "Letzte 7 Tage"
-
-#: Civi/Herald/Digest/Options.php
-msgid "Last 30 days"
-msgstr "Letzte 30 Tage"
-
-#: Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Digest/Options.php, ang/heraldAdmin/index.html, ang/heraldAdmin/sources.html, managed/Navigation.mgd.php
+#: Civi/Herald/Admin/AdminScreens.php, ang/heraldAdmin/index.html, ang/heraldAdmin/sources.html, managed/Navigation.mgd.php
 msgid "Contribution source"
 msgstr "Beitragsquelle"
-
-#: Civi/Herald/Digest/Options.php
-msgid "Line item and unit price"
-msgstr "Position und Einzelpreis"
-
-
 
 #: CRM/Herald/CivirulesAdapter/Form/SendNotification.php
 msgid "Variables (JSON object passed to the template)"
@@ -193,14 +166,6 @@ msgid "Runs checks contributed via hook_civicrm_heraldChecks and publishes ok/fa
 msgstr "Führt die über hook_civicrm_heraldChecks bereitgestellten Checks aus und veröffentlicht ok/fail-Übergänge im Topic herald_monitor_topic."
 
 #: managed/MessageTemplate.mgd.php
-msgid "Herald: Daily contribution digest"
-msgstr "Herald: Täglicher Beitragsreport"
-
-#: managed/MessageTemplate.mgd.php
-msgid "Herald: Weekly contribution digest"
-msgstr "Herald: Wöchentlicher Beitragsreport"
-
-#: managed/MessageTemplate.mgd.php
 msgid "Herald: New completed contribution"
 msgstr "Herald: Neuer abgeschlossener Beitrag"
 
@@ -252,47 +217,23 @@ msgstr "Herald: Event deaktiviert"
 msgid "Herald: Event deleted"
 msgstr "Herald: Event gelöscht"
 
-#: managed/MessageTemplate.mgd.php
-msgid "Herald: Contribution digest block (composable)"
-msgstr "Herald: Beitragsreport-Block (kombinierbar)"
-
-#: managed/MessageTemplate.mgd.php
-msgid "Daily report %1"
-msgstr "Tagesreport %1"
-
-#: Civi/Herald/Digest/ContributionStatsService.php, managed/MessageTemplate.mgd.php
-msgid "Received"
-msgstr "Eingegangen"
-
-#: managed/MessageTemplate.mgd.php
-msgid "Open pending pool"
-msgstr "Offener Pending-Pool"
-
-#: CRM/Herald/CivirulesAdapter/RetiredHandlers.php, CRM/Herald/Upgrader/DigestJobs.php, CRM/Herald/Upgrader/InlineDigest.php, Civi/Herald/Digest/ContributionStatsService.php, Civi/Herald/Digest/DigestVars.php, Civi/Herald/Trigger/CampaignProgress.php, Civi/Herald/Trigger/ContributionVars.php, managed/MessageTemplate.mgd.php, schema/HeraldDigestBlock.entityType.php
+#: CRM/Herald/CivirulesAdapter/RetiredHandlers.php, CRM/Herald/Upgrader/DigestJobs.php, CRM/Herald/Upgrader/InlineDigest.php, Civi/Herald/Trigger/CampaignProgress.php, Civi/Herald/Trigger/ContributionVars.php, managed/MessageTemplate.mgd.php
 msgid "Campaign"
 msgstr "Kampagne"
 
-#: CRM/Herald/CivirulesAdapter/Action/AbstractSend.php, CRM/Herald/CivirulesAdapter/Action/Digest.php, CRM/Herald/CivirulesAdapter/Condition/FieldTransition.php, CRM/Herald/CivirulesAdapter/DependentRules.php, CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/InlineDigests.php, CRM/Herald/CivirulesAdapter/OriginalData.php, CRM/Herald/CivirulesAdapter/Registrar.php, CRM/Herald/CivirulesAdapter/RetiredHandlers.php, CRM/Herald/CivirulesAdapter/Trigger/Schedule.php, CRM/Herald/DAO/HeraldBufferedAlert.php, CRM/Herald/DAO/HeraldDigest.php, CRM/Herald/DAO/HeraldDigestBlock.php, CRM/Herald/Upgrader.php, CRM/Herald/Upgrader/BufferTable.php, CRM/Herald/Upgrader/DigestJobs.php, CRM/Herald/Upgrader/InlineContributionBlock.php, CRM/Herald/Upgrader/InlineDigest.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, CRM/Herald/Upgrader/InlineDigestJobs.php, CRM/Herald/Upgrader/PreferencesProfile.php, Civi/Api4/Herald.php, Civi/Api4/HeraldBufferedAlert.php, Civi/Api4/HeraldDigestBlock.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Admin/MonitorChecks.php, Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Admin/StringMap.php, Civi/Herald/Api4/Action/CheckFieldTransition.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Api4/Action/SaveAllowedHosts.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Api4/Action/Send.php, Civi/Herald/Buffer/AggregateSummary.php, Civi/Herald/Buffer/AlertBuffer.php, Civi/Herald/Buffer/DeadLetter.php, Civi/Herald/Channel/ChannelInterface.php, Civi/Herald/Channel/HtmlPrefix.php, Civi/Herald/Channel/HtmlTokens.php, Civi/Herald/Channel/MessageLimit.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PlainTextWriter.php, Civi/Herald/Channel/TelegramChannel.php, Civi/Herald/Channel/TelegramText.php, Civi/Herald/Channel/WebhookChannel.php, Civi/Herald/Condition/FieldTransition.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/Digest/BucketEdges.php, Civi/Herald/Digest/ContributionStatsService.php, Civi/Herald/Digest/DigestRules.php, Civi/Herald/Digest/DigestVars.php, Civi/Herald/Digest/ExtraSections.php, Civi/Herald/Digest/FormValidator.php, Civi/Herald/Digest/HistogramFormatter.php, Civi/Herald/Digest/Options.php, Civi/Herald/Digest/SearchBlock.php, Civi/Herald/Digest/Validator.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Dispatch/NoRecipientsException.php, Civi/Herald/Monitor/CheckCollector.php, Civi/Herald/Monitor/CheckState.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Monitor/MonitorConfig.php, Civi/Herald/PreEditSnapshot.php, Civi/Herald/Preflight/DeployGate.php, Civi/Herald/Preflight/DisabledRulesCheck.php, Civi/Herald/Preflight/HandlerContract.php, Civi/Herald/Preflight/RuleHandlers.php, Civi/Herald/Privacy/Mask.php, Civi/Herald/Renderer/TemplateRenderer.php, Civi/Herald/Schedule/ScheduleParams.php, Civi/Herald/Schedule/ScheduleText.php, Civi/Herald/StatusTransitionDispatcher.php, Civi/Herald/Subscribers/GroupRecipients.php, Civi/Herald/Subscribers/SubscriberLookup.php, Civi/Herald/Subscribers/SubscriptionScope.php, Civi/Herald/Topic/ValueType.php, Civi/Herald/Trigger/CampaignProgress.php, Civi/Herald/Trigger/ContextVars.php, Civi/Herald/Trigger/ContributionStatusName.php, Civi/Herald/Trigger/ContributionVars.php, Civi/Herald/Trigger/OriginalValues.php, Civi/Herald/Util/StoredFields.php, ang/afformHeraldDigest.aff.html, ang/heraldAdmin.js, ang/heraldAdmin/fields.html, ang/heraldAdmin/monitor.html, ang/heraldAdmin/monitor.js, ang/heraldAdmin/preview.html, ang/heraldAdmin/preview.js, ang/heraldAdmin/sources.html, ang/heraldAdmin/sources.js, ang/heraldAdmin/test.js, ang/heraldAdmin/topic.html, ang/heraldAdmin/topic.js, ang/heraldAdmin/topics.js, ang/heraldDigest.ang.php, ang/heraldDigest.js, api/v3/Job/HeraldBufferFlush.php, bin/note-foreign-rules.php, bin/rules-disable.php, bin/rules-reenable.php, herald.civix.php, herald.php, managed/Digests.mgd.php, managed/MessageTemplate.mgd.php, managed/ParkedAlerts.mgd.php, managed/SubscriberPreferences.mgd.php, schema/HeraldBufferedAlert.entityType.php, schema/HeraldDigest.entityType.php, schema/HeraldDigestBlock.entityType.php, settings/herald.setting.php
+#: CRM/Herald/CivirulesAdapter/Action/AbstractSend.php, CRM/Herald/CivirulesAdapter/Action/Digest.php, CRM/Herald/CivirulesAdapter/Condition/FieldTransition.php, CRM/Herald/CivirulesAdapter/DependentRules.php, CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/OriginalData.php, CRM/Herald/CivirulesAdapter/Registrar.php, CRM/Herald/CivirulesAdapter/RetiredHandlers.php, CRM/Herald/CivirulesAdapter/Trigger/Schedule.php, CRM/Herald/DAO/HeraldBufferedAlert.php, CRM/Herald/DAO/HeraldDigest.php, CRM/Herald/Upgrader.php, CRM/Herald/Upgrader/BufferTable.php, CRM/Herald/Upgrader/DigestJobs.php, CRM/Herald/Upgrader/InlineContributionBlock.php, CRM/Herald/Upgrader/InlineDigest.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, CRM/Herald/Upgrader/InlineDigestJobs.php, CRM/Herald/Upgrader/PreferencesProfile.php, Civi/Api4/Herald.php, Civi/Api4/HeraldBufferedAlert.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Admin/MonitorChecks.php, Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Admin/StringMap.php, Civi/Herald/Api4/Action/CheckFieldTransition.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Api4/Action/SaveAllowedHosts.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Api4/Action/Send.php, Civi/Herald/Buffer/AggregateSummary.php, Civi/Herald/Buffer/AlertBuffer.php, Civi/Herald/Buffer/DeadLetter.php, Civi/Herald/Channel/ChannelInterface.php, Civi/Herald/Channel/HtmlPrefix.php, Civi/Herald/Channel/HtmlTokens.php, Civi/Herald/Channel/MessageLimit.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PlainTextWriter.php, Civi/Herald/Channel/TelegramChannel.php, Civi/Herald/Channel/TelegramText.php, Civi/Herald/Channel/WebhookChannel.php, Civi/Herald/Condition/FieldTransition.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/Digest/BucketEdges.php, Civi/Herald/Digest/DigestRules.php, Civi/Herald/Digest/ExtraSections.php, Civi/Herald/Digest/FormValidator.php, Civi/Herald/Digest/HistogramFormatter.php, Civi/Herald/Digest/Validator.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Dispatch/NoRecipientsException.php, Civi/Herald/Monitor/CheckCollector.php, Civi/Herald/Monitor/CheckState.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Monitor/MonitorConfig.php, Civi/Herald/PreEditSnapshot.php, Civi/Herald/Preflight/DeployGate.php, Civi/Herald/Preflight/DisabledRulesCheck.php, Civi/Herald/Preflight/HandlerContract.php, Civi/Herald/Preflight/RuleHandlers.php, Civi/Herald/Privacy/Mask.php, Civi/Herald/Renderer/TemplateRenderer.php, Civi/Herald/Schedule/ScheduleParams.php, Civi/Herald/Schedule/ScheduleText.php, Civi/Herald/StatusTransitionDispatcher.php, Civi/Herald/Subscribers/GroupRecipients.php, Civi/Herald/Subscribers/SubscriberLookup.php, Civi/Herald/Subscribers/SubscriptionScope.php, Civi/Herald/Topic/ValueType.php, Civi/Herald/Trigger/CampaignProgress.php, Civi/Herald/Trigger/ContextVars.php, Civi/Herald/Trigger/ContributionStatusName.php, Civi/Herald/Trigger/ContributionVars.php, Civi/Herald/Trigger/OriginalValues.php, Civi/Herald/Util/StoredFields.php, ang/afformHeraldDigest.aff.html, ang/heraldAdmin.js, ang/heraldAdmin/fields.html, ang/heraldAdmin/monitor.html, ang/heraldAdmin/monitor.js, ang/heraldAdmin/preview.html, ang/heraldAdmin/preview.js, ang/heraldAdmin/sources.html, ang/heraldAdmin/sources.js, ang/heraldAdmin/test.js, ang/heraldAdmin/topic.html, ang/heraldAdmin/topic.js, ang/heraldAdmin/topics.js, ang/heraldDigest.ang.php, ang/heraldDigest.js, api/v3/Job/HeraldBufferFlush.php, bin/note-foreign-rules.php, bin/rules-disable.php, bin/rules-reenable.php, herald.civix.php, herald.php, managed/Digests.mgd.php, managed/MessageTemplate.mgd.php, managed/ParkedAlerts.mgd.php, managed/SubscriberPreferences.mgd.php, schema/HeraldBufferedAlert.entityType.php, schema/HeraldDigest.entityType.php, settings/herald.setting.php
 msgid "of"
 msgstr "von"
-
-#: managed/MessageTemplate.mgd.php
-msgid "donation(s)"
-msgstr "Spende(n)"
-
-#: managed/MessageTemplate.mgd.php
-msgid "Weekly report %1"
-msgstr "Wochenreport %1"
 
 #: managed/MessageTemplate.mgd.php
 msgid "Donation received"
 msgstr "Spende eingegangen"
 
-#: Civi/Api4/Herald.php, Civi/Herald/Admin/SourceRule.php, Civi/Herald/Admin/SourceRules.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Digest/ContributionStatsService.php, Civi/Herald/Digest/DigestVars.php, Civi/Herald/Digest/SourceNormalizer.php, Civi/Herald/Subscribers/SubscriptionScope.php, Civi/Herald/Trigger/ContributionVars.php, ang/heraldAdmin.js, ang/heraldAdmin/sources.html, ang/heraldAdmin/sources.js, managed/MessageTemplate.mgd.php, schema/HeraldDigestBlock.entityType.php, settings/herald.setting.php
+#: Civi/Api4/Herald.php, Civi/Herald/Admin/SourceRule.php, Civi/Herald/Admin/SourceRules.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Subscribers/SubscriptionScope.php, Civi/Herald/Trigger/ContributionVars.php, ang/heraldAdmin.js, ang/heraldAdmin/sources.html, ang/heraldAdmin/sources.js, managed/MessageTemplate.mgd.php, settings/herald.setting.php
 msgid "Source"
 msgstr "Quelle"
 
-#: Civi/Herald/Digest/ContributionStatsService.php, Civi/Herald/Monitor/CheckState.php, Civi/Herald/Monitor/TransitionPlanner.php, managed/MessageTemplate.mgd.php, settings/herald.setting.php
+#: Civi/Herald/Monitor/CheckState.php, Civi/Herald/Monitor/TransitionPlanner.php, managed/MessageTemplate.mgd.php, settings/herald.setting.php
 msgid "announced"
 msgstr "angekündigt"
 
@@ -304,7 +245,7 @@ msgstr "Spende angekündigt"
 msgid "Status changed"
 msgstr "Status geändert"
 
-#: Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Digest/ContributionStatsService.php, Civi/Herald/Digest/DigestVars.php, Civi/Herald/Digest/HistogramFormatter.php, Civi/Herald/Dispatch/Dispatcher.php, managed/MessageTemplate.mgd.php, schema/HeraldBufferedAlert.entityType.php
+#: Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Digest/HistogramFormatter.php, Civi/Herald/Dispatch/Dispatcher.php, managed/MessageTemplate.mgd.php, schema/HeraldBufferedAlert.entityType.php
 msgid "Amount"
 msgstr "Betrag"
 
@@ -356,7 +297,7 @@ msgstr "Check %1 wieder ok"
 msgid "New membership"
 msgstr "Neue Mitgliedschaft"
 
-#: CRM/Herald/CivirulesAdapter/Availability.php, CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/RetiredHandlers.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PushoverChannel.php, Civi/Herald/Channel/TelegramChannel.php, Civi/Herald/Channel/WebhookChannel.php, Civi/Herald/Digest/ContributionStatsService.php, Civi/Herald/StatusTransitionDispatcher.php, Civi/Herald/Trigger/ContributionStatusName.php, Civi/Herald/Trigger/ContributionVars.php, ang/heraldAdmin/hosts.js, ang/heraldAdmin/monitor.js, ang/heraldAdmin/sources.js, ang/heraldAdmin/topic.js, bin/rules-disable.php, herald.php, managed/MessageTemplate.mgd.php
+#: CRM/Herald/CivirulesAdapter/Availability.php, CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/RetiredHandlers.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PushoverChannel.php, Civi/Herald/Channel/TelegramChannel.php, Civi/Herald/Channel/WebhookChannel.php, Civi/Herald/StatusTransitionDispatcher.php, Civi/Herald/Trigger/ContributionStatusName.php, Civi/Herald/Trigger/ContributionVars.php, ang/heraldAdmin/hosts.js, ang/heraldAdmin/monitor.js, ang/heraldAdmin/sources.js, ang/heraldAdmin/topic.js, bin/rules-disable.php, herald.php, managed/MessageTemplate.mgd.php
 msgid "Status"
 msgstr "Status"
 
@@ -387,10 +328,6 @@ msgstr "Storno Event-Anmeldung"
 #: managed/MessageTemplate.mgd.php
 msgid "Event deleted"
 msgstr "Event gelöscht"
-
-#: managed/MessageTemplate.mgd.php
-msgid "no receipts"
-msgstr "keine Eingänge"
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/Form/Schedule.php, CRM/Herald/CivirulesAdapter/Form/SendDigest.php, CRM/Herald/CivirulesAdapter/Form/SendNotification.php, Civi/Herald/Buffer/AggregateSummary.php, Civi/Herald/Channel/HtmlRepair.php, Civi/Herald/Channel/HtmlTokens.php, Civi/Herald/Channel/MessageLimit.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Monitor/MonitorConfig.php, Civi/Herald/Monitor/TransitionPlanner.php, managed/Digests.mgd.php, managed/MessageTemplate.mgd.php, settings/herald.setting.php
 msgid "open"
@@ -832,11 +769,11 @@ msgstr "Herald-Pufferalarme"
 msgid "Alerts held for aggregated delivery, and parked alerts that could not be delivered."
 msgstr "Alarme, die auf gebündelte Zustellung warten, und geparkte Alarme, die nicht zugestellt werden konnten."
 
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/Upgrader/PreferencesProfile.php, Civi/Herald/Admin/AllowedHosts.php, Civi/Herald/Channel/ActivityChannel.php, Civi/Herald/Channel/ActivityContactId.php, Civi/Herald/Channel/TelegramChannel.php, Civi/Herald/Channel/WebhookChannel.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Schedule/ScheduleParams.php, Civi/Herald/StatusTransitionDispatcher.php, Civi/Herald/Subscribers/SubscriberLookup.php, ang/heraldAdmin.js, bin/test-telegram.php, herald.civix.php, managed/ParkedAlerts.mgd.php, managed/SubscriberPreferences.mgd.php, schema/HeraldBufferedAlert.entityType.php, schema/HeraldDigest.entityType.php, schema/HeraldDigestBlock.entityType.php, settings/herald.setting.php
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/Upgrader/PreferencesProfile.php, Civi/Herald/Admin/AllowedHosts.php, Civi/Herald/Channel/ActivityChannel.php, Civi/Herald/Channel/ActivityContactId.php, Civi/Herald/Channel/TelegramChannel.php, Civi/Herald/Channel/WebhookChannel.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Schedule/ScheduleParams.php, Civi/Herald/StatusTransitionDispatcher.php, Civi/Herald/Subscribers/SubscriberLookup.php, ang/heraldAdmin.js, bin/test-telegram.php, herald.civix.php, managed/ParkedAlerts.mgd.php, managed/SubscriberPreferences.mgd.php, schema/HeraldBufferedAlert.entityType.php, schema/HeraldDigest.entityType.php, settings/herald.setting.php
 msgid "ID"
 msgstr "ID"
 
-#: CRM/Herald/CivirulesAdapter/Action/Notification.php, CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/Upgrader/PreferencesProfile.php, Civi/Herald/Buffer/AlertBuffer.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/Digest/ContributionStatsService.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Subscribers/GroupRecipients.php, Civi/Herald/Topic/RouteFields.php, Civi/Herald/Trigger/ContextVars.php, ang/heraldAdmin.js, managed/ParkedAlerts.mgd.php, managed/SubscriberPreferences.mgd.php, schema/HeraldBufferedAlert.entityType.php, settings/herald.setting.php
+#: CRM/Herald/CivirulesAdapter/Action/Notification.php, CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/Upgrader/PreferencesProfile.php, Civi/Herald/Buffer/AlertBuffer.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Subscribers/GroupRecipients.php, Civi/Herald/Topic/RouteFields.php, Civi/Herald/Trigger/ContextVars.php, ang/heraldAdmin.js, managed/ParkedAlerts.mgd.php, managed/SubscriberPreferences.mgd.php, schema/HeraldBufferedAlert.entityType.php, settings/herald.setting.php
 msgid "Group"
 msgstr "Gruppe"
 
@@ -912,21 +849,8 @@ msgstr "Keine geparkten Alarme."
 msgid "herald: Send Digest"
 msgstr "herald: Report senden"
 
-#: Civi/Herald/Digest/DigestRules.php
-msgid "Block %1: %2"
-msgstr "Block %1: %2"
-
-#: Civi/Herald/Digest/BlockType.php
 msgid "unknown type \"%1\"."
 msgstr "unbekannter Typ „%1“."
-
-#: managed/MessageTemplate.mgd.php
-msgid "Herald: Digest block from a search display"
-msgstr "Herald: Report-Block aus einer Suchanzeige"
-
-#: managed/MessageTemplate.mgd.php
-msgid "nothing found"
-msgstr "nichts gefunden"
 
 #: Civi/Herald/Schedule/ScheduleText.php
 msgid "Daily at %1"
@@ -944,7 +868,7 @@ msgstr "Jeden %1 um %2"
 msgid "Not configured: %1"
 msgstr "Nicht eingerichtet: %1"
 
-#: CRM/Herald/CivirulesAdapter/Action/AbstractSend.php, CRM/Herald/CivirulesAdapter/Action/Digest.php, CRM/Herald/CivirulesAdapter/Action/Notification.php, CRM/Herald/CivirulesAdapter/Availability.php, CRM/Herald/CivirulesAdapter/Condition/FieldTransition.php, CRM/Herald/CivirulesAdapter/DependentRules.php, CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/Form/Schedule.php, CRM/Herald/CivirulesAdapter/Form/SendDigest.php, CRM/Herald/CivirulesAdapter/Form/SendNotification.php, CRM/Herald/CivirulesAdapter/InlineDigests.php, CRM/Herald/CivirulesAdapter/OriginalData.php, CRM/Herald/CivirulesAdapter/Registrar.php, CRM/Herald/CivirulesAdapter/RetiredHandlers.php, CRM/Herald/CivirulesAdapter/Trigger/Schedule.php, CRM/Herald/Upgrader.php, CRM/Herald/Upgrader/Reconcile.php, Civi/Api4/Herald.php, Civi/Api4/HeraldDigest.php, Civi/Herald/Admin/SourceRule.php, Civi/Herald/Admin/SourceRules.php, Civi/Herald/Api4/Action/CheckFieldTransition.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Api4/Action/Notify.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Channel/ChannelInterface.php, Civi/Herald/Condition/FieldTransition.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/Condition/FieldTransitionWatchList.php, Civi/Herald/Digest/Composer.php, Civi/Herald/Digest/ContributionStatsService.php, Civi/Herald/Digest/DigestRules.php, Civi/Herald/Digest/FormValidator.php, Civi/Herald/Digest/SourceNormalizer.php, Civi/Herald/Digest/Validator.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/PreEditSnapshot.php, Civi/Herald/Preflight/DeployGate.php, Civi/Herald/Preflight/DisabledRulesCheck.php, Civi/Herald/Preflight/HandlerContract.php, Civi/Herald/Preflight/RuleHandlers.php, Civi/Herald/Privacy/Mask.php, Civi/Herald/Schedule/ScheduleText.php, Civi/Herald/StatusTransitionDispatcher.php, Civi/Herald/Topic/RouteRules.php, Civi/Herald/Topic/RouteValidator.php, Civi/Herald/Topic/Router.php, Civi/Herald/Trigger/ContextVars.php, ang/afformHeraldDigest.aff.html, ang/heraldAdmin/sources.js, bin/preflight-rules.php, bin/rules-disable.php, bin/rules-reenable.php, managed/CiviRules.mgd.php, schema/HeraldDigest.entityType.php
+#: CRM/Herald/CivirulesAdapter/Action/AbstractSend.php, CRM/Herald/CivirulesAdapter/Action/Digest.php, CRM/Herald/CivirulesAdapter/Action/Notification.php, CRM/Herald/CivirulesAdapter/Availability.php, CRM/Herald/CivirulesAdapter/Condition/FieldTransition.php, CRM/Herald/CivirulesAdapter/DependentRules.php, CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/Form/Schedule.php, CRM/Herald/CivirulesAdapter/Form/SendDigest.php, CRM/Herald/CivirulesAdapter/Form/SendNotification.php, CRM/Herald/CivirulesAdapter/OriginalData.php, CRM/Herald/CivirulesAdapter/Registrar.php, CRM/Herald/CivirulesAdapter/RetiredHandlers.php, CRM/Herald/CivirulesAdapter/Trigger/Schedule.php, CRM/Herald/Upgrader.php, CRM/Herald/Upgrader/Reconcile.php, Civi/Api4/Herald.php, Civi/Api4/HeraldDigest.php, Civi/Herald/Admin/SourceRule.php, Civi/Herald/Admin/SourceRules.php, Civi/Herald/Api4/Action/CheckFieldTransition.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Api4/Action/Notify.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Channel/ChannelInterface.php, Civi/Herald/Condition/FieldTransition.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/Condition/FieldTransitionWatchList.php, Civi/Herald/Digest/Composer.php, Civi/Herald/Digest/DigestRules.php, Civi/Herald/Digest/FormValidator.php, Civi/Herald/Digest/Validator.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/PreEditSnapshot.php, Civi/Herald/Preflight/DeployGate.php, Civi/Herald/Preflight/DisabledRulesCheck.php, Civi/Herald/Preflight/HandlerContract.php, Civi/Herald/Preflight/RuleHandlers.php, Civi/Herald/Privacy/Mask.php, Civi/Herald/Schedule/ScheduleText.php, Civi/Herald/StatusTransitionDispatcher.php, Civi/Herald/Topic/RouteRules.php, Civi/Herald/Topic/RouteValidator.php, Civi/Herald/Topic/Router.php, Civi/Herald/Trigger/ContextVars.php, ang/afformHeraldDigest.aff.html, ang/heraldAdmin/sources.js, bin/preflight-rules.php, bin/rules-disable.php, bin/rules-reenable.php, managed/CiviRules.mgd.php, schema/HeraldDigest.entityType.php
 msgid "Rule"
 msgstr "Regel"
 
@@ -964,7 +888,7 @@ msgstr "Wochentage"
 msgid "- every day -"
 msgstr "- jeden Tag -"
 
-#: CRM/Herald/CivirulesAdapter/Form/Schedule.php, Civi/Herald/Admin/MonitorChecks.php, Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Digest/DateRange.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Schedule/Clock.php, Civi/Herald/Schedule/Schedule.php, Civi/Herald/Schedule/ScheduleParams.php, ang/heraldAdmin/monitor.html, ang/heraldAdmin/monitor.js
+#: CRM/Herald/CivirulesAdapter/Form/Schedule.php, Civi/Herald/Admin/MonitorChecks.php, Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Schedule/Clock.php, Civi/Herald/Schedule/Schedule.php, Civi/Herald/Schedule/ScheduleParams.php, ang/heraldAdmin/monitor.html, ang/heraldAdmin/monitor.js
 msgid "Time"
 msgstr "Uhrzeit"
 
@@ -1156,7 +1080,7 @@ msgstr "BCC (durch Kommas getrennt)"
 msgid "Topic"
 msgstr "Topic"
 
-#: CRM/Herald/CivirulesAdapter/Form/SendNotification.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PushoverChannel.php, managed/Digests.mgd.php, schema/HeraldDigest.entityType.php, schema/HeraldDigestBlock.entityType.php
+#: CRM/Herald/CivirulesAdapter/Form/SendNotification.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PushoverChannel.php, managed/Digests.mgd.php, schema/HeraldDigest.entityType.php
 msgid "Title"
 msgstr "Titel"
 
@@ -1336,7 +1260,7 @@ msgstr "Die Liste ist leer: Webhooks dürfen jede öffentliche Adresse aufrufen.
 msgid "The settings form holds the single values; the lists and maps are edited here."
 msgstr "Das Einstellungsformular enthält die Einzelwerte; Listen und Zuordnungen werden hier bearbeitet."
 
-#: Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Channel/EmailChannel.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PushoverChannel.php, Civi/Herald/Channel/WebhookChannel.php, Civi/Herald/Digest/Options.php, ang/heraldAdmin.js, ang/heraldAdmin/index.html, ang/heraldDigest.ang.php, herald.civix.php, managed/Navigation.mgd.php, settings/herald.setting.php
+#: Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Channel/EmailChannel.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PushoverChannel.php, Civi/Herald/Channel/WebhookChannel.php, ang/heraldAdmin.js, ang/heraldAdmin/index.html, ang/heraldDigest.ang.php, herald.civix.php, managed/Navigation.mgd.php, settings/herald.setting.php
 msgid "Settings"
 msgstr "Einstellungen"
 
@@ -1345,8 +1269,8 @@ msgid "where each topic is delivered."
 msgstr "wohin jedes Topic zugestellt wird."
 
 #: ang/heraldAdmin/index.html
-msgid "how digests group contribution sources."
-msgstr "wie Reports Beitragsquellen zusammenfassen."
+msgid "readable names for contribution sources in notifications."
+msgstr "lesbare Namen für Beitragsquellen in Benachrichtigungen."
 
 #: ang/heraldAdmin/index.html
 msgid "which hosts the webhook channel may call."
@@ -1376,7 +1300,7 @@ msgstr "Das hat nicht geklappt:"
 msgid "Extensions contribute these checks; the monitor job reports when one starts failing or recovers. An expected check that disappears counts as failing. A snoozed check sends no failure alerts until the time set."
 msgstr "Extensions stellen diese Checks bereit; der Monitor-Job meldet, wenn einer zu scheitern beginnt oder sich erholt. Ein erwarteter Check, der verschwindet, gilt als gescheitert. Ein stummgeschalteter Check sendet bis zum gesetzten Zeitpunkt keine Fehlermeldungen."
 
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, Civi/Api4/Herald.php, Civi/Api4/HeraldBufferedAlert.php, Civi/Herald/Admin/AllowedHosts.php, Civi/Herald/Admin/MonitorChecks.php, Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Admin/RegexCheck.php, Civi/Herald/Admin/SourceRule.php, Civi/Herald/Admin/SourceRules.php, Civi/Herald/Api4/Action/CheckFieldTransition.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Api4/Action/GetMonitorChecks.php, Civi/Herald/Api4/Action/ReactivateBufferedAlerts.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Channel/EmailChannel.php, Civi/Herald/Monitor/CheckCollector.php, Civi/Herald/Monitor/CheckState.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Monitor/TransitionPlanner.php, Civi/Herald/Preflight/DeployGate.php, Civi/Herald/Preflight/DisabledRulesCheck.php, Civi/Herald/Topic/RouteValidator.php, ang/heraldAdmin/monitor.html, ang/heraldAdmin/monitor.js, api/v3/Job/HeraldMonitor.php, herald.php, managed/Job.mgd.php, managed/MessageTemplate.mgd.php, managed/SubscriberPreferences.mgd.php, schema/HeraldDigestBlock.entityType.php, settings/herald.setting.php
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, Civi/Api4/Herald.php, Civi/Api4/HeraldBufferedAlert.php, Civi/Herald/Admin/AllowedHosts.php, Civi/Herald/Admin/MonitorChecks.php, Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Admin/RegexCheck.php, Civi/Herald/Admin/SourceRule.php, Civi/Herald/Admin/SourceRules.php, Civi/Herald/Api4/Action/CheckFieldTransition.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Api4/Action/GetMonitorChecks.php, Civi/Herald/Api4/Action/ReactivateBufferedAlerts.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Channel/EmailChannel.php, Civi/Herald/Monitor/CheckCollector.php, Civi/Herald/Monitor/CheckState.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Monitor/TransitionPlanner.php, Civi/Herald/Preflight/DeployGate.php, Civi/Herald/Preflight/DisabledRulesCheck.php, Civi/Herald/Topic/RouteValidator.php, ang/heraldAdmin/monitor.html, ang/heraldAdmin/monitor.js, api/v3/Job/HeraldMonitor.php, herald.php, managed/Job.mgd.php, managed/MessageTemplate.mgd.php, managed/SubscriberPreferences.mgd.php, settings/herald.setting.php
 msgid "Check"
 msgstr "Check"
 
@@ -1472,7 +1396,7 @@ msgstr "Monitor-Checks gespeichert."
 msgid "Renders a herald message template with sample values. Nothing is sent."
 msgstr "Stellt eine herald-Nachrichtenvorlage mit Beispielwerten dar. Es wird nichts gesendet."
 
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/SendDigest.php, CRM/Herald/CivirulesAdapter/Form/SendNotification.php, Civi/Api4/Herald.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Api4/Action/RenderTemplate.php, Civi/Herald/Digest/Composer.php, Civi/Herald/Digest/Options.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Renderer/TemplateRenderer.php, Civi/Herald/Trigger/ContextVars.php, Civi/Herald/Trigger/ContributionVars.php, ang/heraldAdmin/index.html, ang/heraldAdmin/preview.html, ang/heraldAdmin/preview.js, managed/MessageTemplate.mgd.php, managed/Navigation.mgd.php, schema/HeraldDigestBlock.entityType.php
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/SendDigest.php, CRM/Herald/CivirulesAdapter/Form/SendNotification.php, Civi/Api4/Herald.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Api4/Action/RenderTemplate.php, Civi/Herald/Digest/Composer.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Renderer/TemplateRenderer.php, Civi/Herald/Trigger/ContextVars.php, Civi/Herald/Trigger/ContributionVars.php, ang/heraldAdmin/index.html, ang/heraldAdmin/preview.html, ang/heraldAdmin/preview.js, managed/MessageTemplate.mgd.php, managed/Navigation.mgd.php
 msgid "Template"
 msgstr "Vorlage"
 
@@ -1492,7 +1416,7 @@ msgstr "Ein JSON-Objekt mit Vorlagenvariablen; fehlende Variablen bleiben leer."
 msgid "Render"
 msgstr "Darstellen"
 
-#: Civi/Herald/Api4/Action/CheckFieldTransition.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Api4/Action/DeleteTopic.php, Civi/Herald/Api4/Action/GetChannels.php, Civi/Herald/Api4/Action/GetMonitorChecks.php, Civi/Herald/Api4/Action/GetParkedAlerts.php, Civi/Herald/Api4/Action/Notify.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Api4/Action/ReactivateBufferedAlerts.php, Civi/Herald/Api4/Action/ReactivateParkedAlerts.php, Civi/Herald/Api4/Action/RenderTemplate.php, Civi/Herald/Api4/Action/SaveAllowedHosts.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Api4/Action/SaveTopic.php, Civi/Herald/Api4/Action/Send.php, Civi/Herald/Api4/Action/TestTelegram.php, Civi/Herald/Digest/SearchBlock.php, ang/heraldAdmin/preview.html, managed/Digests.mgd.php, managed/ParkedAlerts.mgd.php
+#: Civi/Herald/Api4/Action/CheckFieldTransition.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Api4/Action/DeleteTopic.php, Civi/Herald/Api4/Action/GetChannels.php, Civi/Herald/Api4/Action/GetMonitorChecks.php, Civi/Herald/Api4/Action/GetParkedAlerts.php, Civi/Herald/Api4/Action/Notify.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Api4/Action/ReactivateBufferedAlerts.php, Civi/Herald/Api4/Action/ReactivateParkedAlerts.php, Civi/Herald/Api4/Action/RenderTemplate.php, Civi/Herald/Api4/Action/SaveAllowedHosts.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Api4/Action/SaveTopic.php, Civi/Herald/Api4/Action/Send.php, Civi/Herald/Api4/Action/TestTelegram.php, ang/heraldAdmin/preview.html, managed/Digests.mgd.php, managed/ParkedAlerts.mgd.php
 msgid "Result"
 msgstr "Ergebnis"
 
@@ -1521,8 +1445,8 @@ msgid "Template rendered."
 msgstr "Vorlage dargestellt."
 
 #: ang/heraldAdmin/sources.html
-msgid "Digests group contributions by their source. These rules give differently written sources one name; the first matching rule wins."
-msgstr "Reports gruppieren Beiträge nach ihrer Quelle. Diese Regeln geben unterschiedlich geschriebenen Quellen einen Namen; die erste passende Regel gilt."
+msgid "Contribution notifications show the source of a contribution. These rules give differently written sources one name; the first matching rule wins."
+msgstr "Beitragsbenachrichtigungen zeigen die Quelle eines Beitrags. Diese Regeln geben unterschiedlich geschriebenen Quellen einen Namen; die erste passende Regel gilt."
 
 #: ang/heraldAdmin/sources.html
 msgid "Source rules, in the order they are tried"
@@ -1577,8 +1501,8 @@ msgid "rule %1"
 msgstr "Regel %1"
 
 #: ang/heraldAdmin/sources.html
-msgid "No rules: digests show every source as written."
-msgstr "Keine Regeln: Reports zeigen jede Quelle so, wie sie geschrieben ist."
+msgid "No rules: notifications show every source as written."
+msgstr "Keine Regeln: Benachrichtigungen zeigen jede Quelle so, wie sie geschrieben ist."
 
 #: ang/heraldAdmin/sources.html
 msgid "A regular expression uses PHP syntax with delimiters, for example /^SEPA/i. It is checked when you save."
@@ -1588,11 +1512,11 @@ msgstr "Ein regulärer Ausdruck nutzt PHP-Syntax mit Begrenzern, zum Beispiel /^
 msgid "Add rule"
 msgstr "Regel hinzufügen"
 
-#: CRM/Herald/CivirulesAdapter/Form/Schedule.php, Civi/Herald/Admin/AllowedHosts.php, Civi/Herald/Admin/SourceRule.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Digest/SourceNormalizer.php, ang/heraldAdmin/sources.js, settings/herald.setting.php
+#: CRM/Herald/CivirulesAdapter/Form/Schedule.php, Civi/Herald/Admin/AllowedHosts.php, Civi/Herald/Admin/SourceRule.php, Civi/Herald/Api4/Action/SaveSourceRules.php, ang/heraldAdmin/sources.js, settings/herald.setting.php
 msgid "contains"
 msgstr "enthält"
 
-#: Civi/Herald/Admin/SourceRule.php, Civi/Herald/Digest/Options.php, ang/heraldAdmin/sources.js, ang/heraldDigest.js
+#: Civi/Herald/Admin/SourceRule.php, ang/heraldAdmin/sources.js, ang/heraldDigest.js
 msgid "starts with"
 msgstr "beginnt mit"
 
@@ -1648,7 +1572,7 @@ msgstr "Nachrichtenformat"
 msgid "HTML"
 msgstr "HTML"
 
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/SendNotification.php, CRM/Herald/CivirulesAdapter/Trigger/Schedule.php, CRM/Herald/Upgrader/DigestJobs.php, Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Api4/Action/RenderTemplate.php, Civi/Herald/Api4/Action/TestTelegram.php, Civi/Herald/Buffer/AlertBuffer.php, Civi/Herald/Buffer/DeadLetter.php, Civi/Herald/Channel/MessageLimit.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PushoverChannel.php, Civi/Herald/Channel/TelegramChannel.php, Civi/Herald/Channel/TelegramText.php, Civi/Herald/Channel/WebhookChannel.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/Digest/BucketEdges.php, Civi/Herald/Digest/Options.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Monitor/CheckCollector.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Preflight/DisabledRulesCheck.php, Civi/Herald/Preflight/HandlerContract.php, Civi/Herald/Renderer/TemplateRenderer.php, Civi/Herald/Schedule/ScheduleText.php, Civi/Herald/Trigger/ContextVars.php, Civi/Herald/Trigger/ContributionVars.php, Civi/Herald/Util/StoredFields.php, ang/heraldAdmin/preview.js, ang/heraldAdmin/test.html, api/v3/Job/HeraldBufferFlush.php, bin/preflight-rules.php, managed/MessageTemplate.mgd.php, schema/HeraldDigestBlock.entityType.php
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/SendNotification.php, CRM/Herald/CivirulesAdapter/Trigger/Schedule.php, CRM/Herald/Upgrader/DigestJobs.php, Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Api4/Action/RenderTemplate.php, Civi/Herald/Api4/Action/TestTelegram.php, Civi/Herald/Buffer/AlertBuffer.php, Civi/Herald/Buffer/DeadLetter.php, Civi/Herald/Channel/MessageLimit.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PushoverChannel.php, Civi/Herald/Channel/TelegramChannel.php, Civi/Herald/Channel/TelegramText.php, Civi/Herald/Channel/WebhookChannel.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/Digest/BucketEdges.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Monitor/CheckCollector.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Preflight/DisabledRulesCheck.php, Civi/Herald/Preflight/HandlerContract.php, Civi/Herald/Renderer/TemplateRenderer.php, Civi/Herald/Schedule/ScheduleText.php, Civi/Herald/Trigger/ContextVars.php, Civi/Herald/Trigger/ContributionVars.php, Civi/Herald/Util/StoredFields.php, ang/heraldAdmin/preview.js, ang/heraldAdmin/test.html, api/v3/Job/HeraldBufferFlush.php, bin/preflight-rules.php, managed/MessageTemplate.mgd.php
 msgid "Message"
 msgstr "Nachricht"
 
@@ -1836,21 +1760,13 @@ msgstr "ID der Adressart der E-Mail"
 msgid "0 sends each alert at once; a window collects alerts and sends them together."
 msgstr "0 sendet jede Meldung sofort; ein Fenster sammelt Meldungen und sendet sie gemeinsam."
 
-#: CRM/Herald/BAO/HeraldBufferedAlert.php, CRM/Herald/CivirulesAdapter/Action/AbstractSend.php, CRM/Herald/CivirulesAdapter/Action/Digest.php, CRM/Herald/CivirulesAdapter/Action/Notification.php, CRM/Herald/CivirulesAdapter/Availability.php, CRM/Herald/CivirulesAdapter/Condition/FieldTransition.php, CRM/Herald/CivirulesAdapter/DependentRules.php, CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/Form/Schedule.php, CRM/Herald/CivirulesAdapter/Form/SendDigest.php, CRM/Herald/CivirulesAdapter/Form/SendNotification.php, CRM/Herald/CivirulesAdapter/InlineDigests.php, CRM/Herald/CivirulesAdapter/OriginalData.php, CRM/Herald/CivirulesAdapter/Registrar.php, CRM/Herald/CivirulesAdapter/RetiredHandlers.php, CRM/Herald/CivirulesAdapter/Trigger/Schedule.php, CRM/Herald/DAO/HeraldBufferedAlert.php, CRM/Herald/DAO/HeraldDigest.php, CRM/Herald/DAO/HeraldDigestBlock.php, CRM/Herald/Upgrader.php, CRM/Herald/Upgrader/BufferTable.php, CRM/Herald/Upgrader/DigestJobs.php, CRM/Herald/Upgrader/InlineContributionBlock.php, CRM/Herald/Upgrader/InlineDigest.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, CRM/Herald/Upgrader/InlineDigestJobs.php, CRM/Herald/Upgrader/PreferencesProfile.php, CRM/Herald/Upgrader/Reconcile.php, Civi/Api4/Herald.php, Civi/Api4/HeraldBufferedAlert.php, Civi/Api4/HeraldDigest.php, Civi/Api4/HeraldDigestBlock.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Admin/AllowedHosts.php, Civi/Herald/Admin/InvalidInput.php, Civi/Herald/Admin/MonitorChecks.php, Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Admin/RegexCheck.php, Civi/Herald/Admin/SourceRule.php, Civi/Herald/Admin/SourceRules.php, Civi/Herald/Admin/StringMap.php, Civi/Herald/Api4/Action/CheckFieldTransition.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Api4/Action/DeleteTopic.php, Civi/Herald/Api4/Action/GetChannels.php, Civi/Herald/Api4/Action/GetMonitorChecks.php, Civi/Herald/Api4/Action/GetParkedAlerts.php, Civi/Herald/Api4/Action/Notify.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Api4/Action/ReactivateBufferedAlerts.php, Civi/Herald/Api4/Action/ReactivateParkedAlerts.php, Civi/Herald/Api4/Action/RenderTemplate.php, Civi/Herald/Api4/Action/SaveAllowedHosts.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Api4/Action/SaveTopic.php, Civi/Herald/Api4/Action/Send.php, Civi/Herald/Api4/Action/TestTelegram.php, Civi/Herald/Buffer/AggregateSummary.php, Civi/Herald/Buffer/AlertBuffer.php, Civi/Herald/Buffer/DeadLetter.php, Civi/Herald/Channel/ActivityChannel.php, Civi/Herald/Channel/ActivityContactId.php, Civi/Herald/Channel/ActivityOptionResolver.php, Civi/Herald/Channel/ActivityText.php, Civi/Herald/Channel/ActivityValues.php, Civi/Herald/Channel/ChannelInterface.php, Civi/Herald/Channel/ChannelRegistry.php, Civi/Herald/Channel/EmailChannel.php, Civi/Herald/Channel/HtmlLineBreaks.php, Civi/Herald/Channel/HtmlPrefix.php, Civi/Herald/Channel/HtmlRepair.php, Civi/Herald/Channel/HtmlTokens.php, Civi/Herald/Channel/MessageLimit.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PlainText.php, Civi/Herald/Channel/PlainTextWriter.php, Civi/Herald/Channel/PushoverChannel.php, Civi/Herald/Channel/TelegramChannel.php, Civi/Herald/Channel/TelegramText.php, Civi/Herald/Channel/Utf16Text.php, Civi/Herald/Channel/WebhookChannel.php, Civi/Herald/Condition/FieldTransition.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/Condition/FieldTransitionWatchList.php, Civi/Herald/Digest/BlockType.php, Civi/Herald/Digest/BucketEdges.php, Civi/Herald/Digest/Composer.php, Civi/Herald/Digest/ContributionStatsService.php, Civi/Herald/Digest/DateRange.php, Civi/Herald/Digest/Definition.php, Civi/Herald/Digest/DigestRules.php, Civi/Herald/Digest/DigestVars.php, Civi/Herald/Digest/ExtraSections.php, Civi/Herald/Digest/FormValidator.php, Civi/Herald/Digest/HistogramFormatter.php, Civi/Herald/Digest/Options.php, Civi/Herald/Digest/SearchBlock.php, Civi/Herald/Digest/SourceNormalizer.php, Civi/Herald/Digest/Validator.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Dispatch/NoRecipientsException.php, Civi/Herald/Monitor/CheckCollector.php, Civi/Herald/Monitor/CheckState.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Monitor/MonitorConfig.php, Civi/Herald/Monitor/Observation.php, Civi/Herald/Monitor/TransitionPlanner.php, Civi/Herald/PreEditSnapshot.php, Civi/Herald/Preflight/DeployGate.php, Civi/Herald/Preflight/DisabledRulesCheck.php, Civi/Herald/Preflight/HandlerContract.php, Civi/Herald/Preflight/RuleHandlers.php, Civi/Herald/Privacy/Mask.php, Civi/Herald/Renderer/TemplateRenderer.php, Civi/Herald/Schedule/Clock.php, Civi/Herald/Schedule/Schedule.php, Civi/Herald/Schedule/ScheduleParams.php, Civi/Herald/Schedule/ScheduleText.php, Civi/Herald/StatusTransitionDispatcher.php, Civi/Herald/Subscribers/GroupRecipients.php, Civi/Herald/Subscribers/SubscriberLookup.php, Civi/Herald/Subscribers/SubscriptionScope.php, Civi/Herald/Topic/RouteFields.php, Civi/Herald/Topic/RouteRules.php, Civi/Herald/Topic/RouteValidator.php, Civi/Herald/Topic/Router.php, Civi/Herald/Topic/ValueType.php, Civi/Herald/Trigger/CampaignProgress.php, Civi/Herald/Trigger/ContextVars.php, Civi/Herald/Trigger/ContributionStatusName.php, Civi/Herald/Trigger/ContributionVars.php, Civi/Herald/Trigger/OriginalValues.php, Civi/Herald/Util/StoredFields.php, ang/afformHeraldDigest.aff.html, ang/afformHeraldDigest.aff.php, ang/afsearchHeraldDigests.aff.html, ang/afsearchHeraldDigests.aff.php, ang/heraldAdmin.ang.php, ang/heraldAdmin.js, ang/heraldAdmin/hosts.html, ang/heraldAdmin/hosts.js, ang/heraldAdmin/index.html, ang/heraldAdmin/monitor.html, ang/heraldAdmin/monitor.js, ang/heraldAdmin/preview.html, ang/heraldAdmin/preview.js, ang/heraldAdmin/sources.html, ang/heraldAdmin/sources.js, ang/heraldAdmin/test.html, ang/heraldAdmin/test.js, ang/heraldAdmin/topic.js, ang/heraldAdmin/topics.html, ang/heraldAdmin/topics.js, ang/heraldDigest.ang.php, api/v3/Job/HeraldBufferFlush.php, api/v3/Job/HeraldMonitor.php, bin/note-foreign-rules.php, bin/preflight-rules.php, bin/rules-disable.php, bin/rules-reenable.php, bin/test-telegram.php, demo/seed.php, herald.civix.php, herald.php, managed/ActivityType.mgd.php, managed/CiviRules.mgd.php, managed/Digests.mgd.php, managed/Job.mgd.php, managed/MessageTemplate.mgd.php, managed/Navigation.mgd.php, managed/ParkedAlerts.mgd.php, managed/SubscriberPreferences.mgd.php, schema/HeraldBufferedAlert.entityType.php, schema/HeraldDigest.entityType.php, schema/HeraldDigestBlock.entityType.php, settings/herald.setting.php, templates/CRM/Herald/CivirulesAdapter/Form/SendDigest.tpl
+#: CRM/Herald/BAO/HeraldBufferedAlert.php, CRM/Herald/CivirulesAdapter/Action/AbstractSend.php, CRM/Herald/CivirulesAdapter/Action/Digest.php, CRM/Herald/CivirulesAdapter/Action/Notification.php, CRM/Herald/CivirulesAdapter/Availability.php, CRM/Herald/CivirulesAdapter/Condition/FieldTransition.php, CRM/Herald/CivirulesAdapter/DependentRules.php, CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/Form/Schedule.php, CRM/Herald/CivirulesAdapter/Form/SendDigest.php, CRM/Herald/CivirulesAdapter/Form/SendNotification.php, CRM/Herald/CivirulesAdapter/OriginalData.php, CRM/Herald/CivirulesAdapter/Registrar.php, CRM/Herald/CivirulesAdapter/RetiredHandlers.php, CRM/Herald/CivirulesAdapter/Trigger/Schedule.php, CRM/Herald/DAO/HeraldBufferedAlert.php, CRM/Herald/DAO/HeraldDigest.php, CRM/Herald/Upgrader.php, CRM/Herald/Upgrader/BufferTable.php, CRM/Herald/Upgrader/DigestJobs.php, CRM/Herald/Upgrader/InlineContributionBlock.php, CRM/Herald/Upgrader/InlineDigest.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, CRM/Herald/Upgrader/InlineDigestJobs.php, CRM/Herald/Upgrader/PreferencesProfile.php, CRM/Herald/Upgrader/Reconcile.php, Civi/Api4/Herald.php, Civi/Api4/HeraldBufferedAlert.php, Civi/Api4/HeraldDigest.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Admin/AllowedHosts.php, Civi/Herald/Admin/InvalidInput.php, Civi/Herald/Admin/MonitorChecks.php, Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Admin/RegexCheck.php, Civi/Herald/Admin/SourceRule.php, Civi/Herald/Admin/SourceRules.php, Civi/Herald/Admin/StringMap.php, Civi/Herald/Api4/Action/CheckFieldTransition.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Api4/Action/DeleteTopic.php, Civi/Herald/Api4/Action/GetChannels.php, Civi/Herald/Api4/Action/GetMonitorChecks.php, Civi/Herald/Api4/Action/GetParkedAlerts.php, Civi/Herald/Api4/Action/Notify.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Api4/Action/ReactivateBufferedAlerts.php, Civi/Herald/Api4/Action/ReactivateParkedAlerts.php, Civi/Herald/Api4/Action/RenderTemplate.php, Civi/Herald/Api4/Action/SaveAllowedHosts.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Api4/Action/SaveTopic.php, Civi/Herald/Api4/Action/Send.php, Civi/Herald/Api4/Action/TestTelegram.php, Civi/Herald/Buffer/AggregateSummary.php, Civi/Herald/Buffer/AlertBuffer.php, Civi/Herald/Buffer/DeadLetter.php, Civi/Herald/Channel/ActivityChannel.php, Civi/Herald/Channel/ActivityContactId.php, Civi/Herald/Channel/ActivityOptionResolver.php, Civi/Herald/Channel/ActivityText.php, Civi/Herald/Channel/ActivityValues.php, Civi/Herald/Channel/ChannelInterface.php, Civi/Herald/Channel/ChannelRegistry.php, Civi/Herald/Channel/EmailChannel.php, Civi/Herald/Channel/HtmlLineBreaks.php, Civi/Herald/Channel/HtmlPrefix.php, Civi/Herald/Channel/HtmlRepair.php, Civi/Herald/Channel/HtmlTokens.php, Civi/Herald/Channel/MessageLimit.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PlainText.php, Civi/Herald/Channel/PlainTextWriter.php, Civi/Herald/Channel/PushoverChannel.php, Civi/Herald/Channel/TelegramChannel.php, Civi/Herald/Channel/TelegramText.php, Civi/Herald/Channel/Utf16Text.php, Civi/Herald/Channel/WebhookChannel.php, Civi/Herald/Condition/FieldTransition.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/Condition/FieldTransitionWatchList.php, Civi/Herald/Digest/BucketEdges.php, Civi/Herald/Digest/Composer.php, Civi/Herald/Digest/Definition.php, Civi/Herald/Digest/DigestRules.php, Civi/Herald/Digest/ExtraSections.php, Civi/Herald/Digest/FormValidator.php, Civi/Herald/Digest/HistogramFormatter.php, Civi/Herald/Digest/Validator.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Dispatch/NoRecipientsException.php, Civi/Herald/Monitor/CheckCollector.php, Civi/Herald/Monitor/CheckState.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Monitor/MonitorConfig.php, Civi/Herald/Monitor/Observation.php, Civi/Herald/Monitor/TransitionPlanner.php, Civi/Herald/PreEditSnapshot.php, Civi/Herald/Preflight/DeployGate.php, Civi/Herald/Preflight/DisabledRulesCheck.php, Civi/Herald/Preflight/HandlerContract.php, Civi/Herald/Preflight/RuleHandlers.php, Civi/Herald/Privacy/Mask.php, Civi/Herald/Renderer/TemplateRenderer.php, Civi/Herald/Schedule/Clock.php, Civi/Herald/Schedule/Schedule.php, Civi/Herald/Schedule/ScheduleParams.php, Civi/Herald/Schedule/ScheduleText.php, Civi/Herald/StatusTransitionDispatcher.php, Civi/Herald/Subscribers/GroupRecipients.php, Civi/Herald/Subscribers/SubscriberLookup.php, Civi/Herald/Subscribers/SubscriptionScope.php, Civi/Herald/Topic/RouteFields.php, Civi/Herald/Topic/RouteRules.php, Civi/Herald/Topic/RouteValidator.php, Civi/Herald/Topic/Router.php, Civi/Herald/Topic/ValueType.php, Civi/Herald/Trigger/CampaignProgress.php, Civi/Herald/Trigger/ContextVars.php, Civi/Herald/Trigger/ContributionStatusName.php, Civi/Herald/Trigger/ContributionVars.php, Civi/Herald/Trigger/OriginalValues.php, Civi/Herald/Util/StoredFields.php, ang/afformHeraldDigest.aff.html, ang/afformHeraldDigest.aff.php, ang/afsearchHeraldDigests.aff.html, ang/afsearchHeraldDigests.aff.php, ang/heraldAdmin.ang.php, ang/heraldAdmin.js, ang/heraldAdmin/hosts.html, ang/heraldAdmin/hosts.js, ang/heraldAdmin/index.html, ang/heraldAdmin/monitor.html, ang/heraldAdmin/monitor.js, ang/heraldAdmin/preview.html, ang/heraldAdmin/preview.js, ang/heraldAdmin/sources.html, ang/heraldAdmin/sources.js, ang/heraldAdmin/test.html, ang/heraldAdmin/test.js, ang/heraldAdmin/topic.js, ang/heraldAdmin/topics.html, ang/heraldAdmin/topics.js, ang/heraldDigest.ang.php, api/v3/Job/HeraldBufferFlush.php, api/v3/Job/HeraldMonitor.php, bin/note-foreign-rules.php, bin/preflight-rules.php, bin/rules-disable.php, bin/rules-reenable.php, bin/test-telegram.php, demo/seed.php, herald.civix.php, herald.php, managed/ActivityType.mgd.php, managed/CiviRules.mgd.php, managed/Digests.mgd.php, managed/Job.mgd.php, managed/MessageTemplate.mgd.php, managed/Navigation.mgd.php, managed/ParkedAlerts.mgd.php, managed/SubscriberPreferences.mgd.php, schema/HeraldBufferedAlert.entityType.php, schema/HeraldDigest.entityType.php, settings/herald.setting.php, templates/CRM/Herald/CivirulesAdapter/Form/SendDigest.tpl
 msgid "Herald"
 msgstr "Herald"
 
 #: CRM/Herald/CivirulesAdapter/Form/SendDigest.php
 msgid "- select digest -"
 msgstr "- Report auswählen -"
-
-#: schema/HeraldDigestBlock.entityType.php
-msgid "A contribution summary, search display or extension section within a digest."
-msgstr "Eine Beitragsübersicht, eine Suchanzeige oder ein Abschnitt einer Extension innerhalb eines Reports."
-
-#: schema/HeraldDigest.entityType.php
-msgid "A summary message composed of contribution, search and section blocks."
-msgstr "Eine Zusammenfassung aus Beitrags-, Such- und Abschnittsblöcken."
 
 #: managed/Digests.mgd.php
 msgid "Add digest"
@@ -1860,19 +1776,7 @@ msgstr "Report hinzufügen"
 msgid "Another digest is already named \"%1\"."
 msgstr "Ein anderer Report heißt bereits „%1“."
 
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Block Type"
-msgstr "Blocktyp"
-
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Break Down By"
-msgstr "Aufschlüsseln nach"
-
-#: Civi/Herald/Digest/ContributionStatsService.php, Civi/Herald/Digest/Options.php
-msgid "Contributions"
-msgstr "Beiträge"
-
-#: CRM/Herald/CivirulesAdapter/Action/Digest.php, CRM/Herald/CivirulesAdapter/Form/SendDigest.php, CRM/Herald/CivirulesAdapter/InlineDigests.php, CRM/Herald/CivirulesAdapter/RetiredHandlers.php, CRM/Herald/DAO/HeraldDigest.php, CRM/Herald/DAO/HeraldDigestBlock.php, CRM/Herald/Upgrader.php, CRM/Herald/Upgrader/DigestJobs.php, CRM/Herald/Upgrader/InlineContributionBlock.php, CRM/Herald/Upgrader/InlineDigest.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, CRM/Herald/Upgrader/InlineDigestJobs.php, Civi/Api4/Herald.php, Civi/Api4/HeraldDigest.php, Civi/Api4/HeraldDigestBlock.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Digest/BlockType.php, Civi/Herald/Digest/BucketEdges.php, Civi/Herald/Digest/Composer.php, Civi/Herald/Digest/ContributionStatsService.php, Civi/Herald/Digest/DateRange.php, Civi/Herald/Digest/Definition.php, Civi/Herald/Digest/DigestRules.php, Civi/Herald/Digest/DigestVars.php, Civi/Herald/Digest/ExtraSections.php, Civi/Herald/Digest/FormValidator.php, Civi/Herald/Digest/HistogramFormatter.php, Civi/Herald/Digest/Options.php, Civi/Herald/Digest/SearchBlock.php, Civi/Herald/Digest/SourceNormalizer.php, Civi/Herald/Digest/Validator.php, Civi/Herald/Trigger/ContributionVars.php, ang/afformHeraldDigest.aff.html, ang/afsearchHeraldDigests.aff.html, ang/heraldAdmin/sources.html, ang/heraldDigest.ang.php, ang/heraldDigest.js, managed/CiviRules.mgd.php, managed/Digests.mgd.php, managed/MessageTemplate.mgd.php, managed/Navigation.mgd.php, schema/HeraldDigest.entityType.php, schema/HeraldDigestBlock.entityType.php, templates/CRM/Herald/CivirulesAdapter/Form/SendDigest.tpl
+#: CRM/Herald/CivirulesAdapter/Action/Digest.php, CRM/Herald/CivirulesAdapter/Form/SendDigest.php, CRM/Herald/CivirulesAdapter/RetiredHandlers.php, CRM/Herald/DAO/HeraldDigest.php, CRM/Herald/Upgrader.php, CRM/Herald/Upgrader/DigestJobs.php, CRM/Herald/Upgrader/InlineContributionBlock.php, CRM/Herald/Upgrader/InlineDigest.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, CRM/Herald/Upgrader/InlineDigestJobs.php, Civi/Api4/Herald.php, Civi/Api4/HeraldDigest.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Digest/BucketEdges.php, Civi/Herald/Digest/Composer.php, Civi/Herald/Digest/Definition.php, Civi/Herald/Digest/DigestRules.php, Civi/Herald/Digest/ExtraSections.php, Civi/Herald/Digest/FormValidator.php, Civi/Herald/Digest/HistogramFormatter.php, Civi/Herald/Digest/Validator.php, Civi/Herald/Trigger/ContributionVars.php, ang/afformHeraldDigest.aff.html, ang/afsearchHeraldDigests.aff.html, ang/heraldAdmin/sources.html, ang/heraldDigest.ang.php, ang/heraldDigest.js, managed/CiviRules.mgd.php, managed/Digests.mgd.php, managed/MessageTemplate.mgd.php, managed/Navigation.mgd.php, schema/HeraldDigest.entityType.php, templates/CRM/Herald/CivirulesAdapter/Form/SendDigest.tpl
 msgid "Digest"
 msgstr "Report"
 
@@ -1880,49 +1784,17 @@ msgstr "Report"
 msgid "Digest \"%1\" does not exist."
 msgstr "Den Report „%1“ gibt es nicht."
 
-#: Civi/Herald/Digest/DigestRules.php
-msgid "Digest \"%1\" has no blocks."
-msgstr "Der Report „%1“ hat keine Blöcke."
-
-#: CRM/Herald/CivirulesAdapter/Form/SendDigest.php, CRM/Herald/CivirulesAdapter/InlineDigests.php, CRM/Herald/Upgrader.php, CRM/Herald/Upgrader/InlineDigest.php, Civi/Api4/HeraldDigest.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Digest/Validator.php, ang/afsearchHeraldDigests.aff.html, ang/heraldAdmin/sources.html, managed/Digests.mgd.php, managed/Navigation.mgd.php, schema/HeraldDigest.entityType.php, templates/CRM/Herald/CivirulesAdapter/Form/SendDigest.tpl
+#: CRM/Herald/CivirulesAdapter/Form/SendDigest.php, CRM/Herald/Upgrader.php, CRM/Herald/Upgrader/InlineDigest.php, Civi/Api4/HeraldDigest.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Digest/Validator.php, ang/afsearchHeraldDigests.aff.html, ang/heraldAdmin/sources.html, managed/Digests.mgd.php, managed/Navigation.mgd.php, schema/HeraldDigest.entityType.php, templates/CRM/Herald/CivirulesAdapter/Form/SendDigest.tpl
 msgid "Digests"
 msgstr "Reports"
-
-#: templates/CRM/Herald/CivirulesAdapter/Form/SendDigest.tpl
-msgid "Digests and their blocks are edited under <a href=\"%1\">Administer » Herald » Digests</a>."
-msgstr "Reports und ihre Blöcke bearbeiten Sie unter <a href=\"%1\">Administration » Herald » Reports</a>."
-
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Empty: the period of the digest."
-msgstr "Leer: der Zeitraum des Reports."
-
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Financial Type"
-msgstr "Finanztyp"
-
-#: ang/afformHeraldDigest.aff.html, schema/HeraldDigest.entityType.php
-msgid "HTML line above the blocks."
-msgstr "HTML-Zeile über den Blöcken."
 
 #: Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/WebhookChannel.php, schema/HeraldDigest.entityType.php, templates/CRM/Herald/CivirulesAdapter/Form/Schedule.tpl
 msgid "Header"
 msgstr "Kopfzeile"
 
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Heading of the block, as {$block_title} in its template."
-msgstr "Überschrift des Blocks, in seiner Vorlage als {$block_title}."
-
-#: schema/HeraldDigest.entityType.php, schema/HeraldDigestBlock.entityType.php
+#: schema/HeraldDigest.entityType.php
 msgid "Herald Digest"
 msgstr "Herald-Report"
-
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Herald Digest Block"
-msgstr "Herald-Reportblock"
-
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Herald Digest Blocks"
-msgstr "Herald-Reportblöcke"
 
 #: schema/HeraldDigest.entityType.php
 msgid "Herald Digests"
@@ -1936,19 +1808,7 @@ msgstr "Herald-Report"
 msgid "Herald digests"
 msgstr "Herald-Reports"
 
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Histogram Bucket Edges"
-msgstr "Klassengrenzen des Histogramms"
-
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Histogram Buckets"
-msgstr "Histogramm-Klassen"
-
-#: ang/afformHeraldDigest.aff.html, schema/HeraldDigestBlock.entityType.php
-msgid "JSON array of fixed edges, e.g. [0, 10, 50, 250]. Empty: adaptive buckets."
-msgstr "JSON-Array fester Grenzen, z. B. [0, 10, 50, 250]. Leer: an die Beträge angepasste Klassen."
-
-#: ang/afformHeraldDigest.aff.html, schema/HeraldDigestBlock.entityType.php
+#: ang/afformHeraldDigest.aff.html
 msgid "Key an extension answers in hook_civicrm_heraldDigestSections, e.g. myext.seats."
 msgstr "Schlüssel, den eine Extension in hook_civicrm_heraldDigestSections beantwortet, z. B. myext.seats."
 
@@ -1956,11 +1816,11 @@ msgstr "Schlüssel, den eine Extension in hook_civicrm_heraldDigestSections bean
 msgid "Machine name, used by rules and scripts to pick the digest."
 msgstr "Maschinenname, über den Regeln und Skripte den Report auswählen."
 
-#: Civi/Herald/Renderer/TemplateRenderer.php, managed/MessageTemplate.mgd.php, schema/HeraldDigestBlock.entityType.php
+#: Civi/Herald/Renderer/TemplateRenderer.php, managed/MessageTemplate.mgd.php
 msgid "Message Template"
 msgstr "Nachrichtenvorlage"
 
-#: CRM/Herald/CivirulesAdapter/Form/Schedule.php, CRM/Herald/CivirulesAdapter/Form/SendNotification.php, CRM/Herald/DAO/HeraldBufferedAlert.php, CRM/Herald/DAO/HeraldDigest.php, CRM/Herald/DAO/HeraldDigestBlock.php, CRM/Herald/Upgrader/InlineContributionBlock.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, CRM/Herald/Upgrader/PreferencesProfile.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Api4/Action/SaveTopic.php, Civi/Herald/Channel/ActivityOptionResolver.php, Civi/Herald/Channel/EmailChannel.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/Condition/FieldTransitionWatchList.php, Civi/Herald/Digest/Composer.php, Civi/Herald/Digest/DigestRules.php, Civi/Herald/Digest/FormValidator.php, Civi/Herald/Digest/Validator.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Monitor/CheckCollector.php, Civi/Herald/Renderer/TemplateRenderer.php, Civi/Herald/Schedule/ScheduleText.php, Civi/Herald/Trigger/ContextVars.php, Civi/Herald/Trigger/ContributionStatusName.php, Civi/Herald/Trigger/ContributionVars.php, Civi/Herald/Trigger/OriginalValues.php, Civi/Herald/Util/StoredFields.php, ang/heraldAdmin.js, ang/heraldAdmin/monitor.html, ang/heraldAdmin/monitor.js, ang/heraldAdmin/sources.html, ang/heraldAdmin/topic.js, herald.php, managed/Digests.mgd.php, schema/HeraldDigest.entityType.php, templates/CRM/Herald/CivirulesAdapter/Form/FieldTransition.tpl, templates/CRM/Herald/CivirulesAdapter/Form/SendDigest.tpl, templates/CRM/Herald/CivirulesAdapter/Form/SendNotification.tpl
+#: CRM/Herald/CivirulesAdapter/Form/Schedule.php, CRM/Herald/CivirulesAdapter/Form/SendNotification.php, CRM/Herald/DAO/HeraldBufferedAlert.php, CRM/Herald/DAO/HeraldDigest.php, CRM/Herald/Upgrader/InlineContributionBlock.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, CRM/Herald/Upgrader/PreferencesProfile.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Api4/Action/SaveTopic.php, Civi/Herald/Channel/ActivityOptionResolver.php, Civi/Herald/Channel/EmailChannel.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/Condition/FieldTransitionWatchList.php, Civi/Herald/Digest/Composer.php, Civi/Herald/Digest/DigestRules.php, Civi/Herald/Digest/FormValidator.php, Civi/Herald/Digest/Validator.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Monitor/CheckCollector.php, Civi/Herald/Renderer/TemplateRenderer.php, Civi/Herald/Schedule/ScheduleText.php, Civi/Herald/Trigger/ContextVars.php, Civi/Herald/Trigger/ContributionStatusName.php, Civi/Herald/Trigger/ContributionVars.php, Civi/Herald/Trigger/OriginalValues.php, Civi/Herald/Util/StoredFields.php, ang/heraldAdmin.js, ang/heraldAdmin/monitor.html, ang/heraldAdmin/monitor.js, ang/heraldAdmin/sources.html, ang/heraldAdmin/topic.js, herald.php, managed/Digests.mgd.php, schema/HeraldDigest.entityType.php, templates/CRM/Herald/CivirulesAdapter/Form/FieldTransition.tpl, templates/CRM/Herald/CivirulesAdapter/Form/SendDigest.tpl, templates/CRM/Herald/CivirulesAdapter/Form/SendNotification.tpl
 msgid "Name"
 msgstr "Name"
 
@@ -1968,31 +1828,15 @@ msgstr "Name"
 msgid "No digests yet."
 msgstr "Noch keine Reports."
 
-#: schema/HeraldDigest.entityType.php
-msgid "Period of every block that sets none of its own."
-msgstr "Zeitraum aller Blöcke, die keinen eigenen setzen."
-
-#: ang/afformHeraldDigest.aff.html, schema/HeraldDigestBlock.entityType.php
-msgid "SQL LIKE pattern on the contribution source, e.g. %Bank TX%."
-msgstr "SQL-LIKE-Muster für die Beitragsquelle, z. B. %Bank TX%."
-
-#: schema/HeraldDigestBlock.entityType.php
 msgid "Search Display"
 msgstr "Suchanzeige"
 
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Its rows, columns, sort and limit make the block."
-msgstr "Ihre Zeilen, Spalten, Sortierung und ihr Limit bilden den Block."
-
-#: Civi/Herald/Digest/Options.php
 msgid "Search display"
 msgstr "Suchanzeige"
 
-#: schema/HeraldDigestBlock.entityType.php
 msgid "Section Key"
 msgstr "Abschnittsschlüssel"
 
-#: Civi/Herald/Digest/Options.php
 msgid "Section from an extension"
 msgstr "Abschnitt aus einer Extension"
 
@@ -2000,63 +1844,13 @@ msgstr "Abschnitt aus einer Extension"
 msgid "Sends the digest \"%1\"."
 msgstr "Verschickt den Report „%1“."
 
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Show Histogram"
-msgstr "Histogramm anzeigen"
-
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Show Pending Pool"
-msgstr "Ausstehende Beträge anzeigen"
-
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Source Pattern"
-msgstr "Quellmuster"
-
 #: Civi/Herald/Digest/DigestRules.php
 msgid "Use lowercase letters, digits and underscores for the name."
 msgstr "Verwenden Sie für den Namen Kleinbuchstaben, Ziffern und Unterstriche."
 
-#: schema/HeraldDigestBlock.entityType.php
-msgid "Workflow name of the block template. Empty: the default of the block type."
-msgstr "Workflow-Name der Blockvorlage. Leer: der Standard des Blocktyps."
-
-#: Civi/Herald/Digest/BlockType.php
-msgid "a search block needs a search display."
-msgstr "ein Suchblock braucht eine Suchanzeige."
-
-#: Civi/Herald/Digest/BlockType.php
-msgid "a section block needs a section key."
-msgstr "ein Abschnittsblock braucht einen Abschnittsschlüssel."
-
-#: Civi/Herald/Digest/BlockType.php, Civi/Herald/Digest/Options.php, schema/HeraldDigestBlock.entityType.php
-msgid "grouping"
-msgstr "Aufschlüsselung"
-
-#: CRM/Herald/Upgrader/InlineDigest.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Digest/BlockType.php, Civi/Herald/Digest/Composer.php, Civi/Herald/Digest/ContributionStatsService.php, Civi/Herald/Digest/DateRange.php, Civi/Herald/Digest/Definition.php, Civi/Herald/Digest/DigestRules.php, Civi/Herald/Digest/DigestVars.php, Civi/Herald/Digest/ExtraSections.php, Civi/Herald/Digest/Options.php, ang/afformHeraldDigest.aff.html, managed/Digests.mgd.php, managed/MessageTemplate.mgd.php, schema/HeraldDigest.entityType.php, schema/HeraldDigestBlock.entityType.php
-msgid "period"
-msgstr "Zeitraum"
-
-#: Civi/Herald/Digest/BlockType.php
-msgid "the bucket count must be at least 1."
-msgstr "die Anzahl der Klassen muss mindestens 1 sein."
-
-#: Civi/Herald/Digest/BucketEdges.php
-msgid "the bucket edges must be a JSON array of at least two numbers, e.g. [0, 10, 50]."
-msgstr "die Klassengrenzen müssen ein JSON-Array aus mindestens zwei Zahlen sein, z. B. [0, 10, 50]."
-
-#: Civi/Herald/Digest/BucketEdges.php
-msgid "the bucket edges must be numbers in ascending order."
-msgstr "die Klassengrenzen müssen aufsteigende Zahlen sein."
-
-#: Civi/Herald/Digest/Options.php
-msgid "unknown %1 \"%2\"."
-msgstr "unbekannter Wert für %1: „%2“."
-
-#: Civi/Herald/Digest/SearchBlock.php
 msgid "search display %1 does not exist."
 msgstr "die Suchanzeige %1 gibt es nicht."
 
-#: Civi/Herald/Digest/SearchBlock.php
 msgid "a display of type \"%1\" has no rows for a digest; use a table, list or grid."
 msgstr "eine Anzeige vom Typ „%1“ hat keine Zeilen für einen Report; nehmen Sie eine Tabelle, Liste oder ein Raster."
 
@@ -2083,3 +1877,342 @@ msgstr "Unbekannter Operator „%1“."
 #: Civi/Herald/Condition/FieldTransitionParams.php
 msgid "\"%1\" needs a number as its value."
 msgstr "„%1“ braucht eine Zahl als Wert."
+
+#: managed/DigestSearches.mgd.php
+msgid "yesterday"
+msgstr "gestern"
+
+#: managed/DigestSearches.mgd.php
+msgid "last week"
+msgstr "letzte Woche"
+
+#: managed/DigestSearches.mgd.php
+msgid "Shipped by herald as a digest source."
+msgstr "Von herald als Report-Quelle mitgeliefert."
+
+#: managed/DigestSearches.mgd.php
+msgid "Sum"
+msgstr "Summe"
+
+#: managed/DigestSearches.mgd.php
+msgid "Count"
+msgstr "Anzahl"
+
+#: managed/DigestSearches.mgd.php
+msgid "Digest: contributions %1"
+msgstr "Report: Beiträge %1"
+
+#: managed/DigestSearches.mgd.php
+msgid "Digest: contributions %1 by form"
+msgstr "Report: Beiträge %1 nach Formular"
+
+#: managed/DigestSearches.mgd.php
+msgid "Form"
+msgstr "Formular"
+
+#: managed/DigestSearches.mgd.php
+msgid "Digest: contributions %1 by financial type"
+msgstr "Report: Beiträge %1 nach Finanztyp"
+
+#: managed/DigestSearches.mgd.php
+msgid "Financial type"
+msgstr "Finanztyp"
+
+#: managed/DigestSearches.mgd.php
+msgid "Digest: line items %1"
+msgstr "Report: Posten %1"
+
+#: managed/DigestSearches.mgd.php
+msgid "Item"
+msgstr "Posten"
+
+#: managed/DigestSearches.mgd.php
+msgid "Price"
+msgstr "Preis"
+
+#: managed/DigestSearches.mgd.php
+msgid "Quantity"
+msgstr "Menge"
+
+#: managed/DigestSearches.mgd.php
+msgid "Digest: contribution amounts %1"
+msgstr "Report: Beitragsbeträge %1"
+
+#: managed/DigestSearches.mgd.php
+msgid "Digest: activities %1 by type and status"
+msgstr "Report: Aktivitäten %1 nach Typ und Status"
+
+#: managed/DigestSearches.mgd.php
+msgid "Type"
+msgstr "Typ"
+
+#: managed/DigestSearches.mgd.php
+msgid "Digest: pending contributions"
+msgstr "Report: ausstehende Beiträge"
+
+#: managed/DigestSearches.mgd.php
+msgid "Digest: overdue activities by type"
+msgstr "Report: überfällige Aktivitäten nach Typ"
+
+#: ang/heraldDigest.js
+msgid "Placeholders of this source"
+msgstr "Platzhalter dieser Quelle"
+
+#: ang/heraldDigest.js
+msgid "Snippet for the template"
+msgstr "Textbaustein für die Vorlage"
+
+#: ang/heraldDigest.js
+msgid "Copy snippet"
+msgstr "Textbaustein kopieren"
+
+#: ang/heraldDigest.js
+msgid "Snippet copied."
+msgstr "Textbaustein kopiert."
+
+#: ang/heraldDigest.js
+msgid "Copying failed; select the text instead."
+msgstr "Kopieren fehlgeschlagen; markieren Sie den Text stattdessen."
+
+#: ang/heraldDigest.js
+msgid "Preview with today's data"
+msgstr "Vorschau mit heutigen Daten"
+
+#: ang/heraldDigest.js
+msgid "Subject:"
+msgstr "Betreff:"
+
+#: ang/heraldDigest.js
+msgid "Digest preview"
+msgstr "Vorschau des Reports"
+
+#: ang/heraldDigest.js
+msgid "The digest cannot be composed."
+msgstr "Der Report lässt sich nicht zusammensetzen."
+
+#: ang/heraldDigest.js
+msgid "The preview is ready."
+msgstr "Die Vorschau ist fertig."
+
+#: ang/heraldDigest.js
+msgid "Composing the preview."
+msgstr "Die Vorschau wird zusammengesetzt."
+
+#: Civi/Herald/Digest/Validator.php
+msgid "The digest has another source named %1."
+msgstr "Der Report hat bereits eine Quelle namens %1."
+
+#: Civi/Herald/Digest/TemplateValidator.php
+msgid "Digest \"%1\": %2"
+msgstr "Report „%1“: %2"
+
+#: Civi/Herald/Digest/DigestRules.php
+msgid "Choose the message template of the digest."
+msgstr "Wählen Sie die Nachrichtenvorlage des Reports."
+
+#: Civi/Herald/Digest/DigestRules.php
+msgid "A digest takes its subject from its message template; remove email_subject from the delivery settings."
+msgstr "Ein Report nimmt seinen Betreff aus seiner Nachrichtenvorlage; entfernen Sie email_subject aus den Zustelleinstellungen."
+
+#: Civi/Herald/Digest/DigestRules.php
+msgid "Digest \"%1\" has no message template; choose one in the digest form."
+msgstr "Der Report „%1“ hat keine Nachrichtenvorlage; wählen Sie eine im Report-Formular."
+
+#: Civi/Herald/Digest/Composer.php
+msgid "The digest cannot be composed: %1"
+msgstr "Der Report lässt sich nicht zusammensetzen: %1"
+
+#: Civi/Herald/Digest/Placeholders.php
+msgid "the column \"%1\" is named rows, which holds the list of rows; rename its header."
+msgstr "die Spalte „%1“ heißt rows, worunter die Liste der Zeilen steht; benennen Sie ihre Überschrift um."
+
+#: Civi/Herald/Digest/Placeholders.php
+msgid "the column \"%1\" starts with a digit; start its header with a letter."
+msgstr "die Spalte „%1“ beginnt mit einer Ziffer; beginnen Sie ihre Überschrift mit einem Buchstaben."
+
+#: Civi/Herald/Digest/Placeholders.php
+msgid "two columns are named %1; give their headers different words."
+msgstr "zwei Spalten heißen %1; geben Sie ihren Überschriften verschiedene Wörter."
+
+#: Civi/Herald/Digest/BucketEdges.php
+msgid "herald_histogram: the edges \"%1\" must be ascending numbers, e.g. \"0,10,50\"."
+msgstr "herald_histogram: Die Grenzen „%1“ müssen aufsteigende Zahlen sein, z. B. \"0,10,50\"."
+
+#: Civi/Herald/Digest/BucketEdges.php
+msgid "herald_histogram: the edges \"%1\" must be at least two numbers, e.g. \"0,10,50\"."
+msgstr "herald_histogram: Die Grenzen „%1“ müssen mindestens zwei Zahlen sein, z. B. \"0,10,50\"."
+
+#: Civi/Herald/Digest/TemplateCheck.php
+msgid "The template has a syntax error: %1 The editor stores > as &gt; and && as &amp;&amp;, also inside Smarty tags; write gt, lt and and instead."
+msgstr "Die Vorlage hat einen Syntaxfehler: %1 Der Editor speichert > als &gt; und && als &amp;&amp;, auch in Smarty-Tags; schreiben Sie stattdessen gt, lt und and."
+
+#: Civi/Herald/Digest/TemplateCheck.php
+msgid "The template cannot be rendered: %1"
+msgstr "Die Vorlage lässt sich nicht rendern: %1"
+
+#: Civi/Herald/Digest/TemplateCheck.php
+msgid "{$%1} is not a source of this digest."
+msgstr "{$%1} ist keine Quelle dieses Reports."
+
+#: Civi/Herald/Digest/TemplateCheck.php
+msgid "The template causes a warning: %1"
+msgstr "Die Vorlage erzeugt eine Warnung: %1"
+
+#: Civi/Herald/Digest/TemplateCheck.php
+msgid "A placeholder reads \"%1\", which its source does not provide."
+msgstr "Ein Platzhalter liest „%1“, das seine Quelle nicht liefert."
+
+#: Civi/Herald/Digest/TemplateCheck.php
+msgid "%1 is not a placeholder of this digest."
+msgstr "%1 ist kein Platzhalter dieses Reports."
+
+#: Civi/Herald/Digest/ExtraSections.php
+msgid "No extension answers the digest section \"%1\"."
+msgstr "Keine Extension antwortet auf den Report-Abschnitt „%1“."
+
+#: Civi/Herald/Digest/ExtraSections.php
+msgid "The digest section \"%1\" answered with text; a section returns values, e.g. ['booked' => 138]."
+msgstr "Der Report-Abschnitt „%1“ hat mit Text geantwortet; ein Abschnitt liefert Werte, z. B. ['booked' => 138]."
+
+#: Civi/Herald/Digest/ExtraSections.php
+msgid "Digest section \"%1\": %2"
+msgstr "Report-Abschnitt „%1“: %2"
+
+#: Civi/Herald/Digest/HistogramFormatter.php
+msgid "(no data)"
+msgstr "(keine Daten)"
+
+#: Civi/Herald/Digest/SourceRules.php
+msgid "Two sources are named %1."
+msgstr "Zwei Quellen heißen %1."
+
+#: Civi/Herald/Digest/SourceRules.php
+msgid "Source %1: %2"
+msgstr "Quelle %1: %2"
+
+#: Civi/Herald/Digest/SourceRules.php
+msgid "A source needs a name, e.g. donations for {$donations.sum}."
+msgstr "Eine Quelle braucht einen Namen, z. B. spenden für {$spenden.summe}."
+
+#: Civi/Herald/Digest/SourceRules.php
+msgid "\"%1\" is a name Smarty reserves; choose another source name."
+msgstr "„%1“ ist ein Name, den Smarty reserviert; wählen Sie einen anderen Quellennamen."
+
+#: Civi/Herald/Digest/SourceRules.php
+msgid "A source name starts with a lowercase letter, followed by lowercase letters, digits and underscores."
+msgstr "Ein Quellenname beginnt mit einem Kleinbuchstaben, gefolgt von Kleinbuchstaben, Ziffern und Unterstrichen."
+
+#: Civi/Herald/Digest/SectionRules.php
+msgid "the name \"%1\" is not lowercase letters, digits and underscores."
+msgstr "der Name „%1“ besteht nicht aus Kleinbuchstaben, Ziffern und Unterstrichen."
+
+#: Civi/Herald/Digest/SectionRules.php
+msgid "a row of \"%1\" names a value \"%2\", which is not lowercase letters, digits and underscores."
+msgstr "eine Zeile von „%1“ nennt einen Wert „%2“, der nicht aus Kleinbuchstaben, Ziffern und Unterstrichen besteht."
+
+#: Civi/Herald/Digest/SectionRules.php
+msgid "\"%1\" is neither a value nor a list of rows of values."
+msgstr "„%1“ ist weder ein Wert noch eine Liste von Zeilen mit Werten."
+
+#: Civi/Herald/Digest/SourceType.php
+msgid "a search source needs a search display."
+msgstr "eine Suchquelle braucht eine Suchanzeige."
+
+#: Civi/Herald/Digest/SourceType.php
+msgid "a section source needs a section key."
+msgstr "eine Abschnittsquelle braucht einen Abschnittsschlüssel."
+
+#: Civi/Herald/Digest/Snippet.php
+msgid "Every row, with the names above"
+msgstr "Jede Zeile, mit den Namen oben"
+
+#: Civi/Herald/Digest/Snippet.php
+msgid "Rows; there are none now, so their names are unknown"
+msgstr "Zeilen; gerade gibt es keine, daher sind ihre Namen unbekannt"
+
+#: Civi/Herald/Digest/Snippet.php
+msgid "Rows with %1"
+msgstr "Zeilen mit %1"
+
+#: Civi/Herald/Digest/HistogramModifier.php
+msgid "herald_histogram needs the rows of a source and a column, e.g. {$amounts.rows|herald_histogram:\"amount\"}."
+msgstr "herald_histogram braucht die Zeilen einer Quelle und eine Spalte, z. B. {$betraege.rows|herald_histogram:\"betrag\"}."
+
+#: Civi/Herald/Digest/HistogramModifier.php
+msgid "herald_histogram: the rows have no column \"%1\"."
+msgstr "herald_histogram: Die Zeilen haben keine Spalte „%1“."
+
+#: Civi/Herald/Digest/HistogramModifier.php
+msgid "herald_histogram: the column \"%1\" holds a value that is not a number."
+msgstr "herald_histogram: Die Spalte „%1“ enthält einen Wert, der keine Zahl ist."
+
+#: Civi/Herald/Digest/HistogramModifier.php
+msgid "herald_histogram: \"%1\" is neither a number of buckets nor edges such as \"0,10,50\"."
+msgstr "herald_histogram: „%1“ ist weder eine Klassenzahl noch Grenzen wie \"0,10,50\"."
+
+#: Civi/Herald/Api4/Action/GetDigestPlaceholders.php
+msgid "The placeholders cannot be read: %1"
+msgstr "Die Platzhalter lassen sich nicht lesen: %1"
+
+#: Civi/Herald/Api4/Action/NotifyDigest.php
+msgid "an unexpected error, see the CiviCRM log."
+msgstr "ein unerwarteter Fehler, siehe CiviCRM-Protokoll."
+
+#: Civi/Herald/Api4/Action/NotifyDigest.php
+msgid "⚠️ Digest \"%1\" could not be composed: %2"
+msgstr "⚠️ Der Report „%1“ ließ sich nicht zusammensetzen: %2"
+
+#: Civi/Herald/Api4/Action/NotifyDigest.php
+msgid "Digest \"%1\" failed"
+msgstr "Report „%1“ fehlgeschlagen"
+
+#: CRM/Herald/Upgrader/InlineTemplate.php
+msgid "Pending"
+msgstr "Ausstehend"
+
+#: CRM/Herald/Upgrader/InlineSources.php
+msgid "campaign goal"
+msgstr "Kampagnenziel"
+
+#: CRM/Herald/Upgrader/InlineSources.php
+msgid "Goal"
+msgstr "Ziel"
+
+#: schema/HeraldDigest.entityType.php
+msgid "A summary message: one message template filled from searches and extension sections."
+msgstr "Eine zusammenfassende Nachricht: eine Nachrichtenvorlage, gefüllt aus Suchen und Abschnitten von Extensions."
+
+#: schema/HeraldDigest.entityType.php
+msgid "Subject and text of the digest, with the values of its sources as placeholders."
+msgstr "Betreff und Text des Reports, mit den Werten seiner Quellen als Platzhaltern."
+
+#: schema/HeraldDigestSource.entityType.php
+msgid "Herald Digest Source"
+msgstr "Herald-Report-Quelle"
+
+#: schema/HeraldDigestSource.entityType.php
+msgid "Herald Digest Sources"
+msgstr "Herald-Report-Quellen"
+
+#: schema/HeraldDigestSource.entityType.php
+msgid "A search display or extension section whose values fill a digest template."
+msgstr "Eine Suchanzeige oder ein Extension-Abschnitt, dessen Werte eine Report-Vorlage füllen."
+
+#: schema/HeraldDigestSource.entityType.php
+msgid "Name of the source in the template, e.g. donations for {$donations.sum}."
+msgstr "Name der Quelle in der Vorlage, z. B. spenden für {$spenden.summe}."
+
+#: schema/HeraldDigestSource.entityType.php
+msgid "Source Type"
+msgstr "Quellentyp"
+
+#: schema/HeraldDigestSource.entityType.php
+msgid "Its column headers name the values, its filters and limit pick the rows."
+msgstr "Ihre Spaltenüberschriften benennen die Werte, ihre Filter und ihr Limit wählen die Zeilen."
+
+#: templates/CRM/Herald/CivirulesAdapter/Form/SendDigest.tpl
+msgid "Digests and their sources are edited under <a href=\"%1\">Administer » Herald » Digests</a>."
+msgstr "Reports und ihre Quellen bearbeiten Sie unter <a href=\"%1\">Administrieren » Herald » Reports</a>."
+
+msgid "line item totals"
+msgstr "Postensummen"

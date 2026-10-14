@@ -2,99 +2,113 @@
 
 declare(strict_types = 1);
 
-use Civi\Api4\CiviRulesAction;
-use Civi\Api4\CiviRulesRuleAction;
 use Civi\Api4\Contact;
 use Civi\Api4\HeraldDigest;
-use Civi\Api4\HeraldDigestBlock;
-use Civi\Api4\Job;
+use Civi\Api4\HeraldDigestSource;
 use Civi\Api4\SavedSearch;
-use Civi\Api4\SearchDisplay;
-use Civi\Herald\Digest\SearchBlock;
+use Civi\Herald\Digest\Composer;
+use Civi\Herald\Digest\Definition;
+use Civi\Herald\Digest\DigestProblem;
+use Civi\Herald\Digest\ExtraSections;
+use Civi\Herald\Upgrader\InlineDigestFixture;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Digests kept inside rule action and job parameters become HeraldDigest
- * records; the parameters keep the delivery settings and name the digest.
+ * Digests kept inside rule action and job parameters (0.10.0) become a
+ * HeraldDigest with its own template and sources; the parameters keep the
+ * delivery settings and name the digest.
  *
  * @group headless
  */
 class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessInterface, TransactionalInterface {
 
+  use InlineDigestFixture;
+
+  private const TOTALS = 'Sum: {$block1.sum|crmMoney}, Count: {$block1.count}';
+
+  private const BY_FORM =
+    "{foreach from=\$block1_breakdown.rows item=row}\n"
+      . "• Form: {\$row.form}, Sum: {\$row.sum|crmMoney}, Count: {\$row.count}\n{/foreach}";
+
+  private const PENDING = '🏦 Pending: Sum: {$block1_pending.sum|crmMoney}, Count: {$block1_pending.count}';
+
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    // APIv4 hides Contribution.campaign_id while CiviCampaign is off; enabling it commits.
+    return \Civi\Test::headless()
+      ->install('org.civicoop.civirules')
+      ->installMe(__DIR__)
+      ->callback(static fn () => \CRM_Core_BAO_ConfigSetting::enableComponent('CiviCampaign'), 'herald-civicampaign')
+      ->apply();
+  }
+
+  protected function setUp(): void {
+    parent::setUp();
+    \Civi::dispatcher()->addListener(ExtraSections::HOOK, [self::class, 'seats']);
+  }
+
+  protected function tearDown(): void {
+    \Civi::dispatcher()->removeListener(ExtraSections::HOOK, [self::class, 'seats']);
+    parent::tearDown();
+  }
+
+  public static function seats(\Civi\Core\Event\GenericHookEvent $event): void {
+    if (in_array('myext.seats', $event->keys, TRUE)) {
+      $event->sections['myext.seats'] = ['booked' => 138, 'paid' => 120];
+    }
+    if (in_array('myext.html', $event->keys, TRUE)) {
+      $event->sections['myext.html'] = '<b>138</b> seats';
+    }
   }
 
   /**
-   * The warnings the herald log channel receives while $run runs.
-   *
+   * @param array<string, mixed> $params
    * @return list<string>
    */
-  private function heraldWarnings(callable $run): array {
-    $logger = new class extends \Psr\Log\AbstractLogger {
-
-      /**
-       * @var list<string>
-       */
-      public array $warnings = [];
-
-      public function log($level, string|\Stringable $message, array $context = []): void {
-        if ($level === \Psr\Log\LogLevel::WARNING) {
-          $this->warnings[] = (string) $message;
-        }
-      }
-
-    };
-    // LogManager caches one logger per channel and has no setter.
-    $channels = \Closure::bind(
-      fn &(): array => $this->channels,
-      \Civi::container()->get('psr_log_manager'),
-      \Civi\Core\LogManager::class,
-    );
-    $cache = &$channels();
-    $previous = $cache;
-    $cache['herald'] = $logger;
+  private static function problems(array $params): array {
     try {
-      $run();
+      CRM_Core_Transaction::create()->run(
+        static fn () => CRM_Herald_Upgrader_InlineDigest::extract(
+          $params,
+          'old_broken',
+          'Old broken',
+        ),
+      );
     }
-    finally {
-      $cache = $previous;
+    catch (DigestProblem $e) {
+      self::assertSame(
+        0,
+        HeraldDigest::get(checkPermissions: FALSE)->addWhere('name', '=', 'old_broken')->execute()->count(),
+      );
+      return $e->problems();
     }
-    return $logger->warnings;
+    self::fail('The digest migrated.');
   }
 
   /**
-   * @return array{digest: array<string, mixed>, blocks: list<array<string, mixed>>}
+   * @return list<mixed>
    */
-  private function stored(string $name): array {
-    $digest = HeraldDigest::get(checkPermissions: FALSE)
-      ->addSelect('id', 'title', 'header', 'period')
-      ->addWhere('name', '=', $name)
-      ->execute()
-      ->single();
-    $blocks = HeraldDigestBlock::get(checkPermissions: FALSE)
-      ->addWhere('digest_id', '=', $digest['id'])
-      ->addOrderBy('id')
-      ->execute()
-      ->getArrayCopy();
-    unset($digest['id']);
-    $blocks = array_map(static function (array $block): array {
-      unset($block['id'], $block['digest_id']);
-      return array_filter($block, static fn ($value): bool => $value !== NULL);
-    }, $blocks);
-    return ['digest' => $digest, 'blocks' => array_values($blocks)];
+  private static function completed(string $field, mixed $period): array {
+    return [
+      [
+        $field === 'receive_date' ? 'contribution_status_id:name' : 'contribution_id.contribution_status_id:name',
+        '=',
+        'Completed',
+      ],
+      [str_replace('receive_date', 'is_test', $field), '=', FALSE],
+      [str_replace('receive_date', 'is_template', $field), '=', FALSE],
+      ...($period === NULL ? [] : [$period]),
+    ];
   }
 
-  public function testTheParamsWithoutBlocksBecomeOneBlock(): void {
+  public function testTheParamsWithoutBlocksBecomeOneBlockOnTheShippedSearches(): void {
     $delivery = CRM_Herald_Upgrader_InlineDigest::extract(
       [
         'channel' => 'telegram',
         'chat_id' => '-100',
-        'header' => '<b>Daily</b>',
-        'period' => 'last_7_days',
-        'template' => 'herald_contribution_digest_weekly',
+        'header' => '<b>Daily</b> {on time}',
+        'template' => 'herald_contribution_digest_daily',
         'show_histogram' => '0',
         'bucket_edges' => '[]',
         'group_by' => 'bogus',
@@ -108,35 +122,34 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
     self::assertSame(['digest' => 'old_daily', 'channel' => 'telegram', 'chat_id' => '-100'], $delivery);
     self::assertSame(
       [
-        'digest' => ['title' => 'Old daily', 'header' => '<b>Daily</b>', 'period' => 'last_7_days'],
-        'blocks' => [[
-          'type' => 'contribution',
-          'template' => 'herald_contribution_digest_weekly',
-          'group_by' => 'source',
-          'show_pending' => TRUE,
-          'show_histogram' => FALSE,
-          'bucket_count' => 8,
-        ]],
+        'title' => 'Old daily',
+        'subject' => '{$block1.count} · {$block1.sum|crmMoney}',
+        'html' =>
+          "{literal}<b>Daily</b> {on time}{/literal}\n\n" . implode("\n", [self::TOTALS, self::BY_FORM, self::PENDING]),
+        'sources' => [
+          'block1' => 'Herald_Digest_Contributions_Yesterday_Table',
+          'block1_breakdown' => 'Herald_Digest_Contributions_Yesterday_By_Form_Table',
+          'block1_pending' => 'Herald_Digest_Contributions_Pending_Table',
+        ],
       ],
       $this->stored('old_daily'),
     );
   }
 
   public function testBlocksOfEveryTypeKeepTheirOrder(): void {
-    $searchId = SavedSearch::create(checkPermissions: FALSE)
+    SavedSearch::create(checkPermissions: FALSE)
       ->setValues([
         'name' => 'herald_test_members',
         'label' => 'Members',
         'api_entity' => 'Contact',
-        'api_params' => ['version' => 4, 'select' => ['id']],
+        'api_params' => ['version' => 4, 'select' => ['COUNT(id) AS COUNT_id']],
       ])
-      ->execute()
-      ->single()['id'];
+      ->execute();
     CRM_Herald_Upgrader_InlineDigest::extract(
       [
         'channel' => 'email',
         'blocks' => json_encode([
-          ['title' => 'Donations', 'financial_type_id' => 1, 'bucket_edges' => [0, 10, 100], 'period' => 'today'],
+          ['title' => 'Donations & gifts', 'show_pending' => FALSE],
           ['type' => 'search', 'search' => 'herald_test_members', 'title' => 'Members'],
           ['type' => 'section', 'key' => 'myext.seats'],
         ]),
@@ -145,24 +158,26 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
       'Old blocks',
     );
 
-    $blocks = $this->stored('old_blocks')['blocks'];
-    self::assertSame('yesterday', $this->stored('old_blocks')['digest']['period']);
-    self::assertSame(['contribution', 'search', 'section'], array_column($blocks, 'type'));
-    self::assertSame(['Donations', 1, '[0,10,100]', 'today'], [
-      $blocks[0]['title'],
-      $blocks[0]['financial_type_id'],
-      $blocks[0]['bucket_edges'],
-      $blocks[0]['period'],
-    ]);
+    $stored = $this->stored('old_blocks');
+    self::assertSame('Old blocks', $stored['subject']);
     self::assertSame(
-      ['id' => $blocks[1]['search_display_id'], 'saved_search_id' => $searchId, 'label' => 'Herald: Old blocks'],
-      SearchDisplay::get(checkPermissions: FALSE)
-        ->addSelect('saved_search_id', 'label')
-        ->addWhere('id', '=', $blocks[1]['search_display_id'])
-        ->execute()
-        ->single(),
+      ['block1', 'block1_breakdown', 'block1_amounts', 'block2', 'block3'],
+      array_keys($stored['sources']),
     );
-    self::assertSame('myext.seats', $blocks[2]['section_key']);
+    self::assertSame('myext.seats', $stored['sources']['block3']);
+    self::assertSame(
+      implode("\n\n", [
+        implode("\n", [
+          '<b>Donations &amp; gifts</b>',
+          self::TOTALS,
+          self::BY_FORM,
+          '<pre>{$block1_amounts.rows|herald_histogram:"amount"}</pre>',
+        ]),
+        "<b>Members</b>\n(Count) Contact ID: {\$block2.count_contact_id}",
+        'booked: {$block3.booked}, paid: {$block3.paid}',
+      ]),
+      $stored['html'],
+    );
   }
 
   public function testASearchBlockShowsTheRowsTheSearchGave(): void {
@@ -186,60 +201,339 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
       ])
       ->execute();
     CRM_Herald_Upgrader_InlineDigest::extract(
-      ['blocks' => [['type' => 'search', 'search' => 'herald_test_names']]],
+      ['blocks' => [['type' => 'search', 'search' => 'herald_test_names', 'title' => 'Names']]],
       'old_names',
       'Old names',
     );
 
-    $displayId = (int) $this->stored('old_names')['blocks'][0]['search_display_id'];
+    $stored = $this->stored('old_names');
+    self::assertSame('Names: {$block1.rows|count}', $stored['subject']);
     self::assertSame(
-      [['Herald Test C'], ['Herald Test B']],
-      array_column(SearchBlock::vars($displayId)['rows'], 'cells'),
+      "<b>Names</b>\n{foreach from=\$block1.rows item=row}\n• Organization Name: {\$row.organization_name}\n{/foreach}",
+      $stored['html'],
+    );
+    $message = (new Composer())->compose(Definition::load('old_names'));
+    self::assertSame('Names: 2', $message['subject']);
+    self::assertStringContainsString('Herald Test C', $message['body']);
+    self::assertStringContainsString('Herald Test B', $message['body']);
+    self::assertStringNotContainsString('Herald Test A', $message['body']);
+  }
+
+  public function testPeriodsBecomeFiltersOfCopiedSearches(): void {
+    CRM_Herald_Upgrader_InlineDigest::extract(
+      ['period' => 'last_7_days', 'show_pending' => '0', 'show_histogram' => '0', 'group_by' => 'line_item'],
+      'old_week',
+      'Old week',
+    );
+    CRM_Herald_Upgrader_InlineDigest::extract(
+      ['period' => 'last_week', 'blocks' => '[{"period": "today", "show_pending": false, "show_histogram": false}]'],
+      'old_today',
+      'Old today',
+    );
+    $warnings = $this->heraldWarnings(static function (): void {
+      CRM_Herald_Upgrader_InlineDigest::extract(
+        ['period' => 'fortnight', 'show_pending' => '0', 'show_histogram' => '0'],
+        'old_unknown',
+        'Old unknown',
+      );
+    });
+
+    $week = $this->stored('old_week')['sources'];
+    $items = [
+      ...self::completed('contribution_id.receive_date', NULL),
+      ['line_total', '>', 0],
+      ['DATEDIFF(CURDATE(), contribution_id.receive_date)', 'BETWEEN', [1, 7]],
+    ];
+    self::assertSame($items, $week['block1']);
+    self::assertSame($items, $week['block1_breakdown']);
+    self::assertSame(
+      self::completed('receive_date', ['receive_date', '=', 'this.day']),
+      $this->stored('old_today')['sources']['block1'],
+    );
+    // Older releases read every period they did not know as yesterday.
+    self::assertSame(['herald: unknown digest period read as yesterday, as before'], $warnings);
+    self::assertSame(
+      'Herald_Digest_Contributions_Yesterday_Table',
+      $this->stored('old_unknown')['sources']['block1'],
     );
   }
 
-  public function testPeriodsAreReadAsOlderReleasesReadThem(): void {
-    CRM_Herald_Upgrader_InlineDigest::extract(
-      ['period' => 'last_week', 'blocks' => '[{"period": "fortnight"}, {}]'],
-      'old_unknown',
-      'Old unknown',
-    );
-    CRM_Herald_Upgrader_InlineDigest::extract(
-      ['period' => 'last_7_days', 'blocks' => '[{"period": ""}, {}]'],
-      'old_blank',
-      'Old blank',
-    );
-
-    $unknown = $this->stored('old_unknown');
-    self::assertSame('yesterday', $unknown['digest']['period']);
-    self::assertSame(['yesterday', NULL], array_map(static fn (array $b) => $b['period'] ?? NULL, $unknown['blocks']));
-    // A blank block period meant yesterday, not the digest's period.
-    $blank = $this->stored('old_blank')['blocks'];
-    self::assertSame(['yesterday', NULL], array_map(static fn (array $b) => $b['period'] ?? NULL, $blank));
+  public function testTheLastSevenDaysCountWhatTheOldPeriodCounted(): void {
+    \CRM_Utils_Time::setTime('2026-10-14 10:00:00');
+    try {
+      $contact = Contact::create(checkPermissions: FALSE)
+        ->setValues(['contact_type' => 'Individual', 'first_name' => 'Herald'])
+        ->execute()
+        ->single()['id'];
+      foreach ([
+        '2026-10-14 08:00:00' => 1,
+        '2026-10-13 23:00:00' => 10,
+        '2026-10-07 00:30:00' => 100,
+        '2026-10-06 23:00:00' => 1000,
+      ] as $date => $amount) {
+        \Civi\Api4\Contribution::create(checkPermissions: FALSE)
+          ->setValues([
+            'contact_id' => $contact,
+            'financial_type_id:name' => 'Donation',
+            'total_amount' => $amount,
+            'receive_date' => $date,
+            'contribution_status_id:name' => 'Completed',
+          ])
+          ->execute();
+      }
+      CRM_Herald_Upgrader_InlineDigest::extract(
+        ['period' => 'last_7_days', 'show_pending' => '0', 'show_histogram' => '0'],
+        'old_week',
+        'Old week',
+      );
+      $values = (new Composer())->values(Definition::load('old_week'));
+    }
+    finally {
+      \CRM_Utils_Time::resetTime();
+    }
+    // The SQL clock is not the test clock; only the real day decides.
+    $today = new DateTimeImmutable('today');
+    $expected = 0;
+    foreach (['2026-10-14' => 1, '2026-10-13' => 10, '2026-10-07' => 100, '2026-10-06' => 1000] as $day => $amount) {
+      $days = (int) (new DateTimeImmutable($day))
+        ->diff($today)
+        ->format('%r%a');
+      $expected += $days >= 1 && $days <= 7 ? $amount : 0;
+    }
+    self::assertEquals($expected, $values['block1']['sum'] ?? 0);
   }
 
-  public function testContributionFiltersKeepTheirOldReading(): void {
+  public function testFiltersAndCampaignProgressBecomeCopies(): void {
+    $campaign = (int) \Civi\Api4\Campaign::create(checkPermissions: FALSE)
+      ->setValues(['title' => 'Spring', 'name' => 'herald_test_spring', 'goal_revenue' => 1000, 'is_active' => TRUE])
+      ->execute()
+      ->single()['id'];
     CRM_Herald_Upgrader_InlineDigest::extract(
-      ['source_pattern' => ' Bank%', 'bucket_edges' => '["0", "10", "100.5"]'],
+      [
+        'campaign_id' => (string) $campaign,
+        'financial_type_id' => 1,
+        'source_pattern' => ' Bank%',
+        'bucket_edges' => '["0", "10", "100.5"]',
+      ],
       'old_filters',
       'Old filters',
     );
+
+    $stored = $this->stored('old_filters');
+    $filters = [['campaign_id', '=', $campaign], ['financial_type_id', '=', 1], ['source', 'LIKE', ' Bank%']];
+    self::assertSame(
+      [...self::completed('receive_date', ['receive_date', '=', 'previous.day']), ...$filters],
+      $stored['sources']['block1'],
+    );
+    // The pending pool and campaign progress have no period.
+    self::assertSame(
+      [
+        ['contribution_status_id:name', '=', 'Pending'],
+        ['is_test', '=', FALSE],
+        ['is_template', '=', FALSE],
+        ...$filters,
+      ],
+      $stored['sources']['block1_pending'],
+    );
+    self::assertSame(
+      [...self::completed('receive_date', NULL), ...$filters],
+      $stored['sources']['block1_campaign_total'],
+    );
+    self::assertSame([['id', '=', $campaign]], $stored['sources']['block1_campaign']);
+    self::assertStringContainsString(
+      self::TOTALS
+      . '{if $block1_campaign.goal gt 0} · '
+      . '{($block1_campaign_total.sum * 100 / $block1_campaign.goal)|round:1}% of {$block1_campaign.goal|crmMoney}{/if}',
+      $stored['html'],
+    );
+    self::assertStringContainsString(
+      '<pre>{$block1_amounts.rows|herald_histogram:"amount":"0,10,100.5"}</pre>',
+      $stored['html'],
+    );
+    self::assertStringContainsString(
+      '% of $1,000.00',
+      (new Composer())->compose(Definition::load('old_filters'))['body'],
+    );
+  }
+
+  public function testALineItemBlockCountsTheMatchingItemsSold(): void {
+    $contact = Contact::create(checkPermissions: FALSE)
+      ->setValues(['contact_type' => 'Individual', 'first_name' => 'Herald'])
+      ->execute()
+      ->single()['id'];
+    $contribution = \Civi\Api4\Contribution::create(checkPermissions: FALSE)
+      ->setValues([
+        'contact_id' => $contact,
+        'financial_type_id:name' => 'Donation',
+        'total_amount' => 35,
+        'receive_date' => date('Y-m-d 12:00:00', strtotime('-1 day')),
+        'contribution_status_id:name' => 'Completed',
+      ])
+      ->execute()
+      ->single()['id'];
+    $item = \Civi\Api4\LineItem::get(checkPermissions: FALSE)
+      ->addWhere('contribution_id', '=', $contribution)
+      ->execute()
+      ->single();
+    \Civi\Api4\LineItem::update(checkPermissions: FALSE)
+      ->addWhere('id', '=', $item['id'])
+      ->setValues([
+        'label' => 'Ticket',
+        'qty' => 3,
+        'unit_price' => 10,
+        'line_total' => 30,
+        'financial_type_id:name' => 'Event Fee',
+      ])
+      ->execute();
+    \Civi\Api4\LineItem::create(checkPermissions: FALSE)
+      ->setValues([
+        'entity_table' => 'civicrm_contribution',
+        'entity_id' => $contribution,
+        'contribution_id' => $contribution,
+        'price_field_id' => $item['price_field_id'],
+        'label' => 'Gift',
+        'qty' => 1,
+        'unit_price' => 5,
+        'line_total' => 5,
+        'financial_type_id:name' => 'Donation',
+      ])
+      ->execute();
+    $eventFee = (int) \Civi\Api4\FinancialType::get(checkPermissions: FALSE)
+      ->addWhere('name', '=', 'Event Fee')
+      ->execute()
+      ->single()['id'];
     CRM_Herald_Upgrader_InlineDigest::extract(
-      ['show_histogram' => '0', 'bucket_count' => '-1'],
-      'old_no_histogram',
-      'Old no histogram',
+      ['financial_type_id' => $eventFee, 'group_by' => 'line_item', 'show_pending' => '0', 'show_histogram' => '0'],
+      'old_tickets',
+      'Old tickets',
     );
 
-    CRM_Herald_Upgrader_InlineDigest::extract(['bucket_count' => '0', 'status' => 0], 'old_zero', 'Old zero');
-    CRM_Herald_Upgrader_InlineDigest::extract(['bucket_count' => -3], 'old_negative', 'Old negative');
+    $values = (new Composer())->values(Definition::load('old_tickets'));
+    self::assertEquals(30, $values['block1']['sum']);
+    self::assertEquals(3, $values['block1']['count']);
+    self::assertSame(['Ticket'], array_column($values['block1_breakdown']['rows'], 'item'));
+    self::assertMatchesRegularExpression(
+      '/Sum: \\$30\\.00, Count: 3(?![.\\d])/',
+      (new Composer())->compose(Definition::load('old_tickets'))['body'],
+    );
+  }
 
-    $block = $this->stored('old_filters')['blocks'][0];
-    self::assertSame([' Bank%', '[0,10,100.5]'], [$block['source_pattern'], $block['bucket_edges']]);
-    self::assertFalse($this->stored('old_no_histogram')['blocks'][0]['show_histogram']);
-    $zero = $this->stored('old_zero')['blocks'][0];
-    self::assertSame([TRUE, 8], [$zero['show_histogram'], $zero['bucket_count']]);
-    // A count below 0 drew a single bucket.
-    self::assertSame(1, $this->stored('old_negative')['blocks'][0]['bucket_count']);
+  public function testTheHistogramKeepsItsBuckets(): void {
+    $warnings = $this->heraldWarnings(static function (): void {
+      CRM_Herald_Upgrader_InlineDigest::extract(
+        ['bucket_count' => '', 'show_pending' => '0'],
+        'old_blank',
+        'Old blank',
+      );
+      CRM_Herald_Upgrader_InlineDigest::extract(['bucket_count' => '5', 'show_pending' => '0'], 'old_five', 'Old five');
+      // A count below 0 drew a single bucket.
+      CRM_Herald_Upgrader_InlineDigest::extract(
+        ['bucket_count' => -3, 'show_pending' => '0'],
+        'old_negative',
+        'Old negative',
+      );
+      CRM_Herald_Upgrader_InlineDigest::extract(
+        ['bucket_count' => '0', 'show_histogram' => '0', 'show_pending' => '0'],
+        'old_hidden',
+        'Old hidden',
+      );
+    });
+    self::assertSame([], $warnings);
+    $histogram = static fn (string $name): string => (string) preg_replace(
+      '/.*<pre>(.*)<\/pre>.*/s',
+      '$1',
+      Definition::load($name)['template']['msg_html'] ?? '',
+    );
+    self::assertSame(
+      [
+        '{$block1_amounts.rows|herald_histogram:"amount"}',
+        '{$block1_amounts.rows|herald_histogram:"amount":5}',
+        '{$block1_amounts.rows|herald_histogram:"amount":1}',
+      ],
+      [$histogram('old_blank'), $histogram('old_five'), $histogram('old_negative')],
+    );
+    self::assertArrayNotHasKey('block1_amounts', $this->stored('old_hidden')['sources']);
+
+    $warnings = $this->heraldWarnings(static function (): void {
+      CRM_Herald_Upgrader_InlineDigest::extract(['bucket_count' => '0'], 'old_zero', 'Old zero');
+      CRM_Herald_Upgrader_InlineDigest::extract(['bucket_edges' => '0, 10, 50'], 'old_edges', 'Old edges');
+      CRM_Herald_Upgrader_InlineDigest::extract(['bucket_edges' => '[10, 0]'], 'old_falling', 'Old falling');
+    });
+    self::assertSame(
+      [
+        'herald: histogram bucket count 0 replaced with the default 8',
+        'herald: unusable bucket edges dropped, the histogram uses adaptive buckets',
+      ],
+      $warnings,
+    );
+    self::assertSame('{$block1_amounts.rows|herald_histogram:"amount"}', $histogram('old_zero'));
+    // Old releases read only JSON edges; this text decoded to nothing and drew adaptive buckets.
+    self::assertSame('{$block1_amounts.rows|herald_histogram:"amount":"0, 10, 50"}', $histogram('old_edges'));
+    self::assertSame('{$block1_amounts.rows|herald_histogram:"amount"}', $histogram('old_falling'));
+  }
+
+  public function testAnEmailSubjectMovesIntoTheTemplate(): void {
+    $delivery = CRM_Herald_Upgrader_InlineDigest::extract(
+      ['channel' => 'email', 'email_subject' => 'Numbers {today}', 'show_pending' => '0'],
+      'old_subject',
+      'Old subject',
+    );
+    $config = CRM_Herald_Upgrader_InlineDigest::extract(
+      ['channel' => 'email', 'channel_config' => '{"email_subject": "From config", "email_format": "html"}'],
+      'old_config',
+      'Old config',
+    );
+
+    self::assertSame(['digest' => 'old_subject', 'channel' => 'email'], $delivery);
+    self::assertSame('{literal}Numbers {today}{/literal}', $this->stored('old_subject')['subject']);
+    self::assertSame(
+      ['digest' => 'old_config', 'channel' => 'email', 'channel_config' => '{"email_format":"html"}'],
+      $config,
+    );
+    self::assertSame('From config', $this->stored('old_config')['subject']);
+  }
+
+  public function testACustomBlockTemplateIsNamedAndReplaced(): void {
+    $warnings = $this->heraldWarnings(static function (): void {
+      CRM_Herald_Upgrader_InlineDigest::extract(
+        ['template' => 'my_digest', 'show_pending' => '0'],
+        'old_custom',
+        'Old custom',
+      );
+      CRM_Herald_Upgrader_InlineDigest::extract(
+        ['template' => 'herald_contribution_digest_weekly', 'show_pending' => '0'],
+        'old_weekly',
+        'Old weekly',
+      );
+    });
+
+    self::assertSame(['herald: a digest block template was replaced with the default text'], $warnings);
+    self::assertStringStartsWith(self::TOTALS, $this->stored('old_custom')['html']);
+  }
+
+  public function testADigestThatCannotComposeStaysInline(): void {
+    self::assertSame(
+      ['saved search "herald_test_missing" does not exist'],
+      self::problems(['blocks' => '[{"type": "search", "search": "herald_test_missing"}]']),
+    );
+    self::assertSame(['blocks are not a JSON array of objects'], self::problems(['blocks' => '{"type": "search"']));
+    self::assertSame(['campaign_id 999999 does not exist'], self::problems(['campaign_id' => 999_999]));
+    self::assertSame(['unknown block type ""'], self::problems(['blocks' => '[{"type": ""}]']));
+    // Sources have no status filter; reporting Completed instead would change the numbers unnoticed.
+    $status = ['a contribution status filter other than Completed is no longer available'];
+    self::assertSame($status, self::problems(['status' => 'Pending']));
+    // The pending pool read the status too, so it reported completed contributions.
+    self::assertSame($status, self::problems(['status' => 'Completed']));
+    // A status the old filter kept matched no contribution at all.
+    self::assertSame($status, self::problems(['status' => FALSE]));
+    self::assertStringContainsString(
+      'answered with text',
+      implode(' ', self::problems(['blocks' => '[{"type": "section", "key": "myext.html"}]'])),
+    );
+    self::assertStringContainsString(
+      'No extension answers',
+      implode(' ', self::problems(['blocks' => '[{"type": "section", "key": "myext.none"}]'])),
+    );
   }
 
   public function testAStatusFilterRecordsReportTheSameIsDropped(): void {
@@ -259,65 +553,12 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
       'Old section',
     );
 
-    self::assertFalse($this->stored('old_completed')['blocks'][0]['show_pending']);
-    self::assertSame('line_item', $this->stored('old_items')['blocks'][0]['group_by']);
-    self::assertSame('myext.seats', $this->stored('old_section')['blocks'][0]['section_key']);
-  }
-
-  public function testOnlyACountOfZeroForAHistogramWarns(): void {
-    $warnings = $this->heraldWarnings(static function (): void {
-      CRM_Herald_Upgrader_InlineDigest::extract(['bucket_count' => ''], 'old_blank', 'Old blank');
-      CRM_Herald_Upgrader_InlineDigest::extract(['bucket_count' => '5'], 'old_five', 'Old five');
-      CRM_Herald_Upgrader_InlineDigest::extract(
-        ['bucket_count' => '0', 'show_histogram' => '0'],
-        'old_hidden',
-        'Old hidden',
-      );
-    });
-    self::assertSame([], $warnings);
-    self::assertSame([8, 5], [
-      $this->stored('old_blank')['blocks'][0]['bucket_count'],
-      $this->stored('old_five')['blocks'][0]['bucket_count'],
-    ]);
-
-    $warnings = $this->heraldWarnings(static function (): void {
-      CRM_Herald_Upgrader_InlineDigest::extract(['bucket_count' => '0'], 'old_zero', 'Old zero');
-    });
-    self::assertSame(['herald: histogram bucket count 0 replaced with the default 8'], $warnings);
-  }
-
-  public function testUnreadableEdgesAreDroppedAsTheyWereIgnored(): void {
-    CRM_Herald_Upgrader_InlineDigest::extract(['bucket_edges' => '0, 10, 50'], 'old_edges', 'Old edges');
-    self::assertArrayNotHasKey('bucket_edges', $this->stored('old_edges')['blocks'][0]);
-  }
-
-  public function testADigestThatCouldNeverRunStaysInline(): void {
-    self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(
-      ['blocks' => '[{"type": "search", "search": "herald_test_missing"}]'],
-      'old_broken',
-      'Old broken',
-    ));
-    self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(
-      ['blocks' => '{"type": "search"'],
-      'old_json',
-      'Old JSON',
-    ));
-    self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(
-      ['campaign_id' => 999_999],
-      'old_campaign',
-      'Old campaign',
-    ));
-    self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(['blocks' => '[{"type": ""}]'], 'old_type', 'Old type'));
-    // Records have no status filter; reporting Completed instead would change the numbers unnoticed.
-    self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(['status' => 'Pending'], 'old_status', 'Old status'));
-    // The pending pool read the status too, so it reported completed contributions.
-    self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(['status' => 'Completed'], 'old_pool', 'Old pool'));
-    // A status the old filter kept matched no contribution at all.
-    self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(['status' => FALSE], 'old_false', 'Old false'));
+    self::assertArrayNotHasKey('block1_pending', $this->stored('old_completed')['sources']);
     self::assertSame(
-      0,
-      HeraldDigest::get(checkPermissions: FALSE)->addWhere('name', 'LIKE', 'old\\_%')->execute()->count(),
+      'Herald_Digest_Line_Items_Yesterday_Table',
+      $this->stored('old_items')['sources']['block1_breakdown'],
     );
+    self::assertSame('myext.seats', $this->stored('old_section')['sources']['block1']);
   }
 
   public function testASearchThatCannotBecomeADisplayIsNamed(): void {
@@ -339,22 +580,13 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
       ->execute();
 
     self::assertSame(
-      'saved search "herald_test_offset" skips its first 2 rows, which a display cannot',
-      CRM_Herald_Upgrader_InlineSearch::problem(['type' => 'search', 'saved_search' => 'herald_test_offset']),
-    );
-    self::assertSame(
-      'saved search "herald_test_missing" does not exist',
-      CRM_Herald_Upgrader_InlineSearch::problem(['type' => 'search', 'saved_search' => 'herald_test_missing']),
+      ['saved search "herald_test_offset" skips its first 2 rows, which a display cannot'],
+      self::problems(['type' => 'search', 'search' => 'herald_test_offset']),
     );
     self::assertStringStartsWith(
       'saved search "herald_test_gone" has no default display: ',
-      (string) CRM_Herald_Upgrader_InlineSearch::problem(['type' => 'search', 'saved_search' => 'herald_test_gone']),
+      implode(' ', self::problems(['type' => 'search', 'search' => 'herald_test_gone'])),
     );
-    self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(
-      ['type' => 'search', 'search' => 'herald_test_gone'],
-      'old_gone',
-      'Old gone',
-    ));
   }
 
   public function testADisplayLabelIsCutToItsColumn(): void {
@@ -372,242 +604,12 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
       str_repeat('ä', 300),
     );
 
-    $label = SearchDisplay::get(checkPermissions: FALSE)
-      ->addSelect('label')
-      ->addWhere('id', '=', $this->stored('old_long')['blocks'][0]['search_display_id'])
+    $display = HeraldDigestSource::get(checkPermissions: FALSE)
+      ->addSelect('search_display_id.label')
+      ->addWhere('digest_id.name', '=', 'old_long')
       ->execute()
-      ->single()['label'];
-    self::assertSame('Herald: ' . str_repeat('ä', 247), $label);
-  }
-
-  public function testRuleActionsNameTheirNewDigest(): void {
-    $actionId = CiviRulesAction::get(checkPermissions: FALSE)
-      ->addWhere('name', '=', 'herald_digest')
-      ->execute()
-      ->single()['id'];
-    $ruleId = (int) \Civi\Api4\CiviRulesRule::create(checkPermissions: FALSE)
-      ->setValues([
-        'name' => 'herald_test_inline',
-        'label' => 'Morning numbers',
-        'trigger_id' => \Civi\Api4\CiviRulesTrigger::get(checkPermissions: FALSE)
-          ->addWhere('name', '=', 'herald_schedule')
-          ->execute()
-          ->single()['id'],
-        'is_active' => TRUE,
-      ])
-      ->execute()
-      ->single()['id'];
-    // A handler retired while CiviRules was disabled keeps its actions until CiviRules returns.
-    $retiredId = (int) CiviRulesAction::create(checkPermissions: FALSE)
-      ->setValues([
-        'name' => 'herald_test_retired_digest',
-        'label' => 'Retired digest',
-        'class_name' => 'CRM_Herald_CivirulesAdapter_Action_ContributionDigest',
-        'is_active' => TRUE,
-      ])
-      ->execute()
-      ->single()['id'];
-    $create = static fn (array $params, int $handler = 0): int => (int) CiviRulesRuleAction::create(
-      checkPermissions: FALSE,
-    )
-      ->setValues([
-        'rule_id' => $ruleId,
-        'action_id' => $handler ?: $actionId,
-        'action_params' => $params,
-        'is_active' => TRUE,
-      ])
-      ->execute()
-      ->single()['id'];
-    $inline = $create(['channel' => 'telegram', 'template' => 'herald_contribution_digest_daily']);
-    $stored = $create(['channel' => 'telegram', 'digest' => 'already_stored']);
-    $retired = $create(['channel' => 'email'], $retiredId);
-
-    self::assertSame(2, CRM_Herald_Upgrader_InlineDigestActions::migrate());
-
-    $params = CiviRulesRuleAction::get(checkPermissions: FALSE)
-      ->addSelect('id', 'action_params')
-      ->addWhere('id', 'IN', [$inline, $stored])
-      ->execute()
-      ->indexBy('id')
-      ->column('action_params');
-    self::assertSame(['digest' => "rule_action_{$inline}", 'channel' => 'telegram'], $params[$inline]);
-    self::assertSame(['channel' => 'telegram', 'digest' => 'already_stored'], $params[$stored]);
-    self::assertSame('Morning numbers', $this->stored("rule_action_{$inline}")['digest']['title']);
-    self::assertSame(
-      ['digest' => "rule_action_{$retired}", 'channel' => 'email'],
-      CiviRulesRuleAction::get(checkPermissions: FALSE)
-        ->addWhere('id', '=', $retired)
-        ->execute()
-        ->single()['action_params'],
-    );
-  }
-
-  public function testRuleActionsThatCannotMoveStayAsTheyWere(): void {
-    // A rule without a label, which only older forms could save.
-    \CRM_Core_DAO::executeQuery(
-      "INSERT INTO civirule_rule (name, label, trigger_id, is_active, created_date)
-       VALUES ('herald_test_stuck', '', (SELECT MIN(id) FROM civirule_trigger), 1, NOW())",
-    );
-    $ruleId = (int) \CRM_Core_DAO::singleValueQuery('SELECT LAST_INSERT_ID()');
-    $actionId = CiviRulesAction::get(checkPermissions: FALSE)
-      ->addWhere('name', '=', 'herald_digest')
-      ->execute()
-      ->single()['id'];
-    $create = static function (string $serialized) use ($ruleId, $actionId): int {
-      \CRM_Core_DAO::executeQuery(
-        'INSERT INTO civirule_rule_action (rule_id, action_id, action_params, is_active) VALUES (%1, %2, %3, 1)',
-        [1 => [$ruleId, 'Integer'], 2 => [$actionId, 'Integer'], 3 => [$serialized, 'String']],
-      );
-      return (int) \CRM_Core_DAO::singleValueQuery('SELECT LAST_INSERT_ID()');
-    };
-    $empty = $create('');
-    $unreadable = $create('not serialized');
-    $broken = serialize(['blocks' => '{"type": "search"']);
-    $neverRan = $create($broken);
-
-    $migrated = 0;
-    $warnings = $this->heraldWarnings(static function () use (&$migrated): void {
-      $migrated = CRM_Herald_Upgrader_InlineDigestActions::migrate();
-    });
-
-    self::assertSame(1, $migrated);
-    self::assertContains('herald: rule action params unreadable, digest left inline', $warnings);
-    $stored = static fn (int $id): string => (string) \CRM_Core_DAO::singleValueQuery(
-      'SELECT action_params FROM civirule_rule_action WHERE id = %1',
-      [1 => [$id, 'Integer']],
-    );
-    // CiviRules reads empty params as none, which sent the default digest.
-    self::assertSame(serialize(['digest' => "rule_action_{$empty}"]), $stored($empty));
-    self::assertSame("Rule action {$empty}", $this->stored("rule_action_{$empty}")['digest']['title']);
-    self::assertSame('not serialized', $stored($unreadable));
-    self::assertSame($broken, $stored($neverRan));
-  }
-
-  public function testAJobWithUnreadableParametersIsLeftAlone(): void {
-    $id = (int) Job::create(checkPermissions: FALSE)
-      ->setValues([
-        'name' => 'Broken digest',
-        'run_frequency' => 'Daily',
-        'api_entity' => 'Herald',
-        'api_action' => 'notifyDigest',
-        'parameters' => '{"version": 4,',
-      ])
-      ->execute()
-      ->single()['id'];
-    $neverRan = (int) Job::create(checkPermissions: FALSE)
-      ->setValues([
-        'name' => 'Broken blocks',
-        'run_frequency' => 'Daily',
-        'api_entity' => 'Herald',
-        'api_action' => 'notifyDigest',
-        'parameters' => json_encode(['version' => 4, 'actionParams' => ['blocks' => '{"type": "search"']]),
-      ])
-      ->execute()
-      ->single()['id'];
-
-    self::assertSame(0, CRM_Herald_Upgrader_InlineDigestJobs::migrate());
-
-    $parameters = Job::get(checkPermissions: FALSE)
-      ->addWhere('id', 'IN', [$id, $neverRan])
-      ->execute()
-      ->indexBy('id')
-      ->column('parameters');
-    self::assertSame('{"version": 4,', $parameters[$id]);
-    self::assertSame(
-      ['version' => 4, 'actionParams' => ['blocks' => '{"type": "search"']],
-      json_decode((string) $parameters[$neverRan], TRUE),
-    );
-  }
-
-  public function testJobsNameTheDigestBesideTheirDelivery(): void {
-    $id = (int) Job::create(checkPermissions: FALSE)
-      ->setValues([
-        'name' => 'Weekly numbers',
-        'run_frequency' => 'Daily',
-        'api_entity' => 'Herald',
-        'api_action' => 'notifyDigest',
-        'parameters' => json_encode([
-          'version' => 4,
-          'sendHour' => 8,
-          'actionParams' => [
-            'channel' => 'email',
-            'email_to' => 'ops@example.org',
-            'template' => 'herald_contribution_digest_weekly',
-          ],
-        ]),
-      ])
-      ->execute()
-      ->single()['id'];
-
-    self::assertSame(1, CRM_Herald_Upgrader_InlineDigestJobs::migrate());
-    self::assertSame(0, CRM_Herald_Upgrader_InlineDigestJobs::migrate());
-
-    $parameters = json_decode(
-      (string) Job::get(checkPermissions: FALSE)->addWhere('id', '=', $id)->execute()->single()['parameters'],
-      TRUE,
-    );
-    self::assertSame(
-      [
-        'version' => 4,
-        'sendHour' => 8,
-        'actionParams' => ['channel' => 'email', 'email_to' => 'ops@example.org'],
-        'digest' => "job_{$id}",
-      ],
-      $parameters,
-    );
-    self::assertSame('Weekly numbers', $this->stored("job_{$id}")['digest']['title']);
-  }
-
-  public function testAJobWithoutActionParamsKeepsSendingTheDefaultDigest(): void {
-    $id = (int) Job::create(checkPermissions: FALSE)
-      ->setValues([
-        'name' => 'Plain digest',
-        'run_frequency' => 'Daily',
-        'api_entity' => 'Herald',
-        'api_action' => 'notifyDigest',
-        'parameters' => json_encode(['version' => 4, 'sendHour' => 7]),
-      ])
-      ->execute()
-      ->single()['id'];
-
-    self::assertSame(1, CRM_Herald_Upgrader_InlineDigestJobs::migrate());
-
-    self::assertSame(
-      ['version' => 4, 'sendHour' => 7, 'digest' => "job_{$id}", 'actionParams' => []],
-      json_decode(
-        (string) Job::get(checkPermissions: FALSE)->addWhere('id', '=', $id)->execute()->single()['parameters'],
-        TRUE,
-      ),
-    );
-    self::assertSame('contribution', $this->stored("job_{$id}")['blocks'][0]['type']);
-  }
-
-  public function testAJobWithKeyValueParametersKeepsThemAndAJobThatNeverRanStays(): void {
-    $job = static fn (string $parameters): int => (int) Job::create(checkPermissions: FALSE)
-      ->setValues([
-        'name' => 'Plain digest',
-        'run_frequency' => 'Daily',
-        'api_entity' => 'Herald',
-        'api_action' => 'notifyDigest',
-        'parameters' => $parameters,
-      ])
-      ->execute()
-      ->single()['id'];
-    $lines = $job("version=4\nsendHour=7");
-    $v3 = $job('');
-
-    self::assertSame(1, CRM_Herald_Upgrader_InlineDigestJobs::migrate());
-
-    self::assertSame(
-      ['version' => '4', 'sendHour' => '7', 'digest' => "job_{$lines}", 'actionParams' => []],
-      CRM_Core_BAO_Job::parseParameters(
-        (string) Job::get(checkPermissions: FALSE)->addWhere('id', '=', $lines)->execute()->single()['parameters'],
-      ),
-    );
-    self::assertSame(
-      '',
-      (string) Job::get(checkPermissions: FALSE)->addWhere('id', '=', $v3)->execute()->single()['parameters'],
-    );
+      ->single();
+    self::assertSame('Herald: ' . str_repeat('ä', 247), $display['search_display_id.label']);
   }
 
 }

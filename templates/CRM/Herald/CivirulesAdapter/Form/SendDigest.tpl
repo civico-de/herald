@@ -1,7 +1,7 @@
 {* herald: SendDigest action form *}
 {crmScope extensionKey='herald'}
 <h3>{ts}herald: Send Digest{/ts}</h3>
-<p class="help">{ts 1=$heraldDigestsUrl}Digests and their blocks are edited under <a href="%1">Administer » Herald » Digests</a>.{/ts}</p>
+<p class="help">{ts 1=$heraldDigestsUrl}Digests and their sources are edited under <a href="%1">Administer » Herald » Digests</a>.{/ts}</p>
 
 <div class="crm-block crm-form-block">
   <table class="form-layout">

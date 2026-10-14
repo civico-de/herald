@@ -14,6 +14,7 @@
         "ext-bcmath": "*",
         "ext-ctype": "*",
         "ext-filter": "*",
+        "ext-intl": "*",
         "ext-mbstring": "*",
         "civico-de/stdlib": "^0.1"
     },

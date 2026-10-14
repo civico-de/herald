@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Trigger;
 
-use Civi\Herald\Digest\ContributionStatsService;
-use Civi\Herald\Digest\SourceNormalizer;
 use Civi\Test\HeadlessInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -22,7 +20,7 @@ class ContributionVarsTest extends TestCase implements HeadlessInterface {
   }
 
   /**
-   * @var \ArrayObject<int, array<string, mixed>>
+   * @var \ArrayObject<int, int>
    */
   private \ArrayObject $statsCalls;
 
@@ -30,21 +28,14 @@ class ContributionVarsTest extends TestCase implements HeadlessInterface {
     $this->statsCalls = new \ArrayObject();
   }
 
-  private function makeFakeStats(): ContributionStatsService {
-    return new class($this->statsCalls) extends ContributionStatsService {
-
-      /**
-       * @param \ArrayObject<int, array<string, mixed>> $calls
-       */
-      public function __construct(
-        private \ArrayObject $calls,
-      ) {}
-
-      public function getCampaignTotal(array $filters): array {
-        $this->calls[] = $filters;
-        return ['total' => 18_000.0, 'count' => 42];
-      }
-
+  /**
+   * @return \Closure(int): array{total: float, count: int}
+   */
+  private function fakeCampaignTotal(): \Closure {
+    $calls = $this->statsCalls;
+    return static function (int $campaignId) use ($calls): array {
+      $calls[] = $campaignId;
+      return ['total' => 18_000.0, 'count' => 42];
     };
   }
 
@@ -71,7 +62,7 @@ class ContributionVarsTest extends TestCase implements HeadlessInterface {
       $contribution,
       $previous,
       new ContributionLookups(
-        $this->makeFakeStats(),
+        $this->fakeCampaignTotal(),
         $this->statusResolver(),
         $this->campaignResolver($campaigns),
         new SourceNormalizer([]),
@@ -101,7 +92,7 @@ class ContributionVarsTest extends TestCase implements HeadlessInterface {
       ['id' => 1, 'source' => 'Bank TX 123', 'contribution_status_id' => 1],
       NULL,
       new ContributionLookups(
-        $this->makeFakeStats(),
+        $this->fakeCampaignTotal(),
         $this->statusResolver(),
         $this->campaignResolver([]),
         new SourceNormalizer([['match' => 'Bank TX', 'type' => 'contains', 'label' => 'Ueberweisung']]),
@@ -121,7 +112,7 @@ class ContributionVarsTest extends TestCase implements HeadlessInterface {
     $this->assertSame(42, $vars['campaign']['count']);
     $this->assertEqualsWithDelta(60.0, $vars['campaign']['percent'], 0.1);
     $this->assertSame('Campaign 2026', $vars['campaign']['title']);
-    $this->assertSame([['campaign_id' => 2]], $this->statsCalls->getArrayCopy());
+    $this->assertSame([2], $this->statsCalls->getArrayCopy());
   }
 
   public function testCampaignWithoutGoalKeepsTitleAndTotalsButNoPercent(): void {
@@ -142,20 +133,12 @@ class ContributionVarsTest extends TestCase implements HeadlessInterface {
   }
 
   public function testFailingCampaignTotalGivesTheEmptyBlock(): void {
-    $failingStats = new class extends ContributionStatsService {
-
-      public function __construct() {}
-
-      public function getCampaignTotal(array $filters): array {
-        throw new \RuntimeException('read failed');
-      }
-
-    };
+    $failingTotal = static fn (int $campaignId): array => throw new \RuntimeException('read failed');
     $vars = ContributionVars::build(
       ['id' => 5, 'contribution_status_id' => 1, 'campaign_id' => 2],
       NULL,
       new ContributionLookups(
-        $failingStats,
+        $failingTotal,
         $this->statusResolver(),
         $this->campaignResolver([2 => ['title' => 'Campaign 2026', 'goal' => 30_000.0]]),
       ),

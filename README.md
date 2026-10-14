@@ -39,20 +39,30 @@ To get a message for every completed contribution, create a CiviRules rule:
 2. Add the condition "Contribution Status is (not) one of" with Completed.
 3. Add the action "Herald: Send notification (generic)" with the template "Herald: New completed contribution" and the channel Telegram.
 
-A weekly summary with an amount histogram needs a digest and a rule on herald's own trigger:
+A weekly summary with an amount histogram needs a message template, a digest and a rule on herald's own trigger:
 
-1. Under Administer » Herald » Digests, add a digest with the period "Last 7 days" and one contribution block with the template "Herald: Weekly contribution digest".
-2. Create a rule with the trigger "Herald: Schedule", with Monday under Weekdays and 08:00 under Time.
-3. Add the action "Herald: Send digest" with that digest and the channel Telegram.
+1. Add a message template on the tab "User-driven Messages" of Mailings » Message Templates, with the subject `Last week` and this text:
 
-Every Monday at 8:00 the chat gets the total, a line per contribution source and the histogram. herald picks the buckets from the amounts. Each bar counts contributions, and the bracket holds their sum:
+   ```smarty
+   📈 <b>Last week</b>
+   Received: {$week.sum|crmMoney} ({$week.count})
+   {foreach from=$forms.rows item=row}
+   • {$row.form|default:"Other"}: {$row.sum|crmMoney} ({$row.count})
+   {/foreach}
+   <pre>{$amounts.rows|herald_histogram:"amount"}</pre>
+   ```
+
+2. Under Administer » Herald » Digests, add a digest with that template and three sources: `week` with the display "Digest: contributions last week", `forms` with "… last week by form" and `amounts` with "Digest: contribution amounts last week".
+3. Create a rule with the trigger "Herald: Schedule", with Monday under Weekdays and 08:00 under Time.
+4. Add the action "Herald: Send digest" with that digest and the channel Telegram.
+
+Every Monday at 8:00 the chat gets the total, a line per contribution page and the histogram. herald picks the buckets from the amounts. Each bar counts contributions, and the bracket holds their sum:
 
 ```
-📈 Weekly report last 7 days
-
+📈 Last week
 Received: $1,815.00 (29)
-• Bank transfer: $595.00 (10)
 • Website: $1,220.00 (19)
+• Other: $595.00 (10)
 10–50   ████████████ 14 (330)
 50–100  ███████ 8 (465)
 100–150 ███ 4 (420)
@@ -60,7 +70,7 @@ Received: $1,815.00 (29)
 200–250 ██ 2 (450)
 ```
 
-A digest can also combine blocks, such as the contributions of one campaign and the rows of a SearchKit display. See [Digests](https://civico-de.github.io/herald/digests/).
+The form lists the placeholders of every source and offers a snippet to copy, so you rarely write a template from scratch. A source can be any SearchKit display, or values another extension provides. See [Digests](https://civico-de.github.io/herald/digests/).
 
 Scripts and other extensions can publish to a named topic, and the setting `herald_topics` decides where it goes:
 
@@ -74,7 +84,7 @@ cv api4 Herald.publish topic=ops message='Import finished'
 - [Recipes](https://civico-de.github.io/herald/recipes/): donations, ticket sales, events, signups and scheduled digests
 - [Channels](https://civico-de.github.io/herald/channels/): settings, options and limits of each channel
 - [Delivery](https://civico-de.github.io/herald/delivery/): recipients, subscriptions, topics, aggregation and parked alerts
-- [Digests](https://civico-de.github.io/herald/digests/): contribution, search display and section blocks
+- [Digests](https://civico-de.github.io/herald/digests/): templates filled from SearchKit displays and extension sections
 - [Check monitor](https://civico-de.github.io/herald/monitor/): contributing health checks and tuning the alerts
 - [Reference](https://civico-de.github.io/herald/reference/): CiviRules actions and conditions, API, jobs, templates, settings and hooks
 - [Deployment](https://civico-de.github.io/herald/deploy/): updating herald without breaking the writes its rules run in

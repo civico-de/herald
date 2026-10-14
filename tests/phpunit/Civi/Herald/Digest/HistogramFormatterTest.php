@@ -4,13 +4,19 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Digest;
 
+use Civi\Test\HeadlessInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Pure-logic unit tests — no Civi headless needed.
- * @group unit
+ * Headless: "(no data)" is translated.
+ *
+ * @group headless
  */
-class HistogramFormatterTest extends TestCase {
+class HistogramFormatterTest extends TestCase implements HeadlessInterface {
+
+  public function setUpHeadless() {
+    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+  }
 
   public function testEmptyInputReturnsEmpty(): void {
     $this->assertSame([], HistogramFormatter::compute([]));
@@ -162,11 +168,13 @@ class HistogramFormatterTest extends TestCase {
 
   public function testOverrideEdgesCatchOutOfRangeAmountsInExtraBuckets(): void {
     // 0.5 below the first edge, 9000 above the last — with admin-supplied
-    // edges these must land in "<low" / "≥high" buckets, not vanish.
+    // edges these must land in "0–low" / "≥high" buckets, not vanish.
     $buckets = HistogramFormatter::compute([0.5, 5, 15, 70, 9000], 8, [1.0, 10.0, 100.0]);
 
     $this->assertSame(5, array_sum(array_column($buckets, 'count')));
-    $this->assertSame('<1', $buckets[0]['label']);
+    $this->assertSame('0–1', $buckets[0]['label']);
+    // The modifier inserts the chart unescaped into HTML and text templates.
+    $this->assertDoesNotMatchRegularExpression('/[<>&]/', HistogramFormatter::render($buckets));
     $this->assertSame(1, $buckets[0]['count']);
     $last = end($buckets);
     $this->assertSame('≥100', $last['label']);

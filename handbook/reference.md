@@ -112,6 +112,8 @@ The entity `Herald` offers these actions. The actions need the permission "admin
 | getParkedAlerts | ids, optional | Lists [Parked alerts](delivery.md#parked-alerts) without their bodies. |
 | reactivateParkedAlerts | ids, optional | Puts parked alerts back into the buffer. Without ids, all of them. |
 | renderTemplate | workflow, vars | Renders a template without sending it. |
+| previewDigest | digest, sources | Composes a digest from unsaved values with today's data and sends nothing. The digest form's preview calls it. |
+| getDigestPlaceholders | source, digest | The placeholders and the snippet of one source, as the digest form shows them. |
 | saveTopic | topic, route, previousName | Validates one route and stores it in `herald_topics`; with previousName it renames that topic in place. The Topic routes screen uses this action. |
 | deleteTopic | topic | Removes one route from `herald_topics`. |
 | saveSourceRules | rules | Validates and stores `herald_source_normalization`. Errors name the rule. |
@@ -133,7 +135,7 @@ cv api4 Herald.renderTemplate workflow=herald_contribution_alert_completed \
 
 The entity `HeraldBufferedAlert` is the alert buffer. Administrators can read it with get and getFields and put parked alerts back with reactivate; all three need "administer CiviCRM". Its update and delete actions are for herald's own code, and no user may call them. There is no create action: herald writes new rows itself, so the stored message text stays exactly as rendered. The body and delivery fields can contain contact data, so the shipped display of parked alerts leaves them out.
 
-The entities `HeraldDigest` and `HeraldDigestBlock` hold the digests and their blocks, with the usual actions such as get, create, save and delete. They need "administer CiviCRM". Saving checks every record, see [Setting up a digest](digests.md#setting-up-a-digest), and deleting a digest deletes its blocks.
+The entities `HeraldDigest` and `HeraldDigestSource` hold the digests and their sources, with the usual actions such as get, create, save and delete. They need "administer CiviCRM". Saving checks every record, see [Setting up a digest](digests.md#setting-up-a-digest), and deleting a digest deletes its sources.
 
 Another extension can call `send` and `publish` without a hard dependency on herald:
 
@@ -165,10 +167,6 @@ herald's templates are CiviCRM message templates. Edit them under Mailings, Mess
 | Herald: New ticket/event contribution | herald_contribution_alert_ticket | A ticket or event contribution |
 | Herald: Ticket ordered, bank transfer announced | herald_contribution_alert_ticket_pending | A ticket ordered by transfer |
 | Herald: Ticket bank transfer received | herald_contribution_alert_ticket_paid | A ticket transfer received |
-| Herald: Daily contribution digest | herald_contribution_digest_daily | The daily digest |
-| Herald: Weekly contribution digest | herald_contribution_digest_weekly | The weekly digest |
-| Herald: Contribution digest block (composable) | herald_contribution_digest_block | A contribution block of a digest |
-| Herald: Digest block from a search display | herald_digest_search_block | A search block of a digest |
 | Herald: New event created | herald_event_created_alert | A new event |
 | Herald: Event deactivated | herald_event_deactivated_alert | A deactivated event |
 | Herald: Event deleted | herald_event_deleted_alert | A deleted event |
@@ -188,7 +186,9 @@ herald renders only the default version of a template. Naming a template that do
 
 ### Escaping
 
-Templates render to HTML. String variables are HTML-escaped before they reach the HTML body, so data cannot inject markup. The subject gets them unescaped. A template with only a text body is rendered and then escaped as a whole. Digest sections and the digest header are inserted as HTML on purpose.
+Templates render to HTML. String variables are HTML-escaped before they reach the HTML body, so data cannot inject markup. The subject gets them unescaped. A template with only a text body is rendered and then escaped as a whole.
+
+Every template renders under CiviCRM's policy for user content, as message templates of mailings do: `{crmAPI}`, PHP constants and superglobals are blocked, and PHP functions only work in the few forms the policy allows, such as `|count`. Smarty's own modifiers and CiviCRM's, such as `|crmMoney`, `|crmDate` and `|round`, work as usual.
 
 ### Trigger variables
 
@@ -211,14 +211,14 @@ When a lookup fails, herald logs an error and leaves the variable out instead of
 
 | Variable | Content |
 |---|---|
-| contribution | The contribution's fields, such as total_amount, currency, receive_date and source. The source is shown after [Source normalisation](digests.md#source-normalisation). |
+| contribution | The contribution's fields, such as total_amount, currency, receive_date and source. The source is shown after [Source normalisation](recipes.md#source-normalisation). |
 | campaign.title, campaign.total, campaign.count | The contribution's campaign: its title and the total and number of its completed contributions. |
 | campaign.goal, campaign.percent | The campaign's revenue goal and the share reached, rounded to one decimal. Both are 0 when the campaign has no goal. |
 | from_status, to_status | The status names before and after the edit. from_status is empty when the status before the edit is unknown. |
 
 Without a campaign, every campaign field is empty or 0, so `{if $campaign.goal}` hides the progress line in a template.
 
-The digest variables are listed in [Template variables](digests.md#template-variables).
+Digests have no fixed variables; their sources name them, see [Placeholders](digests.md#placeholders).
 
 ## Settings
 
@@ -241,7 +241,7 @@ Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value
 | `herald_topics` | empty | [Topic](delivery.md#topics) routes. |
 | `herald_buffer_max_attempts` | 5 | Failed deliveries before an aggregated group is parked. |
 | `herald_buffer_max_items` | 25 | Messages printed in one aggregated message. 0 prints all. |
-| `herald_source_normalization` | empty | Readable labels for sources, see [Source normalisation](digests.md#source-normalisation). |
+| `herald_source_normalization` | empty | Readable labels for sources, see [Source normalisation](recipes.md#source-normalisation). |
 | `herald_monitor_topic` | ops | The topic for monitor alerts. |
 | `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours`, `herald_monitor_snooze`, `herald_monitor_expected` | see [Tuning](monitor.md#tuning) | Monitor tuning. |
 | `herald_monitor_state` | empty | The monitor's own state. Do not edit it. |
@@ -251,7 +251,7 @@ Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value
 | Hook | Signature | Purpose |
 |---|---|---|
 | `hook_civicrm_heraldChecks` | `(array &$checks)` | Add checks to the monitor, see [Contributing a check](monitor.md#contributing-a-check). |
-| `hook_civicrm_heraldDigestSections` | `(array $keys, array $context, array &$sections)` | Provide the text of a digest's section blocks, see [Section blocks](digests.md#section-blocks). |
+| `hook_civicrm_heraldDigestSections` | `(array $keys, array $context, array &$sections)` | Provide the values of a digest's section sources, see [Sections from other extensions](digests.md#sections-from-other-extensions). |
 
 ## System status
 

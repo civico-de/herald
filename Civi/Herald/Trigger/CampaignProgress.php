@@ -42,6 +42,24 @@ final class CampaignProgress {
   }
 
   /**
+   * Total and count of the campaign's completed contributions at any date.
+   * APIv4 applies no is_test/is_template default: test drives and recurring templates are no income.
+   *
+   * @return array{total: float, count: int}
+   */
+  public static function total(int $campaignId): array {
+    $row = \Civi\Api4\Contribution::get(checkPermissions: FALSE)
+      ->addSelect('SUM(total_amount) AS total', 'COUNT(id) AS count')
+      ->addWhere('campaign_id', '=', $campaignId)
+      ->addWhere('contribution_status_id:name', '=', 'Completed')
+      ->addWhere('is_test', '=', value: FALSE)
+      ->addWhere('is_template', '=', value: FALSE)
+      ->execute()
+      ->first();
+    return ['total' => Cast::toFloat($row['total'] ?? 0), 'count' => Cast::toInt($row['count'] ?? 0)];
+  }
+
+  /**
    * @return array{title: string, goal: float}|null NULL when the campaign is gone.
    */
   public static function resolveCampaign(int $campaignId): ?array {

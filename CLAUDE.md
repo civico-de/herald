@@ -61,7 +61,7 @@ actions (no bespoke cron for alerts). CiviRules is optional, not in `<requires>`
 - herald ships one trigger, `Schedule`, one condition, `Field transition`,
   and one per-event action, `Send notification`; entity specifics (contribution, campaign progress,
   status names) are template variables in `Civi\Herald\Trigger\*`, not extra
-  handlers; the third action, `Send digest`, composes blocks. Retired handlers
+  handlers; the third action, `Send digest`, sends a digest record. Retired handlers
   move onto these via
   `CRM_Herald_CivirulesAdapter_RetiredHandlers::migrate()` (upgrade and
   reconcile). The pre-edit value comes from CiviRules original data, else the
@@ -106,28 +106,34 @@ actions (no bespoke cron for alerts). CiviRules is optional, not in `<requires>`
   `bin/rules-reenable.php`, because loading a foreign class can be a fatal.
   `DisabledRulesCheck` warns while the marker exists and reads only that file.
   Every registered handler needs a contract scenario, with full and partial payloads.
-- A digest is a `HeraldDigest` record with ordered `HeraldDigestBlock` rows
-  (`Definition` loads, `Composer` renders): contribution, SearchKit display,
-  hook section. Rules, jobs and scripts name it by `name`; their params carry only
-  delivery settings. `DigestRules`/`BlockType` checks run on APIv4 validate
-  (`Validator`: blocks per diff merged with the stored row, digests on the
-  diff alone), on Afform submit
-  (`FormValidator`, because Afform swallows save exceptions) and again at send,
-  for a display deleted since. Block FKs to campaign and financial type
-  are RESTRICT (a vanished filter would widen the block to every contribution);
-  search_display_id is SET NULL. Upgrade 1011 moves inline digests into records
-  (`CRM_Herald_Upgrader_Inline*`; rule actions through
-  `CRM_Herald_Upgrader_InlineDigestActions`, on the CiviRules tables so a
-  disabled or pre-3.36 CiviRules is covered, retired digest handlers
-  included; jobs as the job manager parses them), reading their params as the old
-  code did (unknown periods are yesterday) and leaving unrunnable ones inline
-  with a warning; an old search block gets a new table display with the
-  search's sort and limit (`CRM_Herald_Upgrader_InlineSearch`). Search blocks
-  take table, list and grid displays (`SearchBlock::TYPES`, picker filter and
-  save check), resolve auto-mode columns as `SearchDisplay::run` does, and
-  run with `acl_bypass` forced on — whoever configures a
-  digest can report any display, the same trust as the contribution queries. Scheduled digests are rules on
-  the cron trigger "Herald: Schedule" (`Herald.checkSchedule`): a slot fires
+- A digest is a `HeraldDigest` record: a user-driven message template plus
+  `HeraldDigestSource` rows (`Definition` loads, `Composer` renders). A source
+  is a SearchKit display (`SearchSource`: values of the first row by column
+  header slug, every row under `rows`, SUM/COUNT of no rows 0) or a hook section
+  (`ExtraSections`: values only, never text, checked by `SectionRules`). herald
+  has no period and no contribution logic of its own: periods and filters live
+  in the displays, the shipped ones in `managed/DigestSearches.mgd.php` (displays `update => never`: their headers are placeholder names, a reconcile in another locale must not rename them), and
+  formatting in the template (`herald_histogram` modifier). Rules, jobs and
+  scripts name a digest by `name`; their params carry only delivery settings,
+  never `email_subject` (the subject is the template's). Checks run on APIv4
+  validate (`Validator`: `DigestRules`/`SourceRules` per diff), on Afform submit
+  (`FormValidator`, which also composes, because Afform swallows save
+  exceptions), on template edits that would break a digest using it
+  (`TemplateValidator`, APIv4 and the legacy form) and again at send. Search
+  displays run with `acl_bypass` forced on — whoever configures a digest can
+  report any display. Every herald template renders under core's
+  `UserContentPolicy`.
+- Upgrade 1011 moves inline digests (0.10.0 and older, params with blocks) into
+  records: `CRM_Herald_Upgrader_InlineDigest::extract()` writes a template
+  (`InlineTemplate`, the form's snippets) and sources (`InlineBlock`,
+  `InlineSources`; shipped searches, else `SearchCopy` copies with the old
+  period and filters; line-item blocks total on items, `LineItemSearch::totals`), then composes; a digest that cannot compose throws, the
+  caller's transaction rolls back and it stays inline with a warning. Rule
+  actions go through `InlineDigestActions` on the CiviRules tables, so a
+  disabled or pre-3.36 CiviRules and retired handlers are covered; jobs through
+  `InlineDigestJobs`, parsed as the job manager parses them. Old params are read
+  as the old code read them (unknown periods are yesterday).
+- Scheduled digests are rules on the cron trigger "Herald: Schedule" (`Herald.checkSchedule`): a slot fires
   once, when the rule log has no run since it and it is not older than the
   rule's `created_date` or the trigger's `since` — never `modified_date`, which
   the deploy's rule disable/re-enable touches. CiviRules stamps `log_date` and
@@ -141,11 +147,15 @@ actions (no bespoke cron for alerts). CiviRules is optional, not in `<requires>`
   New UI is Angular/SearchKit/Afform: phpat and mago forbid QuickForm/page bases
   outside the CiviRules adapter forms.
 - The digest form (`afformHeraldDigest`) works around Afform: the
-  `heraldDigestBlock` directive fills schema defaults into new blocks only
-  (`afform_default` overwrites loaded join rows), `heraldDigestBlockType`
-  shows type fields per repeat row (`af-if` cannot see its own row), and
-  `FormValidator` takes the edited id from `Submit::getArgs()`, as Afform drops
-  the main entity's id from the submitted values.
+  `heraldDigestSource` directive fills schema defaults into new sources only
+  (`afform_default` overwrites loaded join rows), `heraldDigestSourceType`
+  shows type fields per repeat row (`af-if` cannot see its own row),
+  `heraldDigestPlaceholders` and `heraldDigestPreview` call
+  `Herald.getDigestPlaceholders`/`previewDigest` with the unsaved form values,
+  and `FormValidator` takes the edited id from `Submit::getArgs()`, as Afform
+  drops the main entity's id from the submitted values. The preview iframe
+  stays in the DOM and gets `srcdoc` set directly: an interpolated `srcdoc`
+  inside `ng-if` stays unrendered.
 - Post-hook payloads of partial updates carry only the written fields; code
   reading an entity payload completes it from the stored row.
 - Bundled packages (`civico-de/stdlib`) are prefixed into `Civi\Herald\Vendor\`

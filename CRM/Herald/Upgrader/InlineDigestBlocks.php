@@ -5,7 +5,7 @@ declare(strict_types = 1);
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * HeraldDigestBlock values from the parameters of older releases: a `blocks`
+ * The digest blocks in the parameters of older releases: a `blocks`
  * JSON list, or the top-level params as the one block.
  */
 final class CRM_Herald_Upgrader_InlineDigestBlocks {

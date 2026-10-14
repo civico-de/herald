@@ -75,7 +75,7 @@ final class CRM_Herald_Upgrader_DigestJobs {
    */
   public static function actionParams(array $params, int $jobId): array {
     $dropped = self::withoutRetired($params);
-    $sections = \Civi\Herald\Digest\ExtraSections::parseKeys($params['sections'] ?? '');
+    $sections = CRM_Herald_Upgrader_SectionKeys::parse($params['sections'] ?? '');
     unset($params['sections']);
     $blocks = $params['blocks'] ?? NULL;
     $blocks = is_string($blocks) ? json_decode($blocks, TRUE) : $blocks;

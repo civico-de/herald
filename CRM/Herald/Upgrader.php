@@ -34,17 +34,6 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
   }
 
   /**
-   * 0.7.0 added the herald_field_transition condition to the CiviRules
-   * manifest and the scope fields to the managed custom group; both are only
-   * (re)registered on install/enable, so existing installs need a reconcile.
-   */
-  public function upgrade_1003(): bool {
-    $this->ctx->log->info('herald: re-registering CiviRules handlers and reconciling managed entities');
-    CRM_Herald_Upgrader_Reconcile::run();
-    return TRUE;
-  }
-
-  /**
    * herald_rule_health is no longer a declared setting; SQL, because the
    * settings API refuses a name without metadata.
    */
@@ -89,21 +78,15 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
   }
 
   /**
-   * Existing installs: register the "Herald: Schedule" trigger.
-   */
-  public function upgrade_1010(): bool {
-    $this->ctx->log->info('herald: registering the Herald: Schedule CiviRules trigger');
-    CRM_Herald_Upgrader_Reconcile::run();
-    return TRUE;
-  }
-
-  /**
-   * Digests move out of rule action and job parameters into HeraldDigest records.
+   * Digests move out of rule action and job parameters into HeraldDigest
+   * records with their own template; the reconcile registers the Schedule
+   * trigger and the shipped searches the migrated digests use.
    */
   public function upgrade_1011(): bool {
     $this->ctx->log->info('herald: creating the digest tables');
     E::schema()->createEntityTable('schema/HeraldDigest.entityType.php');
-    E::schema()->createEntityTable('schema/HeraldDigestBlock.entityType.php');
+    E::schema()->createEntityTable('schema/HeraldDigestSource.entityType.php');
+    CRM_Herald_Upgrader_Reconcile::run();
     $actions = CRM_Herald_Upgrader_InlineDigestActions::migrate();
     $jobs = CRM_Herald_Upgrader_InlineDigestJobs::migrate();
     $this->ctx->log->info("herald: moved the digests of {$actions} rule action(s) and {$jobs} job(s) into records");

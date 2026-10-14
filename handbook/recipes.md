@@ -20,7 +20,7 @@ Three rules follow a donation (paid at once, announced as a bank transfer, recei
 | Paid at once | Contribution is added | Contribution Status is (not) one of: Completed | Herald: New completed contribution |
 | Transfer announced | Contribution is added | Contribution Status is (not) one of: Pending, and Contribution is (not) of Financial Type(s): Donation | Herald: New pending contribution |
 | Transfer received | Contribution is changed | Herald: Field transition, see below, and Contribution Status is (not) one of: Completed | Herald: Contribution status changed |
-| Daily summary | Herald: Schedule, see [Scheduled digests](#scheduled-digests) | | Herald: Daily contribution digest, in the digest's contribution block |
+| Daily summary | Herald: Schedule, see [Scheduled digests](#scheduled-digests) | | A digest with the display "Digest: contributions yesterday" |
 
 The first three use the action "Herald: Send notification (generic)"; the daily summary uses "Herald: Send digest".
 
@@ -53,7 +53,28 @@ A bank import that creates Completed contributions would fire "Paid at once" for
 
 The same source can drive a rule of its own with the opposite operator.
 
-To show such sources under one readable label in alerts and digests, set up [Source normalisation](digests.md#source-normalisation).
+### Source normalisation
+
+Contribution sources are often technical, such as a payment processor's reference or the transaction prefix of a bank import. The setting `herald_source_normalization` maps them to readable labels, which contribution notifications show as the source. The setting is empty by default, which leaves sources as they are.
+
+The rules are under Administer » Herald » Contribution source names. Each row holds the source text, how it is matched and the name to show. The arrow buttons change the order in which the rules are tried. Saving rejects an incomplete rule and a regular expression that does not compile, and names the rule by its number.
+
+With cv:
+
+```bash
+cv api4 --in=json Setting.set <<'JSON'
+{"values": {"herald_source_normalization": [
+  {"match": "Bank TX", "type": "contains", "label": "Bank transfer"},
+  {"match": "Ueberweisung", "type": "prefix", "label": "Bank transfer"},
+  {"match": "/^pi_[A-Za-z0-9]+$/", "type": "regex", "label": "Stripe"}
+]}}
+JSON
+```
+
+- The rules are tried in order, and the first match wins.
+- The type is contains, prefix or regex. Contains and prefix are case-sensitive.
+- A regex uses PHP's preg syntax, including the delimiters.
+- A malformed rule that reaches the setting is ignored, so a typo cannot break an alert. The screen and `Herald.saveSourceRules` reject it before it is stored.
 
 ## Ticket sales
 
@@ -102,12 +123,12 @@ A digest that goes out at a fixed time is a CiviRules rule with the trigger "Her
 
 A weekly contribution digest every Monday at 8:00:
 
-1. Under Administer » Herald » Digests, add a digest with the title "Weekly contributions", the name `weekly_contributions`, the period "Last 7 days" and one contribution block with the template "Herald: Weekly contribution digest".
+1. Add a message template "Weekly contributions" on the tab "User-driven Messages" of Mailings » Message Templates. Under Administer » Herald » Digests, add a digest with the title "Weekly contributions", the name `weekly_contributions` and that template. Give it a source `donations` with the display "Digest: contributions last week", copy the snippet the form offers into the template, and check the preview.
 2. Create a CiviRules rule and choose the trigger "Herald: Schedule".
 3. In the trigger's form, choose Monday under Weekdays and 08:00 under Time. Leave Weekdays empty to send every day. The time is in CiviCRM's timezone.
 4. Add the action "Herald: Send digest", pick the digest, and set the channel and, for Telegram, the chat ID.
 
-The rule list shows the schedule as "Every Monday at 08:00" and the action as `Sends the digest "Weekly contributions".` For a daily digest, leave Weekdays empty, give the digest the period "Yesterday" and give its contribution block the template "Herald: Daily contribution digest".
+The rule list shows the schedule as "Every Monday at 08:00" and the action as `Sends the digest "Weekly contributions".` For a daily digest, leave Weekdays empty and use the display "Digest: contributions yesterday".
 
 CiviRules checks the trigger each time its scheduled job runs, so the digest goes out with the first cron run after the hour. Whether a slot has been sent is read from the rule's own log:
 
@@ -118,7 +139,7 @@ CiviRules checks the trigger each time its scheduled job runs, so the digest goe
 
 CiviCRM runs scheduled jobs, the CiviRules job included, only in the Production environment.
 
-How to set up a digest and its blocks is described in [Digests](digests.md).
+How to set up a digest and its sources is described in [Digests](digests.md).
 
 ### Without a rule
 

@@ -61,7 +61,7 @@ final class ContributionVars {
     try {
       return CampaignProgress::of(
         $campaignId,
-        static fn (): array => $lookups->stats->getCampaignTotal(['campaign_id' => $campaignId]),
+        static fn (): array => ($lookups->campaignTotal)($campaignId),
         $lookups->campaign,
       );
     }

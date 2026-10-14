@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Digest;
 
+use CRM_Herald_ExtensionUtil as E;
+
 /**
  * ASCII histogram of amounts, with buckets from HistogramEdges or the caller.
  */
@@ -43,7 +45,7 @@ class HistogramFormatter {
   public static function render(array $buckets, int $maxBlocks = 12): string {
     $maxCount = max([0, ...array_column($buckets, 'count')]);
     if ($maxCount === 0) {
-      return '(no data)';
+      return E::ts('(no data)');
     }
     $labelWidth = max([0, ...array_map(static fn ($b) => mb_strlen($b['label']), $buckets)]);
     $lines = [];

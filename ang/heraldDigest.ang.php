@@ -8,10 +8,13 @@ declare(strict_types = 1);
  */
 return [
   'js' => ['ang/heraldDigest.js'],
-  'requires' => ['af'],
-  'settingsFactory' => [\Civi\Herald\Digest\Options::class, 'angularSettings'],
+  'css' => ['ang/heraldDigest.css'],
+  'requires' => ['af', 'api4'],
+  'settingsFactory' => [\Civi\Herald\Digest\FormSettings::class, 'angular'],
   'exports' => [
-    'herald-digest-block' => 'A',
-    'herald-digest-block-type' => 'A',
+    'herald-digest-source' => 'A',
+    'herald-digest-source-type' => 'A',
+    'herald-digest-placeholders' => 'A',
+    'herald-digest-preview' => 'A',
   ],
 ];

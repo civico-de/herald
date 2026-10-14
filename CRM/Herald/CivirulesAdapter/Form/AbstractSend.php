@@ -122,7 +122,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
         CRM_Herald_CivirulesAdapter_SendOptions::channels(),
         required: TRUE,
       );
-      // A digest's blocks bring their own templates.
+      // A digest brings its own template.
       $templates = $this->getTemplateOptions();
       if ($templates !== []) {
         $this->add('select', 'template', E::ts('Message template'), $templates, required: TRUE);

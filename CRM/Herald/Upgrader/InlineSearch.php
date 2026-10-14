@@ -6,7 +6,7 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Search blocks of older releases named a SearchKit saved search and ran its own query.
- * A record shows a display, so the migration adds one with the same rows.
+ * A digest source shows a display, so the migration adds one with the same rows.
  */
 final class CRM_Herald_Upgrader_InlineSearch {
 
@@ -39,34 +39,14 @@ final class CRM_Herald_Upgrader_InlineSearch {
   }
 
   /**
-   * The block as checked before anything is saved: its search stands in for the display it gets.
+   * A new table display of a checked search block's saved search.
    *
    * @param array<string, mixed> $block
-   * @return array<string, mixed>
    */
-  public static function forCheck(array $block): array {
-    if (!array_key_exists('saved_search', $block)) {
-      return $block;
-    }
-    $search = self::search(Cast::toString($block['saved_search']));
-    unset($block['saved_search']);
-    return $block + ['search_display_id' => $search['id'] ?? NULL];
-  }
-
-  /**
-   * The HeraldDigestBlock values, with a new display for a search block.
-   *
-   * @param array<string, mixed> $block
-   * @return array<string, mixed>
-   */
-  public static function record(array $block, string $label): array {
-    if (!array_key_exists('saved_search', $block)) {
-      return $block;
-    }
+  public static function display(array $block, string $label): int {
     $search = self::search(Cast::toString($block['saved_search'])) ?? throw new CRM_Core_Exception(
       'herald: the saved search of a checked block is gone',
     );
-    unset($block['saved_search']);
     $id = \Civi\Api4\SearchDisplay::create(checkPermissions: FALSE)
       ->setValues([
         'saved_search_id' => $search['id'],
@@ -77,7 +57,7 @@ final class CRM_Herald_Upgrader_InlineSearch {
       ])
       ->execute()
       ->single()['id'];
-    return $block + ['search_display_id' => Cast::toInt($id)];
+    return Cast::toInt($id);
   }
 
   /**

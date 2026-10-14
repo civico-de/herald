@@ -24,65 +24,6 @@ use CRM_Herald_ExtensionUtil as E;
 
 $templates = [
   [
-    'workflow_name' => 'herald_contribution_digest_daily',
-    'msg_title' => E::ts('Herald: Daily contribution digest'),
-    'msg_subject' => '{crmScope extensionKey=\'herald\'}{$period.label} — {$totals.count} {ts}donation(s){/ts}, {$totals.amount|crmMoney}{/crmScope}',
-    'msg_html' => <<<'TPL'
-      {crmScope extensionKey='herald'}📊 <b>{ts 1=$period.label}Daily report %1{/ts}</b>
-
-      {ts}Received{/ts}: <b>{$totals.amount|crmMoney}</b> ({$totals.count})
-      {foreach from=$by_source item=src}• {$src.source}: {$src.total|crmMoney} ({$src.count})
-      {/foreach}
-      {if $pending.count > 0}
-      🏦 {ts}Open pending pool{/ts}: <b>{$pending.amount|crmMoney}</b> ({$pending.count})
-      {/if}
-      {if $histogram}<pre>{$histogram}</pre>{/if}
-
-      {if $campaign.goal}{ts}Campaign{/ts}{if !empty($campaign.title)} <b>{$campaign.title}</b>{/if}: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
-      TPL,
-    'msg_text' => <<<'TPL'
-      {crmScope extensionKey='herald'}{ts 1=$period.label}Daily report %1{/ts}
-
-      {ts}Received{/ts}: {$totals.amount|crmMoney} ({$totals.count})
-      {foreach from=$by_source item=src}- {$src.source}: {$src.total|crmMoney} ({$src.count})
-      {/foreach}
-      {if $pending.count > 0}{ts}Open pending pool{/ts}: {$pending.amount|crmMoney} ({$pending.count}){/if}
-
-      {$histogram}
-
-      {if $campaign.goal}{ts}Campaign{/ts}{if !empty($campaign.title)} {$campaign.title}{/if}: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
-      TPL,
-  ],
-  [
-    'workflow_name' => 'herald_contribution_digest_weekly',
-    'msg_title' => E::ts('Herald: Weekly contribution digest'),
-    'msg_subject' => '{crmScope extensionKey=\'herald\'}📈 {$period.label}: {$totals.count} {ts}donation(s){/ts}, {$totals.amount|crmMoney}{/crmScope}',
-    'msg_html' => <<<'TPL'
-      {crmScope extensionKey='herald'}📈 <b>{ts 1=$period.label}Weekly report %1{/ts}</b>
-
-      {ts}Received{/ts}: <b>{$totals.amount|crmMoney}</b> ({$totals.count})
-      {foreach from=$by_source item=src}• {$src.source}: {$src.total|crmMoney} ({$src.count})
-      {/foreach}
-      {if $pending.count > 0}
-      🏦 {ts}Open pending pool{/ts}: <b>{$pending.amount|crmMoney}</b> ({$pending.count})
-      {/if}
-      {if $histogram}<pre>{$histogram}</pre>{/if}
-
-      {if $campaign.goal}{ts}Campaign{/ts}{if !empty($campaign.title)} <b>{$campaign.title}</b>{/if}: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
-      TPL,
-    'msg_text' => <<<'TPL'
-      {crmScope extensionKey='herald'}{ts 1=$period.label}Weekly report %1{/ts}
-
-      {ts}Received{/ts}: {$totals.amount|crmMoney} ({$totals.count})
-      {foreach from=$by_source item=src}- {$src.source}: {$src.total|crmMoney} ({$src.count})
-      {/foreach}
-
-      {$histogram}
-
-      {if $campaign.goal}{ts}Campaign{/ts}{if !empty($campaign.title)} {$campaign.title}{/if}: {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{/crmScope}
-      TPL,
-  ],
-  [
     'workflow_name' => 'herald_contribution_alert_completed',
     'msg_title' => E::ts('Herald: New completed contribution'),
     'msg_subject' => '✅ {$contribution.total_amount|crmMoney}{if !empty($contribution.source)} — {$contribution.source}{/if}',
@@ -260,31 +201,6 @@ $templates = [
       TPL,
     'msg_text' => <<<'TPL'
       {crmScope extensionKey='herald'}{ts}Event deleted{/ts}: {$event.title}{/crmScope}
-      TPL,
-  ],
-  [
-    // Contribution block of a composed digest (`blocks`); the caller injects
-    // {$block_title}. One block per revenue stream, filtered independently.
-    'workflow_name' => 'herald_contribution_digest_block',
-    'msg_title' => E::ts('Herald: Contribution digest block (composable)'),
-    'msg_subject' => '{$block_title}: {$totals.count} · {$totals.amount|crmMoney}',
-    'msg_html' => <<<'TPL'
-      {crmScope extensionKey='herald'}{if !empty($block_title)}<b>{$block_title}</b>{/if}{if $totals.count > 0}{"\n"}<b>{$totals.amount|crmMoney}</b> · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{foreach from=$by_item item=it}{"\n"}• {$it.label} ({$it.unit_price|crmMoney}): {$it.qty}× = {$it.total|crmMoney}{/foreach}{foreach from=$by_source item=src}{"\n"}• {$src.source}: {$src.total|crmMoney} ({$src.count}){/foreach}{else}{"\n"}<i>{ts}no receipts{/ts}</i>{/if}{if $pending.count > 0}{"\n"}🏦 {ts}open{/ts}: {$pending.amount|crmMoney} ({$pending.count}){foreach from=$pending_items item=it}{"\n"}• {$it.label} ({$it.unit_price|crmMoney}): {$it.qty}× = {$it.total|crmMoney}{/foreach}{/if}{if $histogram}{"\n"}<pre>{$histogram}</pre>{/if}{/crmScope}
-      TPL,
-    'msg_text' => <<<'TPL'
-      {crmScope extensionKey='herald'}{$block_title}{if $totals.count > 0}{"\n"}{$totals.amount|crmMoney} · {$totals.count}{if $campaign.goal > 0} · {$campaign.percent}% {ts}of{/ts} {$campaign.goal|crmMoney}{/if}{foreach from=$by_item item=it}{"\n"}- {$it.label} ({$it.unit_price|crmMoney}): {$it.qty}x = {$it.total|crmMoney}{/foreach}{foreach from=$by_source item=src}{"\n"}- {$src.source}: {$src.total|crmMoney} ({$src.count}){/foreach}{else}{"\n"}{ts}no receipts{/ts}{/if}{if $pending.count > 0}{"\n"}{ts}open{/ts}: {$pending.amount|crmMoney} ({$pending.count}){foreach from=$pending_items item=it}{"\n"}- {$it.label} ({$it.unit_price|crmMoney}): {$it.qty}x = {$it.total|crmMoney}{/foreach}{/if}{/crmScope}
-      TPL,
-  ],
-  [
-    // Search block of a composed digest: one line per row of a search display.
-    'workflow_name' => 'herald_digest_search_block',
-    'msg_title' => E::ts('Herald: Digest block from a search display'),
-    'msg_subject' => '{$block_title}: {$count}',
-    'msg_html' => <<<'TPL'
-      {crmScope extensionKey='herald'}{if !empty($block_title)}<b>{$block_title}</b>{/if}{foreach from=$rows item=row}{"\n"}• {foreach from=$row.cells item=cell name=cells}{$cell}{if !$smarty.foreach.cells.last} · {/if}{/foreach}{foreachelse}{"\n"}<i>{ts}nothing found{/ts}</i>{/foreach}{/crmScope}
-      TPL,
-    'msg_text' => <<<'TPL'
-      {crmScope extensionKey='herald'}{$block_title}{foreach from=$rows item=row}{"\n"}- {foreach from=$row.cells item=cell name=cells}{$cell}{if !$smarty.foreach.cells.last} · {/if}{/foreach}{foreachelse}{"\n"}{ts}nothing found{/ts}{/foreach}{/crmScope}
       TPL,
   ],
 ];

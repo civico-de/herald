@@ -3,10 +3,11 @@
 declare(strict_types = 1);
 
 use Civi\Herald\Digest\BucketEdges;
+use Civi\Herald\Digest\DigestProblem;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * The HeraldDigestBlock values of a contribution block in the parameters of older releases.
+ * The values of a contribution block in the parameters of older releases.
  */
 final class CRM_Herald_Upgrader_InlineContributionBlock {
 
@@ -60,8 +61,8 @@ final class CRM_Herald_Upgrader_InlineContributionBlock {
     return 8;
   }
 
-  private static function number(mixed $value): mixed {
-    return is_string($value) && is_numeric($value) ? Cast::toFloat($value) : $value;
+  private static function number(mixed $value): string {
+    return is_numeric($value) ? (string) (float) $value : Cast::toString($value);
   }
 
   /**
@@ -73,8 +74,8 @@ final class CRM_Herald_Upgrader_InlineContributionBlock {
   }
 
   /**
-   * The stored form of bucket edges. Older releases read numeric strings as
-   * numbers and drew adaptive buckets over an empty list or unreadable JSON.
+   * Bucket edges as herald_histogram takes them, "0,10,50". Older releases read
+   * numeric strings as numbers and drew adaptive buckets over an empty list or unreadable JSON.
    */
   private static function edges(mixed $edges, string $digestName): ?string {
     $text = is_array($edges) ? '[]' : trim(Cast::toString($edges));
@@ -82,17 +83,19 @@ final class CRM_Herald_Upgrader_InlineContributionBlock {
     if ($text === '' || $decoded === []) {
       return NULL;
     }
-    $edges = is_array($decoded) ? json_encode(array_map(self::number(...), $decoded), JSON_THROW_ON_ERROR) : $text;
-    $problem = BucketEdges::problem($edges);
-    if ($problem === NULL) {
+    $edges = is_array($decoded) ? implode(',', array_map(self::number(...), $decoded)) : $text;
+    try {
+      BucketEdges::parse($edges);
       return $edges;
     }
-    \Civi::log('herald')->warning('herald: unusable bucket edges dropped, the histogram uses adaptive buckets', [
-      'digest' => $digestName,
-      'bucket_edges' => $edges,
-      'problem' => $problem,
-    ]);
-    return NULL;
+    catch (DigestProblem $e) {
+      \Civi::log('herald')->warning('herald: unusable bucket edges dropped, the histogram uses adaptive buckets', [
+        'digest' => $digestName,
+        'bucket_edges' => $edges,
+        'problems' => $e->problems(),
+      ]);
+      return NULL;
+    }
   }
 
 }

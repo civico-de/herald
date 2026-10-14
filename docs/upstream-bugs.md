@@ -56,7 +56,23 @@ MessageTemplate is not an APIv4 ManagedEntity, so `'update' => 'unmodified'` beh
 
 ### Search displays in auto mode store no columns
 
-A display with `columnMode: auto` has no column list. `SearchDisplay::run` builds one at run time from `SearchDisplay::getDefault`. A digest block renders the rows itself, so `Civi\Herald\Digest\SearchRows::columns()` calls `getDefault` the same way. Status: no public API for it.
+A display with `columnMode: auto` has no column list. `SearchDisplay::run` builds one at run time from `SearchDisplay::getDefault`. A digest source names its values after the columns, so `Civi\Herald\Digest\DisplayColumns` calls `getDefault` the same way. Status: no public API for it.
+
+### SearchKit cannot show a relative date offset
+
+APIv4 evaluates `['receive_date', '>=', 'today - 7 days']` correctly, but SearchKit shows the filter as an empty date field, with an error in the browser console, and filling it in replaces it. Core has no relative term for the seven days before today without today: `ending.week` includes today, and `previous_7.day` does not exist. The upgrade writes such periods as `DATEDIFF(CURDATE(), receive_date) BETWEEN 1 AND 7`, which SearchKit shows as "Days between two dates" and keeps on save (`CRM_Herald_Upgrader_SearchCopy`). Test: `InlineDigestTest::testTheLastSevenDaysCountWhatTheOldPeriodCounted`. Status: not reported.
+
+### Component fields vanish from APIv4
+
+A field whose schema names a component, such as `Contribution.campaign_id` with CiviCampaign, is unknown to APIv4 while that component is off: a search filtering on it fails with `Invalid field 'campaign_id'`. An old digest with a campaign filter therefore stays inline on a site without CiviCampaign. Test: `InlineDigestTest::testFiltersAndCampaignProgressBecomeCopies`. Status: core design.
+
+### The template editor encodes comparison operators
+
+CKEditor 4 stores `>` as `&gt;` and `&&` as `&amp;&amp;` in a message template, in source mode as well, and inside Smarty tags too. Smarty then fails on `{if $a > 0}`. Core's own templates fail the same way. `Civi\Herald\Digest\TemplateCheck` recognises an encoded operator in a tag after a compiler error and names `gt`, `lt` and `and` as the fix. Status: core design.
+
+### Smarty warnings depend on the site
+
+`CRM_Core_Smarty` sets `error_reporting` to `E_ALL` only with debugging on, on `localhost` and in unit tests; elsewhere the global setting applies, so a placeholder typo can render silently on production. `CRM_Utils_String::parseOneOffStringThroughSmarty()` installs a handler of its own that lets warnings pass to PHP. `TemplateCheck` therefore renders with `E_ALL` and a handler that turns warnings and notices into errors, and honours `error_reporting()` inside it, because Smarty silences its own writes of compiled templates. Status: core design.
 
 ### Standalone tests can reach the main database
 

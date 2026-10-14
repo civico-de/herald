@@ -112,6 +112,8 @@ Die Entität `Herald` bietet diese Aktionen. Die Aktionen erfordern die Berechti
 | getParkedAlerts | ids, optional | Listet [geparkte Meldungen](delivery.md#geparkte-meldungen) ohne ihre Nachrichtentexte auf. |
 | reactivateParkedAlerts | ids, optional | Legt geparkte Meldungen zurück in den Puffer. Ohne ids alle. |
 | renderTemplate | workflow, vars | Rendert eine Vorlage, ohne sie zu senden. |
+| previewDigest | digest, sources | Setzt einen Report aus ungespeicherten Werten mit den heutigen Daten zusammen und sendet nichts. Die Vorschau des Report-Formulars ruft sie auf. |
+| getDigestPlaceholders | source, digest | Die Platzhalter und der Textbaustein einer Quelle, wie das Report-Formular sie zeigt. |
 | saveTopic | topic, route, previousName | Prüft eine Route und speichert sie in `herald_topics`; mit previousName wird dieses Topic an seinem Platz umbenannt. Die Seite „Topic-Routen“ verwendet diese Aktion. |
 | deleteTopic | topic | Entfernt eine Route aus `herald_topics`. |
 | saveSourceRules | rules | Prüft und speichert `herald_source_normalization`. Fehler nennen die Regel. |
@@ -133,7 +135,7 @@ cv api4 Herald.renderTemplate workflow=herald_contribution_alert_completed \
 
 Die Entität `HeraldBufferedAlert` ist der Meldungspuffer. Administrator:innen können ihn mit get und getFields lesen und geparkte Meldungen mit reactivate zurückholen; alle drei erfordern „administer CiviCRM“. Die Aktionen update und delete sind herald selbst vorbehalten, sonst darf niemand sie aufrufen. Eine Aktion create gibt es nicht: Neue Zeilen schreibt herald selbst, damit der gespeicherte Nachrichtentext genau so bleibt, wie er gerendert wurde. Die Felder für Nachrichtentext und Zustellung können Kontaktdaten enthalten, deshalb lässt die mitgelieferte Anzeige der geparkten Meldungen sie weg.
 
-Die Entitäten `HeraldDigest` und `HeraldDigestBlock` enthalten die Reports und ihre Blöcke, mit den üblichen Aktionen wie get, create, save und delete. Sie erfordern „administer CiviCRM“. Beim Speichern wird jeder Datensatz geprüft, siehe [Einen Report einrichten](digests.md#einen-report-einrichten), und das Löschen eines Reports löscht seine Blöcke.
+Die Entitäten `HeraldDigest` und `HeraldDigestSource` enthalten die Reports und ihre Quellen, mit den üblichen Aktionen wie get, create, save und delete. Sie erfordern „administer CiviCRM“. Beim Speichern wird jeder Datensatz geprüft, siehe [Einen Report einrichten](digests.md#einen-report-einrichten), und das Löschen eines Reports löscht seine Quellen.
 
 Eine andere Extension kann `send` und `publish` aufrufen, ohne fest von herald abzuhängen:
 
@@ -165,10 +167,6 @@ Die Vorlagen von herald sind CiviCRM-Nachrichtenvorlagen. Sie bearbeiten sie unt
 | Herald: Neuer Ticket-/Event-Beitrag | herald_contribution_alert_ticket | Einen Ticket- oder Event-Beitrag |
 | Herald: Ticket bestellt, Überweisung angekündigt | herald_contribution_alert_ticket_pending | Ein per Überweisung bestelltes Ticket |
 | Herald: Ticket-Überweisung eingegangen | herald_contribution_alert_ticket_paid | Eine eingegangene Ticket-Überweisung |
-| Herald: Täglicher Beitragsreport | herald_contribution_digest_daily | Den täglichen Report |
-| Herald: Wöchentlicher Beitragsreport | herald_contribution_digest_weekly | Den wöchentlichen Report |
-| Herald: Beitragsreport-Block (kombinierbar) | herald_contribution_digest_block | Einen Beitragsblock eines Reports |
-| Herald: Report-Block aus einer Suchanzeige | herald_digest_search_block | Einen Suchblock eines Reports |
 | Herald: Neues Event angelegt | herald_event_created_alert | Ein neues Event |
 | Herald: Event deaktiviert | herald_event_deactivated_alert | Ein deaktiviertes Event |
 | Herald: Event gelöscht | herald_event_deleted_alert | Ein gelöschtes Event |
@@ -188,7 +186,9 @@ herald rendert nur die Standardfassung einer Vorlage. Nennt ein Aufruf eine Vorl
 
 ### Maskierung
 
-Vorlagen werden zu HTML gerendert. String-Variablen werden HTML-maskiert, bevor sie in den HTML-Inhalt gelangen, sodass Daten kein Markup einschleusen können. Der Betreff erhält sie unmaskiert. Eine Vorlage, die nur einen Textinhalt hat, wird gerendert und dann als Ganzes maskiert. Report-Abschnitte und die Kopfzeile eines Reports werden bewusst als HTML eingefügt.
+Vorlagen werden zu HTML gerendert. String-Variablen werden HTML-maskiert, bevor sie in den HTML-Inhalt gelangen, sodass Daten kein Markup einschleusen können. Der Betreff erhält sie unmaskiert. Eine Vorlage, die nur einen Textinhalt hat, wird gerendert und dann als Ganzes maskiert.
+
+Jede Vorlage wird unter der Richtlinie von CiviCRM für Inhalte von Benutzer:innen gerendert, wie die Nachrichtenvorlagen von Mailings: `{crmAPI}`, PHP-Konstanten und Superglobals sind gesperrt, und PHP-Funktionen funktionieren nur in den wenigen Formen, die die Richtlinie erlaubt, etwa `|count`. Die eigenen Modifikatoren von Smarty und CiviCRM, etwa `|crmMoney`, `|crmDate` und `|round`, funktionieren wie gewohnt.
 
 ### Triggervariablen
 
@@ -211,14 +211,14 @@ Schlägt eine Abfrage fehl, protokolliert herald einen Fehler und lässt die Var
 
 | Variable | Inhalt |
 |---|---|
-| contribution | Die Felder des Beitrags, etwa total_amount, currency, receive_date und source. Die Quelle erscheint nach der [Normalisierung der Quellen](digests.md#quellen-normalisieren). |
+| contribution | Die Felder des Beitrags, etwa total_amount, currency, receive_date und source. Die Quelle erscheint nach der [Normalisierung der Quellen](recipes.md#quellen-normalisieren). |
 | campaign.title, campaign.total, campaign.count | Die Kampagne des Beitrags: ihr Titel sowie Summe und Anzahl ihrer abgeschlossenen Beiträge. |
 | campaign.goal, campaign.percent | Das Umsatzziel der Kampagne und der erreichte Anteil, auf eine Nachkommastelle gerundet. Beide sind 0, wenn die Kampagne kein Ziel hat. |
 | from_status, to_status | Die Statusnamen vor und nach der Änderung. from_status ist leer, wenn der Status vor der Änderung unbekannt ist. |
 
 Ohne Kampagne ist jedes Kampagnenfeld leer oder 0, sodass `{if $campaign.goal}` die Fortschrittszeile in einer Vorlage ausblendet.
 
-Die Report-Variablen stehen unter [Vorlagenvariablen](digests.md#vorlagenvariablen).
+Reports haben keine festen Variablen; ihre Quellen benennen sie, siehe [Platzhalter](digests.md#platzhalter).
 
 ## Einstellungen
 
@@ -241,7 +241,7 @@ Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'nam
 | `herald_topics` | leer | Die Routen der [Topics](delivery.md#topics). |
 | `herald_buffer_max_attempts` | 5 | Fehlgeschlagene Zustellungen, bevor eine gesammelte Gruppe geparkt wird. |
 | `herald_buffer_max_items` | 25 | Ausgegebene Nachrichten in einer Sammelnachricht. 0 gibt alle aus. |
-| `herald_source_normalization` | leer | Lesbare Bezeichnungen für Quellen, siehe [Quellen normalisieren](digests.md#quellen-normalisieren). |
+| `herald_source_normalization` | leer | Lesbare Bezeichnungen für Quellen, siehe [Quellen normalisieren](recipes.md#quellen-normalisieren). |
 | `herald_monitor_topic` | ops | Das Topic für Meldungen des Monitors. |
 | `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours`, `herald_monitor_snooze`, `herald_monitor_expected` | siehe [Feinabstimmung](monitor.md#feinabstimmung) | Feinabstimmung des Monitors. |
 | `herald_monitor_state` | leer | Der eigene Zustand des Monitors. Nicht bearbeiten. |
@@ -251,7 +251,7 @@ Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'nam
 | Hook | Signatur | Zweck |
 |---|---|---|
 | `hook_civicrm_heraldChecks` | `(array &$checks)` | Checks zum Monitor hinzufügen, siehe [Eigene Checks bereitstellen](monitor.md#eigene-checks-bereitstellen). |
-| `hook_civicrm_heraldDigestSections` | `(array $keys, array $context, array &$sections)` | Den Text für die Abschnittsblöcke eines Reports liefern, siehe [Abschnitte aus anderen Extensions](digests.md#abschnitte-aus-anderen-extensions). |
+| `hook_civicrm_heraldDigestSections` | `(array $keys, array $context, array &$sections)` | Die Werte für die Abschnittsquellen eines Reports liefern, siehe [Abschnitte aus anderen Extensions](digests.md#abschnitte-aus-anderen-extensions). |
 
 ## Systemstatus
 

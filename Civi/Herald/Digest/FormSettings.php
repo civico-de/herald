@@ -1,0 +1,29 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Civi\Herald\Digest;
+
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+
+/**
+ * Settings of the Angular module heraldDigest (CRM.heraldDigest): the schema
+ * defaults the digest form gives a new source.
+ */
+final class FormSettings {
+
+  /**
+   * @return array{sourceDefaults: array<string, mixed>}
+   */
+  public static function angular(): array {
+    /** @var list<array<string, mixed>> $fields */
+    $fields = \Civi\Api4\HeraldDigestSource::getFields(checkPermissions: FALSE)
+      ->setAction('create')
+      ->addSelect('name', 'default_value')
+      ->addWhere('default_value', 'IS NOT NULL')
+      ->execute()
+      ->getArrayCopy();
+    return ['sourceDefaults' => Cast::namedOnly(array_column($fields, 'default_value', 'name'))];
+  }
+
+}

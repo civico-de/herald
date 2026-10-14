@@ -1,0 +1,34 @@
+.herald-digest .herald-digest-snippet {
+  font-family: monospace;
+  width: 100%;
+  max-width: 60em;
+  display: block;
+  margin: 0 0 0.5em;
+}
+
+.herald-digest .herald-digest-copied {
+  margin-left: 0.5em;
+}
+
+.herald-digest .herald-digest-preview {
+  width: 100%;
+  min-height: 20em;
+  border: 1px solid currentColor;
+  background: #fff;
+}
+
+/* The theme's dark buttons put white on #919297 (3.1:1). */
+@media (prefers-color-scheme: dark) {
+  .herald-digest .btn,
+  .herald-digest .btn:focus {
+    color: #fff;
+    background-color: #55565b;
+    border-color: #55565b;
+  }
+
+  .herald-digest .btn:hover {
+    color: #fff;
+    background-color: #67686d;
+    border-color: #67686d;
+  }
+}

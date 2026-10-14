@@ -51,34 +51,60 @@ class TemplateRenderer {
         $workflowName,
       ));
     }
-
-    $isHtml = isset($template['msg_html']);
-    $body = Cast::toString($template['msg_html'] ?? $template['msg_text'] ?? '');
-    if ($body === '') {
+    if (
+      trim(Cast::toString($template['msg_html'] ?? '')) === ''
+      && trim(Cast::toString($template['msg_text'] ?? '')) === ''
+    ) {
       throw new \CRM_Core_Exception(sprintf(
         'herald: MessageTemplate "%s" has empty msg_html and msg_text.',
         $workflowName,
       ));
     }
+    return $this->renderMessage($template, $vars);
+  }
 
+  /**
+   * Render subject and body of a template's values: msg_html, else msg_text.
+   *
+   * @param array<array-key, mixed> $template msg_subject, msg_html, msg_text
+   * @param array<string, mixed> $vars
+   * @return array{subject: ?string, body: string} as renderParts()
+   */
+  public function renderMessage(array $template, array $vars): array {
+    $html = Cast::toString($template['msg_html'] ?? '');
     $subject = trim(Cast::toString($template['msg_subject'] ?? ''));
     $textVars = self::mapStrings($vars, self::decodeInput(...));
     return [
       'subject' => $subject !== '' ? $this->renderInline($subject, $textVars) : NULL,
-      'body' => $isHtml
-        ? $this->renderInline($body, self::escapeHtml($vars))
-        : PlainText::toHtml($this->renderInline($body, $textVars)),
+      'body' => trim($html) !== ''
+        ? $this->renderInline($html, self::escapeHtml($vars))
+        : PlainText::toHtml($this->renderInline(Cast::toString($template['msg_text'] ?? ''), $textVars)),
     ];
   }
 
   /**
-   * Render an arbitrary Smarty string with the given vars. Used when callers
-   * already hold the raw template body (e.g. tests).
+   * Render a Smarty string with the given vars, under core's policy for
+   * user-edited templates (no {crmAPI}, {php} or file access) unless one is on.
    *
    * @param array<string, mixed> $vars
    */
   public function renderInline(string $body, array $vars): string {
-    return Cast::toString(\CRM_Core_Smarty::singleton()->fetchWith('string:' . $body, $vars));
+    $smarty = \CRM_Core_Smarty::singleton();
+    // As parseOneOffStringThroughSmarty(): a caller that enabled the policy keeps it.
+    $useSecurityPolicy = $smarty->security_policy === NULL;
+    $policy = \Civi::service('civi.smarty.userContent');
+    assert($policy instanceof \CRM_Core_Smarty_UserContentPolicy, 'core registers civi.smarty.userContent');
+    if ($useSecurityPolicy) {
+      $policy->enable();
+    }
+    try {
+      return Cast::toString($smarty->fetchWith('string:' . $body, $vars));
+    }
+    finally {
+      if ($useSecurityPolicy) {
+        $policy->disable();
+      }
+    }
   }
 
   /**

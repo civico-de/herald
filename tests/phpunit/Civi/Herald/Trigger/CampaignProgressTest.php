@@ -71,4 +71,39 @@ class CampaignProgressTest extends TestCase implements HeadlessInterface, Transa
     );
   }
 
+  /**
+   * Pending payments, contribution-page test drives and recurring templates are no income.
+   */
+  public function testTheTotalCountsCompletedContributionsOnly(): void {
+    $campaignId = \Civi\Api4\Campaign::create(checkPermissions: FALSE)
+      ->setValues(['name' => 'herald_test_total', 'title' => 'Total'])
+      ->execute()
+      ->single()['id'];
+    $contactId = \Civi\Api4\Contact::create(checkPermissions: FALSE)
+      ->setValues(['contact_type' => 'Individual', 'first_name' => 'Campaign', 'last_name' => 'Test'])
+      ->execute()
+      ->single()['id'];
+    $rows = [
+      [1000.0, 'Completed', []],
+      [20.0, 'Completed', []],
+      [500.0, 'Pending', []],
+      [300.0, 'Completed', ['is_test' => TRUE]],
+      [700.0, 'Completed', ['is_template' => TRUE]],
+    ];
+    foreach ($rows as [$amount, $status, $flags]) {
+      \Civi\Api4\Contribution::create(checkPermissions: FALSE)
+        ->setValues([
+          'contact_id' => $contactId,
+          'campaign_id' => $campaignId,
+          'financial_type_id:name' => 'Donation',
+          'contribution_status_id:name' => $status,
+          'total_amount' => $amount,
+        ] + $flags)
+        ->execute();
+    }
+
+    self::assertSame(['total' => 1020.0, 'count' => 2], CampaignProgress::total($campaignId));
+    self::assertSame(['total' => 0.0, 'count' => 0], CampaignProgress::total(999_999_999));
+  }
+
 }

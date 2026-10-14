@@ -4,94 +4,100 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Digest;
 
-use Civi\Api4\HeraldDigest;
-use Civi\Api4\HeraldDigestBlock;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * A stored digest loads with its blocks in the order the form saved them.
+ * A digest as Composer takes it, stored or submitted by the form.
  *
  * @group headless
  */
 class DefinitionTest extends TestCase implements HeadlessInterface, TransactionalInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()
-      ->install('org.civicoop.civirules')
-      ->installMe(__DIR__)
-      ->callback(static function () {
-        \CRM_Core_BAO_ConfigSetting::enableComponent('CiviCampaign');
-      }, 'enableCiviCampaign')
-      ->apply();
+    return \Civi\Test::headless()->installMe(__DIR__)->apply();
   }
 
-  public function testTheBlocksComeInSaveOrderWithoutEmptyFields(): void {
-    $id = HeraldDigest::create(checkPermissions: FALSE)
-      ->setValues(['name' => 'weekly', 'title' => 'Weekly', 'header' => '<b>Week</b>', 'period' => 'last_7_days'])
+  private function display(): int {
+    $search = \Civi\Api4\SavedSearch::create(checkPermissions: FALSE)
+      ->setValues([
+        'label' => 'Herald definition test',
+        'api_entity' => 'Contact',
+        'api_params' => ['version' => 4, 'select' => ['id']],
+      ])
       ->execute()
       ->single()['id'];
-    HeraldDigestBlock::save(checkPermissions: FALSE)
-      ->setDefaults(['digest_id' => $id])
-      ->setRecords([
-        ['type' => 'section', 'section_key' => 'myext.seats', 'title' => ''],
-        ['type' => 'contribution', 'title' => 'Donations', 'bucket_count' => 4],
-      ])
-      ->execute();
+    return (int) \Civi\Api4\SearchDisplay::create(checkPermissions: FALSE)
+      ->setValues(['saved_search_id' => $search, 'label' => 'Members', 'type' => 'table', 'settings' => []])
+      ->execute()
+      ->single()['id'];
+  }
+
+  public function testADigestLoadsWithItsTemplateAndSourcesInSaveOrder(): void {
+    $display = $this->display();
+    DigestFixture::create(
+      'weekly',
+      'Weekly',
+      '<b>{$seats.booked}</b>',
+      [
+        ['name' => 'seats', 'type' => 'section', 'section_key' => 'myext.seats'],
+        ['name' => 'members', 'type' => 'search', 'search_display_id' => $display],
+      ],
+      'Week {$seats.booked}',
+    );
+
+    self::assertSame(
+      [
+        'name' => 'weekly',
+        'title' => 'Weekly',
+        'template' => [
+          'msg_subject' => 'Week {$seats.booked}',
+          'msg_html' => '<b>{$seats.booked}</b>',
+          'msg_text' => '',
+        ],
+        'sources' => [
+          ['name' => 'seats', 'type' => 'section', 'search_display_id' => NULL, 'section_key' => 'myext.seats'],
+          ['name' => 'members', 'type' => 'search', 'search_display_id' => $display, 'section_key' => NULL],
+        ],
+      ],
+      Definition::load('weekly'),
+    );
+  }
+
+  public function testWhatWasDeletedSinceLoadsAsMissing(): void {
+    $digest = DigestFixture::create('weekly', 'Weekly', sources: [
+      ['name' => 'members', 'type' => 'search', 'search_display_id' => $this->display()],
+    ]);
+    \Civi\Api4\MessageTemplate::delete(checkPermissions: FALSE)->addWhere('id', '=', $digest['template_id'])->execute();
+    \Civi\Api4\SearchDisplay::delete(checkPermissions: FALSE)->addWhere('label', '=', 'Members')->execute();
 
     $definition = Definition::load('weekly');
 
-    self::assertSame(['weekly', '<b>Week</b>', 'last_7_days'], [
-      $definition['name'],
-      $definition['header'],
-      $definition['period'],
-    ]);
-    self::assertSame(['section', 'contribution'], array_column($definition['blocks'], 'type'));
-    self::assertSame(['type' => 'section', 'section_key' => 'myext.seats'], array_intersect_key(
-      $definition['blocks'][0],
-      ['type' => 1, 'section_key' => 1, 'title' => 1, 'period' => 1, 'template' => 1],
+    self::assertNull($definition['template']);
+    self::assertNull($definition['sources'][0]['search_display_id']);
+  }
+
+  public function testSubmittedValuesAreNormalised(): void {
+    self::assertSame([
+      'name' => 'weekly',
+      'title' => 'Weekly',
+      'template' => NULL,
+      'sources' => [['name' => 'members', 'type' => 'search', 'search_display_id' => 12, 'section_key' => NULL]],
+    ], Definition::of(
+      ['name' => 'weekly', 'title' => 'Weekly', 'message_template_id' => ''],
+      [['name' => 'members', 'type' => 'search', 'search_display_id' => '12', 'section_key' => ' ']],
     ));
-    self::assertSame(['Donations', 4], [$definition['blocks'][1]['title'], $definition['blocks'][1]['bucket_count']]);
   }
 
-  public function testACampaignABlockFiltersOnStays(): void {
-    $campaign = \Civi\Api4\Campaign::create(checkPermissions: FALSE)
-      ->setValues(['name' => 'herald_test_campaign', 'title' => 'Herald test campaign'])
-      ->execute()
-      ->single()['id'];
-    HeraldDigestBlock::create(checkPermissions: FALSE)
-      ->setValues([
-        'digest_id' => HeraldDigest::create(checkPermissions: FALSE)
-          ->setValues(['name' => 'weekly', 'title' => 'Weekly'])
-          ->execute()
-          ->single()['id'],
-        'campaign_id' => $campaign,
-      ])
-      ->execute();
-
-    // Without the filter the block would count every contribution.
-    $this->expectExceptionMessage('constraint violation');
-    \Civi\Api4\Campaign::delete(checkPermissions: FALSE)->addWhere('id', '=', $campaign)->execute();
-  }
-
-  public function testAnUnknownDigestFails(): void {
-    $this->expectException(\CRM_Core_Exception::class);
+  public function testAnUnknownDigestIsAProblem(): void {
+    $this->expectException(DigestProblem::class);
     $this->expectExceptionMessage('Digest "missing" does not exist.');
     Definition::load('missing');
   }
 
-  public function testTheFormGetsTheSchemaDefaultsOfABlock(): void {
-    self::assertSame(
-      [
-        'type' => 'contribution',
-        'group_by' => 'source',
-        'show_pending' => TRUE,
-        'show_histogram' => TRUE,
-        'bucket_count' => 8,
-      ],
-      Options::angularSettings()['blockDefaults'],
-    );
+  public function testTheFormGetsTheSchemaDefaultsOfASource(): void {
+    self::assertSame(['type' => 'search'], FormSettings::angular()['sourceDefaults']);
   }
 
 }
