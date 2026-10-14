@@ -99,6 +99,27 @@ class AlertBufferClaimDueTest extends TestCase implements HeadlessInterface, Hoo
     $this->assertSame(self::DELIVERY, $group['delivery']);
   }
 
+  /**
+   * Bodies are rendered HTML with escaped user text; the buffer stores and
+   * returns them byte for byte, as rows written by earlier versions are.
+   */
+  public function testEscapedTextSurvivesTheBufferUnchanged(): void {
+    $hash = 'herald-test-escaped';
+    $body = '<b>Donor</b>: &lt;script&gt; &amp; Co';
+    $delivery = ['channel' => 'email', 'subject' => 'Re: &lt;tag&gt; <i>x</i>'];
+    $this->buffer->add($hash, 15, $body, $delivery);
+    $this->backdate($hash, 20);
+
+    $this->assertSame($body, \CRM_Core_DAO::singleValueQuery(
+      'SELECT body FROM `' . AlertBuffer::TABLE . '` WHERE group_hash = %1',
+      [1 => [$hash, 'String']],
+    ));
+    $group = $this->claim($hash);
+    $this->assertNotNull($group);
+    $this->assertSame([$body], $group['bodies']);
+    $this->assertSame($delivery, $group['delivery']);
+  }
+
   public function testGroupIsNotDueBeforeItsWindowElapsed(): void {
     $hash = 'herald-test-fresh';
     $this->buffer->add($hash, 15, 'too young to send', self::DELIVERY, 10.0);
@@ -221,6 +242,37 @@ class AlertBufferClaimDueTest extends TestCase implements HeadlessInterface, Hoo
     );
 
     $this->assertNotNull($this->claim($hash), 'an abandoned claim must not keep its alerts hostage');
+  }
+
+  /**
+   * APIv4 stamps claims with PHP's clock; a MySQL session two hours behind it
+   * must not keep an abandoned claim for two more hours.
+   */
+  public function testAbandonedClaimsAreOfferedAgainWhenMysqlRunsOnAnotherOffset(): void {
+    $hash = 'herald-test-claim-offset';
+    $this->buffer->add($hash, 5, 'claimed under another offset', self::DELIVERY);
+    $this->backdate($hash, 10);
+    $sessionZone = \CRM_Core_DAO::singleValueQuery('SELECT @@session.time_zone');
+    $offset = (int) date('Z') - 7200;
+    \CRM_Core_DAO::executeQuery(sprintf(
+      "SET time_zone = '%s%02d:%02d'",
+      $offset < 0 ? '-' : '+',
+      intdiv(abs($offset), 3600),
+      intdiv(abs($offset) % 3600, 60),
+    ));
+    try {
+      $group = $this->claim($hash);
+      $this->assertNotNull($group);
+      \CRM_Herald_BAO_HeraldBufferedAlert::writeRecord([
+        'id' => $group['ids'][0],
+        'claimed_at' => date('YmdHis', time() - (40 * 60)),
+      ]);
+
+      $this->assertNotNull($this->claim($hash), 'a claim 40 minutes old by the clock that stamped it is abandoned');
+    }
+    finally {
+      \CRM_Core_DAO::executeQuery('SET time_zone = %1', [1 => [$sessionZone, 'String']]);
+    }
   }
 
   public function testDeleteRowsWithoutIdsIsANoop(): void {

@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Buffer;
 
+use Civi\Api4\HeraldBufferedAlert;
+use Civi\Herald\Api4\Rows;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
@@ -19,8 +21,9 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  * params → identical group_hash) aggregate together; two different rules or
  * two differently-configured actions never mix.
  *
- * Concurrency — claimDue() stamps the rows it hands out, so two overlapping
- * cron runs can never compose and deliver the same entries twice.
+ * Concurrency — callers hold LOCK_NAME while they claim, so overlapping cron
+ * runs never compose the same entries; claimDue() stamps the rows it hands
+ * out, so a run that dies with them leaves them claimed, not lost.
  *
  * Dead letter — rows that cannot be delivered are parked rather than retried
  * forever or dropped; claimDue() skips parked rows, the rest lives in
@@ -59,19 +62,15 @@ class AlertBuffer {
     // Serialise before touching the DB: an alert that cannot carry its
     // delivery params must not be buffered at all.
     $deliveryJson = self::encodeDelivery($delivery);
-    \CRM_Core_DAO::executeQuery(
-      'INSERT INTO `'
-      . self::TABLE
-      . '` (group_hash, window_minutes, body, delivery, amount) VALUES (%1, %2, %3, %4, '
-      . ($amount === NULL ? 'NULL' : '%5')
-      . ')',
-      [
-        1 => [$groupHash, 'String'],
-        2 => [max(1, $windowMinutes), 'Integer'],
-        3 => [$body, 'String'],
-        4 => [$deliveryJson, 'String'],
-      ] + ($amount === NULL ? [] : [5 => [(string) $amount, 'Money']]),
-    );
+    // The BAO stores body and delivery verbatim; APIv4 would turn their escaped
+    // `&lt;`/`&gt;` into markup on the way back.
+    \CRM_Herald_BAO_HeraldBufferedAlert::writeRecord([
+      'group_hash' => $groupHash,
+      'window_minutes' => max(1, $windowMinutes),
+      'body' => $body,
+      'delivery' => $deliveryJson,
+      'amount' => $amount,
+    ]);
   }
 
   /**
@@ -98,9 +97,8 @@ class AlertBuffer {
    * Take ownership of every group whose oldest unclaimed entry has waited at
    * least its window, and return what was claimed.
    *
-   * Claiming is an atomic UPDATE stamp per group, so overlapping cron runs
-   * split the buffer instead of both composing — and delivering — the same
-   * entries; the loser of a race simply sees no rows for that group.
+   * Callers hold LOCK_NAME: the claim is one APIv4 update per group, which
+   * reads the rows before it stamps them and so is not atomic on its own.
    *
    * Rows are NOT deleted here: the caller deletes via deleteRows() once the
    * composed message went out, and hands them back via release() when the send
@@ -114,11 +112,12 @@ class AlertBuffer {
     $claim = bin2hex(random_bytes(16));
     $groups = [];
     foreach ($this->dueGroupHashes() as $groupHash) {
-      \CRM_Core_DAO::executeQuery(
-        'UPDATE `' . self::TABLE . '` SET claimed_by = %2, claimed_at = NOW()
-           WHERE group_hash = %1 AND claimed_by IS NULL AND parked_at IS NULL',
-        [1 => [$groupHash, 'String'], 2 => [$claim, 'String']],
-      );
+      HeraldBufferedAlert::update(checkPermissions: FALSE)
+        ->addWhere('group_hash', '=', $groupHash)
+        ->addWhere('claimed_by', 'IS NULL')
+        ->addWhere('parked_at', 'IS NULL')
+        ->setValues(['claimed_by' => $claim, 'claimed_at' => 'now'])
+        ->execute();
       $group = $this->readClaimed($groupHash, $claim);
       if ($group !== NULL) {
         $groups[] = $group;
@@ -133,19 +132,22 @@ class AlertBuffer {
    * @return list<string>
    */
   private function dueGroupHashes(): array {
-    // The object{} shape narrows executeQuery()'s CRM_Core_DAO|object union
-    // to the columns the loop reads.
-    /** @var \CRM_Core_DAO&object{group_hash: string} $due */
-    $due = \CRM_Core_DAO::executeQuery('
-      SELECT group_hash
-      FROM `' . self::TABLE . '`
-      WHERE claimed_by IS NULL AND parked_at IS NULL
-      GROUP BY group_hash
-      HAVING MIN(created_date) <= DATE_SUB(NOW(), INTERVAL MAX(window_minutes) MINUTE)
-    ');
+    $groups = HeraldBufferedAlert::get(checkPermissions: FALSE)
+      ->addSelect(
+        'group_hash',
+        'TIMESTAMPDIFF(SECOND, MIN(created_date), NOW()) AS waited',
+        'MAX(window_minutes) AS window',
+      )
+      ->addWhere('claimed_by', 'IS NULL')
+      ->addWhere('parked_at', 'IS NULL')
+      ->addGroupBy('group_hash')
+      ->execute();
     $hashes = [];
-    while ($due->fetch()) {
-      $hashes[] = Cast::toString($due->group_hash);
+    foreach (Rows::of($groups) as $group) {
+      if (Cast::toInt($group['waited']) < (Cast::toInt($group['window']) * 60)) {
+        continue;
+      }
+      $hashes[] = Cast::toString($group['group_hash']);
     }
     return $hashes;
   }
@@ -157,26 +159,25 @@ class AlertBuffer {
    * @return array{group_hash: string, window: int, ids: list<int>, bodies: list<string>, amounts: list<float>, delivery: array<string, mixed>}|null
    */
   private function readClaimed(string $groupHash, string $claim): ?array {
-    /** @var \CRM_Core_DAO&object{id: string, window_minutes: string, body: string, delivery: string, amount: ?string} $rows */
-    $rows = \CRM_Core_DAO::executeQuery(
-      'SELECT id, window_minutes, body, delivery, amount FROM `'
-      . self::TABLE
-      . '` WHERE group_hash = %1 AND claimed_by = %2 ORDER BY id',
-      [1 => [$groupHash, 'String'], 2 => [$claim, 'String']],
-    );
+    // Read through the DAO, as add() writes: APIv4 would decode the bodies.
+    $dao = new \CRM_Herald_BAO_HeraldBufferedAlert();
+    $dao->group_hash = $groupHash;
+    $dao->claimed_by = $claim;
+    $dao->orderBy('id');
+    $dao->find();
     $ids = [];
     $bodies = [];
     $amounts = [];
     $window = 0;
     $deliveryParams = [];
-    while ($rows->fetch()) {
-      $ids[] = Cast::toInt($rows->id);
-      $bodies[] = Cast::toString($rows->body);
-      if ($rows->amount !== NULL) {
-        $amounts[] = Cast::toFloat($rows->amount);
+    while ($dao->fetch()) {
+      $ids[] = Cast::toInt($dao->id);
+      $bodies[] = Cast::toString($dao->body);
+      if ($dao->amount !== NULL) {
+        $amounts[] = Cast::toFloat($dao->amount);
       }
-      $window = max($window, Cast::toInt($rows->window_minutes));
-      $delivery = json_decode(Cast::toString($rows->delivery), TRUE);
+      $window = max($window, Cast::toInt($dao->window_minutes));
+      $delivery = json_decode(Cast::toString($dao->delivery), TRUE);
       if ($deliveryParams === [] && is_array($delivery)) {
         // First decodable row wins: the group's rows share the rule config, but
         // each carries the subject ITS OWN event rendered — composeDelivery()
@@ -203,11 +204,12 @@ class AlertBuffer {
    * without this their alerts would sit claimed in the buffer forever.
    */
   private function releaseAbandonedClaims(): void {
-    \CRM_Core_DAO::executeQuery(
-      'UPDATE `' . self::TABLE . '` SET claimed_by = NULL, claimed_at = NULL
-         WHERE claimed_at < DATE_SUB(NOW(), INTERVAL %1 MINUTE) AND parked_at IS NULL',
-      [1 => [self::CLAIM_TIMEOUT_MINUTES, 'Integer']],
-    );
+    HeraldBufferedAlert::update(checkPermissions: FALSE)
+      // claimDue() stamps with APIv4's "now", PHP's clock; compare on the same one.
+      ->addWhere('claimed_at', '<', date('YmdHis', time() - (self::CLAIM_TIMEOUT_MINUTES * 60)))
+      ->addWhere('parked_at', 'IS NULL')
+      ->setValues(['claimed_by' => NULL, 'claimed_at' => NULL])
+      ->execute();
   }
 
   /**
@@ -220,13 +222,10 @@ class AlertBuffer {
     if (!$ids) {
       return;
     }
-    \CRM_Core_DAO::executeQuery(
-      'UPDATE `'
-      . self::TABLE
-      . '` SET claimed_by = NULL, claimed_at = NULL WHERE id IN ('
-      . implode(',', array_map('intval', $ids))
-      . ')',
-    );
+    HeraldBufferedAlert::update(checkPermissions: FALSE)
+      ->addWhere('id', 'IN', $ids)
+      ->setValues(['claimed_by' => NULL, 'claimed_at' => NULL])
+      ->execute();
   }
 
   /**
@@ -236,9 +235,9 @@ class AlertBuffer {
     if (!$ids) {
       return;
     }
-    \CRM_Core_DAO::executeQuery(
-      'DELETE FROM `' . self::TABLE . '` WHERE id IN (' . implode(',', array_map('intval', $ids)) . ')',
-    );
+    HeraldBufferedAlert::delete(checkPermissions: FALSE)
+      ->addWhere('id', 'IN', $ids)
+      ->execute();
   }
 
 }

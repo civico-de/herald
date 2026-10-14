@@ -76,21 +76,37 @@ class BufferedAlertEntityTest extends TestCase implements HeadlessInterface, Tra
   private function assertDenied(callable $call): void {
     try {
       $call();
-      $this->fail('read without "administer CiviCRM"');
+      $this->fail('the call was not denied');
     }
     catch (\Civi\API\Exception\UnauthorizedException) {
       $this->addToAssertionCount(1);
     }
   }
 
-  public function testTheEntityOffersNoWritesBesidesReactivate(): void {
+  /**
+   * The write actions exist for herald's own code only: not even an
+   * administrator may call them, so no display offers to edit or delete rows.
+   */
+  public function testNoUserMayWriteBesidesReactivate(): void {
+    $permissions = \CRM_Core_Config::singleton()->userPermissionClass;
+    $saved = $permissions->permissions;
+    $permissions->permissions = ['access CiviCRM', 'administer CiviCRM'];
+    try {
+      $this->assertDenied(
+        static fn () => HeraldBufferedAlert::update()->addWhere('id', '>', 0)->addValue('attempts', 0)->execute(),
+      );
+      $this->assertDenied(static fn () => HeraldBufferedAlert::delete()->addWhere('id', '>', 0)->execute());
+      $this->assertCount(2, HeraldBufferedAlert::get()->execute());
+    }
+    finally {
+      $permissions->permissions = $saved;
+    }
     $actions = array_column(
       HeraldBufferedAlert::getActions(checkPermissions: FALSE)->execute()->getArrayCopy(),
       'name',
     );
-    $this->assertContains('get', $actions);
-    $this->assertContains('reactivate', $actions);
-    $this->assertSame([], array_values(array_intersect(['create', 'update', 'save', 'delete', 'replace'], $actions)));
+    // New rows come from the BAO only, which stores the rendered body verbatim.
+    $this->assertSame([], array_intersect(['create', 'save', 'replace'], $actions));
   }
 
   public function testTheParkedAlertsDisplayListsParkedRowsWithoutBodies(): void {

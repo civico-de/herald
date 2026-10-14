@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Buffer;
 
+use Civi\Api4\HeraldBufferedAlert;
+use Civi\Herald\Api4\Rows;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
@@ -56,15 +58,25 @@ class DeadLetter {
     if (!$ids) {
       return FALSE;
     }
-    $idList = implode(',', array_map('intval', $ids));
-    \CRM_Core_DAO::executeQuery(
-      'UPDATE `' . AlertBuffer::TABLE . '` SET attempts = attempts + 1, last_error = %1 WHERE id IN (' . $idList . ')',
-      [1 => [self::truncateError($error), 'String']],
-    );
-    $exhausted = (int) \CRM_Core_DAO::singleValueQuery(
-      'SELECT MAX(attempts) FROM `' . AlertBuffer::TABLE . '` WHERE id IN (' . $idList . ')',
-    ) >= max(1, $maxAttempts);
-    if ($exhausted) {
+    // The rows are this run's claim, so reading and writing back the counter
+    // cannot race another run.
+    $idsByAttempts = [];
+    foreach (Rows::of(
+      HeraldBufferedAlert::get(checkPermissions: FALSE)
+        ->addSelect('id', 'attempts')
+        ->addWhere('id', 'IN', $ids)
+        ->execute(),
+    ) as $row) {
+      $idsByAttempts[Cast::toInt($row['attempts']) + 1][] = Cast::toInt($row['id']);
+    }
+    foreach ($idsByAttempts as $next => $rowIds) {
+      HeraldBufferedAlert::update(checkPermissions: FALSE)
+        ->addWhere('id', 'IN', $rowIds)
+        ->setValues(['attempts' => $next, 'last_error' => self::truncateError($error)])
+        ->execute();
+    }
+    $attempts = $idsByAttempts ? max(array_keys($idsByAttempts)) : 0;
+    if ($attempts >= max(1, $maxAttempts)) {
       $this->park($ids, 'max_attempts', $error);
       return TRUE;
     }
@@ -82,11 +94,16 @@ class DeadLetter {
     if (!$ids) {
       return;
     }
-    \CRM_Core_DAO::executeQuery(
-      'UPDATE `' . AlertBuffer::TABLE . '` SET claimed_by = NULL, claimed_at = NULL, parked_at = NOW(), park_reason = %1, last_error = %2
-         WHERE id IN (' . implode(',', array_map('intval', $ids)) . ')',
-      [1 => [substr($reason, 0, 64), 'String'], 2 => [self::truncateError($error), 'String']],
-    );
+    HeraldBufferedAlert::update(checkPermissions: FALSE)
+      ->addWhere('id', 'IN', $ids)
+      ->setValues([
+        'claimed_by' => NULL,
+        'claimed_at' => NULL,
+        'parked_at' => 'now',
+        'park_reason' => substr($reason, 0, 64),
+        'last_error' => self::truncateError($error),
+      ])
+      ->execute();
   }
 
   /**
@@ -97,17 +114,19 @@ class DeadLetter {
    * @return int Rows reactivated.
    */
   public function reactivate(array $ids = []): int {
-    $where = $ids ? ' AND id IN (' . implode(',', array_map('intval', $ids)) . ')' : '';
-    // Counted before the UPDATE: the affected-row count of a DAO query is not
-    // part of the typed API surface.
-    $count = (int) \CRM_Core_DAO::singleValueQuery(
-      'SELECT COUNT(*) FROM `' . AlertBuffer::TABLE . '` WHERE parked_at IS NOT NULL' . $where,
-    );
-    \CRM_Core_DAO::executeQuery(
-      'UPDATE `' . AlertBuffer::TABLE . '` SET parked_at = NULL, park_reason = NULL, attempts = 0, claimed_by = NULL, claimed_at = NULL
-         WHERE parked_at IS NOT NULL' . $where,
-    );
-    return $count;
+    $update = HeraldBufferedAlert::update(checkPermissions: FALSE)
+      ->addWhere('parked_at', 'IS NOT NULL')
+      ->setValues([
+        'parked_at' => NULL,
+        'park_reason' => NULL,
+        'attempts' => 0,
+        'claimed_by' => NULL,
+        'claimed_at' => NULL,
+      ]);
+    if ($ids) {
+      $update->addWhere('id', 'IN', $ids);
+    }
+    return $update->execute()->count();
   }
 
   /**
@@ -118,22 +137,23 @@ class DeadLetter {
    * @return list<array{id: int, group_hash: string, created_date: string, parked_at: string, park_reason: string, attempts: int, last_error: string}>
    */
   public function getParked(array $ids = []): array {
-    $where = $ids ? ' AND id IN (' . implode(',', array_map('intval', $ids)) . ')' : '';
-    /** @var \CRM_Core_DAO&object{id: string, group_hash: string, created_date: string, parked_at: string, park_reason: ?string, attempts: string, last_error: ?string} $rows */
-    $rows = \CRM_Core_DAO::executeQuery(
-      'SELECT id, group_hash, created_date, parked_at, park_reason, attempts, last_error
-       FROM `' . AlertBuffer::TABLE . '` WHERE parked_at IS NOT NULL' . $where . ' ORDER BY id',
-    );
+    $get = HeraldBufferedAlert::get(checkPermissions: FALSE)
+      ->addSelect('id', 'group_hash', 'created_date', 'parked_at', 'park_reason', 'attempts', 'last_error')
+      ->addWhere('parked_at', 'IS NOT NULL')
+      ->addOrderBy('id');
+    if ($ids) {
+      $get->addWhere('id', 'IN', $ids);
+    }
     $out = [];
-    while ($rows->fetch()) {
+    foreach (Rows::of($get->execute()) as $row) {
       $out[] = [
-        'id' => Cast::toInt($rows->id),
-        'group_hash' => Cast::toString($rows->group_hash),
-        'created_date' => Cast::toString($rows->created_date),
-        'parked_at' => Cast::toString($rows->parked_at),
-        'park_reason' => Cast::toString($rows->park_reason),
-        'attempts' => Cast::toInt($rows->attempts),
-        'last_error' => Cast::toString($rows->last_error),
+        'id' => Cast::toInt($row['id']),
+        'group_hash' => Cast::toString($row['group_hash']),
+        'created_date' => Cast::toString($row['created_date']),
+        'parked_at' => Cast::toString($row['parked_at']),
+        'park_reason' => Cast::toString($row['park_reason']),
+        'attempts' => Cast::toInt($row['attempts']),
+        'last_error' => Cast::toString($row['last_error']),
       ];
     }
     return $out;

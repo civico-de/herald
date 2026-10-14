@@ -5,9 +5,9 @@ declare(strict_types = 1);
 namespace Civi\Api4;
 
 /**
- * Read-only view of the alert buffer, for SearchKit. Rows are written and
- * drained by Civi\Herald\Buffer\AlertBuffer; parked rows return to circulation
- * only through Herald.reactivateParkedAlerts, which `reactivate` calls.
+ * The alert buffer. Administrators may read it and `reactivate` parked rows,
+ * which calls Herald.reactivateParkedAlerts; only Civi\Herald\Buffer writes.
+ * New rows go through the BAO: APIv4 would HTML-encode the rendered body.
  */
 final class HeraldBufferedAlert extends Generic\AbstractEntity {
 
@@ -17,6 +17,24 @@ final class HeraldBufferedAlert extends Generic\AbstractEntity {
    */
   public static function get($checkPermissions = TRUE) {
     return (new Generic\DAOGetAction(__CLASS__, __FUNCTION__))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  /**
+   * @param bool $checkPermissions
+   * @return Generic\DAOUpdateAction
+   */
+  public static function update($checkPermissions = TRUE) {
+    return (new Generic\DAOUpdateAction(__CLASS__, __FUNCTION__))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  /**
+   * @param bool $checkPermissions
+   * @return Generic\DAODeleteAction
+   */
+  public static function delete($checkPermissions = TRUE) {
+    return (new Generic\DAODeleteAction(__CLASS__, __FUNCTION__))
       ->setCheckPermissions($checkPermissions);
   }
 
@@ -50,9 +68,13 @@ final class HeraldBufferedAlert extends Generic\AbstractEntity {
    * @return array<string, array<int, string|array<int, string>>>
    */
   public static function permissions(): array {
+    // Only herald's own code writes rows, with checkPermissions off.
+    $internal = [\CRM_Core_Permission::ALWAYS_DENY_PERMISSION];
     return [
       'meta' => ['administer CiviCRM'],
       'default' => ['administer CiviCRM'],
+      'update' => $internal,
+      'delete' => $internal,
     ];
   }
 
