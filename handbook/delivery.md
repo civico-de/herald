@@ -52,7 +52,7 @@ Each contact can choose a channel and the notifications they want. herald adds t
 | Subscriptions | The notification types the contact wants |
 | Scope: entity type, Scope: entity ID | Optional, see [Scoped subscriptions](#scoped-subscriptions) |
 
-Admins can fill these in on the contact record. For self-service, herald installs the profile "My notification preferences". Look up its ID under Administer, Customize Data and Screens, Profiles, and send staff this link:
+Admins can fill these in on the contact record. For self-service, herald installs the profile "My notification preferences". Look up its ID under Administer » Customize Data and Screens » Profiles, and send staff this link:
 
 ```
 /civicrm/profile/edit?gid=<id>&reset=1
@@ -80,7 +80,7 @@ herald ships these subscription types:
 | `daily_digest` | Daily digest |
 | `weekly_digest` | Weekly digest |
 
-The types are the values of the option group `herald_subscription_type`. Add your own under Administer, Customize Data and Screens, Option Groups, or with `cv api4 OptionValue.create`. A new value shows up in the action's list of subscription types. Disabling a value only removes it from that list. Actions that already use it keep delivering to its subscribers.
+The types are the values of the option group `herald_subscription_type`. Add your own under Administer » Customize Data and Screens » Option Groups, or with `cv api4 OptionValue.create`. A new value shows up in the action's list of subscription types. Disabling a value only removes it from that list. Actions that already use it keep delivering to its subscribers.
 
 The two digest types are for digests sent in subscriber mode, from the CiviRules action or from a scheduled job.
 
@@ -141,7 +141,7 @@ A value above 0 stores the rendered alert in the table `civicrm_herald_buffer`. 
 
 ## Parked alerts
 
-A waiting group whose delivery fails stays in the buffer and is retried on the next cron run. After `herald_buffer_max_attempts` failed tries, 5 by default, herald parks it. A group that has nobody to send to is parked at once, because retrying cannot help. Nothing is dropped. Parked alerts stay in the table until someone reactivates them.
+A waiting group whose delivery fails stays in the buffer and is retried on the next cron run. After `herald_buffer_max_attempts` failed tries, 5 by default, herald parks it. A group that has nobody to send to is parked at once, because retrying cannot help. Parked alerts are never deleted; they stay in the table until someone reactivates them.
 
 Administer » Herald » Parked alerts lists them. It is a SearchKit display on the read-only entity `HeraldBufferedAlert`. To reactivate alerts, select their rows and choose "Reactivate parked alerts" from the actions menu; the confirmation names the number of alerts. Neither the display nor `Herald.getParkedAlerts` shows message bodies or delivery parameters, because they can contain contact data.
 

@@ -15,7 +15,7 @@ routes:
 
 herald ergänzt CiviRules um zwei Aktionen. Ihre Formulare haben diese Felder gemeinsam:
 
-- Zustellmodus, mit dem Abo-Typ, der Gruppe, den E-Mail-Adressen, der Option „Kommunikationssperren beachten“ und dem bevorzugten Adresstyp. Siehe [Zustellmodi](delivery.md#zustellmodi).
+- Zustellmodus, mit dem Abo-Typ, der Gruppe, den E-Mail-Adressen, der Option „Kommunikationssperren beachten“ und dem Adresstyp der E-Mail. Siehe [Zustellmodi](delivery.md#zustellmodi).
 - Kanal, der nur im Direktmodus gilt. Abonnent:innen verwenden ihren eigenen Kanal.
 - Nachrichtenvorlage.
 - Telegram-Chat-ID, Telegram-Parse-Modus, „Stille Nachricht“ und „Link-Vorschauen deaktivieren“.
@@ -63,7 +63,7 @@ Die Bedingung „Herald: Field transition“ ist wahr, wenn der Wert eines Felde
 | Feld | Bedeutung |
 |---|---|
 | Entität | Der APIv4-Name der Entität, etwa Contribution. Kontakt-Untertypen zählen als Contact. |
-| Feld | Der APIv4-Feldname. Ein benutzerdefiniertes Feld schreiben Sie als group.field. Ein Feld eines verknüpften Datensatzes folgt auf seinen Fremdschlüssel, etwa `contact_id.contact_type`. An ein Auswahlfeld können Sie ein Suffix wie `:name` anhängen. Dann vergleicht die Bedingung den Namen der Option statt ihrer ID, etwa bei `contribution_status_id:name`. Nehmen Sie `:name` statt `:label`, denn eine Bezeichnung kann sich mit der Sprache der Site ändern. |
+| Feld | Der APIv4-Feldname. Ein benutzerdefiniertes Feld schreiben Sie als group.field. Ein Feld eines verknüpften Datensatzes erreichen Sie über dessen Fremdschlüssel, etwa `contact_id.contact_type`. An ein Auswahlfeld können Sie ein Suffix wie `:name` anhängen. Dann vergleicht die Bedingung den Namen der Option statt ihrer ID, etwa bei `contribution_status_id:name`. Nehmen Sie `:name` statt `:label`, denn eine Bezeichnung kann sich mit der Sprache der Site ändern. |
 | Vorher: Operator, Vorher: Wert | Die Prüfung für den Wert vor der Änderung. |
 | Nachher: Operator, Nachher: Wert | Die Prüfung für den Wert nach der Änderung. |
 
@@ -79,7 +79,7 @@ Zahlen werden exakt verglichen, egal wie viele Stellen sie haben. Eine Zahl mit 
 - Ist nur eine Seite konfiguriert, muss sich der Wert außerdem geändert haben. Andere Änderungen an einem Datensatz, der bereits im Zielzustand ist, lösen daher nicht erneut aus. Ein Feld, das leer bleibt, hat sich nicht geändert.
 - Sind beide Seiten konfiguriert, entscheiden allein die beiden Prüfungen.
 
-Der Wert vor der Änderung stammt aus der Kopie, die CiviRules vom Datensatz aufbewahrt. Bei einem Feld mit Suffix schlägt herald die Option zur gespeicherten ID nach. Ein leerer gespeicherter Wert gilt als leer, ein gespeicherter Wert ohne Option als fehlend. Hat CiviRules keinen Wert, verwendet herald seine eigene Kopie, die direkt vor der Änderung entsteht. Ist der Wert dann noch unbekannt, ist die Bedingung falsch, denn eine verpasste Meldung ist besser als eine falsche.
+Der Wert vor der Änderung stammt aus der Kopie, die CiviRules vom Datensatz aufbewahrt. Bei einem Feld mit Suffix schlägt herald die Option zur gespeicherten ID nach. Ein leerer gespeicherter Wert gilt als leer, ein gespeicherter Wert ohne Option als fehlend. Hat CiviRules keinen Wert, verwendet herald seine eigene Kopie, die direkt vor der Änderung entsteht. Ist der Wert dann noch unbekannt, ist die Bedingung falsch, denn eine ausgebliebene Meldung ist besser als ein Fehlalarm.
 
 Die eigene Kopie von herald lebt nur so lange wie die Anfrage, eine verzögerte Aktion prüft ihre Bedingungen aber erst später im Cron-Lauf. Benutzerdefinierte Felder führt CiviRules unter anderen Namen, und Felder verknüpfter Datensätze hat es gar nicht. Für sie ist die Kopie von herald also die einzige Quelle. Setzen Sie bei einer verzögerten Aktion mit einem solchen Feld „Don't recheck condition upon processing of delayed action“, sonst löst die Bedingung nie aus.
 
@@ -98,7 +98,7 @@ Beispiele:
 
 ## APIv4
 
-Die Entität `Herald` bietet diese Aktionen. Jede Aktion erfordert die Berechtigung „administer CiviCRM“. Die Metadaten-Aktionen wie getFields brauchen nur „access CiviCRM“ (auf CiviCRM zugreifen).
+Die Entität `Herald` bietet diese Aktionen. Die Aktionen erfordern die Berechtigung „administer CiviCRM“, nur die Metadaten-Aktionen wie getFields kommen mit „access CiviCRM“ (auf CiviCRM zugreifen) aus.
 
 | Aktion | Parameter | Was sie tut |
 |---|---|---|
@@ -131,7 +131,7 @@ cv api4 Herald.renderTemplate workflow=herald_contribution_alert_completed \
     vars='{"contribution": {"total_amount": 50, "currency": "EUR"}}'
 ```
 
-Die Entität `HeraldBufferedAlert` ist eine schreibgeschützte Sicht auf den Meldungspuffer für SearchKit, mit den Aktionen get und getFields. Sie erfordert „administer CiviCRM“. Ihre Felder für Nachrichtentext und Zustellung können Kontaktdaten enthalten, deshalb lässt die mitgelieferte Anzeige der geparkten Meldungen sie weg.
+Die Entität `HeraldBufferedAlert` ist der Meldungspuffer. Administrator:innen können ihn mit get und getFields lesen und geparkte Meldungen mit reactivate zurückholen; alle drei erfordern „administer CiviCRM“. Die Aktionen update und delete sind herald selbst vorbehalten, sonst darf niemand sie aufrufen. Eine Aktion create gibt es nicht: Neue Zeilen schreibt herald selbst, damit der gespeicherte Nachrichtentext genau so bleibt, wie er gerendert wurde. Die Felder für Nachrichtentext und Zustellung können Kontaktdaten enthalten, deshalb lässt die mitgelieferte Anzeige der geparkten Meldungen sie weg.
 
 Die Entitäten `HeraldDigest` und `HeraldDigestBlock` enthalten die Reports und ihre Blöcke, mit den üblichen Aktionen wie get, create, save und delete. Sie erfordern „administer CiviCRM“. Beim Speichern wird jeder Datensatz geprüft, siehe [Einen Report einrichten](digests.md#einen-report-einrichten), und das Löschen eines Reports löscht seine Blöcke.
 

@@ -7,7 +7,7 @@ order: 70
 
 Diese Seite erklärt, wie Sie herald auf einer laufenden Site aktualisieren, ohne dass während des Codewechsels etwas kaputtgeht.
 
-Die CiviRules-Aktionen und -Bedingungen von herald laufen innerhalb des Speichervorgangs jedes Datensatzes, auf den ihre Regeln reagieren. Lässt sich eine ihrer Klassen nicht laden, schlägt dieser Speichervorgang fehl: Verloren geht dann der Beitrag, die Registrierung oder die Änderung am Event, nicht nur die Meldung. Die Skripte im Verzeichnis bin von herald schalten seine Regeln deshalb ab, während sich der Code ändert. Sie schalten die Regeln erst wieder ein, wenn sich jeder Handler laden lässt. Auf einer Site ohne CiviRules vermerkt jedes Skript, dass es nichts zu prüfen gibt, und läuft erfolgreich durch.
+Die CiviRules-Aktionen und -Bedingungen von herald laufen innerhalb des Speichervorgangs jedes Datensatzes, auf den ihre Regeln reagieren. Lässt sich eine ihrer Klassen nicht laden, schlägt dieser Speichervorgang fehl: Verloren geht dann der Beitrag, die Anmeldung oder die Änderung am Event, nicht nur die Meldung. Deshalb schalten die Skripte in `bin/` der Extension die herald-Regeln ab, solange der Code ausgetauscht wird. Sie schalten die Regeln erst wieder ein, wenn sich jeder Handler laden lässt. Auf einer Site ohne CiviRules vermerkt jedes Skript, dass es nichts zu prüfen gibt, und läuft erfolgreich durch.
 
 ## Schritte
 
@@ -19,7 +19,7 @@ Führen Sie die Skripte mit `cv scr` vor und nach dem Codewechsel aus und breche
 2. Den Code der Extension austauschen.
 3. Ausstehende Extension-Upgrades mit `cv ext:upgrade-db` ausführen.
 4. preflight-rules.php.
-5. Nur wenn der Preflight bestanden ist: rules-reenable.php.
+5. Nur nach erfolgreichem Preflight: rules-reenable.php.
 6. Zum Schluss: note-foreign-rules.php.
 
 ```bash
@@ -32,7 +32,7 @@ cv ext:upgrade-db \
   && cv scr $HERALD/bin/note-foreign-rules.php
 ```
 
-rules-reenable.php prüft nicht, ob der Preflight bestanden wurde. Führen Sie es also nie nach einem fehlgeschlagenen Preflight aus. Die Upgrades kommen vor dem Preflight, weil ein Upgrade Handler-Klassen umbenennen kann, die der Preflight anschließend lädt.
+rules-reenable.php prüft nicht, ob der Preflight erfolgreich war. Führen Sie es also nie nach einem fehlgeschlagenen Preflight aus. Die Upgrades kommen vor dem Preflight, weil ein Upgrade Handler-Klassen umbenennen kann, die der Preflight anschließend lädt.
 
 ## Was die einzelnen Schritte tun
 
@@ -50,7 +50,7 @@ preflight-rules.php lädt die Handler-Klassen so, wie CiviRules es tut. Es prüf
 
 Es prüft die eigenen Handler von herald und jeden Handler, der an den abgeschalteten Regeln hängt: deren Trigger und alle ihre aktiven Bedingungen und Aktionen, auch solche anderer Extensions. Regeln, deren Trigger fehlt oder inaktiv ist, werden nur vermerkt, weil CiviRules sie nie auslöst. Ohne die Datei aus dem ersten Schritt prüft der Preflight nur die eigenen Handler von herald.
 
-Bei Erfolg gibt es „[herald preflight] OK: N CiviRules handler(s) checked“ aus. Bei einem Fehler gibt es „[herald preflight] FAILED:“ aus und endet mit dem Exit-Code 1. Die Meldung nennt die Regel, die Art des Handlers, die Klasse und den Grund, gefolgt von dem Befehl, der die Regeln nach der Korrektur wieder einschaltet. Bis dahin bleiben die Regeln aus. Die möglichen Gründe sind:
+Bei Erfolg gibt das Skript „[herald preflight] OK: N CiviRules handler(s) checked“ aus. Bei einem Fehler gibt es „[herald preflight] FAILED:“ aus und endet mit dem Exit-Code 1. Die Meldung nennt die Regel, die Art des Handlers, die Klasse und den Grund, gefolgt von dem Befehl, der die Regeln nach der Korrektur wieder einschaltet. Bis dahin bleiben die Regeln aus. Die möglichen Gründe sind:
 
 - class not found (autoload failed)
 - class failed to load, mit dem PHP-Fehler
@@ -66,7 +66,7 @@ rules-reenable.php schaltet die vermerkten Regeln wieder ein, entfernt die Datei
 
 ### Andere Regeln prüfen
 
-note-foreign-rules.php läuft, sobald die herald-Regeln wieder an sind. Es ist der einzige Schritt, der die Klassen von Regeln ohne herald-Handler lädt, und meldet fehlerhafte Handler auf stderr, ohne fehlzuschlagen. Ein Handler einer anderen Extension, der an einer herald-Regel hängt, gehört nicht zu diesem Schritt: Ihn prüft der Preflight, und er verhindert, dass die Regeln wieder eingeschaltet werden. Eine Klasse, die PHP beim Laden abstürzen lässt, etwa eine mit einer nicht implementierten abstrakten Methode, lässt dagegen diesen letzten Schritt fehlschlagen und markiert das Deployment als fehlgeschlagen. Die herald-Regeln sind dann bereits wieder an, und dieser Fehler schaltet sie nicht wieder ab.
+note-foreign-rules.php läuft, sobald die herald-Regeln wieder an sind. Es ist der einzige Schritt, der die Klassen von Regeln ohne herald-Handler lädt, und meldet fehlerhafte Handler auf stderr, ohne fehlzuschlagen. Ein Handler einer anderen Extension, der an einer herald-Regel hängt, gehört nicht zu diesem Schritt: Ihn prüft schon der Preflight, und ist er defekt, bleiben die Regeln aus. Eine Klasse, die PHP beim Laden abstürzen lässt, etwa eine mit einer nicht implementierten abstrakten Methode, lässt dagegen diesen letzten Schritt fehlschlagen und markiert das Deployment als fehlgeschlagen. Die herald-Regeln sind dann bereits wieder an, und dieser Fehler schaltet sie nicht wieder ab.
 
 ## Wenn etwas schiefgeht
 

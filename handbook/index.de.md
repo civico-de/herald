@@ -27,11 +27,11 @@ Skripte und andere Extensions können Nachrichten an ein benanntes Topic wie ops
 
 Ein Report fasst die Beiträge eines Zeitraums zusammen, listet die Zeilen einer SearchKit-Anzeige auf oder enthält Zahlen, die eine andere Extension liefert. Reports richten Sie unter Administrieren » Herald » Reports ein. Meist werden sie täglich oder wöchentlich verschickt, ausgelöst von einer Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
 
-Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet, wenn ein Check fehlschlägt und wenn er wieder in Ordnung ist, und erinnert an Checks, die weiter fehlschlagen. Auf einer gesunden Site bleibt es still. Siehe [Check-Monitor](monitor.md).
+Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet, wenn ein Check fehlschlägt und wenn er wieder in Ordnung ist, und erinnert an Checks, die weiter fehlschlagen. Siehe [Check-Monitor](monitor.md).
 
 ## Voraussetzungen
 
-herald benötigt SearchKit und Form Core, die Teil von CiviCRM sind. CiviRules ist optional. herald registriert seine Regel-Bausteine, egal ob Sie CiviRules vor oder nach herald installieren. Ohne CiviRules funktionieren die API, die geplanten Jobs, die Topics und der Check-Monitor weiterhin. Die unterstützten Versionen von CiviCRM und PHP stehen in der `info.xml` der Extension.
+herald benötigt SearchKit und Form Core, die Teil von CiviCRM sind. CiviRules ist optional; wenn Sie es nutzen, braucht herald Version 3.36 oder neuer, und der Systemstatus meldet eine ältere. herald registriert seine Regel-Bausteine, egal ob Sie CiviRules vor oder nach herald installieren. Ohne CiviRules funktionieren die API, die geplanten Jobs, die Topics und der Check-Monitor weiterhin. Die unterstützten Versionen von CiviCRM und PHP stehen in der `info.xml` der Extension.
 
 ## Installation
 
@@ -60,7 +60,7 @@ cv api4 Herald.testTelegram message='<b>herald works</b>'
 
 Richten Sie nun eine Regel ein, die jeden abgeschlossenen Beitrag meldet:
 
-1. Öffnen Sie „Administer, CiviRules, Manage Rules“ (Administrieren, CiviRules, Regeln verwalten), legen Sie eine Regel an und wählen Sie den Trigger „Contribution is added“ (Beitrag wird angelegt).
+1. Öffnen Sie Administrieren » CiviRules » Regeln verwalten (englisch: Administer » CiviRules » Manage Rules), legen Sie eine Regel an und wählen Sie den Trigger „Contribution is added“ (Beitrag wird angelegt).
 2. Fügen Sie die Bedingung „Contribution Status is (not) one of“ (Beitragsstatus ist (nicht) einer von) mit Completed hinzu.
 3. Fügen Sie die Aktion „Herald: Send notification (generic)“ hinzu. Wählen Sie die Vorlage „Herald: Neuer abgeschlossener Beitrag“ und den Kanal Telegram. Lassen Sie die Chat-ID leer, dann gilt der Standard-Chat.
 

@@ -29,12 +29,18 @@ actions (no bespoke cron for alerts). CiviRules is optional, not in `<requires>`
   resolves to no recipient parks the group immediately, other failures after
   `herald_buffer_max_attempts` tries (`Civi\Herald\Buffer\DeadLetter`). Parked
   rows stay in the table, are listed by `Herald.getParkedAlerts` and the
-  SearchKit display on the read-only `HeraldBufferedAlert` entity (never
+  SearchKit display on the `HeraldBufferedAlert` entity (never
   `body`/`delivery` — contact data), and only
   `Herald.reactivateParkedAlerts` puts them back in circulation (the display's
-  task calls it through `HeraldBufferedAlert.reactivate`, the entity's one
-  write action). The table's
-  shape lives in `schema/`; upgrade steps add columns from that spec.
+  task calls it through `HeraldBufferedAlert.reactivate`, the one write action
+  a user may call; update/delete are `ALWAYS_DENY` and serve
+  `Civi\Herald\Buffer` with checkPermissions off). `body` and `delivery` are
+  written and read only through the BAO: APIv4 encodes `<`/`>` on write and
+  decodes every `&lt;`/`&gt;` on read, turning escaped text into markup. An
+  APIv4 update reads before it writes, so the flush job's
+  `AlertBuffer::LOCK_NAME` lock is what keeps two runs from claiming one
+  group. The table's shape lives in `schema/`; upgrade steps add columns from
+  that spec.
   Uninstall drops every `schema/` table (AutomaticUpgrader), buffer and
   digests — the one sanctioned loss.
 - The monitor publishes only ok→fail / fail→ok transitions to the
@@ -68,8 +74,13 @@ actions (no bespoke cron for alerts). CiviRules is optional, not in `<requires>`
   CiviRules base class lives in `CRM/Herald/CivirulesAdapter/` and does nothing
   but unpack `TriggerData` and call `Herald.notify*` / `Herald.check*` via
   APIv4. Domain logic belongs in `Civi\Herald\*`; phpstan's phpat rule fails
-  the build on any CiviRules reference outside that directory.
-- CiviRules is optional: every adapter class sits behind a
+  the build on a `CRM_Civirules_*` dependency outside that directory. Reading
+  CiviRules data through `Civi\Api4\CiviRules*` is allowed elsewhere, behind
+  `Availability::isInstalled()`. The deploy scripts switch rules with SQL: an
+  APIv4 update would mark another extension's managed rule as modified.
+- CiviRules is optional. herald needs 3.36 or later, whose API unserializes
+  rule params before HTML-decoding them; `CiviRulesVersionCheck` reports an
+  older one. Every adapter class sits behind a
   `// ckconform-optional civirules` `class_exists()` guard, because the
   scan-classes mixin loads each file and a missing parent is a fatal
   (`WithoutCiviRulesTest`). Handlers register as managed entities in

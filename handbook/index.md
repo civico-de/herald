@@ -27,11 +27,11 @@ Scripts and other extensions can publish to a named topic such as ops. A setting
 
 A digest sums up contributions for a period, lists the rows of a SearchKit display, or includes numbers another extension provides. You set them up under Administer » Herald » Digests, and they usually go out daily or weekly, from a rule on the trigger "Herald: Schedule". See [Digests](digests.md).
 
-The check monitor runs health checks that extensions contribute. It reports when a check starts failing and when it recovers, and reminds you about checks that keep failing. A healthy site stays quiet. See [Check monitor](monitor.md).
+The check monitor runs health checks that extensions contribute. It reports when a check starts failing and when it recovers, and reminds you about checks that keep failing. See [Check monitor](monitor.md).
 
 ## Requirements
 
-herald needs SearchKit and Form Core, which ship with CiviCRM. CiviRules is optional. herald registers its rule building blocks whether you install CiviRules before or after herald. Without CiviRules, the API, scheduled jobs, topics and the check monitor still work. The supported CiviCRM and PHP versions are listed in the extension's `info.xml`.
+herald needs SearchKit and Form Core, which ship with CiviCRM. CiviRules is optional; if you use it, herald needs version 3.36 or later, and the system status reports an older one. herald registers its rule building blocks whether you install CiviRules before or after herald. Without CiviRules, the API, scheduled jobs, topics and the check monitor still work. The supported CiviCRM and PHP versions are listed in the extension's `info.xml`.
 
 ## Install
 
@@ -60,7 +60,7 @@ cv api4 Herald.testTelegram message='<b>herald works</b>'
 
 Now set up a rule that reports every completed contribution:
 
-1. Go to Administer, CiviRules, Manage Rules, add a rule and choose the trigger "Contribution is added".
+1. Go to Administer » CiviRules » Manage Rules, add a rule and choose the trigger "Contribution is added".
 2. Add the condition "Contribution Status is (not) one of" with Completed.
 3. Add the action "Herald: Send notification (generic)". Choose the template "Herald: New completed contribution" and the channel Telegram. Leave the chat ID empty to use the default.
 

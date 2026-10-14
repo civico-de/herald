@@ -9,7 +9,7 @@ routes:
 
 The check monitor tells you when something on the site breaks and when it works again. Extensions contribute health checks, and herald runs them on every cron run.
 
-herald reports changes, not states. A check that starts failing sends one alert, and its recovery sends another. A check that keeps failing gets a reminder once a day. A healthy site stays quiet.
+herald alerts when a check starts failing and again when it recovers. While it keeps failing, a reminder goes out once a day.
 
 The scheduled job "Herald: Run check monitor" runs the checks. Each change goes out with the template "Herald: Monitor check transition" to the topic named in `herald_monitor_topic`, which is ops by default. Route that topic in `herald_topics` to decide where the alerts go, see [Topics](delivery.md#topics). A minimal route:
 

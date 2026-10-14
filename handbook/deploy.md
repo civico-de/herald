@@ -66,11 +66,11 @@ rules-reenable.php switches the recorded rules back on, removes the file and pri
 
 ### Checking other rules
 
-note-foreign-rules.php runs once herald's rules are back on. It is the only step that loads the classes of rules without a herald handler, and it reports broken ones on stderr without failing. A handler from another extension that is attached to one of herald's rules is not left to this step: the preflight checks it, and it blocks switching the rules back on. A class that crashes PHP when it loads, such as one with an unimplemented abstract method, does fail this last step and marks the deploy as failed. By then herald's rules are already back on, and this failure does not switch them off again.
+note-foreign-rules.php runs once herald's rules are back on. It is the only step that loads the classes of rules without a herald handler, and it reports broken ones on stderr without failing. A handler from another extension that is attached to one of herald's rules is not left to this step: the preflight checks it, and if it is broken, the rules stay off. A class that crashes PHP when it loads, such as one with an unimplemented abstract method, does fail this last step and marks the deploy as failed. By then herald's rules are already back on, and this failure does not switch them off again.
 
 ## When something goes wrong
 
-- A herald class that cannot load at all crashes PHP no later than in the preflight. The preflight then exits with an error, and herald's rules stay off. With a cold class cache, an earlier step that starts CiviCRM can hit the crash first. `cv flush` shows the class and the file.
+- A herald class that cannot load at all crashes PHP in the preflight, if not earlier. The preflight then exits with an error, and herald's rules stay off. With a cold class cache, an earlier step that starts CiviCRM can hit the crash first. `cv flush` shows the class and the file.
 - While the file from the first step exists, CiviCRM's system status shows the warning "Herald: rules disabled by a deploy". It lists the rule IDs and the command that switches them back on.
 - The next successful deploy switches the rules from a failed deploy back on. That includes a rule an admin switched off on purpose in between.
 - A release that retires a handler moves the rules over to its replacement, but not CiviRules' queue of delayed actions. An action queued before the deploy that names a retired handler fails when it runs, and CiviRules logs it. Deploy when no delayed herald action is waiting.

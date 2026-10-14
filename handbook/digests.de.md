@@ -59,7 +59,7 @@ Regeln und Skripte wählen einen Report über seinen Namen. Nachdem Sie den Name
 
 Eine Kampagne oder ein Finanztyp, nach dem ein Block filtert, lässt sich nicht löschen, solange der Block existiert. Der Versuch endet mit einem Datenbankfehler. Ohne seinen Filter würde der Block jeden Beitrag zählen. Ändern oder entfernen Sie zuerst den Block.
 
-Wird eine Suchanzeige gelöscht oder ihre gespeicherte Suche, die ihre Anzeigen mitlöscht, steht der Block ohne Anzeige da. Der Report scheitert dann beim Versand mit der Fehlermeldung, die auch das Formular gezeigt hätte. Wählen Sie eine andere Anzeige oder entfernen Sie den Block.
+Wird eine Suchanzeige gelöscht, hat der Block keine Anzeige mehr. Dasselbe passiert, wenn die gespeicherte Suche gelöscht wird, denn ihre Anzeigen gehen mit. Der Report scheitert dann beim Versand mit der Fehlermeldung, die auch das Formular gezeigt hätte. Wählen Sie eine andere Anzeige oder entfernen Sie den Block.
 
 ## Einen Report verschicken
 
@@ -144,7 +144,7 @@ Die Antwort wird als HTML eingefügt, der Listener maskiert seine eigenen Daten 
 
 Das Upgrade behält bei, was der Report bisher verschickt hat:
 
-- Ein unbekannter Zeitraum galt bisher als gestern und gilt weiterhin so.
+- Ein unbekannter Zeitraum zählte bisher als „gestern“ und tut das weiterhin.
 - Histogrammgrenzen, die keine aufsteigenden Zahlen sind, entfallen mit einer Warnung im Upgrade-Protokoll, und das Histogramm wählt seine Klassen selbst.
 - Eine negative Klassenzahl hat eine einzige Klasse gezeichnet und wird zu 1. Mit der Klassenzahl 0 scheiterte der Report, sobald sich zwei Beträge unterschieden; sie wird zum Standardwert 8, mit einer Warnung im Upgrade-Protokoll.
 - Ein Suchblock bekommt eine neue Tabellenanzeige seiner Suche mit der Bezeichnung `Herald: <Titel des Reports>`, mit den Spalten, der Sortierung und dem Limit der Suche und ohne Seitenumbruch. Seine Werte erscheinen nun formatiert, so wie die Anzeige sie zeigt.

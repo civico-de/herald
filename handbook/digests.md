@@ -59,7 +59,7 @@ Rules and scripts pick a digest by its name. After you change a digest's name or
 
 A campaign or a financial type that a block filters on cannot be deleted while the block exists, and the attempt ends in a database error. Without its filter the block would count every contribution. Change or remove the block first.
 
-Deleting a search display, or the saved search it belongs to, which deletes its displays too, leaves the block without a display. The digest then fails when it is sent, with the message the form would have shown. Pick another display or remove the block.
+Deleting a search display leaves its block without one. Deleting the saved search does the same, because its displays go with it. The digest then fails when it is sent, with the message the form would have shown. Pick another display or remove the block.
 
 ## Sending a digest
 

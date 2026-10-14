@@ -9,7 +9,7 @@ Documentation: https://civico-de.github.io/herald/
 ## Requirements
 
 - SearchKit and Form Core, which ship with CiviCRM
-- CiviRules, optional: it provides the rule actions, the schedule trigger and the field condition. herald registers them whether CiviRules is installed before or after it. Without CiviRules, the API, scheduled jobs, topics and the check monitor still work.
+- CiviRules 3.36 or later, optional: it provides the rule actions, the schedule trigger and the field condition. herald registers them whether CiviRules is installed before or after it. Without CiviRules, the API, scheduled jobs, topics and the check monitor still work.
 
 The supported CiviCRM and PHP versions are listed in `info.xml`.
 
@@ -93,6 +93,8 @@ docker compose exec -w /var/www/html/ext/herald app ckphpunit    # the test suit
 With a civikitchen checkout next to this repository, `../civikitchen/scaffold/ckup` does the `composer install` in the image, starts the stack on free host ports and prints its URL. `../civikitchen/scaffold/ckx ck ci` runs a command in it.
 
 The first boot installs CiviCRM, CiviRules and herald. The tests install themselves into a separate test database, so the dev site stays untouched. CI runs the same gates on the same image. The coverage floor is `coverage.minimum` in `civikitchen.yaml`.
+
+[docs/upstream-bugs.md](docs/upstream-bugs.md) lists the CiviCRM and CiviRules behaviour herald works around, with the code and test for each workaround.
 
 ## License
 

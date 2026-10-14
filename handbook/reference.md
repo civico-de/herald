@@ -43,7 +43,7 @@ The action "Herald: Send digest" sends a digest each time the rule fires. In its
 
 ### Schedule
 
-The trigger "Herald: Schedule" fires once, on the hour, on the chosen weekdays, in CiviCRM's timezone, and carries no contact. It is meant for actions such as "Herald: Send digest", see [Scheduled digests](recipes.md#scheduled-digests). Its form has two fields:
+The trigger "Herald: Schedule" fires once at the chosen hour on the chosen weekdays, in CiviCRM's timezone. It carries no contact. It is meant for actions such as "Herald: Send digest", see [Scheduled digests](recipes.md#scheduled-digests). Its form has two fields:
 
 | Field | Meaning |
 |---|---|
@@ -98,7 +98,7 @@ Examples:
 
 ## APIv4
 
-The entity `Herald` offers these actions. Every action needs the permission "administer CiviCRM". The metadata actions, such as getFields, need only "access CiviCRM".
+The entity `Herald` offers these actions. The actions need the permission "administer CiviCRM", except the metadata actions such as getFields, which need only "access CiviCRM".
 
 | Action | Parameters | What it does |
 |---|---|---|
@@ -131,7 +131,7 @@ cv api4 Herald.renderTemplate workflow=herald_contribution_alert_completed \
     vars='{"contribution": {"total_amount": 50, "currency": "EUR"}}'
 ```
 
-The entity `HeraldBufferedAlert` is a read-only view of the alert buffer for SearchKit, with the actions get and getFields. It needs "administer CiviCRM". Its body and delivery fields can contain contact data, so the shipped display of parked alerts leaves them out.
+The entity `HeraldBufferedAlert` is the alert buffer. Administrators can read it with get and getFields and put parked alerts back with reactivate; all three need "administer CiviCRM". Its update and delete actions are for herald's own code, and no user may call them. There is no create action: herald writes new rows itself, so the stored message text stays exactly as rendered. The body and delivery fields can contain contact data, so the shipped display of parked alerts leaves them out.
 
 The entities `HeraldDigest` and `HeraldDigestBlock` hold the digests and their blocks, with the usual actions such as get, create, save and delete. They need "administer CiviCRM". Saving checks every record, see [Setting up a digest](digests.md#setting-up-a-digest), and deleting a digest deletes its blocks.
 

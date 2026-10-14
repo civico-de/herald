@@ -7,7 +7,7 @@ order: 10
 
 These are complete setups for common alerts. They are built from CiviRules rules and scheduled jobs in the CiviCRM user interface, without any code.
 
-Rules live under Administer, CiviRules, Manage Rules. The trigger and condition names below come from CiviRules. The actions and conditions whose names start with "Herald:" come with herald. Each herald action has a form, and the templates are listed there by title.
+Rules live under Administer » CiviRules » Manage Rules. The trigger and condition names below come from CiviRules. The actions and conditions whose names start with "Herald:" come with herald. Each herald action has a form, and the templates are listed there by title.
 
 Each recipe sends to Telegram. Leave the chat ID empty to use the default chat from the settings. Every recipe works with any other channel too: choose it in the form and put its keys into "Channel-specific config", see [Channels](channels.md).
 

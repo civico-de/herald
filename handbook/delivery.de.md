@@ -11,7 +11,7 @@ Diese Seite beschreibt, wer eine Nachricht erhält, wann sie verschickt wird und
 
 ## Zustellmodi
 
-Jede CiviRules-Aktion von herald hat einen Zustellmodus. Topic-Routen nehmen denselben Parameter auf, `delivery_mode`. Im Aktionsformular heißen die Modi „Direkt“, „Abonnent:innen“, „Gruppe“ und „Adressliste“.
+Jede CiviRules-Aktion von herald hat einen Zustellmodus. Auch Topic-Routen kennen diesen Parameter, `delivery_mode`. Im Aktionsformular heißen die Modi „Direkt“, „Abonnent:innen“, „Gruppe“ und „Adressliste“.
 
 | Modus | Empfänger:innen | Pflichtparameter |
 |---|---|---|
@@ -39,7 +39,7 @@ Zwei Optionen gelten für die Kontaktmodi, also Abonnent:innen und Gruppe:
 
 Ein Info-Eintrag im CiviCRM-Protokoll zählt die ausgelassenen Kontakte nach Grund: `suspended` (gesperrt), `scope_mismatch` (Bezug passt nicht), `no_channel` (kein Kanal gewählt) und `no_recipient` (keine Adresse, kein Chat, kein Topic für den Kanal).
 
-Scheitert die Zustellung an einzelne Empfänger:innen, hält das die übrigen nicht auf. herald protokolliert eine Warnung und macht mit dem nächsten Kontakt weiter. Die Zustellung als Ganzes schlägt nur fehl, wenn sie bei allen Empfänger:innen fehlgeschlagen ist oder wenn es niemanden gab, an den herald senden konnte: keine Abonnent:innen, eine leere Gruppe oder eine leere Adressliste. Sobald mindestens eine Person die Nachricht erhalten hat, gilt die Zustellung als erledigt, und herald versucht es bei den Empfänger:innen, an die die Zustellung scheiterte, nicht erneut.
+Scheitert die Zustellung an einzelne Empfänger:innen, hält das die übrigen nicht auf. herald protokolliert eine Warnung und macht mit dem nächsten Kontakt weiter. Die Zustellung als Ganzes schlägt nur fehl, wenn sie bei allen Empfänger:innen fehlgeschlagen ist oder wenn es niemanden gab, an den herald senden konnte: keine Abonnent:innen, eine leere Gruppe oder eine leere Adressliste. Sobald mindestens eine Person die Nachricht erhalten hat, gilt die Zustellung als erledigt; für die gescheiterten Empfänger:innen unternimmt herald keinen weiteren Versuch.
 
 ## Abonnements
 
@@ -52,7 +52,7 @@ Jeder Kontakt kann einen Kanal und die gewünschten Benachrichtigungen wählen. 
 | Abonnements | Die Abo-Typen, die der Kontakt erhalten möchte |
 | Bezug: Objekttyp, Bezug: Objekt-ID | Optional, siehe [Abos mit Bezug](#abos-mit-bezug) |
 
-Admins können diese Felder am Kontaktdatensatz ausfüllen. Zur Selbstverwaltung installiert herald das Profil „My notification preferences“ (meine Benachrichtigungseinstellungen). Schlagen Sie seine ID unter „Administer, Customize Data and Screens, Profiles“ (Administrieren, Daten und Masken anpassen, Profile) nach und schicken Sie den Mitarbeitenden diesen Link:
+Admins können diese Felder am Kontaktdatensatz ausfüllen. Zur Selbstverwaltung installiert herald das Profil „My notification preferences“ (meine Benachrichtigungseinstellungen). Schlagen Sie seine ID unter Administrieren » Daten und Masken anpassen » Profile (englisch: Administer » Customize Data and Screens » Profiles) nach und schicken Sie den Mitarbeitenden diesen Link:
 
 ```
 /civicrm/profile/edit?gid=<id>&reset=1
@@ -80,7 +80,7 @@ herald liefert diese Abo-Typen mit:
 | `daily_digest` | Täglicher Report |
 | `weekly_digest` | Wöchentlicher Report |
 
-Die Typen sind die Werte der Optionsgruppe `herald_subscription_type`. Eigene ergänzen Sie unter „Administer, Customize Data and Screens, Option Groups“ (Administrieren, Daten und Masken anpassen, Optionsgruppen) oder mit `cv api4 OptionValue.create`. Ein neuer Wert erscheint in der Liste der Abo-Typen der Aktion. Wenn Sie einen Wert deaktivieren, verschwindet er nur aus dieser Liste. Aktionen, die ihn bereits verwenden, stellen weiter an seine Abonnent:innen zu.
+Die Typen sind die Werte der Optionsgruppe `herald_subscription_type`. Eigene ergänzen Sie unter Administrieren » Daten und Masken anpassen » Optionsgruppen (englisch: Administer » Customize Data and Screens » Option Groups) oder mit `cv api4 OptionValue.create`. Ein neuer Wert erscheint in der Liste der Abo-Typen der Aktion. Wenn Sie einen Wert deaktivieren, verschwindet er nur aus dieser Liste. Aktionen, die ihn bereits verwenden, stellen weiter an seine Abonnent:innen zu.
 
 Die beiden Report-Typen sind für Reports gedacht, die im Abonnent:innen-Modus verschickt werden, über die CiviRules-Aktion oder über einen geplanten Job.
 
@@ -96,7 +96,7 @@ Ein Einstellungsdatensatz ohne Bezug erhält alles, was er abonniert hat. Der Be
 
 Bei Topics nennt der Absender nur ein Topic, und die Einstellung `herald_topics` entscheidet über Kanal, Ziel und Sammeln. Ein Skript oder eine andere Extension muss also nie eine Chat-ID oder eine URL kennen.
 
-Die Routen finden Sie unter Administrieren » Herald » Topic-Routen. Die Liste zeigt jedes Topic mit seinem Kanal, seinem Zustellmodus und seinem Sammelfenster. „Topic hinzufügen“ und „Bearbeiten“ öffnen ein Formular mit den Zustellfeldern und den Optionen, die der Kanal des Topics deklariert. Schlüssel ohne eigenes Feld, etwa `channel_config`, gehören als JSON-Objekt in „Weitere Parameter“. Beim Speichern prüft herald die Route und speichert nichts, wenn es eines dieser Probleme findet: ein nicht registrierter Kanal, ein Wert vom falschen Typ, ein Zustellmodus ohne seinen Pflichtparameter oder ein bereits vergebener Topic-Name. Ein umbenanntes Topic behält seinen Platz in der Liste. „Löschen“ fragt vorher nach; wer an ein gelöschtes Topic veröffentlicht, nutzt dann die Route default.
+Die Routen finden Sie unter Administrieren » Herald » Topic-Routen. Die Liste zeigt jedes Topic mit seinem Kanal, seinem Zustellmodus und seinem Sammelfenster. „Topic hinzufügen“ und „Bearbeiten“ öffnen ein Formular mit den Zustellfeldern und den Optionen, die der Kanal des Topics deklariert. Schlüssel ohne eigenes Feld, etwa `channel_config`, gehören als JSON-Objekt in „Weitere Parameter“. Beim Speichern prüft herald die Route und speichert nichts, wenn es eines dieser Probleme findet: ein nicht registrierter Kanal, ein Wert vom falschen Typ, ein Zustellmodus ohne seinen Pflichtparameter oder ein bereits vergebener Topic-Name. Ein umbenanntes Topic behält seinen Platz in der Liste. „Löschen“ fragt vorher nach; Nachrichten an ein gelöschtes Topic laufen danach über die Route default.
 
 So setzen Sie alle Routen auf einmal mit cv:
 
@@ -141,7 +141,7 @@ Ein Wert über 0 legt die gerenderte Meldung in der Tabelle `civicrm_herald_buff
 
 ## Geparkte Meldungen
 
-Eine wartende Gruppe, deren Zustellung fehlschlägt, bleibt im Puffer und wird beim nächsten Cron-Lauf erneut versucht. Nach `herald_buffer_max_attempts` fehlgeschlagenen Versuchen, standardmäßig 5, parkt herald sie. Eine Gruppe ohne Empfänger:innen wird sofort geparkt, weil ein weiterer Versuch nicht helfen kann. Verloren geht nichts. Geparkte Meldungen bleiben in der Tabelle, bis jemand sie wieder aktiviert.
+Eine wartende Gruppe, deren Zustellung fehlschlägt, bleibt im Puffer und wird beim nächsten Cron-Lauf erneut versucht. Nach `herald_buffer_max_attempts` fehlgeschlagenen Versuchen, standardmäßig 5, parkt herald sie. Eine Gruppe ohne Empfänger:innen wird sofort geparkt, weil ein weiterer Versuch nicht helfen kann. Geparkte Meldungen werden nie gelöscht; sie bleiben in der Tabelle, bis jemand sie wieder aktiviert.
 
 Die Seite Administrieren » Herald » Geparkte Meldungen listet sie auf. Die Liste ist eine SearchKit-Anzeige auf der schreibgeschützten Entität `HeraldBufferedAlert`. Um Meldungen wieder zu aktivieren, wählen Sie ihre Zeilen aus und dann im Aktionsmenü „Geparkte Meldungen reaktivieren“; die Rückfrage nennt die Anzahl der Meldungen. Weder die Anzeige noch `Herald.getParkedAlerts` zeigt Nachrichtentexte oder Zustellparameter, weil diese Kontaktdaten enthalten können.
 

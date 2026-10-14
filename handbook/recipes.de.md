@@ -7,7 +7,7 @@ order: 10
 
 Diese Seite zeigt vollständige Beispiele für häufige Meldungen. Sie bestehen aus CiviRules-Regeln und geplanten Jobs in der CiviCRM-Oberfläche und kommen ohne Code aus.
 
-Regeln verwalten Sie unter „Administer, CiviRules, Manage Rules“ (Administrieren, CiviRules, Regeln verwalten). Die Namen der Trigger und Bedingungen unten stammen aus CiviRules und sind mit ihrer englischen Bezeichnung angegeben. Aktionen und Bedingungen, deren Name mit „Herald:“ beginnt, bringt herald mit. Jede herald-Aktion hat ein Formular, in dem die Vorlagen nach ihrem Titel aufgelistet sind.
+Regeln verwalten Sie unter Administrieren » CiviRules » Regeln verwalten (englisch: Administer » CiviRules » Manage Rules). Die Namen der Trigger und Bedingungen unten stammen aus CiviRules und sind mit ihrer englischen Bezeichnung angegeben. Aktionen und Bedingungen, deren Name mit „Herald:“ beginnt, bringt herald mit. Jede herald-Aktion hat ein Formular, in dem die Vorlagen nach ihrem Titel aufgelistet sind.
 
 Alle Rezepte senden an Telegram. Lassen Sie die Chat-ID leer, dann gilt der Standard-Chat aus den Einstellungen. Jedes Rezept funktioniert auch mit jedem anderen Kanal: Wählen Sie ihn im Formular und tragen Sie seine Schlüssel in „Kanalspezifische Konfiguration“ ein, siehe [Kanäle](channels.md).
 
@@ -79,7 +79,7 @@ Diese Regeln helfen, wenn Events nicht von Hand, sondern per Synchronisation gep
 | Neue Registrierung | Event Participant is added | Participant status is (not) one of: Registered | Herald: Neue Event-Registrierung |
 | Registrierung storniert | Event Participant is changed | Compare Old Participant Status to New Participant Status: von Registered oder Pending from pay later nach Cancelled | Herald: Event-Registrierung storniert |
 
-Eine Synchronisation nimmt ein Event meist offline, indem sie es deaktiviert statt löscht. Deshalb erkennt die Regel „Event deaktiviert“ ein entferntes Event. Bauen Sie sie mit der herald-Bedingung Field transition, nicht mit einer Field Value Comparison auf is_active. Eine Field Value Comparison sieht nur den Wert nach der Änderung und löst deshalb auch bei jeder anderen Änderung eines bereits inaktiven Events aus. Field transition löst nur aus, wenn der Wert tatsächlich von 1 auf 0 wechselt.
+Eine Synchronisation deaktiviert ein Event meist, statt es zu löschen. Deshalb erkennt die Regel „Event deaktiviert“ ein entferntes Event. Bauen Sie sie mit der herald-Bedingung Field transition, nicht mit einer Field Value Comparison auf is_active. Eine Field Value Comparison sieht nur den Wert nach der Änderung und löst deshalb auch bei jeder anderen Änderung eines bereits inaktiven Events aus. Field transition löst nur aus, wenn der Wert tatsächlich von 1 auf 0 wechselt.
 
 Abgebrochene Bestellvorgänge wechseln von einer unvollständigen Transaktion zu Cancelled. Die Stornoregel lässt als alten Status nur Registered und Pending from pay later zu, deshalb lösen sie keine Meldung aus. Weil „Neue Registrierung“ auf Registered beschränkt ist, bleiben Wartelisten- und ausstehende Einträge außen vor.
 

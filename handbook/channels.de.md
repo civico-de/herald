@@ -30,7 +30,7 @@ cv setting:set herald_telegram_bot_token=<bot-token>
 Jede Zustellung kann ein eigenes Ziel und eigene Optionen angeben. Diese Schlüssel pro Aufruf haben Vorrang vor den Standardeinstellungen. Wohin sie gehören, hängt vom Aufrufer ab:
 
 - Eine CiviRules-Aktion hat Formularfelder für die Telegram-Optionen. Alle anderen Schlüssel gehören als JSON-Objekt in das Feld „Kanalspezifische Konfiguration“.
-- Eine Topic-Route nimmt die Schlüssel in ihrem Eintrag auf, entweder direkt oder in `channel_config`.
+- In einer Topic-Route stehen die Schlüssel direkt im Eintrag oder in `channel_config`.
 - `Herald.send` nimmt sie in `config` entgegen.
 
 Ist ein Schlüssel sowohl direkt als auch in `channel_config` gesetzt, gilt der Wert aus `channel_config`. Ist `channel_config` kein JSON-Objekt, schlägt der Versand fehl.
@@ -61,7 +61,7 @@ Das Webhook-Format json übergibt das HTML an den Endpunkt.
 
 ## Telegram
 
-Legen Sie mit @BotFather einen Bot an und speichern Sie sein Token in `herald_telegram_bot_token`. Den Standard-Chat speichern Sie in `herald_telegram_default_chat_id`. Gruppenchats haben negative IDs. Ihre eigene Chat-ID findet jede Person über @userinfobot heraus.
+Legen Sie mit @BotFather einen Bot an und speichern Sie sein Token in `herald_telegram_bot_token`. Den Standard-Chat speichern Sie in `herald_telegram_default_chat_id`. Gruppenchats haben negative IDs. Jede Person kann ihre eigene Chat-ID über @userinfobot herausfinden.
 
 | Schlüssel | Bedeutung |
 |---|---|
@@ -118,7 +118,7 @@ Ein Slack-Incoming-Webhook im Feld „Kanalspezifische Konfiguration“ einer Ak
 }
 ```
 
-Das Standard-Token gehört zur Standard-URL. herald sendet es nur, wenn auch die URL aus `herald_webhook_default_url` stammt. Eine URL aus einer Aktion, einer Route oder von einer Abonnent:in erhält es nie.
+Das Standard-Token gehört zur Standard-URL. herald sendet es nur, wenn auch die URL aus `herald_webhook_default_url` stammt. Eine URL aus einer Aktion, einer Route oder aus den Einstellungen eines Kontakts erhält es nie.
 
 herald prüft jede URL vor dem Senden:
 
@@ -196,7 +196,7 @@ Typ und Status sind Optionsnamen, keine Zahlen, und müssen auf der Site aktiv s
 
 ## Testnachricht
 
-Die Seite Administrieren » Herald » Testnachricht sendet eine echte Nachricht. „Einen Kanal“ sendet über einen Kanal, mit dem Ziel und den Optionen, die Sie auf der Seite eintragen. Leere Felder übernehmen die Standardwerte der Einstellungsseite. „Eine Topic-Route“ schickt die Nachricht über eine Route, wie eine echte Meldung. Sammelt die Route, puffert sie die Nachricht, bis der Puffer das nächste Mal geleert wird, und die Seite weist darauf hin.
+Die Seite Administrieren » Herald » Testnachricht sendet eine echte Nachricht. „Einen Kanal“ sendet über einen Kanal, mit dem Ziel und den Optionen, die Sie auf der Seite eintragen. Leere Felder übernehmen die Standardwerte der Einstellungsseite. „Eine Topic-Route“ schickt die Nachricht über eine Route, wie eine echte Meldung. Hat die Route ein Sammelfenster, bleibt die Nachricht bis zum nächsten Leeren im Puffer, und die Seite weist darauf hin.
 
 Eingabefehler listet die Seite auf. Einen Zustellfehler des Kanals selbst sehen Benutzer:innen mit der Berechtigung „view debug output“ vollständig. Alle anderen sehen eine Fehler-ID, unter der das CiviCRM-Protokoll die Fehlermeldung enthält.
 

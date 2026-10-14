@@ -7,9 +7,9 @@ routes:
 
 # Check-Monitor
 
-Der Check-Monitor sagt Ihnen, wenn auf der Site etwas kaputtgeht und wenn es wieder funktioniert. Extensions steuern Health-Checks bei, und herald führt sie bei jedem Cron-Lauf aus.
+Der Check-Monitor meldet, wenn auf der Site etwas ausfällt und wenn es wieder funktioniert. Extensions steuern Health-Checks bei, und herald führt sie bei jedem Cron-Lauf aus.
 
-herald meldet Wechsel, keine Zustände. Schlägt ein Check fehl, kommt eine Meldung. Ist er wieder in Ordnung, kommt eine zweite. Für einen Check, der weiter fehlschlägt, kommt einmal am Tag eine Erinnerung. Auf einer gesunden Site bleibt es still.
+herald meldet nur Wechsel: wenn ein Check anfängt fehlzuschlagen und wenn er wieder in Ordnung ist. Solange er weiter fehlschlägt, erinnert herald einmal am Tag daran.
 
 Der geplante Job „Herald: Check-Monitor ausführen“ führt die Checks aus. Jeder Wechsel geht mit der Vorlage „Herald: Statuswechsel eines Monitor-Checks“ an das Topic, das in `herald_monitor_topic` steht, standardmäßig ops. Wohin die Meldungen gehen, legen Sie fest, indem Sie für dieses Topic in `herald_topics` eine Route anlegen, siehe [Topics](delivery.md#topics). Eine minimale Route:
 
@@ -65,7 +65,7 @@ Alle Einstellungen sind optional. Standardmäßig meldet herald den ersten fehlg
 
 | Einstellung | Standard | Wirkung |
 |---|---|---|
-| `herald_monitor_open_after` | 1 | Einen Fehler erst nach so vielen fehlgeschlagenen Läufen in Folge melden. So fallen Checks, die hin und her springen, nicht ins Gewicht. |
+| `herald_monitor_open_after` | 1 | Einen Fehler erst nach so vielen fehlgeschlagenen Läufen in Folge melden. So meldet ein Check, der zwischen gesund und fehlgeschlagen hin und her springt, nicht jeden Ausreißer. |
 | `herald_monitor_close_after` | 1 | Eine Entwarnung erst nach so vielen gesunden Läufen in Folge melden. |
 | `herald_monitor_renotify_hours` | 24 | Eine Erinnerung senden, wenn ein Check so viele Stunden lang fehlschlägt. 0 schaltet Erinnerungen ab. |
 | `herald_monitor_topic` | ops | Das Topic, in das die Meldungen veröffentlicht werden. |
@@ -105,7 +105,7 @@ Die Einstellung `herald_monitor_state` enthält den letzten Zustand jedes Checks
 - Jeder Lauf setzt eine Sperre. Ein Lauf, der sich mit einem anderen überschneidet, wird übersprungen, statt doppelt zu senden.
 - Der Zustand jedes Checks wird direkt nach dem Veröffentlichen seiner Meldung gespeichert. Ein Absturz mitten im Lauf wiederholt die Meldungen davor nicht. Nur ein Absturz genau zwischen dem Veröffentlichen einer Meldung und dem Speichern des Zustands kann diese eine Meldung doppelt senden.
 - Schlägt eine Veröffentlichung fehl, behält der Check seinen alten Zustand, und der nächste Lauf meldet den Wechsel erneut. Der Joblauf endet dann mit dem Fehler „herald monitor: N transition(s) could not be published, see the CiviCRM log“, und jeder Fehler steht als Warnung in diesem Protokoll.
-- Sammelt die Route des Topics Meldungen, wird eine veröffentlichte Meldung nur gepuffert. Der Job zum Leeren des Puffers stellt sie später zu.
+- Hat die Route des Topics ein Sammelfenster, landet eine Meldung zunächst nur im Puffer. Der Job zum Leeren des Puffers stellt sie später zu.
 
 ## Grenzen
 
