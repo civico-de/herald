@@ -139,6 +139,31 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransitionConditionTest extends
     );
   }
 
+  /**
+   * A delayed action rechecks in a later process: only CiviRules' raw copy remains.
+   */
+  public function testAnOptionSuffixReadsTheNameFromTheOriginalId(): void {
+    $id = $this->createContribution(1);
+    $params = [
+      'entity' => 'Contribution',
+      'field' => 'contribution_status_id:name',
+      'from_operator' => '=',
+      'from_value' => 'Pending',
+      'to_operator' => '=',
+      'to_value' => 'Completed',
+    ];
+    $this->assertTrue(
+      $this->condition($params)->isConditionValid($this->triggerDataWithOriginal($id, [
+        'contribution_status_id' => '2',
+      ])),
+    );
+    $this->assertFalse(
+      $this->condition($params)->isConditionValid($this->triggerDataWithOriginal($id, [
+        'contribution_status_id' => '1',
+      ])),
+    );
+  }
+
   public function testAfterOnlySideRequiresAnActualChange(): void {
     // One-sided conditions must see a changed value, or every unrelated edit
     // of a row already in the target state would re-fire them.

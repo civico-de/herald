@@ -75,15 +75,20 @@ class FieldTransitionSnapshotterTest extends TestCase implements HeadlessInterfa
   }
 
   public function testAnOptionSuffixReadsTheOptionName(): void {
-    $id = $this->contactId();
-    $this->watch('Contact', 'contact_type:name');
+    $id = (int) Contact::create(checkPermissions: FALSE)
+      ->addValue('contact_type', 'Individual')
+      ->addValue('first_name', 'Herald')
+      ->addValue('gender_id:name', 'Female')
+      ->execute()
+      ->first()['id'];
+    $this->watch('Contact', 'gender_id:name');
 
-    FieldTransitionSnapshotter::capture('Organization', $id);
+    FieldTransitionSnapshotter::capture('Individual', $id);
 
-    $this->assertSame('Organization', PreEditSnapshot::get('Contact', $id, 'contact_type:name'));
+    $this->assertSame('Female', PreEditSnapshot::get('Contact', $id, 'gender_id:name'));
     $this->assertSame(
-      ['known' => TRUE, 'value' => 'Organization'],
-      FieldTransitionSnapshotter::currentValue('Contact', $id, 'contact_type:name'),
+      ['known' => TRUE, 'value' => 'Female'],
+      FieldTransitionSnapshotter::currentValue('Contact', $id, 'gender_id:name'),
     );
   }
 

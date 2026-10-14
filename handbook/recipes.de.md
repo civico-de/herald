@@ -37,7 +37,7 @@ Die Bedingung auf den Finanztyp bei „Überweisung angekündigt“ ist wichtig,
 | Vorher | = 2, die ID von Pending auf einer Standardinstallation |
 | Nachher | beliebiger Wert |
 
-Die Bedingung liest den Status vor der Änderung aus den Daten, die CiviCRM vor der Änderung hatte. Sie funktioniert auch mit verzögerten Aktionen.
+Die Bedingung liest den Status vor der Änderung aus der Kopie, die CiviRules vom Datensatz aufbewahrt, und funktioniert daher auch mit verzögerten Aktionen. Ein benutzerdefiniertes Feld braucht dort eine zusätzliche Einstellung, siehe [Feldwechsel](reference.md#feldwechsel).
 
 Der Fortschritt einer Kampagne braucht keine Einrichtung. Ein Beitrag, der zu einer Kampagne gehört, bringt Titel, Summe und Anzahl der Kampagne mit. Hat die Kampagne ein Umsatzziel, kommen das Ziel und der erreichte Prozentsatz hinzu. Siehe [Beitragsvariablen](reference.md#beitragsvariablen).
 

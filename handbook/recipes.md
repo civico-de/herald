@@ -35,7 +35,7 @@ The financial type condition on "Transfer announced" matters when the site sells
 | Before | = 2, the ID of Pending on a standard install |
 | After | any value |
 
-The condition reads the status before the edit from the data CiviCRM had before the change. It works with delayed actions too.
+The condition reads the status before the edit from the copy CiviRules keeps of the record, so it works with delayed actions too. A custom field needs one more setting there, see [Field transition](reference.md#field-transition).
 
 Campaign progress needs no setup. A contribution that belongs to a campaign brings the campaign's title, total and count. When the campaign has a revenue goal, it also brings the goal and the percentage reached. See [Contribution variables](reference.md#contribution-variables).
 

@@ -15,6 +15,7 @@ final class CRM_Herald_CivirulesAdapter_OriginalData {
   /**
    * Pre-edit value of any field: ['known' => FALSE] when the trigger carries
    * no original data for this entity or the field is absent from it.
+   * CiviRules keeps custom fields as custom_N, so a group.field stays unknown.
    *
    * @return array{known: bool, value: mixed}
    */
@@ -29,11 +30,7 @@ final class CRM_Herald_CivirulesAdapter_OriginalData {
     ) {
       return ['known' => FALSE, 'value' => NULL];
     }
-    $original = $triggerData->getOriginalData();
-    if (!array_key_exists($field, $original)) {
-      return ['known' => FALSE, 'value' => NULL];
-    }
-    return ['known' => TRUE, 'value' => $original[$field]];
+    return \Civi\Herald\Condition\StoredRow::value($entity, $field, $triggerData->getOriginalData());
   }
 
   /**

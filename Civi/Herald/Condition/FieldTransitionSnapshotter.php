@@ -12,7 +12,7 @@ use Civi\Herald\PreEditSnapshot;
  *
  * Reads via APIv4 so custom fields and pseudo-fields resolve the same way the
  * condition later reads the post-edit value. A failed read only skips the
- * snapshot — the condition then falls back to CiviRules' original data.
+ * snapshot, which the condition reads only after CiviRules' original data.
  */
 final class FieldTransitionSnapshotter {
 
