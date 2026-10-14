@@ -33,8 +33,8 @@ Die Bedingung auf den Finanztyp bei „Überweisung angekündigt“ ist wichtig,
 | Feld | Wert |
 |---|---|
 | Entität | Contribution |
-| Feld | contribution_status_id |
-| Vorher | = 2, die ID von Pending auf einer Standardinstallation |
+| Feld | contribution_status_id:name |
+| Vorher | = Pending |
 | Nachher | beliebiger Wert |
 
 Die Bedingung liest den Status vor der Änderung aus der Kopie, die CiviRules vom Datensatz aufbewahrt, und funktioniert daher auch mit verzögerten Aktionen. Ein benutzerdefiniertes Feld braucht dort eine zusätzliche Einstellung, siehe [Feldwechsel](reference.md#feldwechsel).
@@ -63,7 +63,7 @@ Damit solche Quellen in Meldungen und Reports unter einer lesbaren Bezeichnung e
 |---|---|---|---|
 | Ticket online bezahlt | Contribution is added | Finanztyp ist der Ticket-Typ, Status ist Completed | Herald: Neuer Ticket-/Event-Beitrag |
 | Ticket per Überweisung bestellt | Contribution is added | Finanztyp ist der Ticket-Typ, Status ist Pending | Herald: Ticket bestellt, Überweisung angekündigt |
-| Ticket-Überweisung eingegangen | Contribution is changed | Herald: Field transition auf contribution_status_id mit Vorher = 2, Finanztyp ist der Ticket-Typ, Status ist Completed | Herald: Ticket-Überweisung eingegangen |
+| Ticket-Überweisung eingegangen | Contribution is changed | Herald: Field transition auf contribution_status_id:name mit Vorher = Pending, Finanztyp ist der Ticket-Typ, Status ist Completed | Herald: Ticket-Überweisung eingegangen |
 
 Alle drei verwenden „Herald: Send notification (generic)“. Nach einer Ankündigung kommen Verkäufe gehäuft, setzen Sie daher das „Sammelfenster in Minuten“ auf 5. Sieben Verkäufe innerhalb des Fensters erscheinen dann als eine Nachricht mit der Kopfzeile „📬 7 Meldungen, gesamt 385,00 € (gesammelt über 5 min)“, gefolgt von den einzelnen Verkäufen. Siehe [Sammelnachrichten](delivery.md#sammelnachrichten).
 
@@ -81,7 +81,7 @@ Diese Regeln helfen, wenn Events nicht von Hand, sondern per Synchronisation gep
 
 Eine Synchronisation nimmt ein Event meist offline, indem sie es deaktiviert statt löscht. Deshalb erkennt die Regel „Event deaktiviert“ ein entferntes Event. Bauen Sie sie mit der herald-Bedingung Field transition, nicht mit einer Field Value Comparison auf is_active. Eine Field Value Comparison sieht nur den Wert nach der Änderung und löst deshalb auch bei jeder anderen Änderung eines bereits inaktiven Events aus. Field transition löst nur aus, wenn der Wert tatsächlich von 1 auf 0 wechselt.
 
-Abgebrochene Bestellvorgänge wechseln von einer unvollständigen Transaktion zu Cancelled. Wenn Sie den alten Status der Stornoregel einschränken, bleiben sie still. Wenn Sie „Neue Registrierung“ auf Registered beschränken, bleiben Wartelisten- und ausstehende Einträge außen vor.
+Abgebrochene Bestellvorgänge wechseln von einer unvollständigen Transaktion zu Cancelled. Wenn Sie den alten Status der Stornoregel einschränken, lösen sie keine Meldung aus. Wenn Sie „Neue Registrierung“ auf Registered beschränken, bleiben Wartelisten- und ausstehende Einträge außen vor.
 
 Eine online bezahlte Registrierung beginnt als „Pending from incomplete transaction“ (ausstehend wegen unvollständiger Transaktion) und wird zu Registered, sobald die Zahlung durch ist. Um sie zu erfassen, legen Sie eine zweite Regel auf „Event Participant is changed“ an, mit „Compare Old Participant Status to New Participant Status“ von „Pending from incomplete transaction“ nach Registered, und verwenden dieselbe Vorlage.
 
@@ -100,7 +100,7 @@ Anmeldungen kommen nach einem Mailing oder einem Import gehäuft. Ein Sammelfens
 
 ## Geplante Reports
 
-Ein Report, der zu einer festen Zeit verschickt wird, ist eine CiviRules-Regel mit dem Trigger „Herald: Schedule“ und der Aktion „Herald: Send digest“. Der Trigger löst einmal zur gewählten Stunde aus und trägt keinen Kontakt, die Regel verschickt also einen Report und nicht einen pro Datensatz.
+Ein Report, der zu einer festen Zeit verschickt wird, ist eine CiviRules-Regel mit dem Trigger „Herald: Schedule“ und der Aktion „Herald: Send digest“. Der Trigger löst einmal zur gewählten Stunde aus und bezieht sich auf keinen Kontakt. Die Regel verschickt also einen Report und nicht einen pro Datensatz.
 
 Ein wöchentlicher Beitragsreport jeden Montag um 8:00 Uhr:
 
@@ -113,7 +113,7 @@ Die Regelliste zeigt den Zeitplan als „Jeden Montag um 08:00“ und die Aktion
 
 Der Trigger wird bei jedem Lauf des geplanten Jobs von CiviRules geprüft, der Report geht also mit dem ersten Cron-Lauf nach der vollen Stunde hinaus. Ob ein Termin schon verschickt wurde, steht im Protokoll der Regel selbst:
 
-- Verpasst Cron die Stunde, holt der nächste Lauf sie nach. Läuft Cron alle 15 Minuten und folgt auf einen Lauf um 7:45 Uhr einer um 9:00 Uhr, geht der Report für 8 Uhr um 9:00 Uhr hinaus.
+- Verpasst Cron die Stunde, holt der nächste Lauf sie nach. Läuft Cron alle 15 Minuten, fällt aber zwischen 7:45 Uhr und 9:00 Uhr aus, geht der Report für 8 Uhr um 9:00 Uhr hinaus.
 - Nach einem längeren Ausfall wird nur der jüngste Termin verschickt. Drei verpasste Montage ergeben einen Report, nicht drei.
 - Eine neue Regel oder eine, deren Zeitplan gerade gespeichert wurde, verschickt nie einen Termin von vor diesem Zeitpunkt.
 - Ein Lauf zählt auch, wenn das Senden fehlschlägt, etwa weil der Kanal nicht eingerichtet ist. Der Fehler wird protokolliert, und der nächste Report geht zum nächsten Termin hinaus.
@@ -132,7 +132,7 @@ Skripte und die Crontab des Servers können `Herald.notifyDigest` direkt aufrufe
 
 Dieser Aufruf ist nicht auf die Umgebung Production beschränkt.
 
-Ein geplanter Job von CiviCRM für `Herald.notifyDigest`, auf Hourly (stündlich) gestellt und mit `"sendHour": 8` in den Parametern, funktioniert ebenfalls. Er kann aber keine Wochentage wählen und kann einen Tag auslassen: CiviCRM schiebt den nächsten Lauf jedes Jobs um bis zu ein Cron-Intervall nach hinten, und trägt diese Verschiebung den Job über die ganze Stunde hinweg, fällt kein Lauf in sie.
+Ein geplanter Job von CiviCRM für `Herald.notifyDigest`, auf Hourly (stündlich) gestellt und mit `"sendHour": 8` in den Parametern, funktioniert ebenfalls. Er kann aber keine Wochentage wählen und kann einen Tag auslassen: CiviCRM schiebt den nächsten Lauf jedes Jobs um bis zu ein Cron-Intervall nach hinten, Rutscht der Job dadurch über die ganze Stunde hinweg, fällt an diesem Tag kein Lauf in sie.
 
 ## Benachrichtigungen pro Person
 

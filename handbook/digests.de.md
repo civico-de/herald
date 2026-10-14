@@ -20,7 +20,7 @@ Ein Report (im Code Digest genannt) fasst einen Zeitraum in einer Nachricht zusa
 Die Reports finden Sie unter Administrieren » Herald » Reports. „Report hinzufügen“ öffnet das Formular, und jede Zeile der Liste hat „Bearbeiten“ und „Löschen“.
 
 - **Titel** bezeichnet den Report in Listen und in CiviRules.
-- **Name** ist das, womit Regeln und Skripte den Report auswählen. Er besteht aus Kleinbuchstaben, Ziffern und Unterstrichen, und zwei Reports können nicht denselben haben.
+- **Name**: Darüber wählen Regeln und Skripte den Report aus. Er besteht aus Kleinbuchstaben, Ziffern und Unterstrichen und muss eindeutig sein.
 - **Zeitraum** gilt für jeden Block, der keinen eigenen setzt: gestern, heute, die letzten 7 oder die letzten 30 Tage.
 - **Kopfzeile** ist eine optionale Zeile über den Blöcken. Sie wird als HTML eingefügt, zum Beispiel `📊 <b>Daily report</b>`.
 
@@ -57,9 +57,9 @@ JSON
 
 Regeln und Skripte wählen einen Report über seinen Namen. Nachdem Sie den Namen eines Reports geändert oder den Report gelöscht haben, scheitern sie mit der Meldung `Den Report „weekly_report“ gibt es nicht.`, bis sie einen anderen nennen. Die Regelliste zeigt dieselbe Meldung anstelle des Reporttitels. Den Titel können Sie jederzeit ändern.
 
-Eine Kampagne oder ein Finanztyp, nach dem ein Block filtert, lässt sich nicht löschen, solange der Block existiert, der Versuch endet mit einem Datenbankfehler. Ohne seinen Filter würde der Block jeden Beitrag zählen. Ändern oder entfernen Sie zuerst den Block.
+Eine Kampagne oder ein Finanztyp, nach dem ein Block filtert, lässt sich nicht löschen, solange der Block existiert. Der Versuch endet mit einem Datenbankfehler. Ohne seinen Filter würde der Block jeden Beitrag zählen. Ändern oder entfernen Sie zuerst den Block.
 
-Eine Suchanzeige lässt sich löschen, ebenso ihre gespeicherte Suche, die ihre Anzeigen mitnimmt. Der Block, der sie gezeigt hat, steht dann ohne Anzeige da, und der Report scheitert beim Versand mit der Meldung, die auch das Formular gezeigt hätte. Wählen Sie eine andere Anzeige oder entfernen Sie den Block.
+Eine Suchanzeige lässt sich löschen, ebenso ihre gespeicherte Suche, mit der auch ihre Anzeigen gelöscht werden. Der Block, der sie gezeigt hat, steht dann ohne Anzeige da, und der Report scheitert beim Versand mit der Meldung, die auch das Formular gezeigt hätte. Wählen Sie eine andere Anzeige oder entfernen Sie den Block.
 
 ## Einen Report verschicken
 
@@ -110,7 +110,7 @@ Bei der Aufschlüsselung nach Positionen stammen Summen, Anzahlen und ausstehend
 
 Das Histogramm zeigt die abgeschlossenen Beiträge des Zeitraums, die zu den Filtern passen, und ignoriert Beträge von null oder weniger. Es verwendet immer ganze Beitragsbeträge, bei der Aufschlüsselung nach Positionen gilt sein Filter auf den Finanztyp also für den Beitrag. Gibt es nichts anzuzeigen, steht dort „(no data)“.
 
-Ohne feste Grenzen wählt herald Klassengrenzen, die zu den Beträgen passen. Feste Grenzen eignen sich für eine Kampagne, die in Stufen erzählt wird, etwa eine Großspendenkampagne. Geben Sie mindestens zwei Werte an, zum Beispiel `[0, 100, 1000, 10000, 100000, 1000000]`. Beträge unterhalb der ersten oder oberhalb der letzten Grenze landen in zusätzlichen Klassen mit den Beschriftungen „<low“ und „≥high“. Ist das Histogramm ausgeschaltet, werden die Grenzen nicht geprüft.
+Ohne feste Grenzen wählt herald Klassengrenzen, die zu den Beträgen passen. Feste Grenzen eignen sich für eine Kampagne mit festen Spendenstufen, etwa eine Großspendenkampagne. Geben Sie mindestens zwei Werte an, zum Beispiel `[0, 100, 1000, 10000, 100000, 1000000]`. Beträge unterhalb der ersten oder oberhalb der letzten Grenze landen in zusätzlichen Klassen mit den Beschriftungen „<low“ und „≥high“. Ist das Histogramm ausgeschaltet, werden die Grenzen nicht geprüft.
 
 Der Fortschritt einer Kampagne übernimmt Titel und Ziel aus dem Kampagnendatensatz. Er zählt jeden abgeschlossenen Beitrag der Kampagne, der zu den Filtern auf Finanztyp und Quelle passt, unabhängig vom Zeitraum. Bei der Aufschlüsselung nach Positionen zählt er stattdessen die Positionen der Kampagne. Eine Kampagne ohne Ziel zeigt keine Fortschrittszeile.
 
@@ -118,7 +118,7 @@ Der Fortschritt einer Kampagne übernimmt Titel und Ziel aus dem Kampagnendatens
 
 Ein Suchblock zeigt die Zeilen einer SearchKit-Anzeige, die Sie im Feld „Suchanzeige“ (`search_display_id`) wählen. Die Anzeige bauen Sie wie gewohnt in SearchKit, als Tabelle, Liste oder Raster. Nur diese bietet das Feld an, denn die übrigen Anzeigetypen haben keine Zeilen zum Verschicken. Um Anzahlen zu zeigen, gruppieren Sie die Suche, zum Beispiel Mitgliedschaften nach Typ.
 
-Die Standardvorlage gibt eine Zeile pro Ergebniszeile aus. Was darin steht, bestimmt die Anzeige: ihre Wertspalten in ihrer Reihenfolge und so formatiert wie in der Anzeige, ein Ja/Nein-Feld also als „Ja“ und ein Datum im Datumsformat der Seite. Es erscheinen nur Feld- und HTML-Spalten. Links, Schaltflächen, Menüs, Bilder und Untersuchen entfallen. Eine HTML-Spalte kommt als Text an, ohne ihr Markup. Es gilt die Sortierung der Anzeige. Eine Anzeige ohne eigene Sortierung zeigt die Zeilen unsortiert, auch wenn die Suche eine Reihenfolge hat. Auch ihr Limit gilt, bei einer Anzeige mit Seitenumbruch die erste Seite. Geben Sie der Anzeige ein Limit, denn jede Zeile landet in der Nachricht, und nur Telegram kürzt eine zu lange Nachricht.
+Die Standardvorlage gibt eine Zeile pro Ergebniszeile aus. Was darin steht, bestimmt die Anzeige: ihre Wertspalten in ihrer Reihenfolge und so formatiert wie in der Anzeige, ein Ja/Nein-Feld also als „Ja“ und ein Datum im Datumsformat der Site. Es erscheinen nur Feld- und HTML-Spalten. Links, Schaltflächen, Menüs, Bilder und verschachtelte Suchen entfallen. Eine HTML-Spalte kommt als Text an, ohne ihr Markup. Es gilt die Sortierung der Anzeige. Eine Anzeige ohne eigene Sortierung zeigt die Zeilen unsortiert, auch wenn die Suche eine Reihenfolge hat. Auch ihr Limit gilt, bei einer Anzeige mit Seitenumbruch die erste Seite. Geben Sie der Anzeige ein Limit, denn jede Zeile landet in der Nachricht, und nur Telegram kürzt eine zu lange Nachricht.
 
 herald führt die Anzeige ohne Berechtigungsprüfung aus, so wie seine eigenen Beitragsabfragen. Wer einen Report konfigurieren darf, kann deshalb die Zeilen jeder Anzeige an einen Kanal schicken.
 
@@ -142,9 +142,32 @@ Die Antwort wird als HTML eingefügt, der Listener maskiert seine eigenen Daten 
 
 Ältere Versionen haben einen Report in den Einstellungen seiner Regelaktion oder seines geplanten Jobs abgelegt. Das Upgrade macht aus jedem einen Datensatz und lässt in der Aktion nur die Zustelleinstellungen und den Namen des Reports stehen. Der Report einer Regelaktion heißt `rule_action_<id>` und übernimmt den Titel der Regel, der Report eines Jobs heißt `job_<id>` und übernimmt den Namen des Jobs. Sie können sie danach umbenennen. Wählen Sie den Report dann in jeder Regelaktion, die ihn verschickt hat, neu aus, und passen Sie die Jobs und Skripte an, die ihn nennen.
 
-Das Upgrade behält bei, was der Report bisher verschickt hat. Einen Zeitraum, den herald nicht kannte, hat es als gestern gelesen, und so bleibt es. Histogrammgrenzen, die keine aufsteigenden Zahlen sind, entfallen mit einer Warnung im Upgrade-Protokoll, und das Histogramm wählt seine Klassen selbst. Ein Suchblock bekommt eine neue Tabellenanzeige seiner Suche mit der Bezeichnung „Herald: <Titel des Reports>“, mit den Spalten, der Sortierung und dem Limit der Suche und ohne Seitenumbruch. Seine Werte erscheinen nun formatiert, so wie die Anzeige sie zeigt. Eine Klassenzahl unter 0 hat eine einzige Klasse gezeichnet und wird zu 1. Die Klassenzahl 0 ist gescheitert, sobald sich zwei Beträge unterschieden. Sie wird zum Standardwert 8, mit einer Warnung im Upgrade-Protokoll. Ein Statusfilter auf Completed entfällt, weil die Datensätze ohnehin abgeschlossene Beiträge zählen. Ein Report, den die Datensätze nicht nachbilden können, bleibt, wie er war, und das Upgrade-Protokoll enthält die Warnung „digest left inline, it cannot run until fixed“ mit dem Grund. Eine solche Regel oder ein solcher Job scheitert, bis er einen Report nennt. Die meisten dieser Reports konnten nie laufen: eine Blockliste, die kein JSON-Array aus Objekten ist, ein Block unbekannten Typs, ein Abschnittsblock ohne Schlüssel, eine gespeicherte Suche, die es nicht mehr gibt oder deren Entität mit ihrer Extension verschwunden ist, eine Kampagne oder ein Finanztyp, die es nicht mehr gibt. Die übrigen verlangen etwas, das die Datensätze nicht können. Das eine ist eine gespeicherte Suche, die ihre ersten Zeilen überspringt, denn eine Anzeige beginnt immer bei der ersten Zeile. Das andere ist ein Statusfilter auf einen anderen Status als Completed, den die Datensätze nicht mehr anbieten. Dazu gehört auch Completed in einem Report, der die ausstehenden Beträge ohne die Aufschlüsselung nach Positionen zeigte, denn diese Beträge zählten dann ebenfalls abgeschlossene Beiträge. Listener für Abschnitte bekamen in älteren Versionen die Einstellungen des Reports unter `params` in `$context`. Diesen Schlüssel gibt es nicht mehr. Ein Listener, der dort einen Filter gelesen hat, lädt nun den Report-Datensatz über seinen Namen aus `digest`. Eine verzögerte Aktion, die beim Upgrade schon in der Warteschlange von CiviRules wartete, trägt noch die alten Einstellungen und scheitert einmal. Beim nächsten Auslösen nimmt die Regel die neuen.
+Das Upgrade behält bei, was der Report bisher verschickt hat:
 
-Das Report-Formular ist ein Afform, herald braucht deshalb die Extension Form Core (`org.civicrm.afform`). Aktivieren Sie sie vor dem Upgrade von herald auf einer Seite, auf der sie noch fehlt.
+- Einen Zeitraum, den herald nicht kannte, hat es als gestern gelesen, und so bleibt es.
+- Histogrammgrenzen, die keine aufsteigenden Zahlen sind, entfallen mit einer Warnung im Upgrade-Protokoll, und das Histogramm wählt seine Klassen selbst.
+- Eine Klassenzahl unter 0 hat eine einzige Klasse gezeichnet und wird zu 1. Die Klassenzahl 0 ist gescheitert, sobald sich zwei Beträge unterschieden. Sie wird zum Standardwert 8, mit einer Warnung im Upgrade-Protokoll.
+- Ein Suchblock bekommt eine neue Tabellenanzeige seiner Suche mit der Bezeichnung „Herald: <Titel des Reports>“, mit den Spalten, der Sortierung und dem Limit der Suche und ohne Seitenumbruch. Seine Werte erscheinen nun formatiert, so wie die Anzeige sie zeigt.
+- Ein Statusfilter auf Completed entfällt, weil die Datensätze ohnehin abgeschlossene Beiträge zählen.
+
+Ein Report, den die Datensätze nicht nachbilden können, bleibt, wie er war. Das Upgrade-Protokoll enthält dann die Warnung „digest left inline, it cannot run until fixed“ mit dem Grund, und die Regel oder der Job scheitert, bis sie einen Report nennt. Die meisten dieser Reports konnten nie laufen:
+
+- eine Blockliste, die kein JSON-Array aus Objekten ist
+- ein Block unbekannten Typs
+- ein Abschnittsblock ohne Schlüssel
+- eine gespeicherte Suche, die es nicht mehr gibt oder deren Entität mit ihrer Extension verschwunden ist
+- eine Kampagne oder ein Finanztyp, die es nicht mehr gibt
+
+Die übrigen verlangen etwas, das die Datensätze nicht können:
+
+- Eine gespeicherte Suche, die ihre ersten Zeilen überspringt. Eine Anzeige beginnt immer bei der ersten Zeile.
+- Ein Statusfilter auf einen anderen Status als Completed, den die Datensätze nicht mehr anbieten. Dazu gehört auch Completed in einem Report, der die ausstehenden Beträge ohne die Aufschlüsselung nach Positionen zeigte, denn diese Beträge zählten dann ebenfalls abgeschlossene Beiträge.
+
+Listener für Abschnitte bekamen in älteren Versionen die Einstellungen des Reports unter `params` in `$context`. Diesen Schlüssel gibt es nicht mehr. Ein Listener, der dort einen Filter gelesen hat, lädt nun den Report-Datensatz über seinen Namen aus `digest`.
+
+Eine verzögerte Aktion, die beim Upgrade schon in der Warteschlange von CiviRules wartete, trägt noch die alten Einstellungen und scheitert einmal. Beim nächsten Auslösen nimmt die Regel die neuen.
+
+Das Report-Formular ist ein Afform, herald braucht deshalb die Extension Form Core (`org.civicrm.afform`). Aktivieren Sie sie vor dem Upgrade von herald auf einer Site, auf der sie noch fehlt.
 
 ## Quellen normalisieren
 
@@ -167,7 +190,7 @@ JSON
 - Die Regeln werden der Reihe nach geprüft, und der erste Treffer gewinnt.
 - Der Typ ist contains, prefix oder regex. Bei contains und prefix zählt die Groß- und Kleinschreibung.
 - Ein regulärer Ausdruck verwendet die preg-Syntax von PHP, einschließlich der Begrenzungszeichen.
-- Eine fehlerhafte Regel, die in die Einstellung gelangt, wird ignoriert, sodass ein Tippfehler keine Meldung kaputt machen kann. Die Seite und `Herald.saveSourceRules` lehnen sie ab, bevor sie gespeichert wird.
+- Eine fehlerhafte Regel, die in die Einstellung gelangt, wird ignoriert, sodass ein Tippfehler keine Meldung verhindern kann. Die Seite und `Herald.saveSourceRules` lehnen sie ab, bevor sie gespeichert wird.
 - Im Report werden Quellen mit derselben Bezeichnung zu einer Zeile addiert.
 
 ## Vorlagenvariablen

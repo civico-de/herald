@@ -43,11 +43,11 @@ Die Aktion „Herald: Send digest“ verschickt bei jedem Auslösen der Regel ei
 
 ### Zeitplan
 
-Der Trigger „Herald: Schedule“ löst an den gewählten Wochentagen einmal zur vollen Stunde aus, in der Zeitzone von CiviCRM, und trägt keinen Kontakt. Er ist für Aktionen wie „Herald: Send digest“ gedacht, siehe [Geplante Reports](recipes.md#geplante-reports). Sein Formular hat zwei Felder:
+Der Trigger „Herald: Schedule“ löst an den gewählten Wochentagen einmal zur vollen Stunde aus, in der Zeitzone von CiviCRM, und bezieht sich auf keinen Kontakt. Er ist für Aktionen wie „Herald: Send digest“ gedacht, siehe [Geplante Reports](recipes.md#geplante-reports). Sein Formular hat zwei Felder:
 
 | Feld | Bedeutung |
 |---|---|
-| Wochentage | Beliebige von Montag bis Sonntag. Leer bedeutet jeden Tag. |
+| Wochentage | Beliebig viele Tage von Montag bis Sonntag. Leer bedeutet jeden Tag. |
 | Uhrzeit | Die Stunde, von 00:00 bis 23:00. |
 
 Die Regelliste beschreibt den Zeitplan, zum Beispiel „Jeden Montag um 08:00“ oder „Täglich um 08:00“. Der Trigger speichert `weekdays` (ISO-Nummern, 1 für Montag bis 7 für Sonntag), `hour` und `since`, den Zeitpunkt, zu dem das Formular gespeichert wurde.
@@ -63,7 +63,7 @@ Die Bedingung „Herald: Field transition“ ist wahr, wenn der Wert eines Felde
 | Feld | Bedeutung |
 |---|---|
 | Entität | Der APIv4-Name der Entität, etwa Contribution. Kontakt-Untertypen zählen als Contact. |
-| Feld | Der APIv4-Feldname. Ein benutzerdefiniertes Feld schreiben Sie als group.field. Ein Auswahlfeld nimmt ein Suffix wie `:name`, dann wird der Name der Option statt ihrer ID verglichen, etwa bei `contribution_status_id:name`. |
+| Feld | Der APIv4-Feldname. Ein benutzerdefiniertes Feld schreiben Sie als group.field. An ein Auswahlfeld können Sie ein Suffix wie `:name` anhängen. Dann vergleicht die Bedingung den Namen der Option statt ihrer ID, etwa bei `contribution_status_id:name`. Nehmen Sie `:name` statt `:label`, denn eine Bezeichnung kann sich mit der Sprache der Site ändern. |
 | Vorher: Operator, Vorher: Wert | Die Prüfung für den Wert vor der Änderung. |
 | Nachher: Operator, Nachher: Wert | Die Prüfung für den Wert nach der Änderung. |
 
@@ -75,7 +75,7 @@ Die Operatoren sind `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` und `not_empty`.
 - Ist nur eine Seite konfiguriert, muss sich der Wert außerdem geändert haben. Andere Änderungen an einem Datensatz, der bereits im Zielzustand ist, lösen daher nicht erneut aus.
 - Sind beide Seiten konfiguriert, entscheiden allein die beiden Prüfungen.
 
-Der Wert vor der Änderung stammt aus der Kopie, die CiviRules vom Datensatz aufbewahrt. Bei einem Feld mit Suffix schlägt herald die Option zur gespeicherten ID nach. Hat CiviRules keinen Wert, verwendet herald seine eigene Kopie, die direkt vor der Änderung entsteht. Diese Kopie lebt nur so lange wie die Anfrage, eine verzögerte Aktion prüft ihre Bedingungen aber erst später im Cron-Lauf. Benutzerdefinierte Felder führt CiviRules unter anderen Namen, für sie ist heralds Kopie also die einzige Quelle: Setzen Sie bei einer verzögerten Aktion „Don't recheck condition upon processing of delayed action“, sonst löst die Bedingung nie aus. Ist der Wert dann noch unbekannt, ist die Bedingung falsch, denn eine verpasste Meldung ist besser als eine falsche. Der Wert nach der Änderung wird aus dem gespeicherten Datensatz gelesen, eine Teilaktualisierung, die das Feld nicht geschrieben hat, wird also nach seinem tatsächlichen Wert beurteilt.
+Der Wert vor der Änderung stammt aus der Kopie, die CiviRules vom Datensatz aufbewahrt. Bei einem Feld mit Suffix schlägt herald die Option zur gespeicherten ID nach. Hat CiviRules keinen Wert, verwendet herald seine eigene Kopie, die direkt vor der Änderung entsteht. Diese Kopie lebt nur so lange wie die Anfrage, eine verzögerte Aktion prüft ihre Bedingungen aber erst später im Cron-Lauf. Benutzerdefinierte Felder führt CiviRules unter anderen Namen, für sie ist heralds Kopie also die einzige Quelle: Setzen Sie bei einer verzögerten Aktion „Don't recheck condition upon processing of delayed action“, sonst löst die Bedingung nie aus. Ist der Wert dann noch unbekannt, ist die Bedingung falsch, denn eine verpasste Meldung ist besser als eine falsche. Der Wert nach der Änderung wird aus dem gespeicherten Datensatz gelesen. Eine Teilaktualisierung, die das Feld nicht schreibt, wird daher nach dem tatsächlich gespeicherten Wert beurteilt.
 
 herald kopiert nur Felder, die aktive Regeln beobachten. Ein lange laufender Queue- oder Kommandozeilen-Worker sieht ein neu konfiguriertes Feld erst nach einem Neustart.
 
@@ -84,8 +84,8 @@ Beispiele:
 | Beobachtet | Entität | Feld | Vorher | Nachher |
 |---|---|---|---|---|
 | Eine Mitgliedschaft wechselt von Status 2 zu 3 | Membership | status_id | = 2 | = 3 |
-| Ein Beitrag verlässt Pending | Contribution | contribution_status_id | = 2, die ID von Pending | beliebiger Wert |
-| Ein Beitrag war vor der Änderung Pending, geändert oder nicht | Contribution | contribution_status_id | = 2 | not_empty |
+| Ein Beitrag verlässt Pending | Contribution | contribution_status_id:name | = Pending | beliebiger Wert |
+| Ein Beitrag war vor der Änderung Pending, geändert oder nicht | Contribution | contribution_status_id:name | = Pending | not_empty |
 | Ein Event wird deaktiviert | Event | is_active | = 1 | = 0 |
 
 ## APIv4
@@ -143,7 +143,7 @@ if (class_exists(\Civi\Api4\Herald::class)) {
 | Herald: Check-Monitor ausführen | ja | Always (bei jedem Cron-Lauf) | Führt den [Check-Monitor](monitor.md) aus. |
 | Herald.notifyDigest | nein, legen Sie ihn selbst an | Hourly mit sendHour | Verschickt einen Report ohne Regel, siehe [Ohne Regel](recipes.md#ohne-regel). |
 
-Beide mitgelieferten Jobs setzen eine Sperre, ein Lauf, der sich mit einem anderen überschneidet, sendet also nicht doppelt.
+Beide mitgelieferten Jobs setzen eine Sperre. Ein Lauf, der sich mit einem anderen überschneidet, sendet daher nicht doppelt.
 
 ## Vorlagen
 
@@ -195,7 +195,7 @@ Vorlagen werden zu HTML gerendert. String-Variablen werden HTML-maskiert, bevor 
 | participant.role, participant.status | Bei Teilnahme-Triggern: die Bezeichnung der ersten Rolle und die Bezeichnung des Status. |
 | event.id, event.title, event.start_date, event.is_active | Bei Event-Triggern. Teilnahme-Trigger liefern nur die ID und den Titel. |
 
-Schlägt eine Abfrage fehl, protokolliert herald einen Fehler und lässt die Variable weg, statt die Benachrichtigung scheitern zu lassen. Ein gelöschter Kontakt oder eine gelöschte Gruppe behält ihre ID mit leeren Textfeldern. Ein gelöschtes Event behält die Werte aus den eigenen Daten des Triggers.
+Schlägt eine Abfrage fehl, protokolliert herald einen Fehler und lässt die Variable weg, statt die Benachrichtigung scheitern zu lassen. Bei einem gelöschten Kontakt oder einer gelöschten Gruppe bleibt die ID erhalten, die Textfelder sind leer. Ein gelöschtes Event behält die Werte aus den eigenen Daten des Triggers.
 
 ### Beitragsvariablen
 
@@ -243,7 +243,7 @@ Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'nam
 | Hook | Signatur | Zweck |
 |---|---|---|
 | `hook_civicrm_heraldChecks` | `(array &$checks)` | Checks zum Monitor hinzufügen, siehe [Eigene Checks bereitstellen](monitor.md#eigene-checks-bereitstellen). |
-| `hook_civicrm_heraldDigestSections` | `(array $keys, array $context, array &$sections)` | Die Abschnittsblöcke eines Reports beantworten, siehe [Abschnitte aus anderen Extensions](digests.md#abschnitte-aus-anderen-extensions). |
+| `hook_civicrm_heraldDigestSections` | `(array $keys, array $context, array &$sections)` | Den Text für die Abschnittsblöcke eines Reports liefern, siehe [Abschnitte aus anderen Extensions](digests.md#abschnitte-aus-anderen-extensions). |
 
 ## Systemstatus
 

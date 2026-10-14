@@ -13,7 +13,7 @@ herald's CiviRules actions and conditions run inside the save of every record th
 
 A git checkout has no vendor directory. Build it with `composer install --no-dev` before you swap the code. The release archive already contains it.
 
-Run the scripts with `cv scr`, wrap the code swap in them, and stop at the first step that fails:
+Run the scripts with `cv scr` before and after the code swap, and stop at the first step that fails:
 
 1. Before the swap: rules-disable.php, then `cv flush`.
 2. Swap the extension code.
@@ -66,7 +66,7 @@ rules-reenable.php switches the recorded rules back on, removes the file and pri
 
 ### Checking other rules
 
-note-foreign-rules.php runs once herald's rules are back on. It reports broken handlers of the other active rules on stderr, without failing. It is the only step that loads the classes of rules without a herald handler. A class that crashes PHP when it loads, such as one with an unimplemented abstract method, fails this last step and marks the deploy as failed. It cannot keep herald's alerts off, because they are already back on. A handler from another extension that is attached to one of herald's rules is checked by the preflight and does block switching the rules back on.
+note-foreign-rules.php runs once herald's rules are back on. It reports broken handlers of the other active rules on stderr, without failing. It is the only step that loads the classes of rules without a herald handler. A class that crashes PHP when it loads, such as one with an unimplemented abstract method, fails this last step and marks the deploy as failed. By then herald's rules are already back on, and this failure does not switch them off again. A handler from another extension that is attached to one of herald's rules is checked by the preflight and does block switching the rules back on.
 
 ## When something goes wrong
 

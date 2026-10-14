@@ -63,7 +63,7 @@ The condition "Herald: Field transition" is true when a field's value before and
 | Field | Meaning |
 |---|---|
 | Entity | The APIv4 entity name, such as Contribution. Contact subtypes count as Contact. |
-| Field | The APIv4 field name. A custom field is written as group.field. An option field takes a suffix such as `:name` to compare the option's name instead of its ID, for example `contribution_status_id:name`. |
+| Field | The APIv4 field name. A custom field is written as group.field. An option field takes a suffix such as `:name` to compare the option's name instead of its ID, for example `contribution_status_id:name`. Prefer `:name` to `:label`, because a label can change with the site's language. |
 | Before: operator, Before: value | The test for the value before the edit. |
 | After: operator, After: value | The test for the value after the edit. |
 
@@ -84,8 +84,8 @@ Examples:
 | Watches | Entity | Field | Before | After |
 |---|---|---|---|---|
 | A membership moves from status 2 to 3 | Membership | status_id | = 2 | = 3 |
-| A contribution leaves Pending | Contribution | contribution_status_id | = 2, the ID of Pending | any value |
-| A contribution was Pending before the edit, changed or not | Contribution | contribution_status_id | = 2 | not_empty |
+| A contribution leaves Pending | Contribution | contribution_status_id:name | = Pending | any value |
+| A contribution was Pending before the edit, changed or not | Contribution | contribution_status_id:name | = Pending | not_empty |
 | An event is deactivated | Event | is_active | = 1 | = 0 |
 
 ## APIv4
@@ -243,7 +243,7 @@ Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value
 | Hook | Signature | Purpose |
 |---|---|---|
 | `hook_civicrm_heraldChecks` | `(array &$checks)` | Add checks to the monitor, see [Contributing a check](monitor.md#contributing-a-check). |
-| `hook_civicrm_heraldDigestSections` | `(array $keys, array $context, array &$sections)` | Answer the section blocks of a digest, see [Section blocks](digests.md#section-blocks). |
+| `hook_civicrm_heraldDigestSections` | `(array $keys, array $context, array &$sections)` | Provide the text of a digest's section blocks, see [Section blocks](digests.md#section-blocks). |
 
 ## System status
 

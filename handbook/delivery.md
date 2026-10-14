@@ -11,7 +11,7 @@ This page covers who receives a message, when it goes out, and what happens when
 
 ## Delivery modes
 
-Every herald CiviRules action has a delivery mode. Topic routes take the same parameter, `delivery_mode`.
+Every herald CiviRules action has a delivery mode. Topic routes take the same parameter, `delivery_mode`. In the action form the modes are "Direct", "Subscribers", "Group" and "Address list".
 
 | Mode | Recipients | Required parameter |
 |---|---|---|
@@ -96,7 +96,7 @@ A preference record without a scope receives everything it subscribed to. A scop
 
 With topics, a publisher names a topic and the setting `herald_topics` decides the channel, the recipient and the aggregation. A script or another extension never needs to know a chat ID or a URL.
 
-The routes are under Administer » Herald » Topic routes. The list shows each topic with its channel, its delivery mode and its aggregation window. "Add topic" and "Edit" open a form with the delivery fields and the options of the channel the topic ends up using, as the channel declares them. Keys without a field, such as `channel_config`, go into "Other parameters" as a JSON object. Saving checks the route and stores nothing when it finds a problem: an unregistered channel, a value of the wrong type, a delivery mode without its required parameter or a topic name that is taken. Renaming a topic keeps its place in the list. "Delete" asks first; publishers of a deleted topic then use the default route.
+The routes are under Administer » Herald » Topic routes. The list shows each topic with its channel, its delivery mode and its aggregation window. "Add topic" and "Edit" open a form with the delivery fields and the options that the topic's channel declares. Keys without a field, such as `channel_config`, go into "Other parameters" as a JSON object. Saving checks the route and stores nothing when it finds a problem: an unregistered channel, a value of the wrong type, a delivery mode without its required parameter or a topic name that is taken. Renaming a topic keeps its place in the list. "Delete" asks first; publishers of a deleted topic then use the default route.
 
 To set all routes at once with cv:
 
@@ -126,7 +126,7 @@ The check monitor publishes to the topic named in `herald_monitor_topic`, which 
 
 ## Aggregation
 
-Alerts that come in bursts can be collected and sent as one message. Set `aggregate_minutes` on an action or a topic route. The default 0 sends at once.
+Alerts that come in bursts can be collected and sent as one message. Set `aggregate_minutes` on an action or a topic route, in the action form the field "Aggregate window in minutes". The default 0 sends at once.
 
 A value above 0 stores the rendered alert in the table `civicrm_herald_buffer`. The scheduled job "Herald: Flush alert aggregation buffer" runs on every cron run. Once the oldest waiting alert of a group is older than its window, the whole group goes out as one message.
 
@@ -154,7 +154,7 @@ cv api4 Herald.reactivateParkedAlerts '{"ids": [12, 13]}'
 
 The list shows each alert's ID, the reason it was parked, the number of attempts, the last error and its dates. Without `ids`, `reactivateParkedAlerts` reactivates every parked alert.
 
-Reactivated alerts get a fresh set of attempts. They keep the parameters stored when they were buffered. Fixing the rule or the route therefore does not repair a wrong recipient that was set on the action. Subscriber and group recipients are looked up again at delivery, so fixing a contact's preferences does help.
+For reactivated alerts the count of attempts starts again. They keep the parameters stored when they were buffered. Fixing the rule or the route therefore does not repair a wrong recipient that was set on the action. Subscriber and group recipients are looked up again at delivery, so fixing a contact's preferences does help.
 
 The check monitor reports parked alerts and a stuck buffer, see [Built in checks](monitor.md#built-in-checks).
 

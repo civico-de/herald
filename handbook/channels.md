@@ -57,7 +57,7 @@ These receive plain text:
 - Pushover unless `pushover_html` is set
 - email and activities in text format
 
-The webhook format json hands the HTML to the receiver.
+The webhook format json hands the HTML to the endpoint.
 
 ## Telegram
 
@@ -70,7 +70,7 @@ Create a bot with @BotFather and store its token in `herald_telegram_bot_token`.
 | `disable_notification` | Deliver without a sound. |
 | `disable_web_page_preview` | Show no link previews. |
 
-With HTML, Telegram shows the formatting of the template. With an empty parse mode, it gets the plain text. With MarkdownV2, it gets the plain text with every reserved character escaped, so no formatting survives. Only HTML keeps the formatting.
+With HTML, Telegram shows the formatting of the template. With an empty parse mode, it gets the plain text. With MarkdownV2, it gets the plain text with every reserved character escaped, so no formatting survives.
 
 Telegram rejects messages over 4096 characters. herald shortens a longer message at a paragraph break, closes any open HTML tag and adds a line that says how long the full message was. A MarkdownV2 message can still be cut inside its own formatting, and Telegram then rejects it.
 
@@ -126,7 +126,7 @@ herald checks every URL before it sends:
 - By default it must not resolve to a private, reserved, link-local or cloud metadata address.
 - Requests do not follow redirects, so give the final URL.
 
-To lock delivery to known services, list their host names under Administer » Herald » Webhook allowed hosts, one per line. Saving rejects an entry with `https://`, a path or a port and an invalid host name. With cv, set `herald_webhook_allowed_hosts`, for example `["hooks.slack.com"]`. Subdomains of a listed host are allowed too. Once the list is not empty, only those hosts are reached, and they may be internal addresses.
+To lock delivery to known services, list their host names under Administer » Herald » Webhook allowed hosts, one per line. Saving rejects an invalid host name and any entry with `https://`, a path or a port. With cv, set `herald_webhook_allowed_hosts`, for example `["hooks.slack.com"]`. Subdomains of a listed host are allowed too. Once the list is not empty, only those hosts are reached, and they may be internal addresses.
 
 ## ntfy
 
@@ -180,7 +180,7 @@ An aggregated message gets the count line as its subject, for example "📬 7 me
 
 ## Activity
 
-The activity channel keeps a notification inside CiviCRM as an activity assigned to a contact. Work stays visible and on record even without an external service. It needs no settings.
+The activity channel records a notification in CiviCRM as an activity and assigns it to a contact. It needs no external service and no settings.
 
 | Key | Meaning |
 |---|---|
@@ -196,7 +196,7 @@ Type and status are option names, not numbers, and must be active on the site.
 
 ## Test message
 
-Administer » Herald » Test message sends a real message. "A channel" sends through one channel to the recipient and options entered on the screen; empty fields fall back to the defaults on the settings screen. "A topic route" publishes through a route, as an alert would go. A route that aggregates buffers the message until the next flush, and the screen says so.
+Administer » Herald » Test message sends a real message. "A channel" sends through one channel to the recipient and options entered on the screen; empty fields fall back to the defaults on the settings screen. "A topic route" publishes through a route, the way a real alert travels. A route that aggregates buffers the message until the next flush, and the screen says so.
 
 Input errors are listed on the screen. A delivery error from the channel itself is shown in full to users with the permission "view debug output". Others see an error ID, and the CiviCRM log holds the message under that ID.
 
@@ -228,7 +228,7 @@ These are the configuration errors the channels raise. In a direct delivery they
 | ntfy channel requires ntfy_topic | Set a topic on the action or `herald_ntfy_default_topic`. |
 | Pushover app token not configured | Set `herald_pushover_app_token`. |
 | Pushover user/group key required | Set a key on the action or `herald_pushover_default_user_key`. |
-| email channel requires email_to | Set a recipient on the action or `herald_email_default_to`. |
+| email channel requires email_to | Set a recipient address on the action or `herald_email_default_to`. |
 | email delivery failed | CiviCRM's mailer refused the message. Check the outbound mail settings. |
 | activity channel requires activity_assignee_contact_id | Set an assignee. |
 | activity channel option does not exist | The activity type or status name is wrong or disabled. |
@@ -239,4 +239,4 @@ These are the configuration errors the channels raise. In a direct delivery they
 
 Channels live in herald's code. Implement `Civi\Herald\Channel\ChannelInterface` and register the class in `ChannelRegistry::default()`.
 
-`getConfigSchema()` declares the channel's keys. `Herald.getChannels` and the report of unknown keys read it. `getSemanticFields()` maps the shared subject and format onto the channel's keys, so callers never hard-code them. The action forms have dedicated fields only for Telegram, so the keys of a new channel go into "Channel-specific config".
+`getConfigSchema()` declares the channel's keys. `Herald.getChannels` and the list `unknown_config_keys` read it. `getSemanticFields()` maps the shared subject and format onto the channel's keys, so callers need not hard-code them. The action forms have dedicated fields only for Telegram, so the keys of a new channel go into "Channel-specific config".

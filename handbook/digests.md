@@ -7,7 +7,7 @@ routes:
 
 # Digests
 
-A digest sums up a period in one message, for example yesterday's donations. Each digest is a record with a name, and a list of blocks that are rendered one after another:
+A digest sums up a period in one message, for example yesterday's donations. Each digest is a named record with a list of blocks, rendered one after another:
 
 | Block type | Content | Default template |
 |---|---|---|
@@ -110,7 +110,7 @@ With the line item breakdown, the totals, the counts and the pending amounts com
 
 The histogram shows the completed contributions of the period that match the filters, and ignores amounts of zero or less. It always uses whole contribution amounts, so with the line item breakdown its financial type filter applies to the contribution. With nothing to show, it says "(no data)".
 
-Without fixed edges, herald picks bucket edges that fit the amounts. Fixed edges suit a campaign that is told in tiers, such as a major donor campaign. Give at least two values, for example `[0, 100, 1000, 10000, 100000, 1000000]`. Amounts below the first or above the last edge land in extra buckets labelled "<low" and "≥high". With the histogram switched off, the edges are not checked.
+Without fixed edges, herald picks bucket edges that fit the amounts. Fixed edges suit a campaign with fixed donation tiers, such as a major donor campaign. Give at least two values, for example `[0, 100, 1000, 10000, 100000, 1000000]`. Amounts below the first or above the last edge land in extra buckets labelled "<low" and "≥high". With the histogram switched off, the edges are not checked.
 
 The campaign progress takes the title and the goal from the Campaign record. It counts every completed contribution of the campaign that matches the financial type and source filters, regardless of the period. With the line item breakdown it counts the campaign's items instead. A campaign without a goal shows no progress line.
 
@@ -142,7 +142,30 @@ The answer is inserted as HTML, so the listener escapes its own data. An empty a
 
 Older releases kept a digest inside the settings of its rule action or scheduled job. The upgrade turns each of them into a record and leaves only the delivery settings and the digest's name in the action. A rule action's digest is named `rule_action_<id>` and takes the rule's title, a job's digest is named `job_<id>` and takes the job's name. You can rename them afterwards. Then pick the digest again in each rule action that sent it, and update the jobs and scripts that name it.
 
-The upgrade keeps what the digest sent before. A period herald did not know was read as yesterday, and it still is. Histogram edges that are not ascending numbers are dropped with a warning in the upgrade log, and the histogram picks its own buckets. A search block gets a new table display of its search, labelled "Herald: <digest title>", with the search's columns, sort and limit and no pager. Its values now appear formatted, as the display shows them. A histogram bucket count below 0 drew one bucket and becomes 1. A count of 0 failed as soon as two amounts differed. It becomes the default 8, with a warning in the upgrade log. A status filter of Completed is dropped, because records count completed contributions anyway. A digest the records cannot reproduce is left as it was, and the upgrade log has the warning "digest left inline, it cannot run until fixed" with the reason. Such a rule or job fails until it names a digest. Most of these digests could never have run: a block list that is not a JSON array of objects, a block of unknown type, a section block without a key, a saved search that no longer exists or whose entity is gone with its extension, a campaign or financial type that no longer exists. The others ask for something records cannot do. One is a saved search that skips its first rows, because a display always starts at the first row. The other is a status filter other than Completed, which records no longer offer. That includes Completed in a digest that showed the pending amounts without the line item breakdown, as those amounts then counted completed contributions too. Section listeners of older releases received the digest's settings under `params` in `$context`. That key is gone, so a listener that read a filter from it now loads the digest record by its name from `digest`. A delayed action that was already waiting in the CiviRules queue during the upgrade still carries the old settings and fails once. The next time the rule fires, it uses the new settings.
+The upgrade keeps what the digest sent before:
+
+- A period herald did not know was read as yesterday, and it still is.
+- Histogram edges that are not ascending numbers are dropped with a warning in the upgrade log, and the histogram picks its own buckets.
+- A histogram bucket count below 0 drew one bucket and becomes 1. A count of 0 failed as soon as two amounts differed. It becomes the default 8, with a warning in the upgrade log.
+- A search block gets a new table display of its search, labelled "Herald: <digest title>", with the search's columns, sort and limit and no pager. Its values now appear formatted, as the display shows them.
+- A status filter of Completed is dropped, because records count completed contributions anyway.
+
+A digest the records cannot reproduce is left as it was. The upgrade log has the warning "digest left inline, it cannot run until fixed" with the reason, and the rule or job fails until it names a digest. Most of these digests could never have run:
+
+- a block list that is not a JSON array of objects
+- a block of unknown type
+- a section block without a key
+- a saved search that no longer exists, or whose entity is gone with its extension
+- a campaign or financial type that no longer exists
+
+The others ask for something records cannot do:
+
+- A saved search that skips its first rows. A display always starts at the first row.
+- A status filter other than Completed, which records no longer offer. That includes Completed in a digest that showed the pending amounts without the line item breakdown, as those amounts then counted completed contributions too.
+
+Section listeners of older releases received the digest's settings under `params` in `$context`. That key is gone, so a listener that read a filter from it now loads the digest record by its name from `digest`.
+
+A delayed action that was already waiting in the CiviRules queue during the upgrade still carries the old settings and fails once. The next time the rule fires, it uses the new settings.
 
 The digest form is an Afform, so herald needs the extension Form Core (`org.civicrm.afform`). Enable it before you upgrade herald on a site that does not have it yet.
 

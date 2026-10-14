@@ -10,7 +10,7 @@ herald richtet sich an alle, die eine CiviCRM-Site betreiben und wissen möchten
 
 ## Was herald kann
 
-herald stellt über sechs Kanäle zu: Telegram, einen generischen Webhook für Slack, Discord, Mattermost oder einen eigenen Endpunkt, ntfy, Pushover, E-Mail über den ausgehenden Mailversand von CiviCRM und zugewiesene CiviCRM-Aktivitäten. Neue Kanäle kommen im Code von herald hinzu. Siehe [Kanäle](channels.md).
+herald stellt über sechs Kanäle zu: Telegram; einen generischen Webhook für Slack, Discord, Mattermost oder einen eigenen Endpunkt; ntfy; Pushover; E-Mail über den ausgehenden Mailversand von CiviCRM; und zugewiesene CiviCRM-Aktivitäten. Neue Kanäle kommen im Code von herald hinzu. Siehe [Kanäle](channels.md).
 
 Die Nachrichten stammen aus CiviCRM-Nachrichtenvorlagen, sodass Admins den Wortlaut unter „Mailings, Message Templates“ (Mailings, Nachrichtenvorlagen) anpassen können. herald bringt Vorlagen für Beiträge, Ticketverkäufe, Events, Mitgliedschaften, Gruppenanmeldungen, Reports und Health-Checks mit. Die Vorlagen sind auf Englisch geschrieben, eine deutsche Übersetzung liegt bei.
 
@@ -23,11 +23,11 @@ Ist CiviRules installiert, ergänzt herald es um vier Bausteine:
 
 Eine Benachrichtigung kann an ein einzelnes Ziel gehen, an alle Kontakte, die diese Art von Benachrichtigung abonniert haben, an die Mitglieder einer Gruppe oder an eine Liste von E-Mail-Adressen. Jeder Kontakt kann seinen eigenen Kanal wählen. Meldungen, die gehäuft auftreten, lassen sich sammeln und als eine Nachricht pro Zeitfenster verschicken. Siehe [Zustellung](delivery.md).
 
-Skripte und andere Extensions können in ein benanntes Topic wie ops veröffentlichen. Eine Einstellung legt fest, welchen Kanal und welches Ziel jedes Topic erreicht. Wer veröffentlicht, muss also nie eine Chat-ID oder eine URL kennen.
+Skripte und andere Extensions können Nachrichten an ein benanntes Topic wie ops schicken. Eine Einstellung legt fest, welchen Kanal und welches Ziel jedes Topic erreicht. Wer eine Nachricht schickt, muss also nie eine Chat-ID oder eine URL kennen.
 
-Ein Report fasst die Beiträge eines Zeitraums zusammen, listet die Zeilen einer SearchKit-Anzeige auf oder enthält Zahlen, die eine andere Extension liefert. Sie richten sie unter Administrieren » Herald » Reports ein, und sie gehen meist täglich oder wöchentlich hinaus, über eine Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
+Ein Report fasst die Beiträge eines Zeitraums zusammen, listet die Zeilen einer SearchKit-Anzeige auf oder enthält Zahlen, die eine andere Extension liefert. Reports richten Sie unter Administrieren » Herald » Reports ein. Meist gehen sie täglich oder wöchentlich hinaus, ausgelöst von einer Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
 
-Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet, wenn ein Check fehlschlägt und wenn er sich wieder erholt, und erinnert an Checks, die dauerhaft fehlschlagen. Auf einer gesunden Site bleibt es still. Siehe [Check-Monitor](monitor.md).
+Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet, wenn ein Check zu scheitern beginnt und wenn er wieder besteht, und erinnert an Checks, die weiter scheitern. Auf einer gesunden Site bleibt es still. Siehe [Check-Monitor](monitor.md).
 
 ## Voraussetzungen
 
@@ -41,7 +41,7 @@ Laden Sie das Release-Archiv von der [Release-Seite](https://github.com/civico-d
 cv ext:enable herald
 ```
 
-Ein Git-Checkout enthält kein Verzeichnis `vendor/`. Führen Sie darin `composer install --no-dev` aus, bevor Sie die Extension aktivieren. Ohne `vendor/` schlägt jede Seite der Site fehl, sobald herald aktiviert ist.
+Ein Git-Checkout enthält kein Verzeichnis `vendor/`. Führen Sie darin `composer install --no-dev` aus, bevor Sie die Extension aktivieren. Ohne `vendor/` bricht jeder Seitenaufruf mit einem Fehler ab, sobald herald aktiviert ist.
 
 Beim Deinstallieren entfernt herald seine CiviRules-Bausteine, und CiviRules entfernt sie aus jeder Regel, die sie nutzt. Eine Regel ohne ihre herald-Bedingung würde danach öfter auslösen als vorher. Deshalb schaltet herald zuerst jede aktive Regel ab, die einen seiner Trigger, eine seiner Bedingungen oder Aktionen nutzt. Das CiviCRM-Log nennt die IDs dieser Regeln. Beim Deinstallieren löscht herald außerdem seine Tabellen und damit die Reports und jede Meldung, die noch im Puffer wartet, auch die geparkten.
 

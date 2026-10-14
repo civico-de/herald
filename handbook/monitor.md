@@ -23,6 +23,8 @@ The alerts look like this:
 - ⏰ Check myext.queue still failing: 1500 queue items waiting
 - 🟢 Check myext.queue ok again
 
+The text after the colon is the detail the check returns.
+
 ## Contributing a check
 
 An extension adds checks through the hook `hook_civicrm_heraldChecks`. Each check is a function that returns a status and an optional detail:
@@ -102,7 +104,7 @@ The setting `herald_monitor_state` holds the last state of each check. herald ma
 
 - Each run takes a lock. A run that overlaps with another one skips instead of sending twice.
 - The state of each check is saved right after its alert is published. A crash halfway through a run does not repeat the alerts before it. Only a crash in the moment between a publish and its save can send that one alert twice.
-- When a publish fails, the check keeps its old state and is tried again on the next run. The job run then ends with the error "herald monitor: N transition(s) could not be published, see the CiviCRM log", and each failure is a warning in that log.
+- When a publish fails, the check keeps its old state, so the next run reports the change again. The job run then ends with the error "herald monitor: N transition(s) could not be published, see the CiviCRM log", and each failure is a warning in that log.
 - When the topic route aggregates, a published alert is only buffered. The flush job delivers it later.
 
 ## Limits

@@ -13,7 +13,7 @@ Die CiviRules-Aktionen und -Bedingungen von herald laufen innerhalb des Speicher
 
 Ein Git-Checkout enthält kein Verzeichnis vendor. Erzeugen Sie es mit `composer install --no-dev`, bevor Sie den Code austauschen. Das Release-Archiv enthält es bereits.
 
-Führen Sie die Skripte mit `cv scr` aus, legen Sie sie um den Codewechsel herum und brechen Sie beim ersten Schritt ab, der fehlschlägt:
+Führen Sie die Skripte mit `cv scr` vor und nach dem Codewechsel aus und brechen Sie beim ersten fehlgeschlagenen Schritt ab:
 
 1. Vor dem Austausch: rules-disable.php, dann `cv flush`.
 2. Den Code der Extension austauschen.
@@ -66,7 +66,7 @@ rules-reenable.php schaltet die vermerkten Regeln wieder ein, entfernt die Datei
 
 ### Andere Regeln prüfen
 
-note-foreign-rules.php läuft, sobald die Regeln von herald wieder an sind. Es meldet fehlerhafte Handler der übrigen aktiven Regeln auf stderr, ohne fehlzuschlagen. Es ist der einzige Schritt, der die Klassen von Regeln ohne herald-Handler lädt. Eine Klasse, die PHP beim Laden abstürzen lässt, etwa eine mit einer nicht implementierten abstrakten Methode, lässt diesen letzten Schritt fehlschlagen und markiert das Deployment als fehlgeschlagen. Die Meldungen von herald kann sie nicht mehr abschalten, weil diese dann bereits wieder an sind. Ein Handler einer anderen Extension, der an einer Regel von herald hängt, wird vom Preflight geprüft und verhindert sehr wohl, dass die Regeln wieder eingeschaltet werden.
+note-foreign-rules.php läuft, sobald die Regeln von herald wieder an sind. Es meldet fehlerhafte Handler der übrigen aktiven Regeln auf stderr, ohne fehlzuschlagen. Es ist der einzige Schritt, der die Klassen von Regeln ohne herald-Handler lädt. Eine Klasse, die PHP beim Laden abstürzen lässt, etwa eine mit einer nicht implementierten abstrakten Methode, lässt diesen letzten Schritt fehlschlagen und markiert den Deploy als fehlgeschlagen. Die Regeln von herald sind dann bereits wieder an, und dieser Fehler schaltet sie nicht wieder ab. Ein Handler einer anderen Extension, der an einer Regel von herald hängt, wird vom Preflight geprüft und verhindert sehr wohl, dass die Regeln wieder eingeschaltet werden.
 
 ## Wenn etwas schiefgeht
 

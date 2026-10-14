@@ -31,8 +31,8 @@ The financial type condition on "Transfer announced" matters when the site sells
 | Field | Value |
 |---|---|
 | Entity | Contribution |
-| Field | contribution_status_id |
-| Before | = 2, the ID of Pending on a standard install |
+| Field | contribution_status_id:name |
+| Before | = Pending |
 | After | any value |
 
 The condition reads the status before the edit from the copy CiviRules keeps of the record, so it works with delayed actions too. A custom field needs one more setting there, see [Field transition](reference.md#field-transition).
@@ -61,7 +61,7 @@ To show such sources under one readable label in alerts and digests, set up [Sou
 |---|---|---|---|
 | Ticket paid online | Contribution is added | Financial type is the ticket type, status is Completed | Herald: New ticket/event contribution |
 | Ticket ordered by transfer | Contribution is added | Financial type is the ticket type, status is Pending | Herald: Ticket ordered, bank transfer announced |
-| Ticket transfer received | Contribution is changed | Herald: Field transition on contribution_status_id with Before = 2, financial type is the ticket type, status is Completed | Herald: Ticket bank transfer received |
+| Ticket transfer received | Contribution is changed | Herald: Field transition on contribution_status_id:name with Before = Pending, financial type is the ticket type, status is Completed | Herald: Ticket bank transfer received |
 
 All three use "Herald: Send notification (generic)". Sales come in bursts after an announcement, so set "Aggregate window in minutes" to 5. Seven sales inside the window then arrive as one message headed "📬 7 messages, total 385.00 € (collected over 5 min)", followed by the individual sales. See [Aggregation](delivery.md#aggregation).
 
@@ -79,7 +79,7 @@ These rules help when events are maintained by a sync rather than by hand, so a 
 
 A sync usually takes an event down by deactivating it rather than deleting it, so "Event deactivated" is the rule that catches a removed event. Build it with herald's Field transition, not with a Field Value Comparison on is_active. A Field Value Comparison sees only the value after the edit, so it also fires on every other edit of an event that is already inactive. The Field transition fires only when the value really changes from 1 to 0.
 
-Abandoned checkouts go from an incomplete transaction to Cancelled. Limiting the old status of the cancellation rule keeps them quiet. Limiting "New registration" to Registered keeps waitlist and pending entries out.
+Abandoned checkouts go from an incomplete transaction to Cancelled. Limiting the old status of the cancellation rule keeps them from sending an alert. Limiting "New registration" to Registered keeps waitlist and pending entries out.
 
 A registration paid online starts as "Pending from incomplete transaction" and becomes Registered once the payment goes through. To catch it, add a second rule on "Event Participant is changed" with "Compare Old Participant Status to New Participant Status" from "Pending from incomplete transaction" to Registered, and use the same template.
 
@@ -111,7 +111,7 @@ The rule list shows the schedule as "Every Monday at 08:00" and the action as `S
 
 The trigger is checked each time CiviRules' scheduled job runs, so the digest goes out with the first cron run after the full hour. Whether a slot has been sent is read from the rule's own log:
 
-- If cron misses the hour, the next run catches up. With cron every 15 minutes, a run at 7:45 followed by one at 9:00 sends the 8 o'clock digest at 9:00.
+- If cron misses the hour, the next run catches up. When cron runs every 15 minutes but skips everything between 7:45 and 9:00, the 8 o'clock digest goes out at 9:00.
 - After a longer outage, only the latest slot is sent. Three missed Mondays give one digest, not three.
 - A new rule, or one whose schedule was just saved, never sends for a slot from before that moment.
 - A run counts even when the send fails, for example because the channel is not configured. The error is logged, and the next digest goes out at the next slot.
@@ -130,7 +130,7 @@ Scripts and the server's crontab can call `Herald.notifyDigest` directly, at a f
 
 This call is not limited to the Production environment.
 
-A CiviCRM scheduled job of `Herald.notifyDigest`, set to Hourly with `"sendHour": 8` in its parameters, also works, but it cannot pick weekdays and it can skip a day: CiviCRM moves each job's next run later by up to one cron interval, and when that drift carries the job across the whole hour, no run falls into it.
+A CiviCRM scheduled job of `Herald.notifyDigest`, set to Hourly with `"sendHour": 8` in its parameters, also works, but it cannot pick weekdays and it can skip a day: CiviCRM moves each job's next run later by up to one cron interval, and when that drift pushes the job past the whole hour, no run falls inside it that day.
 
 ## Notifications for each person
 

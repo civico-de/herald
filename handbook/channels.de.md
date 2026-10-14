@@ -10,7 +10,7 @@ routes:
 
 Ein Kanal stellt eine Nachricht an genau ein Ziel zu: einen Chat, ein Smartphone, ein Postfach oder eine CiviCRM-Aktivität. Aktionen, Topic-Routen und API-Aufrufe benennen den Kanal über seinen Schlüssel.
 
-| Schlüssel | Stellt zu an | Benötigt |
+| Schlüssel | Ziel | Benötigt |
 |---|---|---|
 | `telegram` | Einen Telegram-Chat oder eine Gruppe, über einen Bot | Bot-Token |
 | `webhook` | Einen HTTP-Endpunkt wie Slack, Discord, Mattermost oder einen eigenen | URL |
@@ -21,13 +21,13 @@ Ein Kanal stellt eine Nachricht an genau ein Ziel zu: einen Chat, ein Smartphone
 
 ## Einen Kanal konfigurieren
 
-Zugangsdaten und Ersatzempfänger sind Einstellungen. Die meisten davon finden Sie auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen. Sie können die Einstellungen auch mit cv setzen:
+Zugangsdaten und Ersatzziele sind Einstellungen. Die meisten davon finden Sie auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen. Sie können die Einstellungen auch mit cv setzen:
 
 ```bash
 cv setting:set herald_telegram_bot_token=<bot-token>
 ```
 
-Jede Zustellung kann eine eigene Empfänger:in und eigene Optionen angeben. Diese Schlüssel pro Aufruf haben Vorrang vor den Ersatzeinstellungen. Wohin sie gehören, hängt vom Aufrufer ab:
+Jede Zustellung kann ein eigenes Ziel und eigene Optionen angeben. Diese Schlüssel pro Aufruf haben Vorrang vor den Ersatzeinstellungen. Wohin sie gehören, hängt vom Aufrufer ab:
 
 - Eine CiviRules-Aktion hat Formularfelder für die Telegram-Optionen. Alle anderen Schlüssel gehören als JSON-Objekt in das Feld „Kanalspezifische Konfiguration“.
 - Eine Topic-Route nimmt die Schlüssel in ihrem Eintrag auf, entweder direkt oder in `channel_config`.
@@ -43,7 +43,7 @@ cv api4 Herald.getChannels channel=ntfy
 
 `Herald.send` reicht unbekannte Schlüssel unverändert durch und führt sie im Ergebnis unter `unknown_config_keys` auf. Ein Tippfehler zeigt sich dort und hält die Zustellung nicht auf.
 
-`Herald.send` nimmt außerdem einen Betreff und ein Format entgegen, die für jeden Kanal funktionieren. herald setzt den Betreff als E-Mail-Betreff, ntfy-Titel, Pushover-Titel oder Betreff der Aktivität ein. Das Format, text oder html, setzt herald als Format der E-Mail und der Aktivität ein. Kanäle ohne ein solches Feld ignorieren beides. Aktionen und Topic-Routen kennen diese Abkürzungen nicht und verwenden die eigenen Schlüssel des Kanals, etwa `email_subject`.
+`Herald.send` nimmt außerdem einen Betreff und ein Format entgegen, die für jeden Kanal funktionieren. herald setzt den Betreff als E-Mail-Betreff, ntfy-Titel, Pushover-Titel oder Betreff der Aktivität ein. Das Format, text oder html, setzt herald als Format der E-Mail und der Aktivität ein. Kanäle ohne ein solches Feld ignorieren beides. Aktionen und Topic-Routen kennen subject und format nicht und verwenden die eigenen Schlüssel des Kanals, etwa `email_subject`.
 
 ## Nachrichtenformat
 
@@ -57,7 +57,7 @@ Klartext erhalten:
 - Pushover, sofern `pushover_html` nicht gesetzt ist
 - E-Mail und Aktivitäten im Format text
 
-Das Webhook-Format json übergibt das HTML an den Empfänger.
+Das Webhook-Format json übergibt das HTML an den Endpunkt.
 
 ## Telegram
 
@@ -70,13 +70,13 @@ Legen Sie mit @BotFather einen Bot an und speichern Sie sein Token in `herald_te
 | `disable_notification` | Ohne Ton zustellen. |
 | `disable_web_page_preview` | Keine Link-Vorschauen anzeigen. |
 
-Mit HTML zeigt Telegram die Formatierung der Vorlage. Mit leerem Parse-Modus erhält es den Klartext. Mit MarkdownV2 erhält es den Klartext, in dem jedes reservierte Zeichen maskiert ist, sodass keine Formatierung übrig bleibt. Nur HTML erhält die Formatierung.
+Mit HTML zeigt Telegram die Formatierung der Vorlage. Mit leerem Parse-Modus erhält es den Klartext. Mit MarkdownV2 erhält es den Klartext, in dem jedes reservierte Zeichen maskiert ist, sodass keine Formatierung übrig bleibt.
 
 Telegram lehnt Nachrichten mit mehr als 4096 Zeichen ab. herald kürzt eine längere Nachricht an einem Absatzumbruch, schließt offene HTML-Tags und fügt eine Zeile an, die angibt, wie lang die vollständige Nachricht war. Eine MarkdownV2-Nachricht kann trotzdem mitten in ihrer eigenen Formatierung abgeschnitten werden, und Telegram lehnt sie dann ab.
 
 ### Wenn aus einer Gruppe eine Supergruppe wird
 
-Telegram vergibt einer Gruppe eine neue Chat-ID, wenn es sie in eine Supergruppe umwandelt. Sendungen an die alte ID schlagen dann mit dem Fehler `400 group chat was upgraded to a supergroup chat` fehl. Die neue ID steht im Fehlertext unter `parameters.migrate_to_chat_id`.
+Telegram gibt einer Gruppe eine neue Chat-ID, wenn es sie in eine Supergruppe umwandelt. Sendungen an die alte ID schlagen dann mit dem Fehler `400 group chat was upgraded to a supergroup chat` fehl. Die neue ID steht im Fehlertext unter `parameters.migrate_to_chat_id`.
 
 Ersetzen Sie die alte ID überall, wo sie gespeichert ist:
 
@@ -85,7 +85,7 @@ Ersetzen Sie die alte ID überall, wo sie gespeichert ist:
 3. In wartenden Meldungen in der Tabelle `civicrm_herald_buffer`. Ihre Spalte `delivery` enthält JSON.
 4. In geplanten Report-Jobs. Die Chat-ID steht in `actionParams` in den JSON-Parametern des Jobs.
 
-Meldungen, die auf das Sammeln warten, bleiben im Puffer, bis eine Sendung gelingt. Sobald jede Kopie der ID korrigiert ist, gehen sie von selbst raus. Meldungen, die in der Zwischenzeit geparkt wurden, müssen Sie wieder aktivieren, siehe [Geparkte Meldungen](delivery.md#geparkte-meldungen).
+Meldungen, die auf das Sammeln warten, bleiben im Puffer, bis eine Sendung gelingt. Sobald jede Kopie der ID korrigiert ist, werden sie von selbst zugestellt. Meldungen, die in der Zwischenzeit geparkt wurden, müssen Sie wieder aktivieren, siehe [Geparkte Meldungen](delivery.md#geparkte-meldungen).
 
 ## Webhook
 
@@ -105,7 +105,7 @@ Die Body-Formate:
 | Format | Request-Body |
 |---|---|
 | `text` | Der Klartext der Nachricht |
-| `json` | `{"text": "<the HTML message>"}`, oder Ihr eigener Schlüssel aus `webhook_body_key` |
+| `json` | `{"text": "<the HTML message>"}` oder Ihr eigener Schlüssel aus `webhook_body_key` |
 | `slack` | `{"text": "<the plain text>"}`, wobei die Zeichen & < > so maskiert sind, wie Slack es erwartet |
 | `discord` | `{"content": "<the plain text>"}` |
 
@@ -126,7 +126,7 @@ herald prüft jede URL vor dem Senden:
 - Standardmäßig darf sie nicht auf eine private, reservierte, link-lokale oder Cloud-Metadaten-Adresse auflösen.
 - Anfragen folgen keinen Weiterleitungen, geben Sie also die endgültige URL an.
 
-Um die Zustellung auf bekannte Dienste zu beschränken, tragen Sie deren Hostnamen unter Administrieren » Herald » Erlaubte Webhook-Hosts ein, einen pro Zeile. Beim Speichern werden Einträge mit `https://`, einem Pfad oder einem Port und ungültige Hostnamen abgelehnt. Mit cv setzen Sie `herald_webhook_allowed_hosts`, zum Beispiel `["hooks.slack.com"]`. Subdomains eines eingetragenen Hosts sind ebenfalls erlaubt. Sobald die Liste nicht leer ist, werden nur diese Hosts erreicht, und sie dürfen auch interne Adressen haben.
+Um die Zustellung auf bekannte Dienste zu beschränken, tragen Sie deren Hostnamen unter Administrieren » Herald » Erlaubte Webhook-Hosts ein, einen pro Zeile. Beim Speichern werden ungültige Hostnamen und alle Einträge mit `https://`, einem Pfad oder einem Port abgelehnt. Mit cv setzen Sie `herald_webhook_allowed_hosts`, zum Beispiel `["hooks.slack.com"]`. Subdomains eines eingetragenen Hosts sind ebenfalls erlaubt. Sobald die Liste nicht leer ist, werden nur diese Hosts erreicht, und sie dürfen auch interne Adressen haben.
 
 ## ntfy
 
@@ -139,7 +139,7 @@ Die Einstellungen sind `herald_ntfy_server`, `herald_ntfy_default_topic` und `he
 | `ntfy_priority` | 1 für die niedrigste bis 5 für die höchste Priorität, oder einer der Prioritätsnamen von ntfy. |
 | `ntfy_tags` | Kommagetrennte Tags. Emoji-Tag-Namen erscheinen als Emoji. |
 | `ntfy_click` | URL, die sich beim Antippen der Benachrichtigung öffnet. |
-| `ntfy_markdown` | ntfy bitten, den Body als Markdown darzustellen. |
+| `ntfy_markdown` | Lässt ntfy den Body als Markdown darstellen. |
 
 Der Body ist der Klartext der Nachricht. Titel, Priorität, Tags und die Klick-URL werden als ntfy-Header übertragen.
 
@@ -159,7 +159,7 @@ Die Einstellungen sind `herald_pushover_app_token`, das Pflicht ist, und `herald
 | `pushover_url_title` | Die Beschriftung dieses Links. |
 | `pushover_html` | Die HTML-Nachricht statt des Klartexts senden. Pushover unterstützt eine kleine Teilmenge von HTML. |
 
-Pushover verlangt für Notfallnachrichten retry und expire. herald setzt die Standardwerte ein, wenn Sie sie weglassen, und holt Werte außerhalb der Grenzen zurück in den erlaubten Bereich.
+Pushover verlangt für Notfallnachrichten retry und expire. herald setzt die Standardwerte ein, wenn Sie sie weglassen, und setzt Werte außerhalb der Grenzen auf die nächstliegende Grenze.
 
 ## E-Mail
 
@@ -169,7 +169,7 @@ Die Einstellungen sind `herald_email_from` und `herald_email_default_to`. Die Ab
 
 | Schlüssel | Bedeutung |
 |---|---|
-| `email_to` | Empfänger. Leer verwendet `herald_email_default_to`. |
+| `email_to` | Empfängeradresse. Leer verwendet `herald_email_default_to`. |
 | `email_to_name` | Anzeigename des Empfängers. |
 | `email_subject` | Betreff. Ohne ihn verwenden Aktionen, Topics und Reports den Betreff der Vorlage. Der letzte Ersatz ist „Notification“. |
 | `email_format` | `html` ist der Standard und erhält die Zeilenumbrüche der Vorlage. `text` sendet Klartext. |
@@ -180,7 +180,7 @@ Eine Sammelnachricht erhält die Kopfzeile mit der Anzahl als Betreff, zum Beisp
 
 ## Aktivität
 
-Der Aktivitätskanal hält eine Benachrichtigung als Aktivität, die einem Kontakt zugewiesen ist, innerhalb von CiviCRM fest. So bleibt die Arbeit auch ohne externen Dienst sichtbar und dokumentiert. Der Kanal braucht keine Einstellungen.
+Der Aktivitätskanal legt eine Benachrichtigung in CiviCRM als Aktivität an und weist sie einem Kontakt zu. Er braucht weder einen externen Dienst noch Einstellungen.
 
 | Schlüssel | Bedeutung |
 |---|---|
@@ -196,7 +196,7 @@ Typ und Status sind Optionsnamen, keine Zahlen, und müssen auf der Site aktiv s
 
 ## Testnachricht
 
-Die Seite Administrieren » Herald » Testnachricht sendet eine echte Nachricht. „Einen Kanal“ sendet über einen Kanal an den Empfänger und mit den Optionen, die Sie auf der Seite eintragen; leere Felder übernehmen die Standardwerte der Einstellungsseite. „Eine Topic-Route“ veröffentlicht über eine Route, wie eine Meldung sie nehmen würde. Eine Route, die sammelt, puffert die Nachricht bis zum nächsten Flush, und die Seite sagt das.
+Die Seite Administrieren » Herald » Testnachricht sendet eine echte Nachricht. „Einen Kanal“ sendet über einen Kanal an das Ziel und mit den Optionen, die Sie auf der Seite eintragen; leere Felder übernehmen die Standardwerte der Einstellungsseite. „Eine Topic-Route“ schickt die Nachricht über eine Route, genau wie eine echte Meldung. Sammelt die Route, puffert sie die Nachricht bis zum nächsten Flush, und die Seite weist darauf hin.
 
 Eingabefehler listet die Seite auf. Einen Zustellfehler des Kanals selbst sehen Benutzer:innen mit der Berechtigung „view debug output“ vollständig. Alle anderen sehen eine Fehler-ID, unter der das CiviCRM-Protokoll die Meldung enthält.
 
@@ -228,7 +228,7 @@ Diese Konfigurationsfehler melden die Kanäle. Bei einer direkten Zustellung err
 | ntfy channel requires ntfy_topic | Setzen Sie ein Topic an der Aktion oder `herald_ntfy_default_topic`. |
 | Pushover app token not configured | Setzen Sie `herald_pushover_app_token`. |
 | Pushover user/group key required | Setzen Sie einen Schlüssel an der Aktion oder `herald_pushover_default_user_key`. |
-| email channel requires email_to | Setzen Sie einen Empfänger an der Aktion oder `herald_email_default_to`. |
+| email channel requires email_to | Setzen Sie eine Empfängeradresse an der Aktion oder `herald_email_default_to`. |
 | email delivery failed | Der Mailversand von CiviCRM hat die Nachricht abgelehnt. Prüfen Sie die Einstellungen für ausgehende Mails. |
 | activity channel requires activity_assignee_contact_id | Setzen Sie einen zugewiesenen Kontakt. |
 | activity channel option does not exist | Der Name des Aktivitätstyps oder -status ist falsch oder deaktiviert. |
@@ -239,4 +239,4 @@ Diese Konfigurationsfehler melden die Kanäle. Bei einer direkten Zustellung err
 
 Kanäle sind Teil des Codes von herald. Implementieren Sie `Civi\Herald\Channel\ChannelInterface` und registrieren Sie die Klasse in `ChannelRegistry::default()`.
 
-`getConfigSchema()` deklariert die Schlüssel des Kanals. `Herald.getChannels` und der Bericht über unbekannte Schlüssel lesen sie dort aus. `getSemanticFields()` bildet den gemeinsamen Betreff und das Format auf die Schlüssel des Kanals ab, sodass Aufrufer sie nie fest einprogrammieren. Die Aktionsformulare haben eigene Felder nur für Telegram, die Schlüssel eines neuen Kanals gehören also in die „Kanalspezifische Konfiguration“.
+`getConfigSchema()` deklariert die Schlüssel des Kanals. `Herald.getChannels` und die Liste `unknown_config_keys` lesen sie dort aus. `getSemanticFields()` bildet den gemeinsamen Betreff und das Format auf die Schlüssel des Kanals ab, sodass Aufrufer sie nicht fest einprogrammieren müssen. Die Aktionsformulare haben eigene Felder nur für Telegram, die Schlüssel eines neuen Kanals gehören also in die „Kanalspezifische Konfiguration“.

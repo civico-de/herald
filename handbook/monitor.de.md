@@ -9,7 +9,7 @@ routes:
 
 Der Check-Monitor sagt Ihnen, wenn auf der Site etwas kaputtgeht und wenn es wieder funktioniert. Extensions steuern Health-Checks bei, und herald führt sie bei jedem Cron-Lauf aus.
 
-herald meldet Wechsel, keine Zustände. Ein Check, der zu fehlschlagen beginnt, löst eine Meldung aus, seine Erholung eine weitere. Für einen Check, der dauerhaft fehlschlägt, kommt einmal am Tag eine Erinnerung. Auf einer gesunden Site bleibt es still.
+herald meldet Wechsel, keine Zustände. Beginnt ein Check zu scheitern, kommt eine Meldung, besteht er wieder, eine zweite. Für einen Check, der weiter scheitert, kommt einmal am Tag eine Erinnerung. Auf einer gesunden Site bleibt es still.
 
 Der geplante Job „Herald: Check-Monitor ausführen“ führt die Checks aus. Jeder Wechsel geht mit der Vorlage „Herald: Statuswechsel eines Monitor-Checks“ an das Topic, das in `herald_monitor_topic` steht, standardmäßig ops. Wohin die Meldungen gehen, legen Sie fest, indem Sie dieses Topic in `herald_topics` routen, siehe [Topics](delivery.md#topics). Eine minimale Route:
 
@@ -66,13 +66,13 @@ Alle Einstellungen sind optional. Standardmäßig meldet herald den ersten fehlg
 | Einstellung | Standard | Wirkung |
 |---|---|---|
 | `herald_monitor_open_after` | 1 | Einen Fehler erst nach so vielen fehlgeschlagenen Läufen in Folge melden. So fallen Checks, die hin und her springen, nicht ins Gewicht. |
-| `herald_monitor_close_after` | 1 | Eine Erholung erst nach so vielen gesunden Läufen in Folge melden. |
+| `herald_monitor_close_after` | 1 | Eine Entwarnung erst nach so vielen gesunden Läufen in Folge melden. |
 | `herald_monitor_renotify_hours` | 24 | Eine Erinnerung senden, wenn ein Check so viele Stunden lang fehlschlägt. 0 schaltet Erinnerungen ab. |
 | `herald_monitor_topic` | ops | Das Topic, in das die Meldungen veröffentlicht werden. |
 
 Diese vier finden Sie auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen. Stummschaltungen und erwartete Checks stehen unter Administrieren » Herald » Monitor-Checks.
 
-Diese Seite listet jeden Check, den eine aktivierte Extension anbietet, jeden erwarteten oder stummgeschalteten Check und jeden Check, für den der Monitor einen Zustand gespeichert hat. Jede Zeile zeigt den zuletzt gemeldeten Status in Worten, die gescheiterten und erfolgreichen Läufe in Folge, die letzte Fehlermeldung und ob eine aktivierte Extension den Check noch anbietet. Die Seite führt die Checks nicht aus und zeigt ihre Details nicht.
+Diese Seite listet jeden Check, den eine aktivierte Extension anbietet, jeden erwarteten oder stummgeschalteten Check und jeden Check, für den der Monitor einen Zustand gespeichert hat. Jede Zeile zeigt den zuletzt gemeldeten Status in Worten, die gescheiterten und erfolgreichen Läufe in Folge, wann zuletzt ein Fehler gemeldet wurde und ob eine aktivierte Extension den Check noch anbietet. Die Seite führt die Checks nicht aus und zeigt ihre Details nicht.
 
 ### Einen Check stummschalten
 
@@ -84,7 +84,7 @@ Mit cv:
 cv api4 Setting.set +v 'herald_monitor_snooze={"myext.disk": "2026-10-12T08:00:00"}'
 ```
 
-Solange ein Check stummgeschaltet ist, sendet herald für ihn weder eine Fehlermeldung noch eine Erinnerung. Schlägt der Check beim Ende der Stummschaltung noch fehl, meldet herald den Fehler dann. Eine Erholung wird nur für einen gemeldeten Fehler gemeldet, ein Fehler, der während der Stummschaltung begann und endete, löst also nichts aus. Abgelaufene oder unlesbare Einträge entfernt herald beim nächsten Lauf.
+Solange ein Check stummgeschaltet ist, sendet herald für ihn weder eine Fehlermeldung noch eine Erinnerung. Schlägt der Check beim Ende der Stummschaltung noch fehl, meldet herald den Fehler dann. Eine Entwarnung folgt nur auf einen gemeldeten Fehler. Ein Fehler, der während der Stummschaltung begann und endete, löst also nichts aus. Abgelaufene oder unlesbare Einträge entfernt herald beim nächsten Lauf.
 
 ### Erwartete Checks
 
@@ -104,7 +104,7 @@ Die Einstellung `herald_monitor_state` enthält den letzten Zustand jedes Checks
 
 - Jeder Lauf setzt eine Sperre. Ein Lauf, der sich mit einem anderen überschneidet, wird übersprungen, statt doppelt zu senden.
 - Der Zustand jedes Checks wird direkt nach dem Veröffentlichen seiner Meldung gespeichert. Ein Absturz mitten im Lauf wiederholt die Meldungen davor nicht. Nur ein Absturz genau zwischen einer Veröffentlichung und ihrem Speichern kann diese eine Meldung doppelt senden.
-- Schlägt eine Veröffentlichung fehl, behält der Check seinen alten Zustand und wird beim nächsten Lauf erneut versucht. Der Joblauf endet dann mit dem Fehler „herald monitor: N transition(s) could not be published, see the CiviCRM log“, und jeder Fehler steht als Warnung in diesem Protokoll.
+- Schlägt eine Veröffentlichung fehl, behält der Check seinen alten Zustand, und der nächste Lauf meldet den Wechsel erneut. Der Joblauf endet dann mit dem Fehler „herald monitor: N transition(s) could not be published, see the CiviCRM log“, und jeder Fehler steht als Warnung in diesem Protokoll.
 - Sammelt die Route des Topics Meldungen, wird eine veröffentlichte Meldung nur gepuffert. Der Job zum Leeren des Puffers stellt sie später zu.
 
 ## Grenzen
