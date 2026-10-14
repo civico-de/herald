@@ -98,7 +98,7 @@ The webhook channel sends an HTTP request to a URL. The settings are `herald_web
 | `webhook_body_format` | How the body is built, see below. The default is `text`. |
 | `webhook_body_key` | JSON key for the json format. The default is `text`. |
 | `webhook_headers` | Extra request headers as a JSON object that maps names to text or numbers. Anything else fails the send. |
-| `webhook_auth_token` | Sent as a bearer token in the Authorization header. A header you set in `webhook_headers` takes precedence. |
+| `webhook_auth_token` | Sent as a bearer token in the Authorization header. An Authorization header in `webhook_headers` takes precedence. |
 
 The body formats:
 
@@ -223,7 +223,7 @@ These are the configuration errors the channels raise. In a direct delivery they
 | webhook host resolves to a disallowed address | The URL points to a private or internal address. Add the host to `herald_webhook_allowed_hosts` if that is intended. |
 | webhook URL must use http or https | Fix the URL. |
 | webhook URL must not contain credentials | Remove the user name and password from the URL. Use `webhook_auth_token` or `webhook_headers` instead. |
-| webhook_headers must map header names to values | Write the headers as a JSON object of names and values, for example `{"X-Source": "civicrm"}`. |
+| webhook_headers must map header names to text or numbers | Write the headers as a JSON object of names and values, for example `{"X-Source": "civicrm"}`. `true`, `false`, lists and nested objects are not header values. |
 | could not resolve webhook host | Check the host name and the server's DNS. |
 | ntfy channel requires ntfy_topic | Set a topic on the action or `herald_ntfy_default_topic`. |
 | Pushover app token not configured | Set `herald_pushover_app_token`. |

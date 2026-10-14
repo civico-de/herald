@@ -305,7 +305,7 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
    * @dataProvider unusableHeadersProvider
    */
   public function testUnusableHeadersFailTheSend(mixed $headers): void {
-    $this->expectExceptionMessage('herald: webhook_headers must map header names to values.');
+    $this->expectExceptionMessage('herald: webhook_headers must map header names to text or numbers.');
     $this->makeChannel(new Response(200, [], ''))->send('x', [
       'webhook_url' => 'https://example.com/x',
       'webhook_headers' => $headers,
