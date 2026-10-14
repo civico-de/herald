@@ -37,7 +37,7 @@ final class CRM_Herald_Upgrader_InlineContributionBlock {
       // Older forms stored "0" or "" for an unchecked box.
       'show_pending' => !empty($block['show_pending']),
       'show_histogram' => !empty($block['show_histogram']),
-      // A count below 1 drew no histogram; such a digest got 0 from an empty form field.
+      // Older releases failed on 0 and drew one bucket below it; blank meant the default.
       'bucket_count' => $count > 0 ? $count : 8,
       'bucket_edges' => self::edges($block['bucket_edges'], $digestName),
     ];

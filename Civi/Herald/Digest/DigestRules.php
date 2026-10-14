@@ -41,7 +41,7 @@ final class DigestRules {
     }
     $problems = [];
     foreach ($blocks as $i => $block) {
-      $problem = BlockType::problem($block);
+      $problem = BlockType::problem($block) ?? SearchBlock::problem($block);
       if ($problem !== NULL) {
         $problems[] = E::ts('Block %1: %2', [1 => $i + 1, 2 => $problem]);
       }

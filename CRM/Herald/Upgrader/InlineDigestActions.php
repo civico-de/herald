@@ -11,7 +11,7 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  * Reads the CiviRules tables directly: they hold the actions while CiviRules
  * is disabled, and the API unserializes action_params only from CiviRules 3.36.
  */
-final class CRM_Herald_CivirulesAdapter_InlineDigests {
+final class CRM_Herald_Upgrader_InlineDigestActions {
 
   /**
    * @return int Number of rule actions rewritten.
@@ -25,7 +25,8 @@ final class CRM_Herald_CivirulesAdapter_InlineDigests {
       ->join('a', 'INNER JOIN civirule_action a ON a.id = ra.action_id')
       ->join('r', 'LEFT JOIN civirule_rule r ON r.id = ra.rule_id')
       ->select(['ra.id', 'ra.action_params', 'r.label'])
-      ->where('a.class_name = @class', ['class' => 'CRM_Herald_CivirulesAdapter_Action_Digest'])
+      // Retired digest handlers still hold actions where CiviRules was disabled when they were retired.
+      ->where('a.class_name IN (@classes)', ['classes' => CRM_Herald_CivirulesAdapter_RetiredHandlers::digestClasses()])
       ->execute()
       ->fetchAll();
     $migrated = 0;
@@ -53,7 +54,6 @@ final class CRM_Herald_CivirulesAdapter_InlineDigests {
     if ($delivery === NULL) {
       return 0;
     }
-    // ckconform-ignore raw-sql -- CiviRules' API is gone while it is disabled, and core has no UPDATE builder.
     CRM_Core_DAO::executeQuery(
       'UPDATE civirule_rule_action SET action_params = %1 WHERE id = %2',
       [1 => [serialize($delivery), 'String'], 2 => [$id, 'Integer']],

@@ -104,7 +104,7 @@ class CRM_Herald_Upgrader extends \CRM_Extension_Upgrader_Base {
     $this->ctx->log->info('herald: creating the digest tables');
     E::schema()->createEntityTable('schema/HeraldDigest.entityType.php');
     E::schema()->createEntityTable('schema/HeraldDigestBlock.entityType.php');
-    $actions = CRM_Herald_CivirulesAdapter_InlineDigests::migrate();
+    $actions = CRM_Herald_Upgrader_InlineDigestActions::migrate();
     $jobs = CRM_Herald_Upgrader_InlineDigestJobs::migrate();
     $this->ctx->log->info("herald: moved the digests of {$actions} rule action(s) and {$jobs} job(s) into records");
     return TRUE;

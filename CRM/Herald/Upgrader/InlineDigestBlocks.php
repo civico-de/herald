@@ -53,7 +53,7 @@ final class CRM_Herald_Upgrader_InlineDigestBlocks {
         'template' => self::text($block, 'template'),
       ]
       + match ($type) {
-        'search' => ['saved_search_id' => CRM_Herald_Upgrader_InlineSearch::id(Cast::toString($block['search'] ?? ''))],
+        'search' => ['saved_search' => Cast::toString($block['search'] ?? '')],
         'section' => ['section_key' => self::text($block, 'key')],
         default => CRM_Herald_Upgrader_InlineContributionBlock::values($block, $digestName),
       }

@@ -5,19 +5,32 @@ declare(strict_types = 1);
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * Search blocks of older releases ran a SearchKit saved search's own query.
+ * Search blocks of older releases named a SearchKit saved search and ran its own query.
  * A record shows a display, so the migration adds one with the same rows.
  */
 final class CRM_Herald_Upgrader_InlineSearch {
 
-  public static function id(string $name): ?int {
-    $id =
-      \Civi\Api4\SavedSearch::get(checkPermissions: FALSE)
-        ->addSelect('id')
-        ->addWhere('name', '=', $name)
-        ->execute()
-        ->first()['id'] ?? NULL;
-    return $id === NULL ? NULL : Cast::toInt($id);
+  /**
+   * Why the saved search of an old search block cannot become a display, or NULL.
+   *
+   * @param array<string, mixed> $block
+   */
+  public static function problem(array $block): ?string {
+    if (!array_key_exists('saved_search', $block)) {
+      return NULL;
+    }
+    $name = Cast::toString($block['saved_search']);
+    $search = self::search($name);
+    if ($search === NULL) {
+      return "saved search \"{$name}\" does not exist";
+    }
+    try {
+      self::settings($search);
+    }
+    catch (CRM_Core_Exception $e) {
+      return "saved search \"{$name}\" has no default display: {$e->getMessage()}";
+    }
+    return NULL;
   }
 
   /**
@@ -27,12 +40,12 @@ final class CRM_Herald_Upgrader_InlineSearch {
    * @return array<string, mixed>
    */
   public static function forCheck(array $block): array {
-    if (!array_key_exists('saved_search_id', $block)) {
+    if (!array_key_exists('saved_search', $block)) {
       return $block;
     }
-    $searchId = $block['saved_search_id'];
-    unset($block['saved_search_id']);
-    return $block + ['search_display_id' => $searchId];
+    $search = self::search(Cast::toString($block['saved_search']));
+    unset($block['saved_search']);
+    return $block + ['search_display_id' => $search['id'] ?? NULL];
   }
 
   /**
@@ -42,45 +55,67 @@ final class CRM_Herald_Upgrader_InlineSearch {
    * @return array<string, mixed>
    */
   public static function record(array $block, string $label): array {
-    if (!array_key_exists('saved_search_id', $block)) {
+    if (!array_key_exists('saved_search', $block)) {
       return $block;
     }
-    $searchId = Cast::toInt($block['saved_search_id']);
-    unset($block['saved_search_id']);
-    return $block + ['search_display_id' => self::display($searchId, $label)];
+    $search = self::search(Cast::toString($block['saved_search'])) ?? throw new CRM_Core_Exception(
+      'herald: the saved search of a checked block is gone',
+    );
+    unset($block['saved_search']);
+    $id = \Civi\Api4\SearchDisplay::create(checkPermissions: FALSE)
+      ->setValues([
+        'saved_search_id' => $search['id'],
+        // The column holds 255 characters; a job name can fill them alone.
+        'label' => mb_substr($label, 0, 255),
+        'type' => 'table',
+        'settings' => self::settings($search),
+      ])
+      ->execute()
+      ->single()['id'];
+    return $block + ['search_display_id' => Cast::toInt($id)];
   }
 
-  private static function display(int $searchId, string $label): int {
+  /**
+   * @return array{id: int, name: string, api_params: array<array-key, mixed>}|null
+   */
+  private static function search(string $name): ?array {
     $search = \Civi\Api4\SavedSearch::get(checkPermissions: FALSE)
-      ->addSelect('name', 'api_params')
-      ->addWhere('id', '=', $searchId)
+      ->addSelect('id', 'name', 'api_params')
+      ->addWhere('name', '=', $name)
       ->execute()
-      ->single();
-    $params = is_array($search['api_params'] ?? NULL) ? $search['api_params'] : [];
-    $orderBy = is_array($params['orderBy'] ?? NULL) ? $params['orderBy'] : [];
+      ->first();
+    return (
+      is_array($search)
+        ? [
+          'id' => Cast::toInt($search['id']),
+          'name' => Cast::toString($search['name']),
+          'api_params' => is_array($search['api_params'] ?? NULL) ? $search['api_params'] : [],
+        ] : NULL
+    );
+  }
+
+  /**
+   * A table of the search's columns; a display's limit and sort replace the
+   * search's, so they are copied over (0 is no limit, as in the search).
+   *
+   * @param array{name: string, api_params: array<array-key, mixed>} $search
+   * @return array<array-key, mixed>
+   */
+  private static function settings(array $search): array {
     $default = \Civi\Api4\SearchDisplay::getDefault(checkPermissions: FALSE)
-      ->setSavedSearch(Cast::toString($search['name']))
+      ->setSavedSearch($search['name'])
       ->setType('table')
       ->execute()
       ->single();
-    // A display's limit and sort replace the search's; 0 is no limit, as in the search.
-    $settings =
+    $params = $search['api_params'];
+    $orderBy = is_array($params['orderBy'] ?? NULL) ? $params['orderBy'] : [];
+    return (
       [
         'limit' => Cast::toInt($params['limit'] ?? 0),
         'sort' => array_map(NULL, array_keys($orderBy), array_values($orderBy)),
         'pager' => FALSE,
         'actions' => FALSE,
-      ] + (is_array($default['settings'] ?? NULL) ? $default['settings'] : []);
-    return Cast::toInt(
-      \Civi\Api4\SearchDisplay::create(checkPermissions: FALSE)
-        ->setValues([
-          'saved_search_id' => $searchId,
-          'label' => $label,
-          'type' => 'table',
-          'settings' => $settings,
-        ])
-        ->execute()
-        ->single()['id'],
+      ] + (is_array($default['settings'] ?? NULL) ? $default['settings'] : [])
     );
   }
 

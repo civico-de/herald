@@ -39,7 +39,7 @@ class SearchBlockTest extends TestCase implements HeadlessInterface, Transaction
    * @param list<array<string, mixed>> $columns
    * @param array<string, mixed> $settings
    */
-  private function display(array $apiParams, array $columns, array $settings = []): int {
+  private function display(array $apiParams, array $columns, array $settings = [], string $type = 'table'): int {
     $search = SavedSearch::create(checkPermissions: FALSE)
       ->setValues([
         'label' => 'Herald test search',
@@ -52,7 +52,7 @@ class SearchBlockTest extends TestCase implements HeadlessInterface, Transaction
       ->setValues([
         'saved_search_id' => $search['id'],
         'label' => 'Herald test display',
-        'type' => 'table',
+        'type' => $type,
         'settings' => ['columns' => $columns, 'pager' => FALSE] + $settings,
       ])
       ->execute()
@@ -117,6 +117,58 @@ class SearchBlockTest extends TestCase implements HeadlessInterface, Transaction
     \CRM_Core_Config::singleton()->userPermissionClass->permissions = [];
 
     self::assertSame([['4']], array_column(SearchBlock::vars($id)['rows'], 'cells'));
+  }
+
+  public function testAnAutoColumnDisplayShowsTheSearchsColumns(): void {
+    $id = $this->display(
+      ['select' => ['display_name'], 'where' => [['display_name', '=', 'Herald Test A']]],
+      [],
+      ['columnMode' => 'auto'],
+    );
+
+    $vars = SearchBlock::vars($id);
+    self::assertSame(['Display Name'], $vars['labels']);
+    self::assertSame([['cells' => ['Herald Test A'], 'values' => ['display_name' => 'Herald Test A']]], $vars['rows']);
+  }
+
+  public function testAnHtmlColumnArrivesAsText(): void {
+    $id = $this->display(
+      ['select' => ['display_name'], 'where' => [['display_name', '=', 'Herald Test A']]],
+      [['type' => 'html', 'key' => 'display_name', 'label' => 'Name', 'rewrite' => '<b>[display_name]</b> & co']],
+    );
+
+    self::assertSame([['Herald Test A & co']], array_column(SearchBlock::vars($id)['rows'], 'cells'));
+  }
+
+  public function testAKeyShownTwiceKeepsItsFirstValue(): void {
+    $id = $this->display(
+      ['select' => ['display_name'], 'where' => [['display_name', '=', 'Herald Test A']]],
+      [
+        ['type' => 'field', 'key' => 'display_name', 'label' => 'Name'],
+        ['type' => 'field', 'key' => 'display_name', 'label' => 'Again', 'rewrite' => 'again'],
+      ],
+    );
+
+    self::assertSame(
+      [['cells' => ['Herald Test A', 'again'], 'values' => ['display_name' => 'Herald Test A']]],
+      SearchBlock::vars($id)['rows'],
+    );
+  }
+
+  public function testOnlyDisplaysWithRowsCanBeChosen(): void {
+    $table = $this->display(['select' => ['display_name']], []);
+    $autocomplete = $this->display(['select' => ['display_name']], [], [], 'autocomplete');
+
+    self::assertNull(SearchBlock::problem(['type' => 'search', 'search_display_id' => $table]));
+    self::assertSame(
+      'a display of type "autocomplete" has no rows for a digest; use a table, list or grid.',
+      SearchBlock::problem(['type' => 'search', 'search_display_id' => $autocomplete]),
+    );
+    self::assertSame(
+      'search display 999999 does not exist.',
+      SearchBlock::problem(['type' => 'search', 'search_display_id' => 999_999]),
+    );
+    self::assertNull(SearchBlock::problem(['type' => 'section', 'search_display_id' => $autocomplete]));
   }
 
   public function testMissingDisplayFails(): void {

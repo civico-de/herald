@@ -81,7 +81,9 @@ final class CRM_Herald_Upgrader_InlineDigest {
   private static function problems(array $blocks): array {
     $problems = array_map(
       static fn (array $block): ?string => (
-        BlockType::problem(CRM_Herald_Upgrader_InlineSearch::forCheck($block)) ?? self::missingReference($block)
+        CRM_Herald_Upgrader_InlineSearch::problem($block)
+        ?? BlockType::problem(CRM_Herald_Upgrader_InlineSearch::forCheck($block))
+        ?? self::missingReference($block)
       ),
       $blocks,
     );

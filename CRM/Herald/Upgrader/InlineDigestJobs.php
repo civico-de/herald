@@ -24,14 +24,32 @@ final class CRM_Herald_Upgrader_InlineDigestJobs {
     $migrated = 0;
     foreach ($jobs as $job) {
       $id = Cast::toInt($job['id'] ?? NULL);
-      $api = json_decode(Cast::toString($job['parameters'] ?? ''), TRUE);
-      $api = is_array($api) ? Cast::namedOnly($api) : [];
+      $api = self::api(Cast::toString($job['parameters'] ?? ''));
+      if ($api === NULL) {
+        continue;
+      }
       $name = Cast::toString($job['name'] ?? '');
       CRM_Core_Transaction::create()->run(static function () use ($api, $id, $name, &$migrated): void {
         $migrated += self::rewrite($api, $id, $name);
       });
     }
     return $migrated;
+  }
+
+  /**
+   * The parameters as the job manager reads them, JSON or key=value lines; NULL
+   * for a job that never ran, as Herald.notifyDigest exists only in APIv4.
+   *
+   * @return array<string, mixed>|null
+   */
+  private static function api(string $parameters): ?array {
+    try {
+      $api = Cast::namedOnly(CRM_Core_BAO_Job::parseParameters($parameters));
+    }
+    catch (CRM_Core_Exception) {
+      return NULL;
+    }
+    return Cast::toInt($api['version'] ?? 3) === 4 ? $api : NULL;
   }
 
   /**
@@ -63,10 +81,14 @@ final class CRM_Herald_Upgrader_InlineDigestJobs {
   private static function migrated(array $api, int $id, string $name): ?array {
     // A job without actionParams sent the default digest.
     $params = $api['actionParams'] ?? [];
-    $params = is_array($params) ? Cast::namedOnly($params) : NULL;
-    if ($params === NULL || array_key_exists('digest', $api) || !CRM_Herald_Upgrader_InlineDigest::isInline($params)) {
+    if (
+      !is_array($params)
+      || array_key_exists('digest', $api)
+      || !CRM_Herald_Upgrader_InlineDigest::isInline($params)
+    ) {
       return NULL;
     }
+    $params = Cast::namedOnly($params);
     $delivery = CRM_Herald_Upgrader_InlineDigest::extract($params, "job_{$id}", $name !== '' ? $name : "Job {$id}");
     if ($delivery === NULL) {
       return NULL;

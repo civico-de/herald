@@ -2043,3 +2043,11 @@ msgstr "die Klassengrenzen müssen aufsteigende Zahlen sein."
 #: Civi/Herald/Digest/Options.php
 msgid "unknown %1 \"%2\"."
 msgstr "unbekannter Wert für %1: „%2“."
+
+#: Civi/Herald/Digest/SearchBlock.php
+msgid "search display %1 does not exist."
+msgstr "die Suchanzeige %1 gibt es nicht."
+
+#: Civi/Herald/Digest/SearchBlock.php
+msgid "a display of type \"%1\" has no rows for a digest; use a table, list or grid."
+msgstr "eine Anzeige vom Typ „%1“ hat keine Zeilen für einen Report; nehmen Sie eine Tabelle, Liste oder ein Raster."

@@ -233,6 +233,54 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
     );
   }
 
+  public function testASearchThatCannotBecomeADisplayIsNamed(): void {
+    SavedSearch::create(checkPermissions: FALSE)
+      ->setValues([
+        'name' => 'herald_test_gone',
+        'label' => 'Gone',
+        'api_entity' => 'HeraldTestNoSuchEntity',
+        'api_params' => ['version' => 4, 'select' => ['id']],
+      ])
+      ->execute();
+
+    self::assertSame(
+      'saved search "herald_test_missing" does not exist',
+      CRM_Herald_Upgrader_InlineSearch::problem(['type' => 'search', 'saved_search' => 'herald_test_missing']),
+    );
+    self::assertStringStartsWith(
+      'saved search "herald_test_gone" has no default display: ',
+      (string) CRM_Herald_Upgrader_InlineSearch::problem(['type' => 'search', 'saved_search' => 'herald_test_gone']),
+    );
+    self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(
+      ['type' => 'search', 'search' => 'herald_test_gone'],
+      'old_gone',
+      'Old gone',
+    ));
+  }
+
+  public function testADisplayLabelIsCutToItsColumn(): void {
+    SavedSearch::create(checkPermissions: FALSE)
+      ->setValues([
+        'name' => 'herald_test_members',
+        'label' => 'Members',
+        'api_entity' => 'Contact',
+        'api_params' => ['version' => 4, 'select' => ['id']],
+      ])
+      ->execute();
+    CRM_Herald_Upgrader_InlineDigest::extract(
+      ['type' => 'search', 'search' => 'herald_test_members'],
+      'old_long',
+      str_repeat('ä', 300),
+    );
+
+    $label = SearchDisplay::get(checkPermissions: FALSE)
+      ->addSelect('label')
+      ->addWhere('id', '=', $this->stored('old_long')['blocks'][0]['search_display_id'])
+      ->execute()
+      ->single()['label'];
+    self::assertSame('Herald: ' . str_repeat('ä', 247), $label);
+  }
+
   public function testRuleActionsNameTheirNewDigest(): void {
     $actionId = CiviRulesAction::get(checkPermissions: FALSE)
       ->addWhere('name', '=', 'herald_digest')
@@ -250,14 +298,32 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
       ])
       ->execute()
       ->single()['id'];
-    $create = static fn (array $params): int => (int) CiviRulesRuleAction::create(checkPermissions: FALSE)
-      ->setValues(['rule_id' => $ruleId, 'action_id' => $actionId, 'action_params' => $params, 'is_active' => TRUE])
+    // A handler retired while CiviRules was disabled keeps its actions until CiviRules returns.
+    $retiredId = (int) CiviRulesAction::create(checkPermissions: FALSE)
+      ->setValues([
+        'name' => 'herald_test_retired_digest',
+        'label' => 'Retired digest',
+        'class_name' => 'CRM_Herald_CivirulesAdapter_Action_ContributionDigest',
+        'is_active' => TRUE,
+      ])
+      ->execute()
+      ->single()['id'];
+    $create = static fn (array $params, int $handler = 0): int => (int) CiviRulesRuleAction::create(
+      checkPermissions: FALSE,
+    )
+      ->setValues([
+        'rule_id' => $ruleId,
+        'action_id' => $handler ?: $actionId,
+        'action_params' => $params,
+        'is_active' => TRUE,
+      ])
       ->execute()
       ->single()['id'];
     $inline = $create(['channel' => 'telegram', 'template' => 'herald_contribution_digest_daily']);
     $stored = $create(['channel' => 'telegram', 'digest' => 'already_stored']);
+    $retired = $create(['channel' => 'email'], $retiredId);
 
-    self::assertSame(1, CRM_Herald_CivirulesAdapter_InlineDigests::migrate());
+    self::assertSame(2, CRM_Herald_Upgrader_InlineDigestActions::migrate());
 
     $params = CiviRulesRuleAction::get(checkPermissions: FALSE)
       ->addSelect('id', 'action_params')
@@ -268,6 +334,13 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
     self::assertSame(['digest' => "rule_action_{$inline}", 'channel' => 'telegram'], $params[$inline]);
     self::assertSame(['channel' => 'telegram', 'digest' => 'already_stored'], $params[$stored]);
     self::assertSame('Morning numbers', $this->stored("rule_action_{$inline}")['digest']['title']);
+    self::assertSame(
+      ['digest' => "rule_action_{$retired}", 'channel' => 'email'],
+      CiviRulesRuleAction::get(checkPermissions: FALSE)
+        ->addWhere('id', '=', $retired)
+        ->execute()
+        ->single()['action_params'],
+    );
   }
 
   public function testJobsNameTheDigestBesideTheirDelivery(): void {
@@ -331,6 +404,34 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
       ),
     );
     self::assertSame('contribution', $this->stored("job_{$id}")['blocks'][0]['type']);
+  }
+
+  public function testAJobWithKeyValueParametersKeepsThemAndAJobThatNeverRanStays(): void {
+    $job = static fn (string $parameters): int => (int) Job::create(checkPermissions: FALSE)
+      ->setValues([
+        'name' => 'Plain digest',
+        'run_frequency' => 'Daily',
+        'api_entity' => 'Herald',
+        'api_action' => 'notifyDigest',
+        'parameters' => $parameters,
+      ])
+      ->execute()
+      ->single()['id'];
+    $lines = $job("version=4\nsendHour=7");
+    $v3 = $job('');
+
+    self::assertSame(1, CRM_Herald_Upgrader_InlineDigestJobs::migrate());
+
+    self::assertSame(
+      ['version' => '4', 'sendHour' => '7', 'digest' => "job_{$lines}", 'actionParams' => []],
+      CRM_Core_BAO_Job::parseParameters(
+        (string) Job::get(checkPermissions: FALSE)->addWhere('id', '=', $lines)->execute()->single()['parameters'],
+      ),
+    );
+    self::assertSame(
+      '',
+      (string) Job::get(checkPermissions: FALSE)->addWhere('id', '=', $v3)->execute()->single()['parameters'],
+    );
   }
 
 }

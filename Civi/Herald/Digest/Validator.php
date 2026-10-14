@@ -43,7 +43,7 @@ final class Validator extends AutoService implements HookInterface {
   private static function validateBlocks(ValidateValuesEvent $e): void {
     foreach (self::diffs($e) as $r => [$new, $old]) {
       $block = $new + $old;
-      $problem = BlockType::problem($block);
+      $problem = BlockType::problem($block) ?? SearchBlock::problem($block);
       if ($problem !== NULL) {
         $field = BlockType::REQUIRED[Cast::toString($block['type'] ?? 'contribution')] ?? 'type';
         $e->addError($r, $field, 'herald_block', ucfirst($problem));

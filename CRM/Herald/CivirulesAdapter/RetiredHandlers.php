@@ -26,6 +26,16 @@ final class CRM_Herald_CivirulesAdapter_RetiredHandlers {
     'CRM_Herald_CivirulesAdapter_Action_ContributionDigest' => [self::DIGEST_CLASS, 'withoutDigestCampaignParams'],
   ];
 
+  /**
+   * The digest action and the retired handlers that move onto it.
+   *
+   * @return list<string>
+   */
+  public static function digestClasses(): array {
+    $retired = array_filter(self::RETIRED_ACTIONS, static fn (array $move): bool => $move[0] === self::DIGEST_CLASS);
+    return [self::DIGEST_CLASS, ...array_keys($retired)];
+  }
+
   private const EVENT_BECAME_INACTIVE = [
     'entity' => 'Event',
     'field' => 'is_active',

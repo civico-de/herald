@@ -106,12 +106,15 @@ actions (no bespoke cron for alerts). CiviRules is optional, not in `<requires>`
   are RESTRICT (a vanished filter would widen the block to every contribution);
   search_display_id is SET NULL. Upgrade 1011 moves inline digests into records
   (`CRM_Herald_Upgrader_Inline*`; rule actions through
-  `CRM_Herald_CivirulesAdapter_InlineDigests`, on the CiviRules tables so a
-  disabled or pre-3.36 CiviRules is covered), reading their params as the old
+  `CRM_Herald_Upgrader_InlineDigestActions`, on the CiviRules tables so a
+  disabled or pre-3.36 CiviRules is covered, retired digest handlers
+  included; jobs as the job manager parses them), reading their params as the old
   code did (unknown periods are yesterday) and leaving unrunnable ones inline
   with a warning; an old search block gets a new table display with the
   search's sort and limit (`CRM_Herald_Upgrader_InlineSearch`). Search blocks
-  run `SearchDisplay::run` with `acl_bypass` forced on — whoever configures a
+  take table, list and grid displays (`SearchBlock::TYPES`, picker filter and
+  save check), resolve auto-mode columns as `SearchDisplay::run` does, and
+  run with `acl_bypass` forced on — whoever configures a
   digest can report any display, the same trust as the contribution queries. Scheduled digests are rules on
   the cron trigger "Herald: Schedule" (`Herald.checkSchedule`): a slot fires
   once, when the rule log has no run since it and it is not older than the

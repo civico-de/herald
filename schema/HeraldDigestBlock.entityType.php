@@ -148,6 +148,9 @@ return [
         'sql_type' => 'int unsigned',
         'input_type' => 'EntityRef',
         'description' => E::ts('Its rows, columns, sort and limit make the block.'),
+        'input_attrs' => [
+          'filter' => ['type' => \Civi\Herald\Digest\SearchBlock::TYPES],
+        ],
         'entity_reference' => [
           'entity' => 'SearchDisplay',
           'key' => 'id',
