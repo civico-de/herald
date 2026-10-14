@@ -5,27 +5,30 @@ declare(strict_types = 1);
 namespace Civi\Herald\Condition;
 
 /**
- * Looks up APIv4 field specs, following a name that starts with a foreign key.
+ * Looks up APIv4 field specs and the foreign key a field name starts with.
  */
 final class FieldSpec {
 
   /**
-   * getFields echoes a joined name in whatever case it was given, so only an
-   * exactly named foreign key counts as a join.
+   * A field of the entity wins over a join, as in an APIv4 select. A custom
+   * field is group.field, so a foreign key can span two segments.
    *
    * @return array{entity: string, rest: string}|null the referenced entity and the rest of the name
    */
   public static function join(string $entity, string $name): ?array {
-    if (!str_contains($name, '.')) {
+    $names = civicrm_api4($entity, 'getFields', ['checkPermissions' => FALSE, 'select' => ['name']])->column('name');
+    if (in_array($name, $names, TRUE)) {
       return NULL;
     }
-    [$head, $rest] = explode('.', $name, 2);
-    $spec = self::get($entity, $head, ['name', 'fk_entity']);
-    return (
-      is_array($spec) && $spec['name'] === $head && is_string($spec['fk_entity'] ?? NULL)
-        ? ['entity' => $spec['fk_entity'], 'rest' => $rest]
-        : NULL
-    );
+    $parts = explode('.', $name);
+    for ($length = 1; $length < min(3, count($parts)); $length++) {
+      $head = implode('.', array_slice($parts, 0, $length));
+      $fk = in_array($head, $names, TRUE) ? self::get($entity, $head, ['fk_entity'])['fk_entity'] ?? NULL : NULL;
+      if (is_string($fk)) {
+        return ['entity' => $fk, 'rest' => implode('.', array_slice($parts, $length))];
+      }
+    }
+    return NULL;
   }
 
   /**

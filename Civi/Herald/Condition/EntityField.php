@@ -22,7 +22,9 @@ final class EntityField {
     try {
       $join = FieldSpec::join($entity, $name);
       if ($join !== NULL) {
-        return self::errors($join['entity'], $join['rest'] . ($suffix === NULL ? '' : ":{$suffix}"));
+        $errors = self::errors($join['entity'], $join['rest'] . ($suffix === NULL ? '' : ":{$suffix}"));
+        // The entity was readable, so behind a join only the field name can be wrong.
+        return $errors === [] ? [] : ['field' => implode(' ', $errors)];
       }
       $spec = FieldSpec::get($entity, $name, ['name', 'type', 'suffixes']);
     }

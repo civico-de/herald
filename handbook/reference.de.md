@@ -63,7 +63,7 @@ Die Bedingung „Herald: Field transition“ ist wahr, wenn der Wert eines Felde
 | Feld | Bedeutung |
 |---|---|
 | Entität | Der APIv4-Name der Entität, etwa Contribution. Kontakt-Untertypen zählen als Contact. |
-| Feld | Der APIv4-Feldname. Ein benutzerdefiniertes Feld schreiben Sie als group.field. An ein Auswahlfeld können Sie ein Suffix wie `:name` anhängen. Dann vergleicht die Bedingung den Namen der Option statt ihrer ID, etwa bei `contribution_status_id:name`. Nehmen Sie `:name` statt `:label`, denn eine Bezeichnung kann sich mit der Sprache der Site ändern. |
+| Feld | Der APIv4-Feldname. Ein benutzerdefiniertes Feld schreiben Sie als group.field. Ein Feld eines verknüpften Datensatzes folgt auf seinen Fremdschlüssel, etwa `contact_id.contact_type`. An ein Auswahlfeld können Sie ein Suffix wie `:name` anhängen. Dann vergleicht die Bedingung den Namen der Option statt ihrer ID, etwa bei `contribution_status_id:name`. Nehmen Sie `:name` statt `:label`, denn eine Bezeichnung kann sich mit der Sprache der Site ändern. |
 | Vorher: Operator, Vorher: Wert | Die Prüfung für den Wert vor der Änderung. |
 | Nachher: Operator, Nachher: Wert | Die Prüfung für den Wert nach der Änderung. |
 
@@ -81,7 +81,7 @@ Zahlen werden exakt verglichen, egal wie viele Stellen sie haben. Eine Zahl mit 
 
 Der Wert vor der Änderung stammt aus der Kopie, die CiviRules vom Datensatz aufbewahrt. Bei einem Feld mit Suffix schlägt herald die Option zur gespeicherten ID nach. Ein leerer gespeicherter Wert gilt als leer, ein gespeicherter Wert ohne Option als fehlend. Hat CiviRules keinen Wert, verwendet herald seine eigene Kopie, die direkt vor der Änderung entsteht. Ist der Wert dann noch unbekannt, ist die Bedingung falsch, denn eine verpasste Meldung ist besser als eine falsche.
 
-Die eigene Kopie von herald lebt nur so lange wie die Anfrage, eine verzögerte Aktion prüft ihre Bedingungen aber erst später im Cron-Lauf. Benutzerdefinierte Felder führt CiviRules unter anderen Namen, für sie ist die Kopie von herald also die einzige Quelle. Setzen Sie bei einer verzögerten Aktion mit benutzerdefiniertem Feld „Don't recheck condition upon processing of delayed action“, sonst löst die Bedingung nie aus.
+Die eigene Kopie von herald lebt nur so lange wie die Anfrage, eine verzögerte Aktion prüft ihre Bedingungen aber erst später im Cron-Lauf. Benutzerdefinierte Felder führt CiviRules unter anderen Namen, und Felder verknüpfter Datensätze hat es gar nicht. Für sie ist die Kopie von herald also die einzige Quelle. Setzen Sie bei einer verzögerten Aktion mit einem solchen Feld „Don't recheck condition upon processing of delayed action“, sonst löst die Bedingung nie aus.
 
 Der Wert nach der Änderung wird aus dem gespeicherten Datensatz gelesen. Eine Teilaktualisierung, die das Feld nicht schreibt, wird daher nach dem tatsächlich gespeicherten Wert beurteilt.
 

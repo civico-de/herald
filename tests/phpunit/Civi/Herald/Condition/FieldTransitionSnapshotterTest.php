@@ -92,6 +92,25 @@ class FieldTransitionSnapshotterTest extends TestCase implements HeadlessInterfa
     );
   }
 
+  public function testAJoinedFieldReadsTheReferencedRecord(): void {
+    $employer = $this->contactId();
+    $id = (int) Contact::create(checkPermissions: FALSE)
+      ->addValue('contact_type', 'Individual')
+      ->addValue('first_name', 'Herald')
+      ->addValue('employer_id', $employer)
+      ->execute()
+      ->first()['id'];
+    $this->watch('Contact', 'employer_id.organization_name');
+
+    FieldTransitionSnapshotter::capture('Individual', $id);
+
+    $this->assertSame('Herald snapshot fixture', PreEditSnapshot::get('Contact', $id, 'employer_id.organization_name'));
+    $this->assertSame(
+      ['known' => TRUE, 'value' => 'Herald snapshot fixture'],
+      FieldTransitionSnapshotter::currentValue('Contact', $id, 'employer_id.organization_name'),
+    );
+  }
+
   public function testUnreadableEntitySkipsTheSnapshot(): void {
     $this->watch('NoSuchEntity', 'status');
 

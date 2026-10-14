@@ -59,7 +59,27 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
   private array $decoys = [];
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Test::headless()
+      ->install('org.civicoop.civirules')
+      ->installMe(__DIR__)
+      ->callback([self::class, 'createReferenceField'], 'herald_form_round_trip_reference_field')
+      ->apply();
+  }
+
+  /**
+   * A custom contact reference field, which joins as herald_ref.person.
+   */
+  public static function createReferenceField(): void {
+    \Civi\Api4\CustomGroup::create(FALSE)
+      ->setValues(['name' => 'herald_ref', 'title' => 'herald_ref', 'extends' => 'Contact'])
+      ->addChain('field', \Civi\Api4\CustomField::create(FALSE)->setValues([
+        'custom_group_id' => '$id',
+        'name' => 'person',
+        'label' => 'person',
+        'data_type' => 'ContactReference',
+        'html_type' => 'Autocomplete-Select',
+      ]))
+      ->execute();
   }
 
   protected function setUp(): void {
@@ -331,6 +351,11 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
         'field',
         'Contact has no field "Contact_Type".',
       ],
+      'wrong case behind a custom reference' => [
+        ['entity' => 'Contact', 'field' => 'herald_ref.person.Display_Name'],
+        'field',
+        'Contact has no field "Display_Name".',
+      ],
       'unknown suffix behind a join' => [
         ['field' => 'contact_id.gender_id:nam'],
         'field',
@@ -379,6 +404,7 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
       ]],
       'joined custom field' => [['field' => 'contact_id.herald_preferences.preferred_channel']],
       'two joins' => [['field' => 'contact_id.employer_id.display_name']],
+      'join behind a custom reference' => [['entity' => 'Contact', 'field' => 'herald_ref.person.display_name']],
       'ordering with a number' => [['from_operator' => '>=', 'from_value' => ' 2 ']],
       'emptiness without a value' => [['to_operator' => 'not_empty', 'to_value' => '']],
     ];

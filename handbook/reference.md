@@ -63,7 +63,7 @@ The condition "Herald: Field transition" is true when a field's value before and
 | Field | Meaning |
 |---|---|
 | Entity | The APIv4 entity name, such as Contribution. Contact subtypes count as Contact. |
-| Field | The APIv4 field name. A custom field is written as group.field. An option field takes a suffix such as `:name` to compare the option's name instead of its ID, for example `contribution_status_id:name`. Prefer `:name` to `:label`, because a label can change with the site's language. |
+| Field | The APIv4 field name. A custom field is written as group.field. A field of a referenced record follows its foreign key, for example `contact_id.contact_type`. An option field takes a suffix such as `:name` to compare the option's name instead of its ID, for example `contribution_status_id:name`. Prefer `:name` to `:label`, because a label can change with the site's language. |
 | Before: operator, Before: value | The test for the value before the edit. |
 | After: operator, After: value | The test for the value after the edit. |
 
@@ -81,7 +81,7 @@ Numbers compare exactly, however many digits they have. A number with an exponen
 
 The value before the edit comes from the copy CiviRules keeps of the record. For a field with a suffix, herald looks up the option of the stored ID. An empty stored value counts as empty, and a stored value without an option counts as missing. When CiviRules has no value, herald uses its own copy, taken just before the edit. When the value is still unknown, the condition is false, because a missed alert is better than a false one.
 
-herald's own copy lasts only as long as the request, but a delayed action rechecks its conditions later, in the cron run. CiviRules keeps custom fields under different names, so for them herald's copy is the only source. On a delayed action with a custom field, tick "Don't recheck condition upon processing of delayed action", or the condition never fires.
+herald's own copy lasts only as long as the request, but a delayed action rechecks its conditions later, in the cron run. CiviRules keeps custom fields under different names and has no fields of referenced records, so for them herald's copy is the only source. On a delayed action with such a field, tick "Don't recheck condition upon processing of delayed action", or the condition never fires.
 
 The value after the edit is read from the stored record, so a partial update that did not write the field is judged by its real value.
 
