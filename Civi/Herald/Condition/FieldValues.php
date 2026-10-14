@@ -18,7 +18,7 @@ final class FieldValues {
    */
   public static function same(mixed $a, mixed $b): bool {
     if (is_scalar($a) && is_scalar($b)) {
-      return self::equals($a, Cast::toStoredString($b));
+      return self::equals($a, self::text($b));
     }
     return $a === $b;
   }
@@ -47,7 +47,7 @@ final class FieldValues {
    * @param \Closure(int): bool $holds
    */
   private static function ordered(mixed $actual, string $expected, \Closure $holds): bool {
-    $a = is_scalar($actual) ? trim(Cast::toStoredString($actual)) : '';
+    $a = is_scalar($actual) ? trim(self::text($actual)) : '';
     $b = trim($expected);
     return is_numeric($a) && is_numeric($b) && $holds(self::order($a, $b));
   }
@@ -56,9 +56,17 @@ final class FieldValues {
     if (!is_scalar($actual)) {
       return FALSE;
     }
-    $a = trim(Cast::toStoredString($actual));
+    $a = trim(self::text($actual));
     $b = trim($expected);
     return is_numeric($a) && is_numeric($b) ? self::order($a, $b) === 0 : $a === $b;
+  }
+
+  /**
+   * APIv4 returns Money and Float as floats; a string cast keeps only 14 digits,
+   * var_export the shortest form that reads back as the same float.
+   */
+  private static function text(bool|float|int|string $value): string {
+    return is_float($value) ? var_export($value, TRUE) : Cast::toStoredString($value);
   }
 
   /**

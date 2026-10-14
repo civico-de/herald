@@ -49,6 +49,11 @@ class FieldTransitionTest extends TestCase {
       'leading zeros numeric compare' => ['=', '00123', '123', TRUE],
       'huge decimals ordering' => ['>', '9007199254740993.5', '9007199254740993.4', TRUE],
       'exponent notation' => ['=', '1e3', '1000', TRUE],
+      // APIv4 returns Money and Float as PHP floats.
+      'float keeps all its digits' => ['=', 1_234_567.123_456_789, '1234567.123456789', TRUE],
+      'float orders by all its digits' => ['>', 1_234_567.123_456_789, '1234567.12345679', FALSE],
+      'money float equals its decimal' => ['=', 1000.0, '1000.00', TRUE],
+      'small float in exponent form' => ['<', 5.0E-5, '0.0001', TRUE],
       'equals bool false vs 0' => ['=', FALSE, '0', TRUE],
       'equals bool true vs 1' => ['=', TRUE, '1', TRUE],
       'equals bool false vs 1' => ['=', FALSE, '1', FALSE],
@@ -62,6 +67,22 @@ class FieldTransitionTest extends TestCase {
    */
   public function testCompare(string $operator, mixed $actual, string $expected, bool $result): void {
     $this->assertSame($result, FieldValues::compare($operator, $actual, $expected));
+  }
+
+  /**
+   * CiviRules keeps the stored text, APIv4 returns a float: an unrelated edit must not read as a change.
+   */
+  public function testAnUnchangedFloatIsNoTransition(): void {
+    $before = FieldTransition::side('', '');
+    $after = FieldTransition::side('not_empty', '');
+    $this->assertFalse(
+      FieldTransition::matches(
+        $before,
+        $after,
+        ['known' => TRUE, 'value' => '52.52000659999999'],
+        52.520_006_599_999_99,
+      ),
+    );
   }
 
   public function testBothSidesConfiguredMustBothMatch(): void {
@@ -138,6 +159,8 @@ class FieldTransitionTest extends TestCase {
     $this->assertTrue(FieldValues::same(a: FALSE, b: '0'));
     $this->assertTrue(FieldValues::same(a: '1', b: TRUE));
     $this->assertFalse(FieldValues::same('9007199254740993', '9007199254740992'));
+    $this->assertTrue(FieldValues::same('1000.00', 1000.0));
+    $this->assertTrue(FieldValues::same('52.52000659999999', 52.520_006_599_999_99));
   }
 
   public function testNoSideConfiguredNeverMatches(): void {
