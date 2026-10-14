@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Trigger;
 
+use Civi\Api4\Email;
 use Civi\Herald\Privacy\Mask;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
@@ -20,14 +21,17 @@ final class ContactVars {
     if ($contactId <= 0) {
       return [];
     }
-    $displayName = Cast::toString(\CRM_Core_DAO::singleValueQuery(
-      'SELECT display_name FROM civicrm_contact WHERE id = %1',
-      [1 => [$contactId, 'Integer']],
-    ));
-    $email = Cast::toString(\CRM_Core_DAO::singleValueQuery(
-      'SELECT email FROM civicrm_email WHERE contact_id = %1 ORDER BY is_primary DESC, id ASC LIMIT 1',
-      [1 => [$contactId, 'Integer']],
-    ));
+    $displayName = self::label('Contact', 'display_name', $contactId);
+    $email = Cast::toString(
+      Email::get(checkPermissions: FALSE)
+        ->addSelect('email')
+        ->addWhere('contact_id', '=', $contactId)
+        ->addOrderBy('is_primary', 'DESC')
+        ->addOrderBy('id')
+        ->setLimit(1)
+        ->execute()
+        ->first()['email'] ?? '',
+    );
     return ['contact' => [
       'id' => $contactId,
       'display_name' => $displayName,
@@ -44,10 +48,7 @@ final class ContactVars {
     if ($groupId <= 0) {
       return [];
     }
-    $title = Cast::toString(\CRM_Core_DAO::singleValueQuery(
-      'SELECT title FROM civicrm_group WHERE id = %1',
-      [1 => [$groupId, 'Integer']],
-    ));
+    $title = self::label('Group', 'title', $groupId);
     return ['group' => ['id' => $groupId, 'title' => $title]];
   }
 
@@ -62,25 +63,28 @@ final class ContactVars {
     $membership += ['membership_type_id' => 0, 'status_id' => 0];
     return ['membership' => [
       'membership_type' => self::label(
-        'civicrm_membership_type',
+        'MembershipType',
         'name',
         Cast::toInt($membership['membership_type_id']),
       ),
-      'status' => self::label('civicrm_membership_status', 'label', Cast::toInt($membership['status_id'])),
+      'status' => self::label('MembershipStatus', 'label', Cast::toInt($membership['status_id'])),
     ]];
   }
 
   /**
-   * Single-column lookup by primary key; '' when the row is gone.
+   * Single-column lookup by primary key; '' when the row is gone. A get by id
+   * skips APIv4's default filters, so deleted, test and template rows count.
    */
-  public static function label(string $table, string $column, int $id): string {
+  public static function label(string $entity, string $column, int $id): string {
     if ($id <= 0) {
       return '';
     }
-    return Cast::toString(\CRM_Core_DAO::singleValueQuery(
-      "SELECT `{$column}` FROM `{$table}` WHERE id = %1",
-      [1 => [$id, 'Integer']],
-    ));
+    $row = civicrm_api4($entity, 'get', [
+      'select' => [$column],
+      'where' => [['id', '=', $id]],
+      'checkPermissions' => FALSE,
+    ])->first();
+    return Cast::toString($row[$column] ?? '');
   }
 
 }

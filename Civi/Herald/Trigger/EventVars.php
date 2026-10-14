@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Trigger;
 
+use Civi\Api4\Event;
+use Civi\Api4\OptionValue;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
@@ -25,11 +27,11 @@ final class EventVars {
     $participant += ['event_id' => 0, 'role_id' => '', 'status_id' => 0];
     $eventId = Cast::toInt($participant['event_id']);
     return [
-      'event' => ['id' => $eventId, 'title' => ContactVars::label('civicrm_event', 'title', $eventId)],
+      'event' => ['id' => $eventId, 'title' => ContactVars::label('Event', 'title', $eventId)],
       'participant' => [
         'role' => self::role($participant['role_id']),
         'status' => ContactVars::label(
-          'civicrm_participant_status_type',
+          'ParticipantStatusType',
           'label',
           Cast::toInt($participant['status_id']),
         ),
@@ -49,15 +51,12 @@ final class EventVars {
       return [];
     }
     $eventId = Cast::toInt($eventData['id']);
-    // The object{} shape narrows executeQuery()'s CRM_Core_DAO|object union.
-    /** @var \CRM_Core_DAO&object{title: ?string, start_date: ?string, is_active: ?string} $row */
-    $row = \CRM_Core_DAO::executeQuery(
-      'SELECT title, start_date, is_active FROM civicrm_event WHERE id = %1',
-      [1 => [$eventId, 'Integer']],
-    );
-    $stored = $row->fetch()
-      ? ['title' => $row->title, 'start_date' => $row->start_date, 'is_active' => $row->is_active]
-      : [];
+    // By id, so event templates are found too.
+    $stored = Event::get(checkPermissions: FALSE)
+      ->addSelect('title', 'start_date', 'is_active')
+      ->addWhere('id', '=', $eventId)
+      ->execute()
+      ->first() ?? [];
     $event = $stored + $eventData + ['title' => '', 'start_date' => ''];
     return ['event' => [
       'id' => $eventId,
@@ -79,12 +78,14 @@ final class EventVars {
     if ($roleId === '') {
       return '';
     }
-    return Cast::toString(\CRM_Core_DAO::singleValueQuery(
-      "SELECT label FROM civicrm_option_value
-       WHERE option_group_id = (SELECT id FROM civicrm_option_group WHERE name = 'participant_role')
-         AND value = %1",
-      [1 => [$roleId, 'String']],
-    ));
+    return Cast::toString(
+      OptionValue::get(checkPermissions: FALSE)
+        ->addSelect('label')
+        ->addWhere('option_group_id:name', '=', 'participant_role')
+        ->addWhere('value', '=', $roleId)
+        ->execute()
+        ->first()['label'] ?? '',
+    );
   }
 
 }

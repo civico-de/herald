@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Trigger;
 
+use Civi\Api4\Contact;
 use Civi\Api4\Event;
 use Civi\Api4\Group;
 use Civi\Test\HeadlessInterface;
@@ -77,6 +78,31 @@ class ContextVarsBuildTest extends TestCase implements HeadlessInterface, Transa
       ],
       $vars['event'],
     );
+  }
+
+  /**
+   * APIv4 leaves templates and trashed contacts out of a get unless it fetches
+   * by id; the lookups must still find them.
+   */
+  public function testAnEventTemplateAndATrashedContactAreFound(): void {
+    $eventId = (int) Event::create(checkPermissions: FALSE)
+      ->addValue('template_title', 'Herald test template')
+      ->addValue('title', 'Herald template event')
+      ->addValue('event_type_id', 1)
+      ->addValue('is_template', value: TRUE)
+      ->execute()
+      ->first()['id'];
+    $contactId = (int) Contact::create(checkPermissions: FALSE)
+      ->addValue('first_name', 'Trashed')
+      ->addValue('last_name', 'Testcontact')
+      ->addValue('is_deleted', value: TRUE)
+      ->execute()
+      ->first()['id'];
+
+    $vars = ContextVars::build(['contact_id' => $contactId, 'Event' => ['id' => $eventId]]);
+
+    $this->assertSame('Herald template event', $vars['event']['title']);
+    $this->assertSame('Trashed Testcontact', $vars['contact']['display_name']);
   }
 
   public function testDeletedEventKeepsTheTriggerSnapshot(): void {

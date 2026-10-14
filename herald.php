@@ -48,10 +48,13 @@ function herald_civicrm_pre($op, $objectName, $id, &$params): void {
   if ($objectName === 'Contribution') {
     // from_status in contribution alerts when the trigger carries no original data.
     $contributionId = (int) $id;
-    $previousStatusId = \CRM_Core_DAO::singleValueQuery(
-      'SELECT contribution_status_id FROM civicrm_contribution WHERE id = %1',
-      [1 => [$contributionId, 'Integer']],
-    );
+    // By id, so test contributions are found too.
+    $previousStatusId =
+      \Civi\Api4\Contribution::get(checkPermissions: FALSE)
+        ->addSelect('contribution_status_id')
+        ->addWhere('id', '=', $contributionId)
+        ->execute()
+        ->first()['contribution_status_id'] ?? NULL;
     \Civi\Herald\StatusTransitionDispatcher::rememberPreEditStatus(
       $contributionId,
       is_scalar($previousStatusId) ? (int) $previousStatusId : NULL,
@@ -98,13 +101,15 @@ function herald_civicrm_alterLogTables(array &$logTableSpec): void {
  */
 function herald_civicrm_heraldChecks(array &$checks): void {
   $checks['herald.buffer_backlog'] = function (): array {
-    $stuck = (int) CRM_Core_DAO::singleValueQuery('
-      SELECT COUNT(*) FROM `'
-    . \Civi\Herald\Buffer\AlertBuffer::TABLE
-    . '`
-      WHERE parked_at IS NULL
-        AND created_date < DATE_SUB(NOW(), INTERVAL window_minutes * 3 MINUTE)
-    ');
+    $rows = \Civi\Api4\HeraldBufferedAlert::get(checkPermissions: FALSE)
+      ->addSelect('TIMESTAMPDIFF(SECOND, created_date, NOW()) AS age', 'window_minutes')
+      ->addWhere('parked_at', 'IS NULL')
+      ->execute();
+    $stuck = 0;
+    foreach (\Civi\Herald\Api4\Rows::of($rows) as $row) {
+      $age = \Civi\Herald\Vendor\Civico\Stdlib\Cast::toInt($row['age']);
+      $stuck += $age > (\Civi\Herald\Vendor\Civico\Stdlib\Cast::toInt($row['window_minutes']) * 180) ? 1 : 0;
+    }
     return (
       $stuck > 0
         ? [
@@ -116,12 +121,11 @@ function herald_civicrm_heraldChecks(array &$checks): void {
   };
 
   $checks['herald.buffer_dead_letter'] = function (): array {
-    $parked = (int) CRM_Core_DAO::singleValueQuery('
-      SELECT COUNT(*) FROM `'
-    . \Civi\Herald\Buffer\AlertBuffer::TABLE
-    . '`
-      WHERE parked_at IS NOT NULL
-    ');
+    $parked = \Civi\Api4\HeraldBufferedAlert::get(checkPermissions: FALSE)
+      ->selectRowCount()
+      ->addWhere('parked_at', 'IS NOT NULL')
+      ->execute()
+      ->count();
     return (
       $parked > 0
         ? [
