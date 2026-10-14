@@ -329,7 +329,19 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
         'api_params' => ['version' => 4, 'select' => ['id']],
       ])
       ->execute();
+    SavedSearch::create(checkPermissions: FALSE)
+      ->setValues([
+        'name' => 'herald_test_offset',
+        'label' => 'Offset',
+        'api_entity' => 'Contact',
+        'api_params' => ['version' => 4, 'select' => ['id'], 'orderBy' => ['id' => 'ASC'], 'limit' => 2, 'offset' => 2],
+      ])
+      ->execute();
 
+    self::assertSame(
+      'saved search "herald_test_offset" skips its first 2 rows, which a display cannot',
+      CRM_Herald_Upgrader_InlineSearch::problem(['type' => 'search', 'saved_search' => 'herald_test_offset']),
+    );
     self::assertSame(
       'saved search "herald_test_missing" does not exist',
       CRM_Herald_Upgrader_InlineSearch::problem(['type' => 'search', 'saved_search' => 'herald_test_missing']),

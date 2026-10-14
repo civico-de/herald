@@ -24,8 +24,13 @@ final class CRM_Herald_Upgrader_InlineSearch {
     if ($search === NULL) {
       return "saved search \"{$name}\" does not exist";
     }
+    // A display runs from the first row unless it pages.
+    $offset = Cast::toInt($search['api_params']['offset'] ?? 0);
+    if ($offset > 0) {
+      return "saved search \"{$name}\" skips its first {$offset} rows, which a display cannot";
+    }
     try {
-      self::settings($search);
+      CRM_Herald_Upgrader_InlineSearchDisplay::settings($search);
     }
     catch (CRM_Core_Exception $e) {
       return "saved search \"{$name}\" has no default display: {$e->getMessage()}";
@@ -68,7 +73,7 @@ final class CRM_Herald_Upgrader_InlineSearch {
         // The column holds 255 characters; a job name can fill them alone.
         'label' => mb_substr($label, 0, 255),
         'type' => 'table',
-        'settings' => self::settings($search),
+        'settings' => CRM_Herald_Upgrader_InlineSearchDisplay::settings($search),
       ])
       ->execute()
       ->single()['id'];
@@ -91,31 +96,6 @@ final class CRM_Herald_Upgrader_InlineSearch {
           'name' => Cast::toString($search['name']),
           'api_params' => is_array($search['api_params'] ?? NULL) ? $search['api_params'] : [],
         ] : NULL
-    );
-  }
-
-  /**
-   * A table of the search's columns; a display's limit and sort replace the
-   * search's, so they are copied over (0 is no limit, as in the search).
-   *
-   * @param array{name: string, api_params: array<array-key, mixed>} $search
-   * @return array<array-key, mixed>
-   */
-  private static function settings(array $search): array {
-    $default = \Civi\Api4\SearchDisplay::getDefault(checkPermissions: FALSE)
-      ->setSavedSearch($search['name'])
-      ->setType('table')
-      ->execute()
-      ->single();
-    $params = $search['api_params'];
-    $orderBy = is_array($params['orderBy'] ?? NULL) ? $params['orderBy'] : [];
-    return (
-      [
-        'limit' => Cast::toInt($params['limit'] ?? 0),
-        'sort' => array_map(NULL, array_keys($orderBy), array_values($orderBy)),
-        'pager' => FALSE,
-        'actions' => FALSE,
-      ] + (is_array($default['settings'] ?? NULL) ? $default['settings'] : [])
     );
   }
 
