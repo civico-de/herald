@@ -2051,3 +2051,15 @@ msgstr "die Suchanzeige %1 gibt es nicht."
 #: Civi/Herald/Digest/SearchBlock.php
 msgid "a display of type \"%1\" has no rows for a digest; use a table, list or grid."
 msgstr "eine Anzeige vom Typ „%1“ hat keine Zeilen für einen Report; nehmen Sie eine Tabelle, Liste oder ein Raster."
+
+#: Civi/Herald/Condition/EntityField.php
+msgid "\"%1\" cannot be checked: %2"
+msgstr "„%1“ lässt sich nicht prüfen: %2"
+
+#: Civi/Herald/Condition/EntityField.php
+msgid "%1 has no field \"%2\"."
+msgstr "%1 hat kein Feld „%2“."
+
+#: Civi/Herald/Condition/EntityField.php
+msgid "%1.%2 has no option suffix \":%3\"."
+msgstr "%1.%2 hat kein Options-Suffix „:%3“."
