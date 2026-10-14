@@ -42,6 +42,20 @@ class CRM_Herald_CivirulesAdapter_DependentRulesTest extends TestCase implements
     );
   }
 
+  public function testSwitchesOffARuleWhoseTriggerIsOffNow(): void {
+    $trigger = $this->trigger();
+    $rule = $this->rule($trigger);
+    $this->addCondition($rule, 'herald_field_transition');
+    $this->addAction($rule, $this->foreignAction());
+    CiviRulesTrigger::update(checkPermissions: FALSE)
+      ->addWhere('id', '=', $trigger)
+      ->addValue('is_active', FALSE)
+      ->execute();
+
+    self::assertSame([$rule], CRM_Herald_CivirulesAdapter_DependentRules::disable());
+    self::assertSame([$rule => FALSE], $this->activeById([$rule]));
+  }
+
   /**
    * Core disables a module's managed entities on disable; the re-enable reconcile
    * must switch herald's handlers back on.
