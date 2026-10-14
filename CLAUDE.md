@@ -35,7 +35,8 @@ actions (no bespoke cron for alerts). CiviRules is optional, not in `<requires>`
   task calls it through `HeraldBufferedAlert.reactivate`, the entity's one
   write action). The table's
   shape lives in `schema/`; upgrade steps add columns from that spec.
-  Uninstall drops the table (AutomaticUpgrader) — the one sanctioned loss.
+  Uninstall drops every `schema/` table (AutomaticUpgrader), buffer and
+  digests — the one sanctioned loss.
 - The monitor publishes only ok→fail / fail→ok transitions to the
   `herald_monitor_topic` topic; steady states never alert. Topic routing:
   publishers name a topic, `herald_topics` decides delivery (topic entry
@@ -94,8 +95,18 @@ actions (no bespoke cron for alerts). CiviRules is optional, not in `<requires>`
   `bin/rules-reenable.php`, because loading a foreign class can be a fatal.
   `DisabledRulesCheck` warns while the marker exists and reads only that file.
   Every registered handler needs a contract scenario, with full and partial payloads.
-- A digest is a list of blocks (`Civi\Herald\Digest\Composer`): contribution,
-  saved search, hook section. Search blocks run the SavedSearch's `api_params`
+- A digest is a `HeraldDigest` record with ordered `HeraldDigestBlock` rows
+  (`Definition` loads, `Composer` renders): contribution, saved search, hook
+  section. Rules, jobs and scripts name it by `name`; their params carry only
+  delivery settings. `DigestRules`/`BlockType` checks run on APIv4 validate
+  (`Validator`, per diff, merged with the stored row), on Afform submit
+  (`FormValidator`, because Afform swallows save exceptions) and again at send,
+  for a saved search deleted since. Block FKs to campaign and financial type
+  are RESTRICT (a vanished filter would widen the block to every contribution);
+  saved_search_id is SET NULL. Upgrade 1011 moves inline digests into records
+  (`CRM_Herald_Upgrader_Inline*`), reading their params as the old code did
+  (unknown periods are yesterday) and leaving unrunnable ones inline with a
+  warning. Search blocks run the SavedSearch's `api_params`
   without permission checks — whoever configures a digest can report any search,
   the same trust as the contribution queries. Scheduled digests are rules on
   the cron trigger "Herald: Schedule" (`Herald.checkSchedule`): a slot fires
@@ -109,8 +120,14 @@ actions (no bespoke cron for alerts). CiviRules is optional, not in `<requires>`
   edit the array settings through validating `Herald.save*` actions that store
   exactly the shape `Setting.set` takes; Setting.set stays unchecked. Channel
   fields are rendered from `Herald.getChannels`, never listed per channel.
-  New UI is Angular/SearchKit: phpat and mago forbid QuickForm/page bases outside
-  the CiviRules adapter forms.
+  New UI is Angular/SearchKit/Afform: phpat and mago forbid QuickForm/page bases
+  outside the CiviRules adapter forms.
+- The digest form (`afformHeraldDigest`) works around Afform: the
+  `heraldDigestBlock` directive fills schema defaults into new blocks only
+  (`afform_default` overwrites loaded join rows), `heraldDigestBlockType`
+  shows type fields per repeat row (`af-if` cannot see its own row), and
+  `FormValidator` takes the edited id from `Submit::getArgs()`, as Afform drops
+  the main entity's id from the submitted values.
 - Post-hook payloads of partial updates carry only the written fields; code
   reading an entity payload completes it from the stored row.
 - Bundled packages (`civico-de/stdlib`) are prefixed into `Civi\Herald\Vendor\`

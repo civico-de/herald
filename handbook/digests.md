@@ -7,60 +7,88 @@ routes:
 
 # Digests
 
-A digest sums up what happened over a period in one message. It is made of blocks, which are rendered one after another:
+A digest sums up what happened over a period in one message: yesterday's donations, last week's new members, the seats another extension has booked. Each digest is a record with a name, and a list of blocks that are rendered one after another:
 
 | Block type | Content | Default template |
 |---|---|---|
-| contribution | Contributions of a period: the total, a breakdown by source, the open pending amounts, campaign progress and an amount histogram | Herald: Contribution digest block (composable) |
-| search | The rows of a SearchKit saved search | Herald: Digest block from a saved search |
-| section | Text another extension provides through a hook | none |
+| Contributions | Contributions of a period: the total, a breakdown by source, the open pending amounts, campaign progress and an amount histogram | Herald: Contribution digest block (composable) |
+| Saved search | The rows of a SearchKit saved search | Herald: Digest block from a saved search |
+| Section from an extension | Text another extension provides through a hook | none |
 
-A digest without blocks is a single contribution block. Its settings are given at the top level, and it is rendered with the template you name, usually "Herald: Daily contribution digest" or "Herald: Weekly contribution digest".
+## Setting up a digest
 
-## Ways to send a digest
+Digests are under Administer » Herald » Digests. "Add digest" opens the form, and each row of the list has Edit and Delete.
 
-- A CiviRules rule with the trigger "Herald: Schedule" and the action "Herald: Send digest" sends daily or weekly summaries at a set hour. [Scheduled digests](recipes.md#scheduled-digests) shows the setup.
-- The action "Herald: Send digest" works with any other trigger too, and sends a digest each time that trigger fires.
+- **Title** names the digest in lists and in CiviRules.
+- **Name** is what rules and scripts use to pick the digest. It takes lowercase letters, digits and underscores, and no two digests share one.
+- **Period** applies to every block that does not set its own: yesterday, today, the last 7 days or the last 30 days.
+- **Header** is an optional line above the blocks, inserted as HTML, for example `📊 <b>Daily report</b>`.
+
+Below these come the blocks, at least one, in the order they appear in the message. Every block has a type, a title, its own period if it needs one, and a template. Leave the template empty to use the block type's default. The other fields depend on the type and are described under [Block types](#block-types).
+
+Saving checks the whole digest before anything is written. The form refuses a name that is taken or has the wrong characters, a saved search block without a search, a section block without a key, a bucket count below 1, and histogram edges that are not at least two numbers in ascending order. Each message names the block, for example "Block 2: a saved search block needs a saved search." Through APIv4 the same checks apply to each `HeraldDigest` and `HeraldDigestBlock` record. A digest saved there without blocks fails when it is sent.
+
+Scripts and deploys can create a digest with cv. The chain saves the blocks in the order given, and `--in=json` reads the JSON from standard input, because cv takes JSON on the command line only in one line:
+
+```bash
+cv api4 --in=json HeraldDigest.create <<'JSON'
+{
+  "values": {"name": "weekly_report", "title": "Weekly report", "period": "last_7_days", "header": "📈 <b>Weekly report</b>"},
+  "chain": {"blocks": ["HeraldDigestBlock", "save", {
+    "defaults": {"digest_id": "$id"},
+    "records": [
+      {"type": "contribution", "title": "Donations", "financial_type_id": 1},
+      {"type": "section", "section_key": "myext.seats"}
+    ]
+  }]}
+}
+JSON
+```
+
+### What a change breaks
+
+Rules and scripts name a digest. After you rename or delete one, they fail with "Digest "weekly_report" does not exist." until they name another. The rule list shows the same message in place of the digest's title, so a broken rule is easy to spot.
+
+A campaign or a financial type that a block filters on cannot be deleted while the block exists. Without its filter the block would count every contribution. Change or remove the block first.
+
+A saved search can be deleted. The block that used it keeps no search, and the digest fails when it is sent, with the message the form would have shown. Pick another search or remove the block.
+
+## Sending a digest
+
+- A CiviRules rule with the trigger "Herald: Schedule" and the action "Herald: Send digest" sends a daily or weekly digest at a set hour. [Scheduled digests](recipes.md#scheduled-digests) shows the setup.
+- The action "Herald: Send digest" works with any other trigger too, and sends the digest each time that trigger fires.
 - Scripts and the server's crontab can call the API action `Herald.notifyDigest` directly.
 
-All three support every [delivery mode](delivery.md#delivery-modes).
+The action picks the digest from a list and holds the delivery settings. All three ways support every [delivery mode](delivery.md#delivery-modes).
 
-For email, a digest with one block uses that block's template subject. A digest with several blocks has no common subject. Set `email_subject` for it, or the subject is "Notification".
+`Herald.notifyDigest` takes:
 
-## Digest settings
+| Parameter | Meaning |
+|---|---|
+| `digest` | The name of the digest. Required. |
+| `actionParams` | The delivery settings, such as `channel`, `chat_id` or `delivery_mode`. The channel defaults to `telegram`. |
+| `sendHour` | Optional. The digest goes out only during this hour, from 0 to 23 in CiviCRM's timezone. In any other hour the call returns `skipped` and sends nothing, and a value outside 0 to 23 is an error. Leave it out when you send a digest by hand. |
 
-In the CiviRules action, each setting has a form field. For `Herald.notifyDigest`, the settings go into `actionParams`, together with the delivery settings such as `channel` and `chat_id`.
+```bash
+cv api4 Herald.notifyDigest '{"checkPermissions": false, "digest": "weekly_report", "actionParams": {"chat_id": "-1001234567890"}}'
+```
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `blocks` | none | A JSON array of blocks, see [Block types](#block-types). Without it, the top-level settings form the one block. |
-| `header` | none | A line above the blocks. It is inserted as HTML, for example `📊 <b>Daily report</b>`. |
-| `template` | the block type's default | The template of the single block. With `blocks`, each block names its own. |
-| `channel` | `telegram` | The channel key. |
-| `period` | `yesterday` | `yesterday`, `today`, `last_7_days` or `last_30_days`. Each block can set its own. Any other value counts as yesterday. |
-
-A block takes nothing from the top level except the period.
-
-`Herald.notifyDigest` also takes `sendHour`, outside `actionParams`. With it, the digest goes out only during that hour of the day, from 0 to 23 in CiviCRM's timezone. In any other hour the call returns `skipped` and sends nothing, and a value outside 0 to 23 is an error. Leave it out when you run a digest by hand. A rule sets its hour in the "Herald: Schedule" trigger instead.
+For email, a digest with one block uses that block's template subject. A digest with several blocks has no common subject. Set `email_subject` in the delivery settings, or the subject is "Notification".
 
 ## Block types
 
-Every block takes `type`, which is contribution when left out, and `period`. Contribution and search blocks also take `title` and `template`. The title is plain text.
-
-The CiviRules form checks the blocks before it saves them. It reports a list that is not a JSON array of objects, an unknown type, a search block without `search`, a section block without `key`, and a saved search that does not exist. A scheduled job fails on the same mistakes when it runs, and the job log names the reason.
-
 ### Contribution blocks
 
-| Setting | Default | Meaning |
-|---|---|---|
-| `campaign_id` | none | Count only this campaign's contributions and add its progress. |
-| `financial_type_id` | none | Count only this financial type. |
-| `source_pattern` | none | A SQL LIKE pattern on the contribution source, for example `%Bank TX%`. |
-| `group_by` | source | `line_item` breaks the numbers down by line item label and unit price. The form calls this "Break down by". |
-| `show_pending` | on | Show the open pending amounts. |
-| `show_histogram` | on | Show the amount histogram. |
-| `bucket_count` | 8 | The number of histogram buckets to aim for. |
-| `bucket_edges` | chosen to fit | Fixed bucket edges as a JSON array, for example `[0, 100, 1000, 10000]`. |
+| Field | API name | Default | Meaning |
+|---|---|---|---|
+| Campaign | `campaign_id` | none | Count only this campaign's contributions and add its progress. |
+| Financial Type | `financial_type_id` | none | Count only this financial type. |
+| Source Pattern | `source_pattern` | none | A SQL LIKE pattern on the contribution source, for example `%Bank TX%`. |
+| Break Down By | `group_by` | contribution source | "Line item and unit price" breaks the numbers down by line item label and unit price. |
+| Show Pending Pool | `show_pending` | on | Show the open pending amounts. |
+| Show Histogram | `show_histogram` | on | Show the amount histogram. |
+| Histogram Buckets | `bucket_count` | 8 | The number of histogram buckets to aim for. |
+| Histogram Bucket Edges | `bucket_edges` | chosen to fit | Fixed bucket edges as a JSON array, for example `[0, 100, 1000, 10000]`. |
 
 How a contribution block counts:
 
@@ -70,27 +98,17 @@ How a contribution block counts:
 - A contribution without a source is listed as "Unknown".
 - Amounts are added up as numbers without currency conversion. With several currencies the totals mean nothing.
 
-With the line item breakdown, the totals, the counts and the pending amounts come from the line items. A mixed cart is split across its items, and the counts are item quantities. Items with a line total of zero or less are left out. The financial type filter then applies to each item, not to the contribution. Only the composable block template prints the items, so use blocks for this view.
+With the line item breakdown, the totals, the counts and the pending amounts come from the line items. A mixed cart is split across its items, and the counts are item quantities. Items with a line total of zero or less are left out. The financial type filter then applies to each item, not to the contribution. Only the composable block template prints the items, so leave the template empty for this view.
 
 The histogram shows the completed contributions of the period that match the filters, and ignores amounts of zero or less. It always uses whole contribution amounts, so with the line item breakdown its financial type filter applies to the contribution. With nothing to show, it says "(no data)".
 
-Without fixed edges, herald picks bucket edges that fit the amounts. Fixed edges suit a campaign that is told in tiers, such as a major donor campaign. Give at least two values:
-
-```json
-"bucket_edges": [0, 100, 1000, 10000, 100000, 1000000]
-```
-
-Amounts below the first or above the last edge land in extra buckets labelled "<low" and "≥high".
+Without fixed edges, herald picks bucket edges that fit the amounts. Fixed edges suit a campaign that is told in tiers, such as a major donor campaign. Give at least two values, for example `[0, 100, 1000, 10000, 100000, 1000000]`. Amounts below the first or above the last edge land in extra buckets labelled "<low" and "≥high". With the histogram switched off, the edges are not checked.
 
 The campaign progress takes the title and the goal from the Campaign record. It counts every completed contribution of the campaign that matches the financial type and source filters, regardless of the period. With the line item breakdown it counts the campaign's items instead. A campaign without a goal shows no progress line.
 
-### Search blocks
+### Saved search blocks
 
-A search block shows the rows of a SearchKit saved search. Name the search by its machine name. To show counts, group the search, for example memberships by type:
-
-```json
-{"type": "search", "search": "memberships_by_type", "title": "Members"}
-```
+A saved search block shows the rows of a SearchKit saved search, picked in the field Saved Search (`saved_search_id`). To show counts, group the search, for example memberships by type.
 
 The default template prints one line per row, with the search's columns in order. Only the search's query counts. Its displays play no part. Give the search a limit, because every row goes into the message and only Telegram shortens a message that is too long.
 
@@ -108,22 +126,17 @@ function myext_civicrm_heraldDigestSections(array $keys, array $context, array &
 }
 ```
 
-The block `{"type": "section", "key": "myext.seats"}` inserts the answer. `$context` holds the digest settings under `params` and the block's period under `period`, so the listener can match the digest's timeframe.
+A block with the section key `myext.seats` inserts the answer. `$context` holds the digest's name under `digest` and the block's period under `period`, so the listener can match the digest's timeframe.
 
 The answer is inserted as HTML, so the listener escapes its own data. An empty answer means there is nothing to report, and the block is left out. A key that no extension answers fails the digest with the error "no extension answers the digest section", so a typo does not go unnoticed.
 
-### Example
+## Digests from older releases
 
-Four blocks: donations of one campaign, ticket sales by item, members by type and a section from another extension.
+Older releases kept a digest inside the settings of its rule action or scheduled job. The upgrade turns each of them into a record and leaves only the delivery settings and the digest's name in the action. A rule action's digest is named `rule_action_<id>` and takes the rule's title, a job's digest is named `job_<id>` and takes the job's name. Rename them afterwards if you like, and update the jobs and scripts that name them.
 
-```json
-[
-  {"title": "Donations", "financial_type_id": 1, "campaign_id": 2},
-  {"title": "Tickets", "financial_type_id": 4, "group_by": "line_item", "show_histogram": false},
-  {"type": "search", "search": "memberships_by_type", "title": "Members"},
-  {"type": "section", "key": "myext.seats"}
-]
-```
+The upgrade keeps what the digest sent before. A period herald did not know was read as yesterday, and it still is. A digest that could never have run is left as it was, and the upgrade log has the warning "digest left inline, it cannot run until fixed" with the reason: a block list that is not valid JSON, a saved search, campaign or financial type that no longer exists, or a contribution status filter, which records no longer have. Such a rule fails until you pick a digest in its action.
+
+The digest form is an Afform, so herald needs the extension Form Core (`org.civicrm.afform`). Enable it before you upgrade herald on a site that does not have it yet.
 
 ## Source normalisation
 

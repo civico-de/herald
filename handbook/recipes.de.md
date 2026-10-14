@@ -104,11 +104,12 @@ Ein Report, der zu einer festen Zeit verschickt wird, ist eine CiviRules-Regel m
 
 Ein wöchentlicher Beitragsreport jeden Montag um 8:00 Uhr:
 
-1. Legen Sie eine CiviRules-Regel an und wählen Sie den Trigger „Herald: Schedule“.
-2. Wählen Sie im Formular des Triggers unter „Wochentage“ den Montag und unter „Uhrzeit“ 08:00. Bleibt „Wochentage“ leer, geht der Report jeden Tag hinaus. Die Uhrzeit gilt in der Zeitzone von CiviCRM.
-3. Fügen Sie die Aktion „Herald: Send digest“ mit der Vorlage „Herald: Wöchentlicher Beitragsreport“ und dem Zeitraum „Letzte 7 Tage“ hinzu, und setzen Sie den Kanal und bei Telegram die Chat-ID.
+1. Legen Sie unter Administrieren » Herald » Reports einen Report mit dem Titel „Weekly contributions“, dem Namen `weekly_contributions`, dem Zeitraum „Letzte 7 Tage“ und einem Beitragsblock mit der Vorlage „Herald: Wöchentlicher Beitragsreport“.
+2. Legen Sie eine CiviRules-Regel an und wählen Sie den Trigger „Herald: Schedule“.
+3. Wählen Sie im Formular des Triggers unter „Wochentage“ den Montag und unter „Uhrzeit“ 08:00. Bleibt „Wochentage“ leer, geht der Report jeden Tag hinaus. Die Uhrzeit gilt in der Zeitzone von CiviCRM.
+4. Fügen Sie die Aktion „Herald: Send digest“ hinzu, wählen Sie den Report, und setzen Sie den Kanal und bei Telegram die Chat-ID.
 
-Die Regelliste zeigt den Zeitplan als „Jeden Montag um 08:00“. Für einen täglichen Report lassen Sie „Wochentage“ leer und nehmen die Vorlage „Herald: Täglicher Beitragsreport“ mit dem Zeitraum „Gestern“.
+Die Regelliste zeigt den Zeitplan als „Jeden Montag um 08:00“ und die Aktion als „Verschickt den Report „Weekly contributions““. Für einen täglichen Report lassen Sie „Wochentage“ leer und geben dem Report den Zeitraum „Gestern“ und die Vorlage „Herald: Täglicher Beitragsreport“.
 
 Der Trigger wird bei jedem Lauf des geplanten Jobs von CiviRules geprüft, der Report geht also mit dem ersten Cron-Lauf nach der vollen Stunde hinaus. Ob ein Termin schon verschickt wurde, steht im Protokoll der Regel selbst:
 
@@ -119,14 +120,14 @@ Der Trigger wird bei jedem Lauf des geplanten Jobs von CiviRules geprüft, der R
 
 CiviCRM führt geplante Jobs, auch den von CiviRules, nur in der Umgebung Production aus.
 
-Alle Report-Einstellungen und die Blocktypen beschreibt die Seite [Reports](digests.md).
+Wie Sie einen Report und seine Blöcke einrichten, beschreibt die Seite [Reports](digests.md).
 
 ### Ohne Regel
 
 Skripte und die Crontab des Servers können `Herald.notifyDigest` direkt aufrufen, zu einer festen Uhrzeit:
 
 ```
-0 8 * * 1 cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "actionParams": {"template": "herald_contribution_digest_weekly", "period": "last_7_days", "chat_id": "-1001234567890"}}'
+0 8 * * 1 cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "digest": "weekly_contributions", "actionParams": {"chat_id": "-1001234567890"}}'
 ```
 
 Dieser Aufruf ist nicht auf die Umgebung Production beschränkt.

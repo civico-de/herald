@@ -102,11 +102,12 @@ A digest that goes out at a fixed time is a CiviRules rule with the trigger "Her
 
 A weekly contribution digest every Monday at 8:00:
 
-1. Create a CiviRules rule and choose the trigger "Herald: Schedule".
-2. In the trigger's form, choose Monday under Weekdays and 08:00 under Time. Leave Weekdays empty to send every day. The time is in CiviCRM's timezone.
-3. Add the action "Herald: Send digest" with the template "Herald: Weekly contribution digest" and the period "Last 7 days", then set the channel and, for Telegram, the chat ID.
+1. Under Administer » Herald » Digests, add a digest with the title "Weekly contributions", the name `weekly_contributions`, the period "Last 7 days" and one contribution block with the template "Herald: Weekly contribution digest".
+2. Create a CiviRules rule and choose the trigger "Herald: Schedule".
+3. In the trigger's form, choose Monday under Weekdays and 08:00 under Time. Leave Weekdays empty to send every day. The time is in CiviCRM's timezone.
+4. Add the action "Herald: Send digest", pick the digest, and set the channel and, for Telegram, the chat ID.
 
-The rule list shows the schedule as "Every Monday at 08:00". For a daily digest, leave Weekdays empty and use the template "Herald: Daily contribution digest" with the period "Yesterday".
+The rule list shows the schedule as "Every Monday at 08:00" and the action as "Sends the digest "Weekly contributions"". For a daily digest, leave Weekdays empty and give the digest the period "Yesterday" and the template "Herald: Daily contribution digest".
 
 The trigger is checked each time CiviRules' scheduled job runs, so the digest goes out with the first cron run after the full hour. Whether a slot has been sent is read from the rule's own log:
 
@@ -117,14 +118,14 @@ The trigger is checked each time CiviRules' scheduled job runs, so the digest go
 
 CiviCRM runs scheduled jobs, the CiviRules job included, only in the Production environment.
 
-All digest settings and the block types are described in [Digests](digests.md).
+How to set up a digest and its blocks is described in [Digests](digests.md).
 
 ### Without a rule
 
 Scripts and the server's crontab can call `Herald.notifyDigest` directly, at a fixed time:
 
 ```
-0 8 * * 1 cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "actionParams": {"template": "herald_contribution_digest_weekly", "period": "last_7_days", "chat_id": "-1001234567890"}}'
+0 8 * * 1 cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "digest": "weekly_contributions", "actionParams": {"chat_id": "-1001234567890"}}'
 ```
 
 This call is not limited to the Production environment.

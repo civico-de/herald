@@ -25,13 +25,13 @@ A notification can go to one recipient, to every contact who subscribed to that 
 
 Scripts and other extensions can publish to a named topic such as ops. A setting decides which channel and recipient each topic reaches, so the publisher never needs to know a chat ID or a URL.
 
-A digest sums up contributions for a period, lists the rows of a SearchKit saved search, or includes numbers another extension provides. Digests usually go out daily or weekly, from a rule on the trigger "Herald: Schedule". See [Digests](digests.md).
+A digest sums up contributions for a period, lists the rows of a SearchKit saved search, or includes numbers another extension provides. You set them up under Administer » Herald » Digests, and they usually go out daily or weekly, from a rule on the trigger "Herald: Schedule". See [Digests](digests.md).
 
 The check monitor runs health checks that extensions contribute. It reports when a check starts failing and when it recovers, and reminds you about checks that keep failing. A healthy site stays quiet. See [Check monitor](monitor.md).
 
 ## Requirements
 
-herald needs SearchKit, which ships with CiviCRM. CiviRules is optional. herald registers its rule building blocks whether you install CiviRules before or after herald. Without CiviRules, the API, scheduled jobs, topics and the check monitor still work. The supported CiviCRM and PHP versions are listed in the extension's `info.xml`.
+herald needs SearchKit and Form Core, which ship with CiviCRM. CiviRules is optional. herald registers its rule building blocks whether you install CiviRules before or after herald. Without CiviRules, the API, scheduled jobs, topics and the check monitor still work. The supported CiviCRM and PHP versions are listed in the extension's `info.xml`.
 
 ## Install
 
@@ -43,7 +43,7 @@ cv ext:enable herald
 
 A git checkout has no `vendor/` directory. Run `composer install --no-dev` in it before you enable the extension. Without `vendor/`, every page of the site fails once herald is enabled.
 
-Uninstalling herald removes its CiviRules building blocks, and CiviRules removes them from every rule that uses them. A rule that lost a herald condition would then fire more often than before, so herald first switches off every active rule that uses one of its triggers, conditions or actions. The CiviCRM log lists the IDs of those rules.
+Uninstalling herald removes its CiviRules building blocks, and CiviRules removes them from every rule that uses them. A rule that lost a herald condition would then fire more often than before, so herald first switches off every active rule that uses one of its triggers, conditions or actions. The CiviCRM log lists the IDs of those rules. Uninstalling also drops herald's tables, and with them the digests and every alert still waiting in the buffer, parked ones included.
 
 ## First steps
 

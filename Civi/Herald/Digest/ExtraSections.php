@@ -9,8 +9,8 @@ use Civi\Core\Event\GenericHookEvent;
 /**
  * Digest sections contributed by other extensions: numbers no query of
  * herald's can answer belong to the extension that owns them. A digest block
- * {"type": "section", "key": "myext.seats"} asks for one; the owning
- * extension answers for its own key:
+ * of type "section" with the section key "myext.seats" asks for one; the
+ * owning extension answers for its own key:
  *
  *   function myext_civicrm_heraldDigestSections(array $keys, array $context, array &$sections): void {
  *     if (in_array('myext.seats', $keys, TRUE)) {
@@ -18,7 +18,7 @@ use Civi\Core\Event\GenericHookEvent;
  *     }
  *   }
  *
- * $context carries the digest params under 'params' and the block's 'period'.
+ * $context carries the digest's name under 'digest' and the block's 'period'.
  */
 class ExtraSections {
 

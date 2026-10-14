@@ -7,60 +7,88 @@ routes:
 
 # Reports
 
-Ein Report (im Code Digest genannt) fasst in einer Nachricht zusammen, was in einem Zeitraum passiert ist. Er besteht aus Blöcken, die nacheinander gerendert werden:
+Ein Report (im Code Digest genannt) fasst in einer Nachricht zusammen, was in einem Zeitraum passiert ist: die Spenden von gestern, die neuen Mitglieder der letzten Woche, die Plätze, die eine andere Extension gebucht hat. Jeder Report ist ein Datensatz mit einem Namen und einer Liste von Blöcken, die nacheinander gerendert werden:
 
 | Blocktyp | Inhalt | Standardvorlage |
 |---|---|---|
-| contribution | Beiträge eines Zeitraums: die Summe, eine Aufschlüsselung nach Quelle, die offenen ausstehenden Beträge, der Fortschritt einer Kampagne und ein Histogramm der Beträge | Herald: Beitragsreport-Block (kombinierbar) |
-| search | Die Zeilen einer gespeicherten SearchKit-Suche | Herald: Report-Block aus einer gespeicherten Suche |
-| section | Text, den eine andere Extension über einen Hook liefert | keine |
+| Beiträge | Beiträge eines Zeitraums: die Summe, eine Aufschlüsselung nach Quelle, die offenen ausstehenden Beträge, der Fortschritt einer Kampagne und ein Histogramm der Beträge | Herald: Beitragsreport-Block (kombinierbar) |
+| Gespeicherte Suche | Die Zeilen einer gespeicherten SearchKit-Suche | Herald: Report-Block aus einer gespeicherten Suche |
+| Abschnitt aus einer Extension | Text, den eine andere Extension über einen Hook liefert | keine |
 
-Ein Report ohne Blöcke ist ein einzelner Beitragsblock. Seine Einstellungen stehen dann auf der obersten Ebene, und er wird mit der angegebenen Vorlage gerendert, meist „Herald: Täglicher Beitragsreport“ oder „Herald: Wöchentlicher Beitragsreport“.
+## Einen Report einrichten
 
-## Wege, einen Report zu verschicken
+Die Reports finden Sie unter Administrieren » Herald » Reports. „Report hinzufügen“ öffnet das Formular, und jede Zeile der Liste hat „Bearbeiten“ und „Löschen“.
 
-- Eine CiviRules-Regel mit dem Trigger „Herald: Schedule“ und der Aktion „Herald: Send digest“ verschickt tägliche oder wöchentliche Zusammenfassungen zu einer festen Stunde. Die Einrichtung zeigt [Geplante Reports](recipes.md#geplante-reports).
-- Die Aktion „Herald: Send digest“ funktioniert auch mit jedem anderen Trigger und verschickt dann bei jedem Auslösen einen Report.
+- **Titel** bezeichnet den Report in Listen und in CiviRules.
+- **Name** ist das, womit Regeln und Skripte den Report auswählen. Er besteht aus Kleinbuchstaben, Ziffern und Unterstrichen, und zwei Reports können nicht denselben haben.
+- **Zeitraum** gilt für jeden Block, der keinen eigenen setzt: gestern, heute, die letzten 7 oder die letzten 30 Tage.
+- **Kopfzeile** ist eine optionale Zeile über den Blöcken. Sie wird als HTML eingefügt, zum Beispiel `📊 <b>Daily report</b>`.
+
+Darunter folgen die Blöcke, mindestens einer, in der Reihenfolge, in der sie in der Nachricht stehen. Jeder Block hat einen Typ, einen Titel, bei Bedarf einen eigenen Zeitraum und eine Vorlage. Bleibt die Vorlage leer, gilt die Standardvorlage des Blocktyps. Die übrigen Felder hängen vom Typ ab und sind unter [Blocktypen](#blocktypen) beschrieben.
+
+Beim Speichern wird der ganze Report geprüft, bevor etwas geschrieben wird. Das Formular lehnt einen Namen ab, der schon vergeben ist oder falsche Zeichen enthält, außerdem einen Suchblock ohne Suche, einen Abschnittsblock ohne Schlüssel, eine Klassenzahl unter 1 und Histogrammgrenzen, die nicht aus mindestens zwei aufsteigenden Zahlen bestehen. Jede Meldung nennt den Block, zum Beispiel „Block 2: ein Suchblock braucht eine gespeicherte Suche.“ Über APIv4 gelten dieselben Prüfungen für jeden Datensatz von `HeraldDigest` und `HeraldDigestBlock`. Ein dort ohne Blöcke gespeicherter Report scheitert beim Versand.
+
+Skripte und Deployments können einen Report mit cv anlegen. Die Verkettung speichert die Blöcke in der angegebenen Reihenfolge. `--in=json` liest das JSON von der Standardeingabe, denn auf der Befehlszeile nimmt cv JSON nur in einer Zeile an:
+
+```bash
+cv api4 --in=json HeraldDigest.create <<'JSON'
+{
+  "values": {"name": "weekly_report", "title": "Weekly report", "period": "last_7_days", "header": "📈 <b>Weekly report</b>"},
+  "chain": {"blocks": ["HeraldDigestBlock", "save", {
+    "defaults": {"digest_id": "$id"},
+    "records": [
+      {"type": "contribution", "title": "Donations", "financial_type_id": 1},
+      {"type": "section", "section_key": "myext.seats"}
+    ]
+  }]}
+}
+JSON
+```
+
+### Was eine Änderung kaputt macht
+
+Regeln und Skripte nennen einen Report beim Namen. Nachdem Sie einen umbenannt oder gelöscht haben, scheitern sie mit „Den Report „weekly_report“ gibt es nicht.“, bis sie einen anderen nennen. Die Regelliste zeigt dieselbe Meldung anstelle des Reporttitels, eine kaputte Regel fällt also auf.
+
+Eine Kampagne oder ein Finanztyp, nach dem ein Block filtert, lässt sich nicht löschen, solange der Block existiert. Ohne seinen Filter würde der Block jeden Beitrag zählen. Ändern oder entfernen Sie zuerst den Block.
+
+Eine gespeicherte Suche lässt sich löschen. Der Block, der sie verwendet hat, steht dann ohne Suche da, und der Report scheitert beim Versand mit der Meldung, die auch das Formular gezeigt hätte. Wählen Sie eine andere Suche oder entfernen Sie den Block.
+
+## Einen Report verschicken
+
+- Eine CiviRules-Regel mit dem Trigger „Herald: Schedule“ und der Aktion „Herald: Send digest“ verschickt einen täglichen oder wöchentlichen Report zu einer festen Stunde. Die Einrichtung zeigt [Geplante Reports](recipes.md#geplante-reports).
+- Die Aktion „Herald: Send digest“ funktioniert auch mit jedem anderen Trigger und verschickt den Report dann bei jedem Auslösen.
 - Skripte und die Crontab des Servers können die API-Aktion `Herald.notifyDigest` direkt aufrufen.
 
-Alle drei Wege unterstützen jeden [Zustellmodus](delivery.md#zustellmodi).
+Die Aktion wählt den Report aus einer Liste und enthält die Zustelleinstellungen. Alle drei Wege unterstützen jeden [Zustellmodus](delivery.md#zustellmodi).
 
-Bei E-Mail verwendet ein Report mit einem Block den Vorlagenbetreff dieses Blocks. Ein Report mit mehreren Blöcken hat keinen gemeinsamen Betreff. Setzen Sie dafür `email_subject`, sonst lautet der Betreff „Notification“.
+`Herald.notifyDigest` nimmt entgegen:
 
-## Reporteinstellungen
+| Parameter | Bedeutung |
+|---|---|
+| `digest` | Der Name des Reports. Pflicht. |
+| `actionParams` | Die Zustelleinstellungen, etwa `channel`, `chat_id` oder `delivery_mode`. Ohne Angabe ist der Kanal `telegram`. |
+| `sendHour` | Optional. Der Report wird nur in dieser Stunde verschickt, von 0 bis 23 in der Zeitzone von CiviCRM. In jeder anderen Stunde gibt der Aufruf `skipped` zurück und sendet nichts, und ein Wert außerhalb von 0 bis 23 ist ein Fehler. Lassen Sie den Parameter weg, wenn Sie einen Report von Hand auslösen. |
 
-In der CiviRules-Aktion hat jede Einstellung ein Formularfeld. Bei `Herald.notifyDigest` stehen die Einstellungen in `actionParams`, zusammen mit den Zustelleinstellungen wie `channel` und `chat_id`.
+```bash
+cv api4 Herald.notifyDigest '{"checkPermissions": false, "digest": "weekly_report", "actionParams": {"chat_id": "-1001234567890"}}'
+```
 
-| Einstellung | Standard | Bedeutung |
-|---|---|---|
-| `blocks` | keiner | Ein JSON-Array von Blöcken, siehe [Blocktypen](#blocktypen). Ohne diese Einstellung bilden die Einstellungen der obersten Ebene den einen Block. |
-| `header` | keiner | Eine Zeile über den Blöcken. Sie wird als HTML eingefügt, zum Beispiel `📊 <b>Daily report</b>`. |
-| `template` | der Standard des Blocktyps | Die Vorlage des einzelnen Blocks. Mit `blocks` nennt jeder Block seine eigene. |
-| `channel` | `telegram` | Der Kanalschlüssel. |
-| `period` | `yesterday` | `yesterday`, `today`, `last_7_days` oder `last_30_days`. Jeder Block kann einen eigenen Zeitraum setzen. Jeder andere Wert zählt als gestern. |
-
-Ein Block übernimmt von der obersten Ebene nichts außer dem Zeitraum.
-
-`Herald.notifyDigest` nimmt außerdem `sendHour` entgegen, außerhalb von `actionParams`. Damit wird der Report nur in dieser Stunde des Tages verschickt, von 0 bis 23 in der Zeitzone von CiviCRM. In jeder anderen Stunde gibt der Aufruf `skipped` zurück und sendet nichts, und ein Wert außerhalb von 0 bis 23 ist ein Fehler. Lassen Sie die Einstellung weg, wenn Sie einen Report von Hand auslösen. Eine Regel legt ihre Stunde stattdessen im Trigger „Herald: Schedule“ fest.
+Bei E-Mail verwendet ein Report mit einem Block den Vorlagenbetreff dieses Blocks. Ein Report mit mehreren Blöcken hat keinen gemeinsamen Betreff. Setzen Sie dafür `email_subject` in den Zustelleinstellungen, sonst lautet der Betreff „Notification“.
 
 ## Blocktypen
 
-Jeder Block nimmt `type` auf, das ohne Angabe contribution ist, und `period`. Beitrags- und Suchblöcke nehmen außerdem `title` und `template` auf. Der Titel ist Klartext.
-
-Das CiviRules-Formular prüft die Blöcke vor dem Speichern. Es meldet eine Liste, die kein JSON-Array aus Objekten ist, einen unbekannten Typ, einen Suchblock ohne `search`, einen Abschnittsblock ohne `key` und eine gespeicherte Suche, die es nicht gibt. Ein geplanter Job scheitert an denselben Fehlern, wenn er läuft, und das Job-Protokoll nennt den Grund.
-
 ### Beitragsblöcke
 
-| Einstellung | Standard | Bedeutung |
-|---|---|---|
-| `campaign_id` | keiner | Nur die Beiträge dieser Kampagne zählen und ihren Fortschritt ergänzen. |
-| `financial_type_id` | keiner | Nur diesen Finanztyp zählen. |
-| `source_pattern` | keiner | Ein SQL-LIKE-Muster für die Beitragsquelle, zum Beispiel `%Bank TX%`. |
-| `group_by` | source | `line_item` schlüsselt die Zahlen nach Bezeichnung und Einzelpreis der Position auf. Im Formular heißt das Feld „Aufschlüsseln nach“. |
-| `show_pending` | an | Die offenen ausstehenden Beträge anzeigen. |
-| `show_histogram` | an | Das Histogramm der Beträge anzeigen. |
-| `bucket_count` | 8 | Die angestrebte Anzahl der Histogramm-Klassen. |
-| `bucket_edges` | passend gewählt | Feste Klassengrenzen als JSON-Array, zum Beispiel `[0, 100, 1000, 10000]`. |
+| Feld | API-Name | Standard | Bedeutung |
+|---|---|---|---|
+| Kampagne | `campaign_id` | keiner | Nur die Beiträge dieser Kampagne zählen und ihren Fortschritt ergänzen. |
+| Finanztyp | `financial_type_id` | keiner | Nur diesen Finanztyp zählen. |
+| Quellmuster | `source_pattern` | keiner | Ein SQL-LIKE-Muster für die Beitragsquelle, zum Beispiel `%Bank TX%`. |
+| Aufschlüsseln nach | `group_by` | Beitragsquelle | „Position und Einzelpreis“ schlüsselt die Zahlen nach Bezeichnung und Einzelpreis der Position auf. |
+| Ausstehende Beträge anzeigen | `show_pending` | an | Die offenen ausstehenden Beträge anzeigen. |
+| Histogramm anzeigen | `show_histogram` | an | Das Histogramm der Beträge anzeigen. |
+| Histogramm-Klassen | `bucket_count` | 8 | Die angestrebte Anzahl der Histogramm-Klassen. |
+| Klassengrenzen des Histogramms | `bucket_edges` | passend gewählt | Feste Klassengrenzen als JSON-Array, zum Beispiel `[0, 100, 1000, 10000]`. |
 
 So zählt ein Beitragsblock:
 
@@ -70,27 +98,17 @@ So zählt ein Beitragsblock:
 - Ein Beitrag ohne Quelle erscheint als „Unknown“.
 - Beträge werden als Zahlen ohne Währungsumrechnung addiert. Bei mehreren Währungen sind die Summen bedeutungslos.
 
-Bei der Aufschlüsselung nach Positionen stammen Summen, Anzahlen und ausstehende Beträge aus den Positionen. Ein gemischter Warenkorb wird auf seine Positionen aufgeteilt, und die Anzahlen sind Stückzahlen. Positionen mit einer Zeilensumme von null oder weniger bleiben außen vor. Der Filter auf den Finanztyp gilt dann für jede Position, nicht für den Beitrag. Nur die kombinierbare Blockvorlage gibt die Positionen aus, verwenden Sie für diese Ansicht also Blöcke.
+Bei der Aufschlüsselung nach Positionen stammen Summen, Anzahlen und ausstehende Beträge aus den Positionen. Ein gemischter Warenkorb wird auf seine Positionen aufgeteilt, und die Anzahlen sind Stückzahlen. Positionen mit einer Zeilensumme von null oder weniger bleiben außen vor. Der Filter auf den Finanztyp gilt dann für jede Position, nicht für den Beitrag. Nur die kombinierbare Blockvorlage gibt die Positionen aus, lassen Sie die Vorlage für diese Ansicht also leer.
 
 Das Histogramm zeigt die abgeschlossenen Beiträge des Zeitraums, die zu den Filtern passen, und ignoriert Beträge von null oder weniger. Es verwendet immer ganze Beitragsbeträge, bei der Aufschlüsselung nach Positionen gilt sein Filter auf den Finanztyp also für den Beitrag. Gibt es nichts anzuzeigen, steht dort „(no data)“.
 
-Ohne feste Grenzen wählt herald Klassengrenzen, die zu den Beträgen passen. Feste Grenzen eignen sich für eine Kampagne, die in Stufen erzählt wird, etwa eine Großspendenkampagne. Geben Sie mindestens zwei Werte an:
-
-```json
-"bucket_edges": [0, 100, 1000, 10000, 100000, 1000000]
-```
-
-Beträge unterhalb der ersten oder oberhalb der letzten Grenze landen in zusätzlichen Klassen mit den Beschriftungen „<low“ und „≥high“.
+Ohne feste Grenzen wählt herald Klassengrenzen, die zu den Beträgen passen. Feste Grenzen eignen sich für eine Kampagne, die in Stufen erzählt wird, etwa eine Großspendenkampagne. Geben Sie mindestens zwei Werte an, zum Beispiel `[0, 100, 1000, 10000, 100000, 1000000]`. Beträge unterhalb der ersten oder oberhalb der letzten Grenze landen in zusätzlichen Klassen mit den Beschriftungen „<low“ und „≥high“. Ist das Histogramm ausgeschaltet, werden die Grenzen nicht geprüft.
 
 Der Fortschritt einer Kampagne übernimmt Titel und Ziel aus dem Kampagnendatensatz. Er zählt jeden abgeschlossenen Beitrag der Kampagne, der zu den Filtern auf Finanztyp und Quelle passt, unabhängig vom Zeitraum. Bei der Aufschlüsselung nach Positionen zählt er stattdessen die Positionen der Kampagne. Eine Kampagne ohne Ziel zeigt keine Fortschrittszeile.
 
-### Suchblöcke
+### Blöcke aus einer gespeicherten Suche
 
-Ein Suchblock zeigt die Zeilen einer gespeicherten SearchKit-Suche. Geben Sie die Suche mit ihrem Maschinennamen an. Um Anzahlen zu zeigen, gruppieren Sie die Suche, zum Beispiel Mitgliedschaften nach Typ:
-
-```json
-{"type": "search", "search": "memberships_by_type", "title": "Members"}
-```
+Ein solcher Block zeigt die Zeilen einer gespeicherten SearchKit-Suche, die Sie im Feld „Gespeicherte Suche“ (`saved_search_id`) wählen. Um Anzahlen zu zeigen, gruppieren Sie die Suche, zum Beispiel Mitgliedschaften nach Typ.
 
 Die Standardvorlage gibt eine Zeile pro Ergebniszeile aus, mit den Spalten der Suche in ihrer Reihenfolge. Es zählt nur die Abfrage der Suche, ihre Anzeigen spielen keine Rolle. Geben Sie der Suche ein Limit, denn jede Zeile landet in der Nachricht, und nur Telegram kürzt eine zu lange Nachricht.
 
@@ -108,22 +126,17 @@ function myext_civicrm_heraldDigestSections(array $keys, array $context, array &
 }
 ```
 
-Der Block `{"type": "section", "key": "myext.seats"}` fügt die Antwort ein. `$context` enthält die Report-Einstellungen unter `params` und den Zeitraum des Blocks unter `period`, sodass der Listener zum Zeitraum des Reports passende Zahlen liefern kann.
+Ein Block mit dem Abschnittsschlüssel `myext.seats` fügt die Antwort ein. `$context` enthält den Namen des Reports unter `digest` und den Zeitraum des Blocks unter `period`, sodass der Listener zum Zeitraum des Reports passende Zahlen liefern kann.
 
 Die Antwort wird als HTML eingefügt, der Listener maskiert seine eigenen Daten also selbst. Eine leere Antwort bedeutet, dass es nichts zu melden gibt, und der Block entfällt. Ein Schlüssel, auf den keine Extension antwortet, lässt den Report mit dem Fehler „no extension answers the digest section“ scheitern, damit ein Tippfehler nicht unbemerkt bleibt.
 
-### Beispiel
+## Reports aus älteren Versionen
 
-Vier Blöcke: die Spenden einer Kampagne, Ticketverkäufe nach Position, Mitglieder nach Typ und ein Abschnitt aus einer anderen Extension.
+Ältere Versionen haben einen Report in den Einstellungen seiner Regelaktion oder seines geplanten Jobs abgelegt. Das Upgrade macht aus jedem einen Datensatz und lässt in der Aktion nur die Zustelleinstellungen und den Namen des Reports stehen. Der Report einer Regelaktion heißt `rule_action_<id>` und übernimmt den Titel der Regel, der Report eines Jobs heißt `job_<id>` und übernimmt den Namen des Jobs. Sie können sie danach umbenennen, passen Sie dann die Jobs und Skripte an, die sie nennen.
 
-```json
-[
-  {"title": "Donations", "financial_type_id": 1, "campaign_id": 2},
-  {"title": "Tickets", "financial_type_id": 4, "group_by": "line_item", "show_histogram": false},
-  {"type": "search", "search": "memberships_by_type", "title": "Members"},
-  {"type": "section", "key": "myext.seats"}
-]
-```
+Das Upgrade behält bei, was der Report bisher verschickt hat. Einen Zeitraum, den herald nicht kannte, hat es als gestern gelesen, und so bleibt es. Ein Report, der nie laufen konnte, bleibt, wie er war, und das Upgrade-Protokoll enthält die Warnung „digest left inline, it cannot run until fixed“ mit dem Grund: eine Blockliste, die kein gültiges JSON ist, eine gespeicherte Suche, Kampagne oder ein Finanztyp, die es nicht mehr gibt, oder ein Filter auf den Beitragsstatus, den die Datensätze nicht mehr kennen. Eine solche Regel scheitert, bis Sie in ihrer Aktion einen Report wählen.
+
+Das Report-Formular ist ein Afform, herald braucht deshalb die Extension Form Core (`org.civicrm.afform`). Aktivieren Sie sie vor dem Upgrade von herald auf einer Seite, auf der sie noch fehlt.
 
 ## Quellen normalisieren
 

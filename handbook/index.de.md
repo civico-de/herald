@@ -25,13 +25,13 @@ Eine Benachrichtigung kann an ein einzelnes Ziel gehen, an alle Kontakte, die di
 
 Skripte und andere Extensions können in ein benanntes Topic wie ops veröffentlichen. Eine Einstellung legt fest, welchen Kanal und welches Ziel jedes Topic erreicht. Wer veröffentlicht, muss also nie eine Chat-ID oder eine URL kennen.
 
-Ein Report fasst die Beiträge eines Zeitraums zusammen, listet die Zeilen einer gespeicherten SearchKit-Suche auf oder enthält Zahlen, die eine andere Extension liefert. Reports gehen meist täglich oder wöchentlich hinaus, über eine Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
+Ein Report fasst die Beiträge eines Zeitraums zusammen, listet die Zeilen einer gespeicherten SearchKit-Suche auf oder enthält Zahlen, die eine andere Extension liefert. Sie richten sie unter Administrieren » Herald » Reports ein, und sie gehen meist täglich oder wöchentlich hinaus, über eine Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
 
 Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet, wenn ein Check fehlschlägt und wenn er sich wieder erholt, und erinnert an Checks, die dauerhaft fehlschlagen. Auf einer gesunden Site bleibt es still. Siehe [Check-Monitor](monitor.md).
 
 ## Voraussetzungen
 
-herald benötigt SearchKit, das Teil von CiviCRM ist. CiviRules ist optional. herald registriert seine Regel-Bausteine, egal ob Sie CiviRules vor oder nach herald installieren. Ohne CiviRules funktionieren die API, die geplanten Jobs, die Topics und der Check-Monitor weiterhin. Die unterstützten Versionen von CiviCRM und PHP stehen in der `info.xml` der Extension.
+herald benötigt SearchKit und Form Core, die Teil von CiviCRM sind. CiviRules ist optional. herald registriert seine Regel-Bausteine, egal ob Sie CiviRules vor oder nach herald installieren. Ohne CiviRules funktionieren die API, die geplanten Jobs, die Topics und der Check-Monitor weiterhin. Die unterstützten Versionen von CiviCRM und PHP stehen in der `info.xml` der Extension.
 
 ## Installation
 
@@ -43,7 +43,7 @@ cv ext:enable herald
 
 Ein Git-Checkout enthält kein Verzeichnis `vendor/`. Führen Sie darin `composer install --no-dev` aus, bevor Sie die Extension aktivieren. Ohne `vendor/` schlägt jede Seite der Site fehl, sobald herald aktiviert ist.
 
-Beim Deinstallieren entfernt herald seine CiviRules-Bausteine, und CiviRules entfernt sie aus jeder Regel, die sie nutzt. Eine Regel ohne ihre herald-Bedingung würde danach öfter auslösen als vorher. Deshalb schaltet herald zuerst jede aktive Regel ab, die einen seiner Trigger, eine seiner Bedingungen oder Aktionen nutzt. Das CiviCRM-Log nennt die IDs dieser Regeln.
+Beim Deinstallieren entfernt herald seine CiviRules-Bausteine, und CiviRules entfernt sie aus jeder Regel, die sie nutzt. Eine Regel ohne ihre herald-Bedingung würde danach öfter auslösen als vorher. Deshalb schaltet herald zuerst jede aktive Regel ab, die einen seiner Trigger, eine seiner Bedingungen oder Aktionen nutzt. Das CiviCRM-Log nennt die IDs dieser Regeln. Beim Deinstallieren löscht herald außerdem seine Tabellen und damit die Reports und jede Meldung, die noch im Puffer wartet, auch die geparkten.
 
 ## Erste Schritte
 

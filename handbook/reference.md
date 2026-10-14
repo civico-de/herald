@@ -37,7 +37,7 @@ On a contribution trigger, the variables also include the contribution, its camp
 
 ### Send digest
 
-The action "Herald: Send digest" sends a digest each time the rule fires. Its fields are the digest settings described in [Digest settings](digests.md#digest-settings). The template list offers the templates whose workflow name starts with herald_contribution_digest_, and "- block default -". The form checks the blocks before it saves them.
+The action "Herald: Send digest" sends a digest each time the rule fires. Its form picks one of the digests set up under Administer » Herald » Digests, see [Setting up a digest](digests.md#setting-up-a-digest), and has the delivery fields of "Send notification". The rule list shows the action as "Sends the digest "…"", or as "Digest "…" does not exist." once the digest is renamed or deleted.
 
 ## CiviRules triggers
 
@@ -95,7 +95,7 @@ The entity `Herald` offers these actions. Every action needs the permission "adm
 | send | channel, message, subject, format, config | Delivers a finished message through one channel. This is the entry point for other extensions. The result lists `unknown_config_keys`. |
 | publish | topic, message or template with vars, format, amount | Delivers through the route in `herald_topics`, see [Topics](delivery.md#topics). |
 | notify | actionParams, triggerContext | What "Send notification" calls. |
-| notifyDigest | actionParams, sendHour | What "Send digest" calls, and scripts, see [Without a rule](recipes.md#without-a-rule). |
+| notifyDigest | digest, actionParams, sendHour | What "Send digest" calls, and scripts, see [Sending a digest](digests.md#sending-a-digest). |
 | checkSchedule | ruleId, schedule | What "Herald: Schedule" calls. Returns `due`, `slot`, `last_run` and `not_before`. |
 | checkFieldTransition | entity, entityId, field, fromOperator, fromValue, toOperator, toValue, originalValue, hasOriginal | What "Field transition" calls. Returns `matched`. |
 | getChannels | channel, optional | Lists the channels and the keys they accept. |
@@ -122,6 +122,8 @@ cv api4 Herald.renderTemplate workflow=herald_contribution_alert_completed \
 ```
 
 The entity `HeraldBufferedAlert` is a read-only view of the alert buffer for SearchKit, with the actions get and getFields. It needs "administer CiviCRM". Its body and delivery fields can contain contact data, so the shipped display of parked alerts leaves them out.
+
+The entities `HeraldDigest` and `HeraldDigestBlock` hold the digests and their blocks, with the usual actions such as get, create, save and delete. They need "administer CiviCRM". Saving checks every record, see [Setting up a digest](digests.md#setting-up-a-digest), and deleting a digest deletes its blocks.
 
 Another extension can call `send` and `publish` without a hard dependency on herald:
 

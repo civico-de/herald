@@ -37,7 +37,7 @@ Bei einem Beitrags-Trigger enthalten die Variablen außerdem den Beitrag, den Fo
 
 ### Report senden
 
-Die Aktion „Herald: Send digest“ verschickt bei jedem Auslösen der Regel einen Report. Ihre Felder sind die Report-Einstellungen, beschrieben unter [Reporteinstellungen](digests.md#reporteinstellungen). Die Vorlagenliste bietet die Vorlagen an, deren Workflow-Name mit herald_contribution_digest_ beginnt, sowie „- Standard des Blocks -“. Das Formular prüft die Blöcke vor dem Speichern.
+Die Aktion „Herald: Send digest“ verschickt bei jedem Auslösen der Regel einen Report. Ihr Formular wählt einen der Reports, die unter Administrieren » Herald » Reports eingerichtet sind, siehe [Einen Report einrichten](digests.md#einen-report-einrichten), und hat die Zustellfelder von „Send notification“. Die Regelliste zeigt die Aktion als „Verschickt den Report „…““ oder, sobald der Report umbenannt oder gelöscht ist, als „Den Report „…“ gibt es nicht.“
 
 ## CiviRules-Trigger
 
@@ -95,7 +95,7 @@ Die Entität `Herald` bietet diese Aktionen. Jede Aktion erfordert die Berechtig
 | send | channel, message, subject, format, config | Stellt eine fertige Nachricht über einen Kanal zu. Das ist der Einstiegspunkt für andere Extensions. Das Ergebnis listet `unknown_config_keys` auf. |
 | publish | topic, message oder template mit vars, format, amount | Stellt über die Route in `herald_topics` zu, siehe [Topics](delivery.md#topics). |
 | notify | actionParams, triggerContext | Wird von „Send notification“ aufgerufen. |
-| notifyDigest | actionParams, sendHour | Wird von „Send digest“ und von Skripten aufgerufen, siehe [Ohne Regel](recipes.md#ohne-regel). |
+| notifyDigest | digest, actionParams, sendHour | Wird von „Send digest“ und von Skripten aufgerufen, siehe [Einen Report verschicken](digests.md#einen-report-verschicken). |
 | checkSchedule | ruleId, schedule | Wird von „Herald: Schedule“ aufgerufen. Gibt `due`, `slot`, `last_run` und `not_before` zurück. |
 | checkFieldTransition | entity, entityId, field, fromOperator, fromValue, toOperator, toValue, originalValue, hasOriginal | Wird von „Field transition“ aufgerufen. Gibt `matched` zurück. |
 | getChannels | channel, optional | Listet die Kanäle und die Schlüssel auf, die sie akzeptieren. |
@@ -122,6 +122,8 @@ cv api4 Herald.renderTemplate workflow=herald_contribution_alert_completed \
 ```
 
 Die Entität `HeraldBufferedAlert` ist eine schreibgeschützte Sicht auf den Meldungspuffer für SearchKit, mit den Aktionen get und getFields. Sie erfordert „administer CiviCRM“. Ihre Felder für Nachrichtentext und Zustellung können Kontaktdaten enthalten, deshalb lässt die mitgelieferte Anzeige der geparkten Meldungen sie weg.
+
+Die Entitäten `HeraldDigest` und `HeraldDigestBlock` enthalten die Reports und ihre Blöcke, mit den üblichen Aktionen wie get, create, save und delete. Sie erfordern „administer CiviCRM“. Beim Speichern wird jeder Datensatz geprüft, siehe [Einen Report einrichten](digests.md#einen-report-einrichten), und das Löschen eines Reports löscht seine Blöcke.
 
 Eine andere Extension kann `send` und `publish` aufrufen, ohne fest von herald abzuhängen:
 

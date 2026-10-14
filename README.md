@@ -8,7 +8,7 @@ Documentation: https://civico-de.github.io/herald/
 
 ## Requirements
 
-- SearchKit, which ships with CiviCRM
+- SearchKit and Form Core, which ship with CiviCRM
 - CiviRules, optional: it provides the rule actions, the schedule trigger and the field condition. herald registers them whether CiviRules is installed before or after it. Without CiviRules, the API, scheduled jobs, topics and the check monitor still work.
 
 The supported CiviCRM and PHP versions are listed in `info.xml`.
@@ -41,8 +41,9 @@ To get a message for every completed contribution, create a CiviRules rule:
 
 A weekly summary with an amount histogram is a rule on herald's own trigger:
 
-1. Trigger "Herald: Schedule" with Monday under Weekdays and 08:00 under Time.
-2. Action "Herald: Send digest" with the template "Herald: Weekly contribution digest", the period "Last 7 days" and the channel Telegram.
+1. Under Administer » Herald » Digests, a digest with the period "Last 7 days" and one contribution block with the template "Herald: Weekly contribution digest".
+2. Trigger "Herald: Schedule" with Monday under Weekdays and 08:00 under Time.
+3. Action "Herald: Send digest" with that digest and the channel Telegram.
 
 Every Monday at 8:00 the chat gets the total, a line per contribution source and the histogram. herald picks the buckets from the amounts. Each bar counts contributions, and the bracket holds their sum:
 
