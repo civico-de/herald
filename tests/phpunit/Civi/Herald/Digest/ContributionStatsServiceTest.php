@@ -51,7 +51,7 @@ class ContributionStatsServiceTest extends TestCase implements
   }
 
   /**
-   * @param array<int, array{amount: float, status?: string, source?: string, receive_date?: string, modified_date?: string}> $rows
+   * @param array<int, array{amount: float, status?: string, source?: string, receive_date?: string}> $rows
    */
   private function seedContributions(array $rows): array {
     $ids = [];
@@ -65,16 +65,6 @@ class ContributionStatsServiceTest extends TestCase implements
         ->addValue('receive_date', $row['receive_date'] ?? date('Y-m-d H:i:s'))
         ->execute()
         ->first()['id'];
-      if (isset($row['modified_date'])) {
-        // modified_date is normally auto-populated; force it for transition tests.
-        \CRM_Core_DAO::executeQuery(
-          'UPDATE civicrm_contribution SET modified_date = %1 WHERE id = %2',
-          [
-            1 => [$row['modified_date'], 'String'],
-            2 => [$id, 'Integer'],
-          ],
-        );
-      }
       $ids[] = $id;
     }
     return $ids;
@@ -116,6 +106,25 @@ class ContributionStatsServiceTest extends TestCase implements
     $this->assertSame(['Bank TX 123', 'Ueberweisung Bank'], $sources);
     $this->assertSame(30.0, $summary['total']);
     $this->assertSame(2, $summary['count']);
+  }
+
+  public function testABlankAndAMissingSourceAreOneUnknownRow(): void {
+    $yesterday = date('Y-m-d 12:00:00', strtotime('yesterday'));
+    $this->seedContributions([
+      ['amount' => 10.0, 'source' => '', 'receive_date' => $yesterday],
+      ['amount' => 5.0, 'source' => 'Stripe', 'receive_date' => $yesterday],
+    ]);
+    Contribution::create(checkPermissions: FALSE)
+      ->addValue('contact_id', $this->contactId)
+      ->addValue('financial_type_id:name', 'Donation')
+      ->addValue('total_amount', 20.0)
+      ->addValue('receive_date', $yesterday)
+      ->execute();
+
+    $bySource = array_column($this->service->getPeriodSummary([], DateRange::yesterday())['bySource'], NULL, 'source');
+
+    $this->assertSame(['source' => 'Unknown', 'total' => 30.0, 'count' => 2], $bySource['Unknown']);
+    $this->assertCount(2, $bySource);
   }
 
   public function testSourceNormalizationMergesTotalsAndCounts(): void {
@@ -214,32 +223,6 @@ class ContributionStatsServiceTest extends TestCase implements
     $this->assertSame([5.0], $this->service->getAmountDistribution([], DateRange::yesterday()));
   }
 
-  public function testGetRecentCompletedReturnsRowsInDateOrder(): void {
-    $now = time();
-    $this->seedContributions([
-      ['amount' => 10.0, 'receive_date' => date('Y-m-d H:i:s', $now - 60)],
-      ['amount' => 20.0, 'receive_date' => date('Y-m-d H:i:s', $now - 120)],
-      ['amount' => 30.0, 'receive_date' => date('Y-m-d H:i:s', $now - 30)],
-    ]);
-    $recent = $this->service->getRecentCompleted([], 10);
-    $this->assertCount(3, $recent);
-    // ordered DESC by receive_date — newest first
-    $this->assertSame(30.0, $recent[0]['amount']);
-    $this->assertSame(10.0, $recent[1]['amount']);
-    $this->assertSame(20.0, $recent[2]['amount']);
-  }
-
-  public function testGetRecentPendingOnlyReturnsPending(): void {
-    $now = date('Y-m-d H:i:s');
-    $this->seedContributions([
-      ['amount' => 10.0, 'status' => 'Pending', 'receive_date' => $now],
-      ['amount' => 20.0, 'status' => 'Completed', 'receive_date' => $now],
-    ]);
-    $pending = $this->service->getRecentPending([], 10);
-    $this->assertCount(1, $pending);
-    $this->assertSame(10.0, $pending[0]['amount']);
-  }
-
   public function testGetCampaignTotalSumsCompletedOnly(): void {
     $campaignId = (int) \Civi\Api4\Campaign::create(checkPermissions: FALSE)
       ->addValue('title', 'TotalCampaign')
@@ -291,88 +274,6 @@ class ContributionStatsServiceTest extends TestCase implements
     $total = $this->service->getCampaignTotal(['campaign_id' => $campaignId, 'financial_type_id' => $eventFeeId]);
     $this->assertSame(300.0, $total['total']);
     $this->assertSame(1, $total['count']);
-  }
-
-  public function testGetRecentStatusTransitions(): void {
-    $now = date('Y-m-d H:i:s');
-    $this->seedContributions([
-      // Genuine transition: received long ago, modified just now.
-      [
-        'amount' => 100.0,
-        'status' => 'Completed',
-        'receive_date' => date('Y-m-d H:i:s', strtotime('-1 day')),
-        'modified_date' => $now,
-      ],
-      // Outside the window: modified 2 hours ago.
-      [
-        'amount' => 200.0,
-        'status' => 'Completed',
-        'receive_date' => date('Y-m-d H:i:s', strtotime('-1 day')),
-        'modified_date' => date('Y-m-d H:i:s', strtotime('-2 hours')),
-      ],
-    ]);
-    $recent = $this->service->getRecentStatusTransitions([], 10, 'Completed');
-    $this->assertCount(1, $recent);
-    $this->assertSame(100.0, $recent[0]['amount']);
-  }
-
-  public function testGetRecentStatusTransitionsExcludesFreshlyReceivedByDefault(): void {
-    $now = date('Y-m-d H:i:s');
-    $this->seedContributions([
-      // Received AND modified inside the window — that's a new contribution,
-      // not a transition; getPeriodSummary already counts it.
-      ['amount' => 300.0, 'status' => 'Completed', 'receive_date' => $now, 'modified_date' => $now],
-    ]);
-    $this->assertCount(0, $this->service->getRecentStatusTransitions([], 10, 'Completed'));
-    // Opt-out returns it.
-    $all = $this->service->getRecentStatusTransitions([], 10, 'Completed', excludeAlsoReceivedInPeriod: FALSE);
-    $this->assertCount(1, $all);
-    $this->assertSame(300.0, $all[0]['amount']);
-  }
-
-  public function testGetPendingSnapshotCountsOnlyPendingInsideThePeriod(): void {
-    $yesterday = date('Y-m-d 12:00:00', strtotime('yesterday'));
-    $this->seedContributions([
-      ['amount' => 10.0, 'status' => 'Pending', 'receive_date' => $yesterday],
-      ['amount' => 25.0, 'status' => 'Pending', 'receive_date' => $yesterday],
-      // Outside the window, and a completed one inside it.
-      ['amount' => 99.0, 'status' => 'Pending', 'receive_date' => date('Y-m-d 12:00:00', strtotime('-9 days'))],
-      ['amount' => 77.0, 'status' => 'Completed', 'receive_date' => $yesterday],
-    ]);
-
-    $snapshot = $this->service->getPendingSnapshot([], DateRange::yesterday());
-    $this->assertSame(35.0, $snapshot['total']);
-    $this->assertSame(2, $snapshot['count']);
-  }
-
-  public function testGetStatusTransitionsInPeriodCanIncludeFreshlyReceived(): void {
-    $yesterday = date('Y-m-d 12:00:00', strtotime('yesterday'));
-    $this->seedContributions([
-      // Received before the window, flipped to Completed inside it: a real
-      // transition, counted either way.
-      [
-        'amount' => 40.0,
-        'status' => 'Completed',
-        'receive_date' => date('Y-m-d 12:00:00', strtotime('-9 days')),
-        'modified_date' => $yesterday,
-      ],
-      // Received AND modified inside the window: excluded by default.
-      ['amount' => 60.0, 'status' => 'Completed', 'receive_date' => $yesterday, 'modified_date' => $yesterday],
-    ]);
-
-    $period = DateRange::yesterday();
-    $transitions = $this->service->getStatusTransitionsInPeriod([], $period, 'Completed');
-    $this->assertSame(40.0, $transitions['total']);
-    $this->assertSame(1, $transitions['count']);
-
-    $withFresh = $this->service->getStatusTransitionsInPeriod(
-      [],
-      $period,
-      'Completed',
-      excludeAlsoReceivedInPeriod: FALSE,
-    );
-    $this->assertSame(100.0, $withFresh['total']);
-    $this->assertSame(2, $withFresh['count']);
   }
 
   public function testGetItemSummaryGroupsLineItemsByLabelAndPrice(): void {
@@ -437,7 +338,7 @@ class ContributionStatsServiceTest extends TestCase implements
     $this->assertSame([10.0], array_column($items, 'total'));
   }
 
-  public function testRecentAndCampaignQueriesAlsoIgnoreTestAndTemplateRows(): void {
+  public function testCampaignQueriesAlsoIgnoreTestAndTemplateRows(): void {
     $now = date('Y-m-d H:i:s');
     $campaignId = (int) \Civi\Api4\Campaign::create(checkPermissions: FALSE)
       ->addValue('title', 'FlagCampaign')
@@ -455,9 +356,6 @@ class ContributionStatsServiceTest extends TestCase implements
       ->execute();
     $this->seedFlagged('is_test', 500.0, $now, $campaignId);
     $this->seedFlagged('is_template', 700.0, $now, $campaignId);
-
-    $recent = $this->service->getRecentCompleted([], 10);
-    $this->assertSame([20.0], array_column($recent, 'amount'));
 
     $total = $this->service->getCampaignTotal(['campaign_id' => $campaignId]);
     $this->assertSame(20.0, $total['total']);
