@@ -107,7 +107,7 @@ class BufferDeadLetterTest extends TestCase implements HeadlessInterface, HookIn
    */
   public function testTransientFailureIsParkedAfterMaxAttempts(): void {
     \Civi::settings()->set('herald_buffer_max_attempts', 3);
-    // No such channel key: deliver() throws a plain exception, i.e. the
+    // No such channel key: Delivery::send() throws a plain exception, i.e. the
     // "retryable" error class.
     $this->bufferDue(['channel' => 'no-such-channel']);
 

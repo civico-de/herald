@@ -1,0 +1,80 @@
+<?php
+
+declare(strict_types = 1);
+
+namespace Civi\Herald\Dispatch;
+
+use Civi\Herald\Channel\ChannelRegistry;
+use Civi\Herald\Subscribers\GroupRecipients;
+use Civi\Herald\Subscribers\SubscriberLookup;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+
+/**
+ * Sends a rendered body the way `delivery_mode` says: to the configured
+ * recipient, to a subscription type's or a group's contacts, or to an
+ * address list.
+ */
+final class Delivery {
+
+  /**
+   * @param array<string, mixed> $params
+   */
+  public static function send(string $body, array $params, ?SubscriberLookup $lookup = NULL): void {
+    match ($params['delivery_mode'] ?? 'direct') {
+      'subscribers' => FanOut::toRecipients(
+        $body,
+        $params,
+        self::subscribers($params, $lookup ?? new SubscriberLookup()),
+      ),
+      'group' => FanOut::toRecipients($body, $params, self::group($params)),
+      'addresses' => FanOut::toAddresses($body, $params),
+      default => ChannelRegistry::default()
+        ->get(Cast::toString($params['channel'] ?? 'telegram'))
+        ->send($body, ChannelConfig::of($params)),
+    };
+  }
+
+  /**
+   * Fan-out options from the caller's params.
+   *
+   * @param array<string, mixed> $params
+   * @return array<string, mixed>
+   */
+  public static function options(array $params): array {
+    $options = [
+      'respect_suspension' => !empty($params['respect_suspension']),
+      'location_type_id' => Cast::toInt($params['email_location_type'] ?? 0),
+    ];
+    $scopeType = Cast::toString($params['scope_entity_type'] ?? '');
+    $scopeId = Cast::toInt($params['scope_entity_id'] ?? 0);
+    if ($scopeType !== '' && $scopeId > 0) {
+      $options['scope'] = ['entity_type' => $scopeType, 'entity_id' => $scopeId];
+    }
+    return $options;
+  }
+
+  /**
+   * @param array<string, mixed> $params
+   * @return array<int, array{contact_id: int, channel: string, config: array<string, mixed>}>
+   */
+  private static function subscribers(array $params, SubscriberLookup $lookup): array {
+    $subscriptionType = Cast::toString($params['subscription_type'] ?? '');
+    if ($subscriptionType === '') {
+      throw new NoRecipientsException('herald: subscriber-mode requires action parameter "subscription_type".');
+    }
+    return $lookup->findBySubscriptionType($subscriptionType, self::options($params));
+  }
+
+  /**
+   * @param array<string, mixed> $params
+   * @return array<int, array{contact_id: int, channel: string, config: array<string, mixed>}>
+   */
+  private static function group(array $params): array {
+    $groupId = Cast::toInt($params['group_id'] ?? 0);
+    if ($groupId <= 0) {
+      throw new NoRecipientsException('herald: group mode requires action parameter "group_id".');
+    }
+    return (new GroupRecipients())->findByGroup($groupId, self::options($params));
+  }
+
+}

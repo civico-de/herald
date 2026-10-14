@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @group headless
  */
-class DispatcherFailureTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
+class FanOutFailureTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 
   public function setUpHeadless() {
     return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
@@ -79,7 +79,7 @@ class DispatcherFailureTest extends TestCase implements HeadlessInterface, HookI
     ];
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/all 2 recipient sends failed/');
-    Dispatcher::deliverToRecipients('body', [], $recipients, $registry);
+    FanOut::toRecipients('body', [], $recipients, $registry);
   }
 
   public function testPartialRecipientFailureDoesNotThrow(): void {
@@ -89,8 +89,19 @@ class DispatcherFailureTest extends TestCase implements HeadlessInterface, HookI
       ['contact_id' => 1, 'channel' => 'telegram', 'config' => ['chat_id' => 'a']],
       ['contact_id' => 2, 'channel' => 'telegram', 'config' => ['chat_id' => 'b']],
     ];
-    Dispatcher::deliverToRecipients('body', [], $recipients, $registry);
+    FanOut::toRecipients('body', [], $recipients, $registry);
     $this->assertCount(2, $sent);
+  }
+
+  public function testARecipientOnAnUnknownChannelDoesNotStopTheOthers(): void {
+    $sent = [];
+    $registry = $this->registry('telegram', [], $sent);
+    $recipients = [
+      ['contact_id' => 1, 'channel' => 'herald_test_gone', 'config' => []],
+      ['contact_id' => 2, 'channel' => 'telegram', 'config' => ['chat_id' => 'b']],
+    ];
+    FanOut::toRecipients('body', [], $recipients, $registry);
+    $this->assertSame([['chat_id' => 'b']], $sent);
   }
 
   /**
@@ -102,7 +113,7 @@ class DispatcherFailureTest extends TestCase implements HeadlessInterface, HookI
     $sent = [];
     $registry = $this->registry('telegram', [], $sent);
     try {
-      Dispatcher::deliverToRecipients('body', ['delivery_mode' => 'subscribers'], [], $registry);
+      FanOut::toRecipients('body', ['delivery_mode' => 'subscribers'], [], $registry);
       $this->fail('an empty recipient list must not count as a successful send');
     }
     catch (\CRM_Core_Exception $e) {
@@ -150,13 +161,13 @@ class DispatcherFailureTest extends TestCase implements HeadlessInterface, HookI
     $registry = $this->registry('email', [TRUE, TRUE], $sent);
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/all 2 address sends failed/');
-    Dispatcher::deliverToAddresses('body', ['email_addresses' => 'a@x.org, b@x.org'], $registry);
+    FanOut::toAddresses('body', ['email_addresses' => 'a@x.org, b@x.org'], $registry);
   }
 
   public function testPartialAddressFailureDoesNotThrow(): void {
     $sent = [];
     $registry = $this->registry('email', [FALSE, TRUE], $sent);
-    Dispatcher::deliverToAddresses('body', ['email_addresses' => 'a@x.org, b@x.org'], $registry);
+    FanOut::toAddresses('body', ['email_addresses' => 'a@x.org, b@x.org'], $registry);
     $this->assertCount(2, $sent);
   }
 
@@ -168,7 +179,7 @@ class DispatcherFailureTest extends TestCase implements HeadlessInterface, HookI
     // No DDL here: the install step (CRM_Herald_Upgrader::install) already
     // created the table, and a CREATE TABLE would implicitly commit.
     $buffer = new \Civi\Herald\Buffer\AlertBuffer();
-    // group mode without a group_id makes deliver() throw deterministically —
+    // group mode without a group_id makes Delivery::send() throw deterministically —
     // the flush must treat that like any transport failure and keep the rows.
     $buffer->add('grp', 1, 'body', ['delivery_mode' => 'group', 'group_id' => 0], NULL);
     \CRM_Core_DAO::executeQuery(

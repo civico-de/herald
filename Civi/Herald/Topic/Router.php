@@ -20,7 +20,7 @@ class Router {
   public const SETTING = 'herald_topics';
 
   /**
-   * @return array<string, mixed> Delivery params for AbstractSend::deliver().
+   * @return array<string, mixed> Delivery params for Delivery::send().
    */
   public function resolve(string $topic): array {
     $map = \Civi::settings()->get(self::SETTING);

@@ -5,7 +5,7 @@ declare(strict_types = 1);
 use Civi\Herald\Buffer\AggregateSummary;
 use Civi\Herald\Buffer\AlertBuffer;
 use Civi\Herald\Buffer\DeadLetter;
-use Civi\Herald\Dispatch\Dispatcher;
+use Civi\Herald\Dispatch\Delivery;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
@@ -60,7 +60,7 @@ function civicrm_api3_job_herald_buffer_flush(array $params): array {
       try {
         $body = AggregateSummary::compose($group['bodies'], $group['window'], $group['amounts'], $maxItems);
         if ($body !== '') {
-          Dispatcher::deliver(
+          Delivery::send(
             $body,
             AggregateSummary::composeDelivery(
               $group['delivery'],

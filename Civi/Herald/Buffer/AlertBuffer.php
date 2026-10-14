@@ -45,7 +45,7 @@ class AlertBuffer {
    * Park one rendered alert body for later aggregated delivery.
    *
    * @param array<string, mixed> $delivery Full action params — everything
-   *   Dispatcher::deliver() needs to send the composed message later.
+   *   Delivery::send() needs to send the composed message later.
    * @param float|null $amount Monetary value of the underlying event (e.g.
    *   contribution.total_amount) — summed into the aggregate header.
    */

@@ -33,7 +33,7 @@ Each delivery can name its own recipient and options. These per-call keys overri
 - A topic route takes the keys in its entry, either directly or inside `channel_config`.
 - `Herald.send` takes them in `config`.
 
-When a key is set both directly and in `channel_config`, the value in `channel_config` wins.
+When a key is set both directly and in `channel_config`, the value in `channel_config` wins. A `channel_config` that is not a JSON object fails the send.
 
 To list the keys a channel accepts, with labels and types:
 

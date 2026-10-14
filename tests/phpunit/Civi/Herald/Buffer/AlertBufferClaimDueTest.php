@@ -95,7 +95,7 @@ class AlertBufferClaimDueTest extends TestCase implements HeadlessInterface, Hoo
     $this->assertCount(2, $group['ids']);
     $this->assertContainsOnly('int', $group['ids']);
     // The delivery params survive the JSON round trip unchanged — the flush
-    // job hands them straight to AbstractSend::deliver().
+    // job hands them straight to Delivery::send().
     $this->assertSame(self::DELIVERY, $group['delivery']);
   }
 
@@ -141,7 +141,7 @@ class AlertBufferClaimDueTest extends TestCase implements HeadlessInterface, Hoo
   /**
    * A delivery column that is not decodable JSON (hand-edited row, truncated
    * write) must not take the whole flush down with it: the bodies still
-   * compose, the params fall back to empty, and deliver() is what complains.
+   * compose, the params fall back to empty, and Delivery::send() is what complains.
    */
   public function testUndecodableDeliveryFallsBackToEmptyParams(): void {
     $hash = 'herald-test-broken-delivery';

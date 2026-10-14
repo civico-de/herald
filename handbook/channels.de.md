@@ -33,7 +33,7 @@ Jede Zustellung kann eine eigene Empfänger:in und eigene Optionen angeben. Dies
 - Eine Topic-Route nimmt die Schlüssel in ihrem Eintrag auf, entweder direkt oder in `channel_config`.
 - `Herald.send` nimmt sie in `config` entgegen.
 
-Ist ein Schlüssel sowohl direkt als auch in `channel_config` gesetzt, gilt der Wert aus `channel_config`.
+Ist ein Schlüssel sowohl direkt als auch in `channel_config` gesetzt, gilt der Wert aus `channel_config`. Ist `channel_config` kein JSON-Objekt, schlägt der Versand fehl.
 
 So listen Sie die Schlüssel eines Kanals mit Bezeichnungen und Typen auf:
 
