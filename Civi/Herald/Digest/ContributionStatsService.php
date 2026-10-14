@@ -32,7 +32,7 @@ class ContributionStatsService {
    * @return array{total: float, count: int, bySource: array<int, array{source: string, total: float, count: int}>}
    */
   public function getPeriodSummary(array $filters, DateRange $period): array {
-    $where = ContributionFilters::where($filters, ContributionFilters::status($filters, 'Completed'));
+    $where = ContributionFilters::where($filters, 'Completed');
     $where[] = ['receive_date', '>=', $period->startSql()];
     $where[] = ['receive_date', '<', $period->endSql()];
 
@@ -78,8 +78,7 @@ class ContributionStatsService {
    * @return array{total: float, count: int}
    */
   public function getAllPending(array $filters): array {
-    $where = ContributionFilters::where($filters, ContributionFilters::status($filters, 'Pending'));
-    return $this->fetchTotalAndCount($where);
+    return $this->fetchTotalAndCount(ContributionFilters::where($filters, 'Pending'));
   }
 
   /**
@@ -91,7 +90,7 @@ class ContributionStatsService {
    * @return float[]
    */
   public function getAmountDistribution(array $filters, DateRange $period): array {
-    $where = ContributionFilters::where($filters, ContributionFilters::status($filters, 'Completed'));
+    $where = ContributionFilters::where($filters, 'Completed');
     $where[] = ['receive_date', '>=', $period->startSql()];
     $where[] = ['receive_date', '<', $period->endSql()];
 
@@ -110,7 +109,7 @@ class ContributionStatsService {
    * Line-item summary: qty + total grouped by (label, unit_price) — "what was
    * actually sold", independent of how contributions bundle items (carts).
    *
-   * Filters mirror buildWhere(), but financial_type_id applies to the LINE
+   * Filters as ContributionFilters reads them, but financial_type_id applies to the LINE
    * ITEM's own financial type: in a mixed cart (ticket + pass in one
    * contribution) each item counts toward its own block. 0-amount lines
    * (code redemptions, free seats) are excluded. `$period` NULL = no date
@@ -120,12 +119,8 @@ class ContributionStatsService {
    *
    * @return array<int, array{label: string, unit_price: float, qty: float|int, total: float}>
    */
-  public function getItemSummary(array $filters, ?DateRange $period, ?string $status = NULL): array {
-    $where = ContributionFilters::where(
-      $filters,
-      $status ?? ContributionFilters::status($filters, 'Completed'),
-      'contribution_id.',
-    );
+  public function getItemSummary(array $filters, ?DateRange $period, string $status = 'Completed'): array {
+    $where = ContributionFilters::where($filters, $status, 'contribution_id.');
     // Same restriction as contributionGet(), on the joined contribution: test
     // drives and recurring templates are not sales.
     $where[] = ['line_total', '>', 0];
@@ -188,7 +183,7 @@ class ContributionStatsService {
    * APIv4 `Contribution.get` with permission checks disabled, restricted to
    * real contributions.
    *
-   * The restriction lives here rather than in buildWhere() because APIv4 — no
+   * The restriction lives here rather than in ContributionFilters because APIv4 — no
    * `api.default` like APIv3 — applies neither filter on its own: a forgotten
    * one would count contribution-page test drives and the is_template row of
    * every recurring contribution as income. The where-clauses go in through

@@ -6,8 +6,8 @@ namespace Civi\Herald\Digest;
 
 /**
  * Digest filters as APIv4 where-clauses. Keys, all optional: campaign_id,
- * financial_type_id, status, source_pattern (a LIKE pattern such as
- * "%Bank TX%"); an empty value applies no filter.
+ * financial_type_id, source_pattern (a LIKE pattern such as "%Bank TX%");
+ * an empty value applies no filter.
  *
  * @phpstan-type HeraldFilters array<string, mixed>
  * @phpstan-type HeraldWhere array<int, mixed>
@@ -35,15 +35,6 @@ final class ContributionFilters {
       $where[] = [$prefix . 'source', 'LIKE', $filters['source_pattern']];
     }
     return $where;
-  }
-
-  /**
-   * The filters' status, else $default.
-   *
-   * @param HeraldFilters $filters
-   */
-  public static function status(array $filters, string $default): string {
-    return (string) self::asScalar($filters['status'] ?? $default);
   }
 
   /**
