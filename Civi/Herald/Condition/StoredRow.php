@@ -4,45 +4,66 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Condition;
 
+use Civi\Api4\Utils\FormattingUtil;
+
 /**
- * Reads an APIv4 field out of a row that holds raw column values, such as the
- * copy CiviRules keeps of a record before an edit.
+ * Reads an APIv4 field out of a stored copy of a record, such as the APIv3 or
+ * APIv4 get result CiviRules keeps from before an edit.
  */
 final class StoredRow {
 
   private const UNKNOWN = ['known' => FALSE, 'value' => NULL];
 
   /**
-   * An option suffix such as :name is resolved from the raw value of its base field.
+   * Serialized values and option suffixes such as :name resolve as APIv4 get
+   * resolves them, disabled options included.
    *
    * @param array<array-key, mixed> $row
    * @return array{known: bool, value: mixed}
    */
   public static function value(string $entity, string $field, array $row): array {
-    if (array_key_exists($field, $row)) {
-      return ['known' => TRUE, 'value' => $row[$field]];
-    }
-    $parts = explode(':', $field, 2);
-    if (count($parts) !== 2 || !array_key_exists($parts[0], $row)) {
+    $name = FormattingUtil::removeSuffix($field);
+    if (!array_key_exists($name, $row)) {
       return self::UNKNOWN;
     }
-    [$name, $suffix] = $parts;
-    $options = civicrm_api4($entity, 'getFields', [
-      'checkPermissions' => FALSE,
-      'loadOptions' => ['id', $suffix],
-      'where' => [['name', '=', $name]],
-      'select' => ['options'],
-    ])->first()['options'] ?? NULL;
-    if (!is_array($options)) {
+    try {
+      $spec = civicrm_api4($entity, 'getFields', [
+        'checkPermissions' => FALSE,
+        'where' => [['name', '=', $name]],
+        'select' => ['name', 'entity', 'serialize'],
+      ])->first();
+      if (!is_array($spec)) {
+        return self::UNKNOWN;
+      }
+      $stored = $row[$name];
+      $raw = $spec['serialize'] && is_string($stored)
+        ? \CRM_Core_DAO::unSerializeField($stored, $spec['serialize'])
+        : $stored;
+      if ($raw === NULL || $name === $field) {
+        return ['known' => TRUE, 'value' => $raw];
+      }
+      $keys = is_array($raw) ? array_map(self::optionKey(...), $raw) : self::optionKey($raw);
+      return [
+        'known' => TRUE,
+        'value' => FormattingUtil::replacePseudoconstant(
+          FormattingUtil::getPseudoconstantList($spec, $field, $row),
+          $keys,
+        ),
+      ];
+    }
+    catch (\CRM_Core_Exception) {
       return self::UNKNOWN;
     }
-    $names = array_column($options, $suffix, 'id');
-    $raw = $row[$name];
-    $ids = is_string($raw) && str_contains($raw, \CRM_Core_DAO::VALUE_SEPARATOR)
-      ? \CRM_Utils_Array::explodePadded($raw)
-      : $raw;
-    $resolve = static fn (mixed $id): mixed => is_int($id) || is_string($id) ? $names[$id] ?? NULL : NULL;
-    return ['known' => TRUE, 'value' => is_array($ids) ? array_map($resolve, array_values($ids)) : $resolve($ids)];
+  }
+
+  private static function optionKey(mixed $value): string {
+    if (is_bool($value)) {
+      return $value ? '1' : '0';
+    }
+    if (is_scalar($value)) {
+      return (string) $value;
+    }
+    throw new \CRM_Core_Exception('An option key must be a scalar.');
   }
 
 }
