@@ -69,7 +69,7 @@ Die Bedingung „Herald: Field transition“ ist wahr, wenn der Wert eines Felde
 
 Das Formular speichert keine Entität, die es nicht gibt, kein Feld, das die Entität nicht hat, kein Suffix, das das Feld nicht anbietet, und keinen Suchfilter wie `groups`, denn der hat keinen Wert. Bei Feldnamen zählt die Groß- und Kleinschreibung. Außerdem lehnt das Formular `>`, `<`, `>=` und `<=` ab, wenn der Wert keine Zahl ist.
 
-Die Operatoren sind `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` und `not_empty`. „- beliebiger Wert -“ lässt diese Seite offen. Die Vergleichsoperatoren für größer und kleiner brauchen auf beiden Seiten Zahlen. `=` und `!=` vergleichen Zahlen, wenn beide Seiten Zahlen sind, und sonst Text ohne führende und folgende Leerzeichen. Zahlen werden exakt verglichen, egal wie viele Stellen sie haben. Eine Zahl mit Exponent wie `1e3` wird als Gleitkommazahl verglichen und ist damit auf etwa 15 Stellen genau. Jeder andere Operator, den nur die API übergeben kann, lässt die Bedingung mit einem Fehler scheitern.
+Die Operatoren sind `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` und `not_empty`. „- beliebiger Wert -“ lässt diese Seite offen. Die Vergleichsoperatoren für größer und kleiner brauchen auf beiden Seiten Zahlen. `=` und `!=` vergleichen Zahlen, wenn beide Seiten Zahlen sind, und sonst Text ohne führende und folgende Leerzeichen. Zahlen werden exakt verglichen, egal wie viele Stellen sie haben. Eine Zahl mit Exponent wie `1e3` wird als Gleitkommazahl verglichen und ist damit auf etwa 15 Stellen genau. Auch Felder vom Typ Money und Float kommen als solche Zahlen bei herald an. Ein Betrag von 19.99 ist trotzdem gleich `19.99`. Jeder andere Operator, den nur die API übergeben kann, lässt die Bedingung mit einem Fehler scheitern.
 
 - Sind beide Seiten offen, ist die Bedingung nie wahr.
 - Ist nur eine Seite konfiguriert, muss sich der Wert außerdem geändert haben. Andere Änderungen an einem Datensatz, der bereits im Zielzustand ist, lösen daher nicht erneut aus.
@@ -86,7 +86,7 @@ Beispiele:
 | Eine Mitgliedschaft wechselt von Status 2 zu 3 | Membership | status_id | = 2 | = 3 |
 | Ein Beitrag verlässt Pending | Contribution | contribution_status_id | = 2, die ID von Pending | beliebiger Wert |
 | Ein Beitrag war vor der Änderung Pending, geändert oder nicht | Contribution | contribution_status_id | = 2 | not_empty |
-| Ein Event wird offline genommen | Event | is_active | = 1 | = 0 |
+| Ein Event wird deaktiviert | Event | is_active | = 1 | = 0 |
 
 ## APIv4
 
@@ -174,7 +174,7 @@ Die Titel erscheinen in der Sprache, in der CiviCRM die Vorlagen angelegt oder z
 
 Die Vorlagen sind auf Englisch geschrieben. Eine deutsche Übersetzung liegt bei und wird verwendet, wenn CiviCRM auf Deutsch läuft.
 
-Eine Änderung, die Sie an einer mitgelieferten Vorlage vornehmen, bleibt erhalten, bis ein herald-Release genau diese Vorlage ändert. Das Release überschreibt dann Ihre Änderung. Um eine angepasste Fassung zu behalten, kopieren Sie sie unter einem eigenen Workflow-Namen. herald rendert nur die Standardfassung einer Vorlage. Die API und die geplanten Jobs akzeptieren jeden Workflow-Namen, die CiviRules-Formulare listen dagegen nur die oben beschriebenen Namen auf.
+Eine Änderung, die Sie an einer mitgelieferten Vorlage vornehmen, bleibt erhalten, bis ein herald-Release genau diese Vorlage ändert. Das Release überschreibt dann Ihre Änderung. Um eine angepasste Fassung zu behalten, kopieren Sie sie unter einem eigenen Workflow-Namen. herald rendert nur die Standardfassung einer Vorlage. Die API und die geplanten Jobs akzeptieren jeden Workflow-Namen, die CiviRules-Formulare listen dagegen nur Vorlagen, deren Workflow-Name mit `herald_` beginnt. Nennen Sie Ihre Kopie etwa `herald_meine_meldung`, dann erscheint sie auch dort.
 
 Eine Vorlage, die es nicht gibt, scheitert mit dem Fehler 'MessageTemplate "…" not found. Is the herald extension enabled?'. Eine Vorlage ohne HTML- und ohne Textinhalt scheitert ebenfalls.
 

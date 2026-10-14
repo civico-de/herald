@@ -15,16 +15,16 @@ Die Beitragsstatus heißen in CiviCRM unter anderem Completed (abgeschlossen), P
 
 ## Spenden
 
-Vier Regeln decken den Weg einer Spende ab: sofort bezahlt, als Überweisung angekündigt und später eingegangen.
+Vier Regeln decken den Weg einer Spende ab: sofort bezahlt, als Überweisung angekündigt, später eingegangen und eine Zusammenfassung jeden Morgen.
 
 | Regel | Trigger | Bedingungen | Vorlage |
 |---|---|---|---|
 | Sofort bezahlt | Contribution is added | Contribution Status is (not) one of: Completed | Herald: Neuer abgeschlossener Beitrag |
 | Überweisung angekündigt | Contribution is added | Contribution Status is (not) one of: Pending, und Contribution is (not) of Financial Type(s): Donation | Herald: Neuer ausstehender Beitrag |
 | Überweisung eingegangen | Contribution is changed | Herald: Field transition, siehe unten, und Contribution Status is (not) one of: Completed | Herald: Beitragsstatus geändert |
-| Tägliche Zusammenfassung | Ein geplanter Job, siehe [Geplante Reports](#geplante-reports) | | Herald: Täglicher Beitragsreport |
+| Tägliche Zusammenfassung | Herald: Schedule, siehe [Geplante Reports](#geplante-reports) | | Herald: Täglicher Beitragsreport, im Beitragsblock des Reports |
 
-Alle verwenden die Aktion „Herald: Send notification (generic)“.
+Die ersten drei verwenden die Aktion „Herald: Send notification (generic)“, die tägliche Zusammenfassung „Herald: Send digest“.
 
 Die Bedingung auf den Finanztyp bei „Überweisung angekündigt“ ist wichtig, wenn die Site Tickets verkauft. Eine ausstehende Event-Bestellung ist ebenfalls ein ausstehender Beitrag und würde sonst als Spende angekündigt. Für Tickets gibt es weiter unten eigene Regeln.
 

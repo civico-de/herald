@@ -13,16 +13,16 @@ Each recipe sends to Telegram. Leave the chat ID empty to use the default chat f
 
 ## Donations
 
-Four rules cover the life of a donation: paid at once, announced as a bank transfer, and received later.
+Four rules cover the life of a donation: paid at once, announced as a bank transfer, received later, and a summary each morning.
 
 | Rule | Trigger | Conditions | Template |
 |---|---|---|---|
 | Paid at once | Contribution is added | Contribution Status is (not) one of: Completed | Herald: New completed contribution |
 | Transfer announced | Contribution is added | Contribution Status is (not) one of: Pending, and Contribution is (not) of Financial Type(s): Donation | Herald: New pending contribution |
 | Transfer received | Contribution is changed | Herald: Field transition, see below, and Contribution Status is (not) one of: Completed | Herald: Contribution status changed |
-| Daily summary | A scheduled job, see [Scheduled digests](#scheduled-digests) | | Herald: Daily contribution digest |
+| Daily summary | Herald: Schedule, see [Scheduled digests](#scheduled-digests) | | Herald: Daily contribution digest, in the digest's contribution block |
 
-All of them use the action "Herald: Send notification (generic)".
+The first three use the action "Herald: Send notification (generic)", the daily summary uses "Herald: Send digest".
 
 The financial type condition on "Transfer announced" matters when the site sells tickets. A pending event order is also a pending contribution and would otherwise be announced as a donation. Tickets get their own rules below.
 
@@ -77,7 +77,7 @@ These rules help when events are maintained by a sync rather than by hand, so a 
 | New registration | Event Participant is added | Participant status is (not) one of: Registered | Herald: New event registration |
 | Registration cancelled | Event Participant is changed | Compare Old Participant Status to New Participant Status: from Registered or Pending from pay later, to Cancelled | Herald: Event registration cancelled |
 
-A sync usually unpublishes an event by deactivating it rather than deleting it, so "Event deactivated" is the rule that catches a removed event. Build it with herald's Field transition, not with a Field Value Comparison on is_active. A Field Value Comparison sees only the value after the edit, so it also fires on every other edit of an event that is already inactive. The Field transition fires only when the value really changes from 1 to 0.
+A sync usually takes an event down by deactivating it rather than deleting it, so "Event deactivated" is the rule that catches a removed event. Build it with herald's Field transition, not with a Field Value Comparison on is_active. A Field Value Comparison sees only the value after the edit, so it also fires on every other edit of an event that is already inactive. The Field transition fires only when the value really changes from 1 to 0.
 
 Abandoned checkouts go from an incomplete transaction to Cancelled. Limiting the old status of the cancellation rule keeps them quiet. Limiting "New registration" to Registered keeps waitlist and pending entries out.
 

@@ -38,7 +38,7 @@ rules-reenable.php does not check whether the preflight passed, so never run it 
 
 ### Switching the rules off
 
-rules-disable.php finds every active rule with a herald condition or action. It writes their IDs to the file herald_deploy_disabled_rules in CiviCRM's private directory and then switches those rules off. IDs left in the file by an earlier failed deploy are kept. It prints:
+rules-disable.php finds every active rule with a herald trigger, condition or action. It writes their IDs to the file herald_deploy_disabled_rules in CiviCRM's private directory and then switches those rules off. IDs left in the file by an earlier failed deploy are kept. It prints:
 
 ```
 [herald deploy] disabled 4 herald rule(s) for the swap: 3,7,8,12 (marker now holds 4)

@@ -69,7 +69,7 @@ The condition "Herald: Field transition" is true when a field's value before and
 
 The form does not save an entity that does not exist, a field the entity does not have, a suffix the field does not offer, or a search filter such as `groups`, which holds no value. Field names are case-sensitive. The form also refuses `>`, `<`, `>=` and `<=` with a value that is not a number.
 
-The operators are `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` and `not_empty`. "- any value -" leaves that side open. The ordering operators need numbers on both sides. `=` and `!=` compare numbers when both sides are numbers, and trimmed text otherwise. Numbers compare exactly, however many digits they have. A number with an exponent, such as `1e3`, compares as a floating-point number, which is exact to about 15 digits. Any other operator, which only the API can pass, fails the condition with an error.
+The operators are `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` and `not_empty`. "- any value -" leaves that side open. The ordering operators need numbers on both sides. `=` and `!=` compare numbers when both sides are numbers, and trimmed text otherwise. Numbers compare exactly, however many digits they have. A number with an exponent, such as `1e3`, compares as a floating-point number, which is exact to about 15 digits. Money and Float fields reach herald as such numbers too. An amount of 19.99 still equals `19.99`. Any other operator, which only the API can pass, fails the condition with an error.
 
 - With both sides open, the condition is never true.
 - With only one side configured, the value must also have changed. Unrelated edits of a record that is already in the target state therefore do not fire again.
@@ -86,7 +86,7 @@ Examples:
 | A membership moves from status 2 to 3 | Membership | status_id | = 2 | = 3 |
 | A contribution leaves Pending | Contribution | contribution_status_id | = 2, the ID of Pending | any value |
 | A contribution was Pending before the edit, changed or not | Contribution | contribution_status_id | = 2 | not_empty |
-| An event is unpublished | Event | is_active | = 1 | = 0 |
+| An event is deactivated | Event | is_active | = 1 | = 0 |
 
 ## APIv4
 
@@ -170,9 +170,11 @@ herald's templates are CiviCRM message templates. Edit them under Mailings, Mess
 | Herald: New group/newsletter subscription | herald_group_subscription_alert | A contact added to a group, with a masked contact |
 | Herald: Monitor check transition | herald_monitor_alert | A change in the check monitor. Variables: check, status, detail, renotify |
 
+The titles appear in the language CiviCRM used when it created or last updated the templates. On a German site, "Herald: New completed contribution" reads "Herald: Neuer abgeschlossener Beitrag", for example. The workflow name is the same in every language.
+
 The templates are in English. A German translation is included and used when CiviCRM runs in German.
 
-An edit you make to a shipped template survives until a herald release changes that template. The release then overwrites your edit. To keep a customised version, copy it under a workflow name of your own. herald renders only the default version of a template. The API and the scheduled jobs accept any workflow name, while the CiviRules forms list only the names described above.
+An edit you make to a shipped template survives until a herald release changes that template. The release then overwrites your edit. To keep a customised version, copy it under a workflow name of your own. herald renders only the default version of a template. The API and the scheduled jobs accept any workflow name, while the CiviRules forms list only templates whose workflow name starts with `herald_`. Name your copy `herald_my_alert`, for example, and it appears there too.
 
 A template that does not exist fails with the error 'MessageTemplate "…" not found. Is the herald extension enabled?'. A template with neither an HTML nor a text body fails too.
 
