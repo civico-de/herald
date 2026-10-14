@@ -18,6 +18,19 @@ class DateRange {
     public readonly string $label,
   ) {}
 
+  /**
+   * A digest period by its key (Options::periods()).
+   */
+  public static function ofPeriod(string $key): self {
+    return match ($key) {
+      'today' => self::today(),
+      'last_7_days' => self::lastDays(7),
+      'last_30_days' => self::lastDays(30),
+      'yesterday' => self::yesterday(),
+      default => throw new \CRM_Core_Exception("herald: unknown digest period \"{$key}\""),
+    };
+  }
+
   public static function yesterday(): self {
     $now = new \DateTimeImmutable('now');
     $start = $now->modify('-1 day')->setTime(0, 0, 0);

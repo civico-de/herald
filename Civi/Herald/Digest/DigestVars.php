@@ -24,7 +24,6 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  *   bucket_edges       — JSON array of edges to override adaptive bucketing
  * The campaign block (title, goal_revenue, running total) comes from the
  * Campaign record named by campaign_id; without one it stays empty.
- * @mago-expect lint:cyclomatic-complexity
  */
 final class DigestVars {
 
@@ -33,120 +32,44 @@ final class DigestVars {
    * @param ContributionStatsService $stats Stats source (mockable in tests)
    * @param (callable(int): ?array{title: string, goal: float})|null $campaignResolver Campaign id → title and goal
    * @return array<string, mixed>
-   * @mago-expect lint:halstead
    */
   public static function build(
     array $params,
     ContributionStatsService $stats,
     ?callable $campaignResolver = NULL,
   ): array {
-    $filters = self::buildFiltersFromParams($params);
-    $period = self::resolvePeriod(Cast::toString($params['period'] ?? 'yesterday'));
-    $groupBy = Cast::toString($params['group_by'] ?? '');
-
+    // The stats service skips empty filters.
+    $filters = array_intersect_key($params, array_flip(['campaign_id', 'financial_type_id', 'source_pattern']));
+    $period = DateRange::ofPeriod(Cast::toString($params['period'] ?? 'yesterday'));
+    $breakdown = Cast::toString($params['group_by'] ?? '') === 'line_item'
+      ? new LineItemBreakdown($stats)
+      : new SourceBreakdown($stats);
     $vars = [
       'period' => ['label' => $period->label, 'start' => $period->startSql(), 'end' => $period->endSql()],
-      'totals' => ['amount' => 0, 'count' => 0],
       'by_source' => [],
       'by_item' => [],
       'pending' => ['amount' => 0, 'count' => 0],
       'pending_items' => [],
       'histogram' => '',
     ];
-
-    if ($groupBy === 'line_item') {
-      // Line-item view: totals are derived from the items themselves so the
-      // headline always matches the breakdown (mixed carts split per item).
-      $items = $stats->getItemSummary($filters, $period);
-      $vars['by_item'] = $items;
-      $vars['totals'] = [
-        'amount' => array_sum(array_column($items, 'total')),
-        'count' => (int) array_sum(array_column($items, 'qty')),
-      ];
+    $vars = $breakdown->totals($filters, $period) + $vars;
+    if (!empty($params['show_pending'] ?? TRUE)) {
+      $vars = $breakdown->pending($filters) + $vars;
     }
-    // @mago-expect lint:no-else-clause
-    else {
-      $summary = $stats->getPeriodSummary($filters, $period);
-      $vars['totals'] = ['amount' => $summary['total'], 'count' => $summary['count']];
-      $vars['by_source'] = $summary['bySource'];
-    }
-
-    if (!isset($params['show_pending']) || !empty($params['show_pending'])) {
-      if ($groupBy === 'line_item') {
-        $pendingItems = $stats->getItemSummary($filters, NULL, 'Pending');
-        $vars['pending_items'] = $pendingItems;
-        $vars['pending'] = [
-          'amount' => array_sum(array_column($pendingItems, 'total')),
-          'count' => (int) array_sum(array_column($pendingItems, 'qty')),
-        ];
-      }
-      // @mago-expect lint:no-else-clause
-      else {
-        $pending = $stats->getAllPending($filters);
-        $vars['pending'] = ['amount' => $pending['total'], 'count' => $pending['count']];
-      }
-    }
-
-    if (!isset($params['show_histogram']) || !empty($params['show_histogram'])) {
-      $amounts = $stats->getAmountDistribution($filters, $period);
-      $bucketCount = Cast::toInt($params['bucket_count'] ?? 8, 8);
-      $edges = BucketEdges::parse($params['bucket_edges'] ?? NULL);
-      $buckets = HistogramFormatter::compute($amounts, $bucketCount, $edges);
+    if (!empty($params['show_histogram'] ?? TRUE)) {
+      $buckets = HistogramFormatter::compute(
+        $stats->getAmountDistribution($filters, $period),
+        Cast::toInt($params['bucket_count'] ?? 8, 8),
+        BucketEdges::parse($params['bucket_edges'] ?? NULL),
+      );
       $vars['histogram'] = HistogramFormatter::render($buckets);
     }
-
-    $campaignId = Cast::toInt($filters['campaign_id'] ?? 0);
     $vars['campaign'] = CampaignProgress::of(
-      $campaignId,
-      static fn (): array => self::campaignTotal($stats, $filters, $groupBy),
+      Cast::toInt($filters['campaign_id'] ?? 0),
+      static fn (): array => $breakdown->campaignTotal($filters),
       $campaignResolver ?? CampaignProgress::resolveCampaign(...),
     );
-
     return $vars;
-  }
-
-  /**
-   * Campaign progress at any date, counted on the same level as the totals:
-   * line items in the line-item view, so the financial type filter means the same.
-   *
-   * @param array<string, mixed> $filters
-   * @return array{total: float, count: int}
-   */
-  private static function campaignTotal(ContributionStatsService $stats, array $filters, string $groupBy): array {
-    if ($groupBy !== 'line_item') {
-      return $stats->getCampaignTotal($filters);
-    }
-    $items = $stats->getItemSummary($filters, NULL, 'Completed');
-    return [
-      'total' => (float) array_sum(array_column($items, 'total')),
-      'count' => (int) array_sum(array_column($items, 'qty')),
-    ];
-  }
-
-  /**
-   * @param array<string, mixed> $params
-   * @return array<string, mixed>
-   */
-  private static function buildFiltersFromParams(array $params): array {
-    // The 0-check also drops '' from an empty form field, which would survive as (int) 0.
-    return array_filter(
-      [
-        'campaign_id' => isset($params['campaign_id']) ? Cast::toInt($params['campaign_id']) : NULL,
-        'financial_type_id' => isset($params['financial_type_id']) ? Cast::toInt($params['financial_type_id']) : NULL,
-        'source_pattern' => $params['source_pattern'] ?? NULL,
-      ],
-      static fn ($v) => $v !== NULL && $v !== '' && $v !== 0,
-    );
-  }
-
-  public static function resolvePeriod(string $key): DateRange {
-    return match ($key) {
-      'today' => DateRange::today(),
-      'last_7_days' => DateRange::lastDays(7),
-      'last_30_days' => DateRange::lastDays(30),
-      'yesterday' => DateRange::yesterday(),
-      default => throw new \CRM_Core_Exception("herald: unknown digest period \"{$key}\""),
-    };
   }
 
 }
