@@ -7,7 +7,7 @@ namespace Civi\Herald\Trigger;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Pure-logic tests for ContextVars::decodeVars.
+ * How ContextVars reads the `vars` parameter.
  * @group unit
  */
 class ContextVarsTest extends TestCase {
@@ -36,23 +36,20 @@ class ContextVarsTest extends TestCase {
     $this->assertSame(['foo' => 'bar', 'n' => 1], $vars);
   }
 
-  public function testInvalidJsonCollapsesToEmpty(): void {
-    $this->assertSame(
-      [],
-      ContextVars::decodeVars([
-        'vars' => 'not-json',
-      ]),
-    );
-  }
-
-  public function testJsonScalarCollapsesToEmpty(): void {
-    // json_decode("42", true) returns 42, not an array — must collapse.
-    $this->assertSame(
-      [],
-      ContextVars::decodeVars([
-        'vars' => '42',
-      ]),
-    );
+  /**
+   * Dropping broken vars would send the message with blanks where the
+   * caller's values belong.
+   */
+  public function testVarsThatAreNoJsonObjectFail(): void {
+    foreach (['not-json', '42', '"text"', 42] as $raw) {
+      try {
+        ContextVars::decodeVars(['vars' => $raw]);
+        $this->fail('vars ' . var_export($raw, TRUE) . ' must fail');
+      }
+      catch (\CRM_Core_Exception $e) {
+        $this->assertStringContainsString('vars must be a JSON object', $e->getMessage());
+      }
+    }
   }
 
 }
