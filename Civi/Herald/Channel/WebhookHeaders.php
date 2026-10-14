@@ -22,7 +22,7 @@ final class WebhookHeaders {
     }
     $headers = [];
     foreach (is_array($raw) ? $raw : [$raw] as $name => $value) {
-      if (!is_string($name) || $name === '') {
+      if (!is_string($name) || $name === '' || !is_scalar($value)) {
         throw new \CRM_Core_Exception('herald: webhook_headers must map header names to values.');
       }
       $headers[$name] = Cast::toString($value);

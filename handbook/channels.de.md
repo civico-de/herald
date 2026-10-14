@@ -97,7 +97,7 @@ Der Webhook-Kanal sendet eine HTTP-Anfrage an eine URL. Die Einstellungen sind `
 | `webhook_method` | `POST` ist der Standard, `PUT` die Alternative. |
 | `webhook_body_format` | Wie der Body aufgebaut wird, siehe unten. Der Standard ist `text`. |
 | `webhook_body_key` | JSON-Schlüssel für das Format json. Der Standard ist `text`. |
-| `webhook_headers` | Zusätzliche Request-Header als JSON-Objekt aus Namen und Werten. Alles andere lässt den Versand scheitern. |
+| `webhook_headers` | Zusätzliche Request-Header als JSON-Objekt, das Namen auf Text oder Zahlen abbildet. Alles andere lässt den Versand scheitern. |
 | `webhook_auth_token` | Wird als Bearer-Token im Authorization-Header gesendet. Ein Header, den Sie in `webhook_headers` setzen, hat Vorrang. |
 
 Die Body-Formate:

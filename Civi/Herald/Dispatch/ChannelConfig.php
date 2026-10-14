@@ -83,16 +83,14 @@ final class ChannelConfig {
    * @return array<array-key, mixed>
    */
   private static function overrides(mixed $raw): array {
-    if ($raw === NULL || $raw === '' || is_array($raw)) {
-      return (array) $raw;
+    if ($raw === NULL || is_string($raw) && trim($raw) === '') {
+      return [];
     }
-    $decoded = is_string($raw) ? json_decode($raw, TRUE) : NULL;
-    if (!is_array($decoded)) {
-      // The value may hold tokens, so the message names only its type.
-      throw new \CRM_Core_Exception(sprintf(
-        'herald: channel_config must be a JSON object, not %s.',
-        is_string($raw) ? 'this text' : get_debug_type($raw),
-      ));
+    $decoded = is_string($raw) ? json_decode($raw, TRUE) : $raw;
+    // A list would lose its entries to the name filter in of().
+    if (!is_array($decoded) || count(Cast::namedOnly($decoded)) !== count($decoded)) {
+      // The value may hold tokens, so the message does not quote it.
+      throw new \CRM_Core_Exception('herald: channel_config must be a JSON object of option names and values.');
     }
     return $decoded;
   }

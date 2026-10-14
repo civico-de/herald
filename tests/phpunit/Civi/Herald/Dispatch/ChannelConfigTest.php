@@ -116,7 +116,7 @@ class ChannelConfigTest extends TestCase {
    * of the one the override names.
    */
   public function testChannelConfigThatIsNoJsonObjectFails(): void {
-    foreach (['not-json', '"a string"', '42', 42] as $raw) {
+    foreach (['not-json', '"a string"', '42', 42, '[{"chat_id": "-200"}]', [['chat_id' => '-200']]] as $raw) {
       try {
         ChannelConfig::of(['chat_id' => '-100', 'channel_config' => $raw]);
         $this->fail('channel_config ' . var_export($raw, TRUE) . ' must fail');
@@ -128,7 +128,7 @@ class ChannelConfigTest extends TestCase {
   }
 
   public function testAnEmptyChannelConfigAddsNothing(): void {
-    foreach ([NULL, '', []] as $raw) {
+    foreach ([NULL, '', '  ', [], '{}'] as $raw) {
       $this->assertSame(['chat_id' => '-100'], ChannelConfig::of(['chat_id' => '-100', 'channel_config' => $raw]));
     }
   }

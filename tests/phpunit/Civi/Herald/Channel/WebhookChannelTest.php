@@ -292,6 +292,8 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
       'scalar' => [42],
       'unnamed entries' => [[0 => 'positional', 'X-Ok' => 7]],
       'blank name' => [['' => 'unnamed']],
+      'list value' => [['Authorization' => ['Bearer intended']]],
+      'null value' => ['{"X-Trace": null}'],
     ];
   }
 

@@ -97,7 +97,7 @@ The webhook channel sends an HTTP request to a URL. The settings are `herald_web
 | `webhook_method` | `POST` is the default, `PUT` the alternative. |
 | `webhook_body_format` | How the body is built, see below. The default is `text`. |
 | `webhook_body_key` | JSON key for the json format. The default is `text`. |
-| `webhook_headers` | Extra request headers as a JSON object of names and values. Anything else fails the send. |
+| `webhook_headers` | Extra request headers as a JSON object that maps names to text or numbers. Anything else fails the send. |
 | `webhook_auth_token` | Sent as a bearer token in the Authorization header. A header you set in `webhook_headers` takes precedence. |
 
 The body formats:
