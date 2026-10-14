@@ -67,6 +67,8 @@ The condition "Herald: Field transition" is true when a field's value before and
 | Before: operator, Before: value | The test for the value before the edit. |
 | After: operator, After: value | The test for the value after the edit. |
 
+The form does not save an entity that does not exist or a field the entity does not have.
+
 The operators are `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` and `not_empty`. "- any value -" leaves that side open. The ordering operators need numbers on both sides. `=` and `!=` compare numbers when both sides are numbers, and trimmed text otherwise. Numbers compare exactly, however many digits they have. Any other operator, which only the API can pass, fails the condition with an error.
 
 - With both sides open, the condition is never true.
