@@ -2,6 +2,8 @@
 
 declare(strict_types = 1);
 
+use Civi\Herald\Trigger\ContextVars;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
 // ckconform-optional civirules -- herald works without CiviRules; this class exists only with it
@@ -14,7 +16,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
   class CRM_Herald_CivirulesAdapter_Form_SendNotification extends CRM_Herald_CivirulesAdapter_Form_AbstractSend {
 
     protected function getTemplateOptions(): array {
-      return $this->lookupHeraldTemplates();
+      return CRM_Herald_CivirulesAdapter_Form_SendOptions::templates();
     }
 
     protected function supportsScopeEntity(): bool {
@@ -34,51 +36,15 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
      * @return array<string, mixed>
      */
     protected function getExtraValues(array $submitted): array {
-      $raw = self::toStringValue($submitted['vars'] ?? '');
-      if (trim($raw) === '') {
-        return ['vars' => []];
-      }
-      $decoded = json_decode($raw, TRUE);
-      if (!is_array($decoded)) {
-        throw new \CRM_Core_Exception(E::ts('Variables JSON is invalid: %1', [1 => json_last_error_msg()]));
-      }
-      return ['vars' => $decoded];
+      return ['vars' => ContextVars::decodeVars($submitted)];
     }
 
     /**
      * @return array<string, mixed>
      */
     protected function extraDefaults(): array {
-      $params = $this->getActionParameters();
-      $vars = $params['vars'] ?? [];
-      $encoded = is_array($vars)
-        ? json_encode($vars, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
-        : self::toStringValue($vars);
-      return ['vars' => $encoded];
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function lookupHeraldTemplates(): array {
-      /** @var list<array<string, mixed>> $rows */
-      $rows = \Civi\Api4\MessageTemplate::get(checkPermissions: FALSE)
-        ->addSelect('workflow_name', 'msg_title')
-        ->addWhere('workflow_name', 'LIKE', 'herald_%')
-        ->addWhere('is_default', '=', value: TRUE)
-        ->execute()
-        ->getArrayCopy();
-      $opts = [];
-      foreach ($rows as $row) {
-        $workflowName = $row['workflow_name'] ?? NULL;
-        if (!is_string($workflowName)) {
-          continue;
-        }
-        $msgTitle = $row['msg_title'] ?? NULL;
-        $msgTitle = is_string($msgTitle) ? $msgTitle : '';
-        $opts[$workflowName] = $msgTitle !== '' ? $msgTitle : $workflowName;
-      }
-      return $opts;
+      $vars = $this->getActionParameters()['vars'] ?? [];
+      return ['vars' => is_array($vars) ? json_encode($vars, self::JSON_FLAGS) : Cast::toString($vars)];
     }
 
   }

@@ -41,7 +41,7 @@ class ContextVarsTest extends TestCase {
    * caller's values belong.
    */
   public function testVarsThatAreNoJsonObjectFail(): void {
-    foreach (['not-json', '42', '"text"', 42] as $raw) {
+    foreach (['not-json', '42', '"text"', 42, '["ops"]'] as $raw) {
       try {
         ContextVars::decodeVars(['vars' => $raw]);
         $this->fail('vars ' . var_export($raw, TRUE) . ' must fail');

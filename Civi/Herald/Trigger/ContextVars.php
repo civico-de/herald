@@ -117,11 +117,9 @@ final class ContextVars {
    */
   public static function decodeVars(array $params): array {
     $raw = $params['vars'] ?? '';
-    if (is_string($raw) && trim($raw) === '') {
-      return [];
-    }
-    $decoded = is_string($raw) ? json_decode($raw, TRUE) : $raw;
-    if (!is_array($decoded)) {
+    $decoded = is_string($raw) ? json_decode(trim($raw) === '' ? '{}' : $raw, TRUE) : $raw;
+    // A list would lose its entries to the name filter.
+    if (!is_array($decoded) || count(Cast::namedOnly($decoded)) !== count($decoded)) {
       throw new \CRM_Core_Exception('herald: vars must be a JSON object of template variables.');
     }
     return Cast::namedOnly($decoded);

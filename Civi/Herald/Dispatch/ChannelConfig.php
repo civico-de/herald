@@ -50,7 +50,7 @@ final class ChannelConfig {
    * @return array<string, mixed>
    */
   public static function of(array $params): array {
-    $config = array_merge($params, self::overrides($params['channel_config'] ?? NULL));
+    $config = array_merge($params, self::decode($params['channel_config'] ?? NULL));
     unset($config['channel_config'], $config['channel'], $config['template']);
     return Cast::namedOnly($config);
   }
@@ -80,9 +80,11 @@ final class ChannelConfig {
   }
 
   /**
+   * A `channel_config` value as option names and values; blank is none.
+   *
    * @return array<array-key, mixed>
    */
-  private static function overrides(mixed $raw): array {
+  public static function decode(mixed $raw): array {
     if ($raw === NULL || is_string($raw) && trim($raw) === '') {
       return [];
     }

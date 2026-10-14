@@ -20,6 +20,8 @@ Every herald CiviRules action has a delivery mode. Topic routes take the same pa
 | `group` | Every contact in a CiviCRM group, each through their own channel | `group_id` |
 | `addresses` | A list of email addresses, without any contact records | `email_addresses` |
 
+Any other mode fails the send. The action form does not save a mode without its required parameter.
+
 In group mode, subscriptions and scopes do not matter. A group member without usable preferences gets an email at their own address instead. That includes a member who chose Telegram but left the chat ID empty.
 
 In subscriber mode, a contact without a chosen channel, or without the recipient that channel needs, is skipped.

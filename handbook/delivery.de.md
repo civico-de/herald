@@ -20,6 +20,8 @@ Jede CiviRules-Aktion von herald hat einen Zustellmodus. Topic-Routen nehmen den
 | `group` | Alle Kontakte einer CiviCRM-Gruppe, jeweils über ihren eigenen Kanal | `group_id` |
 | `addresses` | Eine Liste von E-Mail-Adressen, ganz ohne Kontaktdatensätze | `email_addresses` |
 
+Jeder andere Modus lässt den Versand scheitern. Das Aktionsformular speichert keinen Modus ohne seinen Pflichtparameter.
+
 Im Gruppenmodus spielen Abonnements und Bezüge keine Rolle. Ein Gruppenmitglied ohne verwendbare Einstellungen erhält stattdessen eine E-Mail an die eigene Adresse. Das gilt auch für ein Mitglied, das Telegram gewählt, die Chat-ID aber leer gelassen hat.
 
 Im Abonnent:innen-Modus wird ein Kontakt ohne gewählten Kanal oder ohne das Ziel, das dieser Kanal braucht, übersprungen.

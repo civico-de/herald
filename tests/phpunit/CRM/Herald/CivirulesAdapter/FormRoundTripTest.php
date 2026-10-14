@@ -225,6 +225,68 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     );
   }
 
+  /**
+   * @return array<string, array{0: array<string, string>, 1: string}>
+   */
+  public static function unsavableValues(): array {
+    return [
+      'channel_config that is no JSON' => [
+        ['channel_config' => '{"chat_id": '],
+        'channel_config must be a JSON object',
+      ],
+      'channel_config that is a list' => [
+        ['channel_config' => '[{"chat_id": "-1"}]'],
+        'channel_config must be a JSON object',
+      ],
+      'vars that are a list' => [['vars' => '["ops"]'], 'vars must be a JSON object'],
+      'negative window' => [['aggregate_minutes' => '-5'], 'must be at least 0'],
+      'window that is no number' => [['aggregate_minutes' => 'soon'], 'must be a whole number'],
+      'group mode without a group' => [['delivery_mode' => 'group'], 'needs "Group"'],
+      'address mode without addresses' => [['email_addresses' => ' '], 'needs "Email addresses"'],
+    ];
+  }
+
+  /**
+   * @dataProvider unsavableValues
+   * @param array<string, string> $change
+   */
+  public function testTheFormNamesWhatItCannotSave(array $change, string $error): void {
+    $form = $this->sendForm();
+    $form->_submitValues = array_replace($this->validSubmission($form), $change);
+    $form->_flagSubmitted = TRUE;
+
+    $this->assertFalse($form->validate());
+    $this->assertStringContainsString($error, (string) ($form->_errors['_qf_default'] ?? ''));
+  }
+
+  public function testAValidSubmissionPasses(): void {
+    $form = $this->sendForm();
+    $form->_submitValues = $this->validSubmission($form);
+    $form->_flagSubmitted = TRUE;
+
+    $this->assertTrue($form->validate(), json_encode($form->_errors, JSON_THROW_ON_ERROR));
+  }
+
+  private function sendForm(): CRM_Core_Form {
+    $handlerId = (int) CRM_Core_DAO::singleValueQuery(
+      'SELECT id FROM civirule_action WHERE class_name = %1',
+      [1 => [CRM_Herald_CivirulesAdapter_Action_Notification::class, 'String']],
+    );
+    $id = $this->insert(self::ACTION, $handlerId, $this->rule('herald_test_validation'));
+    return $this->open(
+      (string) (new CRM_Herald_CivirulesAdapter_Action_Notification())->getExtraDataInputUrl($id),
+      CRM_Herald_CivirulesAdapter_Form_SendNotification::class,
+    );
+  }
+
+  /**
+   * @return array<string, string>
+   */
+  private function validSubmission(CRM_Core_Form $form): array {
+    [$submitted] = $this->sendFields();
+    return ['template' => $this->firstOption($form, 'template'), 'vars' => '{"team": "ops"}'] + $submitted;
+  }
+
   public function testDigestForm(): void {
     [$submitted, $expected] = $this->sendFields();
     // A digest's blocks bring their own templates.

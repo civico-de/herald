@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
 // ckconform-optional civirules -- herald works without CiviRules; this class exists only with it
@@ -36,7 +37,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
      * @return array<string, mixed>
      */
     protected function getExtraValues(array $submitted): array {
-      return ['digest' => self::toStringValue($submitted['digest'] ?? '')];
+      return ['digest' => Cast::toString($submitted['digest'] ?? '')];
     }
 
     /**
