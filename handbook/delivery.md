@@ -39,7 +39,7 @@ Two options apply to the contact modes, subscribers and group:
 
 An info entry in the CiviCRM log counts the contacts left out, by reason: `suspended`, `scope_mismatch`, `no_channel` (no channel chosen) and `no_recipient` (no address, chat or topic for the channel).
 
-A failed delivery to one recipient does not stop the others. herald logs a warning and moves on to the next contact. The delivery as a whole fails only when every recipient failed, or when there was nobody to send to: no subscriber, an empty group or an empty address list. Once at least one recipient got the message, the delivery counts as done, and herald does not retry the others.
+A failed delivery to one recipient does not stop the others. herald logs a warning and moves on to the next contact. The delivery as a whole fails only when every recipient failed, or when there was nobody to send to: no subscriber, an empty group or an empty address list. Once at least one recipient got the message, the delivery counts as done, and herald does not retry the recipients it failed to reach.
 
 ## Subscribers
 

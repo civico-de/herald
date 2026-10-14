@@ -148,7 +148,7 @@ Das Upgrade behält bei, was der Report bisher verschickt hat:
 - Histogrammgrenzen, die keine aufsteigenden Zahlen sind, entfallen mit einer Warnung im Upgrade-Protokoll, und das Histogramm wählt seine Klassen selbst.
 - Eine negative Klassenzahl hat eine einzige Klasse gezeichnet und wird zu 1. Mit der Klassenzahl 0 scheiterte der Report, sobald sich zwei Beträge unterschieden; sie wird zum Standardwert 8, mit einer Warnung im Upgrade-Protokoll.
 - Ein Suchblock bekommt eine neue Tabellenanzeige seiner Suche mit der Bezeichnung `Herald: <Titel des Reports>`, mit den Spalten, der Sortierung und dem Limit der Suche und ohne Seitenumbruch. Seine Werte erscheinen nun formatiert, so wie die Anzeige sie zeigt.
-- Ein Statusfilter auf Completed entfällt, weil Report-Datensätze ohnehin nur abgeschlossene Beiträge zählen.
+- Ein Statusfilter auf Completed entfällt, weil die Summen eines Report-Datensatzes immer abgeschlossene Beiträge zählen.
 
 Ein Report, den ein Report-Datensatz nicht nachbilden kann, bleibt, wie er war. Das Upgrade-Protokoll enthält dann die Warnung „digest left inline, it cannot run until fixed“ mit dem Grund, und Regel oder Job scheitern, bis sie einen Report-Datensatz nennen. Die meisten dieser Reports konnten nie laufen:
 

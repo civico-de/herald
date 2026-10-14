@@ -148,7 +148,7 @@ The upgrade keeps what the digest sent before:
 - Histogram edges that are not ascending numbers are dropped with a warning in the upgrade log, and the histogram picks its own buckets.
 - A negative bucket count drew a single bucket and becomes 1. A count of 0 made the digest fail as soon as two amounts differed; it becomes the default 8, with a warning in the upgrade log.
 - A search block gets a new table display of its search, labelled `Herald: <digest title>`, with the search's columns, sort and limit and no pager. Its values now appear formatted, as the display shows them.
-- A status filter of Completed is dropped, because digest records count only completed contributions anyway.
+- A status filter of Completed is dropped, because a digest record's totals always count completed contributions.
 
 A digest that a digest record cannot reproduce is left as it was. The upgrade log has the warning "digest left inline, it cannot run until fixed" with the reason, and the rule or job fails until it names a digest record. Most of these digests could never have run:
 

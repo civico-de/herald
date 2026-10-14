@@ -39,7 +39,7 @@ Zwei Optionen gelten für die Kontaktmodi, also Abonnent:innen und Gruppe:
 
 Ein Info-Eintrag im CiviCRM-Protokoll zählt die ausgelassenen Kontakte nach Grund: `suspended` (gesperrt), `scope_mismatch` (Bezug passt nicht), `no_channel` (kein Kanal gewählt) und `no_recipient` (keine Adresse, kein Chat, kein Topic für den Kanal).
 
-Scheitert die Zustellung an einzelne Empfänger:innen, hält das die übrigen nicht auf. herald protokolliert eine Warnung und macht mit dem nächsten Kontakt weiter. Die Zustellung als Ganzes schlägt nur fehl, wenn sie bei allen Empfänger:innen fehlgeschlagen ist oder wenn es niemanden gab, an den herald senden konnte: keine Abonnent:innen, eine leere Gruppe oder eine leere Adressliste. Sobald mindestens eine Person die Nachricht erhalten hat, gilt die Zustellung als erledigt, und herald versucht keine weitere Zustellung an die anderen.
+Scheitert die Zustellung an einzelne Empfänger:innen, hält das die übrigen nicht auf. herald protokolliert eine Warnung und macht mit dem nächsten Kontakt weiter. Die Zustellung als Ganzes schlägt nur fehl, wenn sie bei allen Empfänger:innen fehlgeschlagen ist oder wenn es niemanden gab, an den herald senden konnte: keine Abonnent:innen, eine leere Gruppe oder eine leere Adressliste. Sobald mindestens eine Person die Nachricht erhalten hat, gilt die Zustellung als erledigt, und herald versucht es bei den Empfänger:innen, an die die Zustellung scheiterte, nicht erneut.
 
 ## Abonnements
 
