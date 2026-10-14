@@ -18,7 +18,7 @@ The text the template escaped is now a tag. Core exempts its own HTML fields by 
 
 The alert buffer stores rendered HTML, so herald writes and reads `body` and `delivery` through the BAO (`writeRecord()` and `find()` in `Civi\Herald\Buffer\AlertBuffer`), which never runs the encoder. `HeraldBufferedAlert` has no `create` or `save` action, so no new row can go through APIv4 by mistake.
 
-Test: `AlertBufferClaimDueTest::testEscapedTextSurvivesTheBufferUnchanged`. Status: core design, not reported.
+Test: `AlertBufferClaimDueTest::testEscapedTextSurvivesTheBufferUnchanged`. Status: core design, not reported. A fix in core would be a field attribute, such as `'html' => TRUE` in the entity definition, that `formatWriteParams()`, `formatInputValue()` and the decode in `DAOGetAction` check next to the name list.
 
 CiviRules' serialized `condition_params` are safe from CiviRules 3.36 on, because the API unserializes them before it decodes. Older versions returned the string and decoded it, so a condition value containing `&lt;` broke the serialization. herald needs CiviRules 3.36 or later, and `CiviRulesVersionCheck` reports an older version in the system status.
 
