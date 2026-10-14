@@ -23,24 +23,24 @@ class HistogramFormatterTest extends TestCase {
 
   public function testNiceCeiling(): void {
     // already a 1-2-5 nice (5×10⁻¹)
-    $this->assertSame(0.5, HistogramFormatter::niceCeiling(0.5));
+    $this->assertSame(0.5, NiceNumber::ceil(0.5));
     // next up after 0.5
-    $this->assertSame(1.0, HistogramFormatter::niceCeiling(0.6));
-    $this->assertSame(1.0, HistogramFormatter::niceCeiling(1.0));
-    $this->assertSame(2.0, HistogramFormatter::niceCeiling(1.5));
-    $this->assertSame(5.0, HistogramFormatter::niceCeiling(3.5));
-    $this->assertSame(10.0, HistogramFormatter::niceCeiling(7.0));
-    $this->assertSame(50.0, HistogramFormatter::niceCeiling(42.0));
-    $this->assertSame(500.0, HistogramFormatter::niceCeiling(380.0));
-    $this->assertSame(5000.0, HistogramFormatter::niceCeiling(2700.0));
+    $this->assertSame(1.0, NiceNumber::ceil(0.6));
+    $this->assertSame(1.0, NiceNumber::ceil(1.0));
+    $this->assertSame(2.0, NiceNumber::ceil(1.5));
+    $this->assertSame(5.0, NiceNumber::ceil(3.5));
+    $this->assertSame(10.0, NiceNumber::ceil(7.0));
+    $this->assertSame(50.0, NiceNumber::ceil(42.0));
+    $this->assertSame(500.0, NiceNumber::ceil(380.0));
+    $this->assertSame(5000.0, NiceNumber::ceil(2700.0));
   }
 
   public function testNiceFloor(): void {
-    $this->assertSame(1.0, HistogramFormatter::niceFloor(1.0));
-    $this->assertSame(1.0, HistogramFormatter::niceFloor(1.5));
-    $this->assertSame(2.0, HistogramFormatter::niceFloor(3.0));
-    $this->assertSame(5.0, HistogramFormatter::niceFloor(7.0));
-    $this->assertSame(10.0, HistogramFormatter::niceFloor(15.0));
+    $this->assertSame(1.0, NiceNumber::floor(1.0));
+    $this->assertSame(1.0, NiceNumber::floor(1.5));
+    $this->assertSame(2.0, NiceNumber::floor(3.0));
+    $this->assertSame(5.0, NiceNumber::floor(7.0));
+    $this->assertSame(10.0, NiceNumber::floor(15.0));
   }
 
   public function testSmallNgoRange(): void {
