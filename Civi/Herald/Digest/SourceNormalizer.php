@@ -29,10 +29,6 @@ final class SourceNormalizer {
     $this->rules = $rules === NULL ? self::settingRules() : self::validatedRules($rules);
   }
 
-  public function isEnabled(): bool {
-    return $this->rules !== [];
-  }
-
   public function normalize(string $source): string {
     foreach ($this->rules as $rule) {
       $matches = match ($rule['type']) {

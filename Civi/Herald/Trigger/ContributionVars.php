@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Trigger;
 
-use Civi\Herald\Digest\ContributionStatsService;
-use Civi\Herald\Digest\SourceNormalizer;
 use Civi\Herald\StatusTransitionDispatcher;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
@@ -31,53 +29,40 @@ final class ContributionVars {
       $id,
       is_numeric($originalStatusId) ? (int) $originalStatusId : NULL,
     );
-    return self::build($contribution, $previousStatusId, new ContributionStatsService());
+    return self::build($contribution, $previousStatusId);
   }
 
   /**
    * @param array<array-key, mixed> $contribution Trigger entity data, completed from the stored row
    * @param int|null $previousStatusId Pre-edit status, NULL when unknown
-   * @param callable(mixed): string|null $statusNameResolver Maps status_id → name (2 → "Pending")
-   * @param callable(int): ?array{title: string, goal: float}|null $campaignResolver Campaign id → title and goal
    * @return array<string, mixed>
-   * @mago-expect lint:excessive-parameter-list
    */
   public static function build(
     array $contribution,
     ?int $previousStatusId,
-    ContributionStatsService $stats,
-    ?callable $statusNameResolver = NULL,
-    ?callable $campaignResolver = NULL,
-    ?SourceNormalizer $sourceNormalizer = NULL,
+    ContributionLookups $lookups = new ContributionLookups(),
   ): array {
-    $statusNameResolver ??= ContributionStatusName::of(...);
-    $campaignResolver ??= CampaignProgress::resolveCampaign(...);
-    $sourceNormalizer ??= new SourceNormalizer();
-    if ($sourceNormalizer->isEnabled() && isset($contribution['source']) && is_string($contribution['source'])) {
-      $contribution['source'] = $sourceNormalizer->normalize($contribution['source']);
+    if (is_string($contribution['source'] ?? NULL)) {
+      $contribution['source'] = $lookups->sources->normalize($contribution['source']);
     }
+    $statusName = $lookups->statusName;
     return [
       'contribution' => $contribution,
-      'campaign' => self::campaign(Cast::toInt($contribution['campaign_id'] ?? 0), $stats, $campaignResolver),
-      'from_status' => $previousStatusId !== NULL ? Cast::toString($statusNameResolver($previousStatusId)) : '',
-      'to_status' => Cast::toString($statusNameResolver($contribution['contribution_status_id'] ?? NULL)),
+      'campaign' => self::campaign(Cast::toInt($contribution['campaign_id'] ?? 0), $lookups),
+      'from_status' => $previousStatusId !== NULL ? Cast::toString($statusName($previousStatusId)) : '',
+      'to_status' => Cast::toString($statusName($contribution['contribution_status_id'] ?? NULL)),
     ];
   }
 
   /**
-   * @param callable(int): ?array{title: string, goal: float} $campaignResolver
    * @return array<string, mixed>
    */
-  private static function campaign(
-    int $campaignId,
-    ContributionStatsService $stats,
-    callable $campaignResolver,
-  ): array {
+  private static function campaign(int $campaignId, ContributionLookups $lookups): array {
     try {
       return CampaignProgress::of(
         $campaignId,
-        static fn (): array => $stats->getCampaignTotal(['campaign_id' => $campaignId]),
-        $campaignResolver,
+        static fn (): array => $lookups->stats->getCampaignTotal(['campaign_id' => $campaignId]),
+        $lookups->campaign,
       );
     }
     catch (\Throwable $e) {
