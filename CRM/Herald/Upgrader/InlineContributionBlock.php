@@ -26,17 +26,26 @@ final class CRM_Herald_Upgrader_InlineContributionBlock {
    */
   public static function values(array $block, string $digestName): array {
     $block = array_filter($block, static fn (mixed $value): bool => $value !== NULL) + self::DEFAULTS;
+    $pattern = Cast::toString($block['source_pattern'] ?? '');
+    $histogram = !empty($block['show_histogram']);
+    $count = self::id($block['bucket_count']) ?? 8;
     return [
       'campaign_id' => self::id($block['campaign_id']),
       'financial_type_id' => self::id($block['financial_type_id']),
-      'source_pattern' => CRM_Herald_Upgrader_InlineDigestBlocks::text($block, 'source_pattern'),
+      // A LIKE pattern, used verbatim.
+      'source_pattern' => $pattern === '' ? NULL : $pattern,
       'group_by' => $block['group_by'] === 'line_item' ? 'line_item' : 'source',
       // Older forms stored "0" or "" for an unchecked box.
-      'show_pending' => (bool) $block['show_pending'],
-      'show_histogram' => (bool) $block['show_histogram'],
-      'bucket_count' => self::id($block['bucket_count']) ?? 8,
+      'show_pending' => !empty($block['show_pending']),
+      'show_histogram' => $histogram,
+      // Without histogram the count is unused, and the record takes no count below 1.
+      'bucket_count' => $histogram || $count > 0 ? $count : 8,
       'bucket_edges' => self::edges($block['bucket_edges'], $digestName),
     ];
+  }
+
+  private static function number(mixed $value): mixed {
+    return is_string($value) && is_numeric($value) ? Cast::toFloat($value) : $value;
   }
 
   /**
@@ -48,19 +57,21 @@ final class CRM_Herald_Upgrader_InlineContributionBlock {
   }
 
   /**
-   * The stored form of bucket edges. Older releases drew adaptive buckets over
-   * an empty list and over edges they could not read; the record keeps that.
+   * The stored form of bucket edges. Older releases read numeric strings as
+   * numbers and drew adaptive buckets over an empty list or unreadable JSON.
    */
   private static function edges(mixed $edges, string $digestName): ?string {
-    $edges = is_array($edges) ? json_encode($edges, JSON_THROW_ON_ERROR) : trim(Cast::toString($edges));
-    if ($edges === '' || $edges === '[]') {
+    $text = is_array($edges) ? '[]' : trim(Cast::toString($edges));
+    $decoded = is_array($edges) ? $edges : json_decode($text, TRUE);
+    if ($text === '' || $decoded === []) {
       return NULL;
     }
+    $edges = is_array($decoded) ? json_encode(array_map(self::number(...), $decoded), JSON_THROW_ON_ERROR) : $text;
     $problem = BucketEdges::problem($edges);
     if ($problem === NULL) {
       return $edges;
     }
-    \Civi::log('herald')->warning('herald: unreadable bucket edges dropped, the histogram stays adaptive', [
+    \Civi::log('herald')->warning('herald: unusable bucket edges dropped, the histogram uses adaptive buckets', [
       'digest' => $digestName,
       'bucket_edges' => $edges,
       'problem' => $problem,

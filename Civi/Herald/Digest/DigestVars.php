@@ -134,7 +134,6 @@ final class DigestVars {
         'campaign_id' => isset($params['campaign_id']) ? Cast::toInt($params['campaign_id']) : NULL,
         'financial_type_id' => isset($params['financial_type_id']) ? Cast::toInt($params['financial_type_id']) : NULL,
         'source_pattern' => $params['source_pattern'] ?? NULL,
-        'status' => $params['status'] ?? NULL,
       ],
       static fn ($v) => $v !== NULL && $v !== '' && $v !== 0,
     );

@@ -28,6 +28,7 @@ final class CRM_Herald_Upgrader_InlineDigest {
     'show_histogram',
     'bucket_count',
     'bucket_edges',
+    'status',
   ];
 
   /**
@@ -58,7 +59,7 @@ final class CRM_Herald_Upgrader_InlineDigest {
         ->addValue('name', $name)
         ->addValue('title', $title)
         ->addValue('header', Cast::toString($params['header'] ?? ''))
-        ->addValue('period', Cast::toString($params['period'] ?? '') ?: 'yesterday')
+        ->addValue('period', CRM_Herald_Upgrader_InlinePeriod::read($params['period'] ?? NULL, $name))
         ->execute()
         ->single()['id'];
       \Civi\Api4\HeraldDigestBlock::save(checkPermissions: FALSE)

@@ -25,6 +25,13 @@ final class CRM_Herald_Upgrader_InlineDigestBlocks {
     }
     // Without a list the params are the one block, which shares the digest's period.
     $raw = $raw === [] ? [array_diff_key($params, ['period' => TRUE])] : array_values($raw);
+    $statuses = array_filter(
+      array_column($raw, 'status'),
+      static fn (mixed $s): bool => trim(Cast::toString($s)) !== '',
+    );
+    if ($statuses !== []) {
+      return 'a contribution status filter is no longer available';
+    }
     return array_map(static fn (array $block): array => self::block(Cast::namedOnly($block), $digestName), $raw);
   }
 
@@ -33,12 +40,15 @@ final class CRM_Herald_Upgrader_InlineDigestBlocks {
    * @return array<string, mixed>
    */
   private static function block(array $block, string $digestName): array {
-    $type = self::text($block, 'type') ?? 'contribution';
+    $type = Cast::toString($block['type'] ?? 'contribution');
     return (
       [
         'type' => $type,
         'title' => self::text($block, 'title'),
-        'period' => self::text($block, 'period'),
+        // A block period set to anything, even blank, replaced the digest's.
+        'period' => array_key_exists('period', $block)
+          ? CRM_Herald_Upgrader_InlinePeriod::read($block['period'], $digestName)
+          : NULL,
         'template' => self::text($block, 'template'),
       ]
       + match ($type) {
@@ -52,7 +62,7 @@ final class CRM_Herald_Upgrader_InlineDigestBlocks {
   /**
    * @param array<string, mixed> $block
    */
-  public static function text(array $block, string $key): ?string {
+  private static function text(array $block, string $key): ?string {
     $value = trim(Cast::toString($block[$key] ?? ''));
     return $value === '' ? NULL : $value;
   }

@@ -117,6 +117,43 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
     self::assertSame('myext.seats', $blocks[2]['section_key']);
   }
 
+  public function testPeriodsAreReadAsOlderReleasesReadThem(): void {
+    CRM_Herald_Upgrader_InlineDigest::extract(
+      ['period' => 'last_week', 'blocks' => '[{"period": "fortnight"}, {}]'],
+      'old_unknown',
+      'Old unknown',
+    );
+    CRM_Herald_Upgrader_InlineDigest::extract(
+      ['period' => 'last_7_days', 'blocks' => '[{"period": ""}, {}]'],
+      'old_blank',
+      'Old blank',
+    );
+
+    $unknown = $this->stored('old_unknown');
+    self::assertSame('yesterday', $unknown['digest']['period']);
+    self::assertSame(['yesterday', NULL], array_map(static fn (array $b) => $b['period'] ?? NULL, $unknown['blocks']));
+    // A blank block period meant yesterday, not the digest's period.
+    $blank = $this->stored('old_blank')['blocks'];
+    self::assertSame(['yesterday', NULL], array_map(static fn (array $b) => $b['period'] ?? NULL, $blank));
+  }
+
+  public function testContributionFiltersKeepTheirOldReading(): void {
+    CRM_Herald_Upgrader_InlineDigest::extract(
+      ['source_pattern' => ' Bank%', 'bucket_edges' => '["0", "10", "100.5"]'],
+      'old_filters',
+      'Old filters',
+    );
+    CRM_Herald_Upgrader_InlineDigest::extract(
+      ['show_histogram' => '0', 'bucket_count' => '-1'],
+      'old_no_histogram',
+      'Old no histogram',
+    );
+
+    $block = $this->stored('old_filters')['blocks'][0];
+    self::assertSame([' Bank%', '[0,10,100.5]'], [$block['source_pattern'], $block['bucket_edges']]);
+    self::assertFalse($this->stored('old_no_histogram')['blocks'][0]['show_histogram']);
+  }
+
   public function testUnreadableEdgesAreDroppedAsTheyWereIgnored(): void {
     CRM_Herald_Upgrader_InlineDigest::extract(['bucket_edges' => '0, 10, 50'], 'old_edges', 'Old edges');
     self::assertArrayNotHasKey('bucket_edges', $this->stored('old_edges')['blocks'][0]);
@@ -138,6 +175,9 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
       'old_campaign',
       'Old campaign',
     ));
+    self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(['blocks' => '[{"type": ""}]'], 'old_type', 'Old type'));
+    // Records have no status filter; reporting Completed instead would change the numbers unnoticed.
+    self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(['status' => 'Pending'], 'old_status', 'Old status'));
     self::assertSame(
       0,
       HeraldDigest::get(checkPermissions: FALSE)->addWhere('name', 'LIKE', 'old\\_%')->execute()->count(),
