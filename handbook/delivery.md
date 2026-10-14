@@ -154,7 +154,7 @@ cv api4 Herald.reactivateParkedAlerts '{"ids": [12, 13]}'
 
 The list shows each alert's ID, the reason it was parked, the number of attempts, the last error and its dates. Without `ids`, `reactivateParkedAlerts` reactivates every parked alert.
 
-Reactivating an alert resets its attempt count. They keep the parameters stored when they were buffered. Fixing the rule or the route therefore does not repair a wrong recipient that was set on the action. Subscriber and group recipients are looked up again at delivery, so fixing a contact's preferences does help.
+Reactivating an alert resets its attempt count. Reactivated alerts keep the parameters stored when they were buffered. Fixing the rule or the route therefore does not repair a wrong recipient that was set on the action. Subscriber and group recipients are looked up again at delivery, so fixing a contact's preferences does help.
 
 The check monitor reports parked alerts and a stuck buffer, see [Built in checks](monitor.md#built-in-checks).
 
