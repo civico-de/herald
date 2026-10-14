@@ -132,7 +132,7 @@ Skripte und die Crontab des Servers können `Herald.notifyDigest` direkt aufrufe
 
 Dieser Aufruf ist nicht auf die Umgebung Production beschränkt.
 
-Ein geplanter Job von CiviCRM für `Herald.notifyDigest`, auf Hourly (stündlich) gestellt und mit `"sendHour": 8` in den Parametern, funktioniert ebenfalls. Er kann aber keine Wochentage wählen und kann einen Tag auslassen: CiviCRM schiebt den nächsten Lauf jedes Jobs um bis zu ein Cron-Intervall nach hinten. Rückt ein Lauf dadurch von kurz vor der vollen Stunde auf kurz danach, fällt an diesem Tag kein Lauf in diese Stunde.
+Ein geplanter Job von CiviCRM für `Herald.notifyDigest`, auf Hourly (stündlich) gestellt und mit `"sendHour": 8` in den Parametern, funktioniert ebenfalls. Er kann aber keine Wochentage wählen und kann einen Tag auslassen. Ein stündlicher Job läuft erst wieder, wenn seit seinem letzten Lauf eine volle Stunde vergangen ist. Läuft Cron alle 15 Minuten und lief der Job um 7:45:05 Uhr, kommt der Cron-Lauf um 8:45 Uhr ein paar Sekunden zu früh. Der Job läuft erst um 9:00 Uhr wieder, und die Stunde ab 8 Uhr bekommt an diesem Tag keinen Lauf.
 
 ## Benachrichtigungen pro Person
 

@@ -130,7 +130,7 @@ Scripts and the server's crontab can call `Herald.notifyDigest` directly, at a f
 
 This call is not limited to the Production environment.
 
-A CiviCRM scheduled job of `Herald.notifyDigest`, set to Hourly with `"sendHour": 8` in its parameters, also works, but it cannot pick weekdays and it can skip a day: CiviCRM moves each job's next run later by up to one cron interval, and when that drift moves a run from just before the hour to just after it, no run falls inside the hour that day.
+A CiviCRM scheduled job of `Herald.notifyDigest`, set to Hourly with `"sendHour": 8` in its parameters, also works, but it cannot pick weekdays and it can skip a day. An hourly job runs again only once a full hour has passed since its last run. With cron every 15 minutes and a run at 7:45:05, the cron run at 8:45 comes a few seconds too early, the job next runs at 9:00, and the 8 o'clock hour gets no run that day.
 
 ## Notifications for each person
 
