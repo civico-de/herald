@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Buffer;
 
+use CRM_Herald_ExtensionUtil as E;
+
 /**
  * The wording of an aggregated alert: which buffered bodies count, and the
  * summary line that introduces them.
@@ -34,11 +36,11 @@ final class AggregateSummary {
   public static function line(int $count, int $windowMinutes, array $amounts, string $emphasis = ''): string {
     $open = $emphasis === '' ? '' : '<' . $emphasis . '>';
     $close = $emphasis === '' ? '' : '</' . $emphasis . '>';
-    $summary = '📬 ' . $open . self::t('%1 messages', [1 => $count]) . $close;
+    $summary = '📬 ' . $open . E::ts('%1 messages', [1 => $count]) . $close;
     if ($amounts) {
-      $summary .= ', ' . self::t('total %1', [1 => $open . self::money(array_sum($amounts)) . $close]);
+      $summary .= ', ' . E::ts('total %1', [1 => $open . \Civi::format()->money(array_sum($amounts)) . $close]);
     }
-    return $summary . ' (' . self::t('collected over %1 min', [1 => $windowMinutes]) . ')';
+    return $summary . ' (' . E::ts('collected over %1 min', [1 => $windowMinutes]) . ')';
   }
 
   /**
@@ -47,7 +49,7 @@ final class AggregateSummary {
    * is not printed.
    */
   public static function more(int $omitted): string {
-    return '… ' . self::t('and %1 more', [1 => $omitted]);
+    return '… ' . E::ts('and %1 more', [1 => $omitted]);
   }
 
   /**
@@ -107,41 +109,6 @@ final class AggregateSummary {
       $delivery['email_subject'] = self::line($count, $windowMinutes, $amounts);
     }
     return $delivery;
-  }
-
-  /**
-   * Locale- and currency-correct money formatting (default currency of the
-   * instance) when Civi is booted; a fixed EUR/German rendering in pure unit
-   * tests, matching this extension's origin.
-   */
-  private static function money(float $amount): string {
-    if (class_exists('\Civi') && is_callable(['\Civi', 'format'])) {
-      try {
-        return \Civi::format()->money($amount);
-      }
-      // @mago-expect lint:no-empty-catch-clause
-      // Deliberate: Civi\format() is optional here, the static rendering is the fallback.
-      catch (\Throwable $e) {
-        // Fall through to the static rendering.
-      }
-    }
-    return number_format($amount, 2, ',', '.') . ' €';
-  }
-
-  /**
-   * Translate through the civix ExtensionUtil (herald's own domain) when Civi
-   * is booted; plain %N substitution otherwise (pure unit tests, no framework).
-   *
-   * @param array<int, string|int> $params
-   */
-  private static function t(string $text, array $params = []): string {
-    if (function_exists('ts') && class_exists(\CRM_Herald_ExtensionUtil::class)) {
-      return \CRM_Herald_ExtensionUtil::ts($text, $params);
-    }
-    foreach ($params as $key => $value) {
-      $text = str_replace('%' . $key, (string) $value, $text);
-    }
-    return $text;
   }
 
 }

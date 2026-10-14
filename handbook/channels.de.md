@@ -97,7 +97,7 @@ Der Webhook-Kanal sendet eine HTTP-Anfrage an eine URL. Die Einstellungen sind `
 | `webhook_method` | `POST` ist der Standard, `PUT` die Alternative. |
 | `webhook_body_format` | Wie der Body aufgebaut wird, siehe unten. Der Standard ist `text`. |
 | `webhook_body_key` | JSON-Schlüssel für das Format json. Der Standard ist `text`. |
-| `webhook_headers` | Zusätzliche Request-Header als JSON-Objekt. |
+| `webhook_headers` | Zusätzliche Request-Header als JSON-Objekt aus Namen und Werten. Alles andere lässt den Versand scheitern. |
 | `webhook_auth_token` | Wird als Bearer-Token im Authorization-Header gesendet. Ein Header, den Sie in `webhook_headers` setzen, hat Vorrang. |
 
 Die Body-Formate:
@@ -223,6 +223,7 @@ Diese Konfigurationsfehler melden die Kanäle. Bei einer direkten Zustellung err
 | webhook host resolves to a disallowed address | Die URL zeigt auf eine private oder interne Adresse. Tragen Sie den Host in `herald_webhook_allowed_hosts` ein, wenn das so gewollt ist. |
 | webhook URL must use http or https | Korrigieren Sie die URL. |
 | webhook URL must not contain credentials | Entfernen Sie Benutzername und Passwort aus der URL. Verwenden Sie stattdessen `webhook_auth_token` oder `webhook_headers`. |
+| webhook_headers must map header names to values | Schreiben Sie die Header als JSON-Objekt aus Namen und Werten, zum Beispiel `{"X-Source": "civicrm"}`. |
 | could not resolve webhook host | Prüfen Sie den Hostnamen und das DNS des Servers. |
 | ntfy channel requires ntfy_topic | Setzen Sie ein Topic an der Aktion oder `herald_ntfy_default_topic`. |
 | Pushover app token not configured | Setzen Sie `herald_pushover_app_token`. |

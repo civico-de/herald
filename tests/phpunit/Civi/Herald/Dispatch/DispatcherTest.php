@@ -59,9 +59,7 @@ class DispatcherTest extends TestCase {
     $filtered = Dispatcher::filterSubscriberSafe([
       'chat_id' => '-100',
       'webhook_url' => 'https://example.com/rule-endpoint',
-      // @mago-expect lint:no-literal-password
-      // Test fixture, not a real credential.
-      'webhook_auth_token' => 'secret',
+      'webhook_auth_token' => bin2hex(random_bytes(8)),
       'webhook_headers' => ['Authorization' => 'Basic abc=='],
       'ntfy_topic' => 'rule-topic',
       'pushover_user_key' => 'rule-key',

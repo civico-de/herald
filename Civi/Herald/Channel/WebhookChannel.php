@@ -36,9 +36,6 @@ use GuzzleHttp\ClientInterface;
  *     applied when the URL also came from the default setting. The default
  *     token belongs to the default endpoint — it must never be attached to a
  *     caller-supplied URL (e.g. a subscriber's personal webhook).
- * @mago-expect lint:cyclomatic-complexity
- * @mago-expect lint:too-many-methods
- * @mago-expect lint:kan-defect
  */
 class WebhookChannel implements ChannelInterface {
 
@@ -66,19 +63,14 @@ class WebhookChannel implements ChannelInterface {
    * @param array<string, mixed> $config
    */
   public function send(string $renderedBody, array $config): void {
-    // !empty, not ??: an empty webhook_url in the config must still fall
-    // back to the default setting.
-    $urlFromConfig = !empty($config['webhook_url']);
-    $url = $urlFromConfig ? $config['webhook_url'] : \Civi::settings()->get('herald_webhook_default_url');
-    if (!$url) {
+    [$effectiveUrl, $token] = self::endpoint($config);
+    if ($effectiveUrl === '') {
       throw new \CRM_Core_Exception(
         'herald: webhook channel requires webhook_url (action param or herald_webhook_default_url setting).',
       );
     }
-
-    $effectiveUrl = Cast::toString($url);
     $allowedHosts = \Civi::settings()->get('herald_webhook_allowed_hosts');
-    self::assertUrlAllowed($effectiveUrl, [
+    WebhookUrlGuard::assert($effectiveUrl, [
       'allowed_hosts' => is_array($allowedHosts) ? $allowedHosts : [],
       'resolver' => $this->hostResolver,
     ]);
@@ -86,44 +78,15 @@ class WebhookChannel implements ChannelInterface {
     $method = strtoupper(Cast::toString($config['webhook_method'] ?? 'POST'));
     $format = Cast::toString($config['webhook_body_format'] ?? 'text');
     $payload = self::buildPayload($renderedBody, $format, Cast::toString($config['webhook_body_key'] ?? 'text'));
-
-    $headers = self::normaliseHeaders($config['webhook_headers'] ?? []);
-    // The default token is paired with the default URL: it must not leak to
-    // caller-supplied endpoints (subscriber-mode contacts control their URL).
-    $authToken = $config['webhook_auth_token'] ?? NULL;
-    if (!$authToken && !$urlFromConfig) {
-      $authToken = \Civi::settings()->get('herald_webhook_default_auth_token');
-    }
-    if ($authToken) {
-      // Don't overwrite an explicitly-set Authorization header — admins can
-      // still pass `Authorization: Basic ...` via webhook_headers and skip the
-      // shorthand.
-      $hasAuth = FALSE;
-      foreach (array_keys($headers) as $h) {
-        if (strcasecmp($h, 'Authorization') !== 0) {
-          continue;
-        }
-
-        $hasAuth = TRUE;
-        break;
-      }
-      if (!$hasAuth) {
-        $headers['Authorization'] = 'Bearer ' . Cast::toString($authToken);
-      }
-    }
-
+    $headers = WebhookHeaders::of($config['webhook_headers'] ?? [], $token);
     // Redirects disabled: a validated public URL could otherwise 302 to a
     // private/link-local address (redirect-based SSRF). Endpoints needing a
     // redirect must be given their final URL.
-    $requestOptions = ['http_errors' => FALSE, 'timeout' => 10, 'headers' => $headers, 'allow_redirects' => FALSE];
-    if ($payload['type'] === 'json') {
-      $requestOptions['json'] = $payload['data'];
-    }
-    // @mago-expect lint:no-else-clause
-    else {
-      $requestOptions['body'] = $payload['data'];
-      $requestOptions['headers']['Content-Type'] = $headers['Content-Type'] ?? 'text/plain; charset=utf-8';
-    }
+    $requestOptions = (
+      $payload['type'] === 'json'
+        ? ['json' => $payload['data'], 'headers' => $headers]
+        : ['body' => $payload['data'], 'headers' => $headers + ['Content-Type' => 'text/plain; charset=utf-8']]
+    ) + ['http_errors' => FALSE, 'timeout' => 10, 'allow_redirects' => FALSE];
 
     $client = $this->httpClient ?? new \GuzzleHttp\Client();
     try {
@@ -144,6 +107,26 @@ class WebhookChannel implements ChannelInterface {
   }
 
   /**
+   * The endpoint and its bearer token. The default token belongs to the default
+   * URL: a caller-supplied endpoint (a subscriber's own webhook) never gets it.
+   *
+   * @param array<string, mixed> $config
+   * @return array{string, string}
+   */
+  private static function endpoint(array $config): array {
+    $token = Cast::toString($config['webhook_auth_token'] ?? '');
+    // !empty, not ??: an empty webhook_url still falls back to the default.
+    if (!empty($config['webhook_url'])) {
+      return [Cast::toString($config['webhook_url']), $token];
+    }
+    $settings = \Civi::settings();
+    return [
+      Cast::toString($settings->get('herald_webhook_default_url')),
+      $token !== '' ? $token : Cast::toString($settings->get('herald_webhook_default_auth_token')),
+    ];
+  }
+
+  /**
    * Pure builder for the request body. Test-seam.
    *
    * @return array{type: 'json'|'raw', data: mixed}
@@ -160,176 +143,6 @@ class WebhookChannel implements ChannelInterface {
       'discord' => ['type' => 'json', 'data' => ['content' => PlainText::fromHtml($body)]],
       default => ['type' => 'raw', 'data' => PlainText::fromHtml($body)],
     };
-  }
-
-  /**
-   * SSRF guard. Pure, static, test-seam like buildPayload: rejects a URL whose
-   * scheme is not http/https, carries credentials, or resolves to any
-   * private/reserved/link-local/metadata address. An optional non-empty
-   * allowed_hosts list locks delivery to known endpoints and bypasses the
-   * denylist for a matching host.
-   *
-   * @param array{allowed_hosts?: array<int|string, mixed>, resolver?: null|callable(string): list<string>} $opts
-   */
-  public static function assertUrlAllowed(string $url, array $opts = []): void {
-    $parts = parse_url($url);
-    $scheme = strtolower(is_array($parts) ? $parts['scheme'] ?? '' : '');
-    $host = trim(is_array($parts) ? $parts['host'] ?? '' : '', '[]');
-    if ($scheme === '' || $host === '') {
-      throw new \CRM_Core_Exception('herald: webhook URL is not a valid absolute URL.');
-    }
-    if ($scheme !== 'http' && $scheme !== 'https') {
-      throw new \CRM_Core_Exception('herald: webhook URL must use http or https, got ' . $scheme . '.');
-    }
-    if (isset($parts['user']) || isset($parts['pass'])) {
-      throw new \CRM_Core_Exception('herald: webhook URL must not contain credentials.');
-    }
-
-    $allowed = $opts['allowed_hosts'] ?? [];
-    if ($allowed !== []) {
-      $lcHost = strtolower($host);
-      foreach ($allowed as $entry) {
-        $needle = strtolower(trim(Cast::toString($entry)));
-        if ($needle === '') {
-          continue;
-        }
-        if ($lcHost === $needle || str_ends_with($lcHost, '.' . $needle)) {
-          return;
-        }
-      }
-      throw new \CRM_Core_Exception('herald: webhook host is not in herald_webhook_allowed_hosts.');
-    }
-
-    $resolver = $opts['resolver'] ?? NULL;
-    $ips = self::resolveHost($host, is_callable($resolver) ? $resolver : NULL);
-    if ($ips === []) {
-      throw new \CRM_Core_Exception('herald: could not resolve webhook host ' . $host . '.');
-    }
-    foreach ($ips as $ip) {
-      if (self::ipIsBlocked($ip)) {
-        throw new \CRM_Core_Exception('herald: webhook host resolves to a disallowed address.');
-      }
-    }
-  }
-
-  /**
-   * @param null|callable(string): list<string> $resolver
-   * @return list<string>
-   */
-  private static function resolveHost(string $host, ?callable $resolver): array {
-    if (filter_var($host, FILTER_VALIDATE_IP) !== FALSE) {
-      return [$host];
-    }
-
-    try {
-      return $resolver !== NULL ? $resolver($host) : self::resolveHostUsingDns($host);
-    }
-    catch (\Throwable $e) {
-      throw new \CRM_Core_Exception(
-        'herald: DNS lookup failed for webhook host ' . $host . '.',
-        0,
-        [],
-        $e,
-      );
-    }
-  }
-
-  /**
-   * Resolve both address families in one DNS query.
-   *
-   * PHP reports resolver failures as warnings and FALSE. Convert only warnings
-   * raised during this one DNS call into an exception so the SSRF guard fails
-   * closed, then immediately restore the previous application error handler.
-   *
-   * @param null|callable(string, int): (array<int, array<string, mixed>>|false) $lookup
-   *   dns_get_record() unless given; tests pass a stub instead of real DNS.
-   * @return list<string>
-   */
-  public static function resolveHostUsingDns(string $host, ?callable $lookup = NULL): array {
-    $lookup ??= dns_get_record(...);
-    set_error_handler(
-      static function (int $severity, string $message, string $file, int $line): never {
-        throw new \ErrorException($message, 0, $severity, $file, $line);
-      },
-      E_WARNING,
-    );
-    try {
-      $records = $lookup($host, DNS_A | DNS_AAAA);
-    }
-    finally {
-      restore_error_handler();
-    }
-
-    if ($records === FALSE) {
-      throw new \RuntimeException('DNS lookup returned false.');
-    }
-
-    $ips = [];
-    foreach ($records as $record) {
-      foreach (['ip', 'ipv6'] as $field) {
-        $ip = $record[$field] ?? NULL;
-        if (is_string($ip) && $ip !== '') {
-          $ips[] = $ip;
-        }
-      }
-    }
-
-    return array_values(array_unique($ips));
-  }
-
-  /**
-   * filter_var's private/reserved flags miss link-local (169.254/16) and
-   * IPv6 ULA/link-local in some PHP builds, so those are checked explicitly.
-   */
-  private static function ipIsBlocked(string $ip): bool {
-    if (stripos($ip, '::ffff:') === 0 && substr_count($ip, '.') === 3) {
-      $ip = substr($ip, (int) strrpos($ip, ':') + 1);
-    }
-    if (filter_var($ip, FILTER_VALIDATE_IP) === FALSE) {
-      return TRUE;
-    }
-    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === FALSE) {
-      return TRUE;
-    }
-    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) !== FALSE) {
-      $long = ip2long($ip);
-      // 169.254/16 link-local (incl. 169.254.169.254 metadata) and 0.0.0.0/8.
-      return $long !== FALSE && (($long & 0xFFFF_0000) === (int) ip2long('169.254.0.0') || ($long >> 24) === 0);
-    }
-    $lower = strtolower($ip);
-    if ($lower === '::1' || $lower === '::') {
-      return TRUE;
-    }
-    // fc00::/7 (fc/fd) ULA and fe80::/10 (fe8-feb) link-local.
-    return (
-      str_starts_with($lower, 'fc')
-      || str_starts_with($lower, 'fd')
-      || str_starts_with($lower, 'fe8')
-      || str_starts_with($lower, 'fe9')
-      || str_starts_with($lower, 'fea')
-      || str_starts_with($lower, 'feb')
-    );
-  }
-
-  /**
-   * @return array<string, string> */
-  private static function normaliseHeaders(mixed $raw): array {
-    if (is_string($raw)) {
-      $decoded = json_decode($raw, TRUE);
-      $raw = is_array($decoded) ? $decoded : [];
-    }
-    if (!is_array($raw)) {
-      return [];
-    }
-    $out = [];
-    foreach ($raw as $name => $value) {
-      if (!(is_string($name) && $name !== '')) {
-        continue;
-      }
-
-      $out[$name] = Cast::toString($value);
-    }
-    return $out;
   }
 
   /**

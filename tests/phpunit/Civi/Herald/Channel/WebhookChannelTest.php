@@ -95,14 +95,13 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
   }
 
   public function testBearerTokenFromConfig(): void {
+    $token = bin2hex(random_bytes(8));
     $channel = $this->makeChannel(new Response(200, [], ''));
     $channel->send('x', [
       'webhook_url' => 'https://example.com/x',
-      // @mago-expect lint:no-literal-password
-      // Test fixture, not a real credential.
-      'webhook_auth_token' => 'abc123',
+      'webhook_auth_token' => $token,
     ]);
-    $this->assertSame('Bearer abc123', $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
+    $this->assertSame("Bearer {$token}", $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
   }
 
   public function testDefaultTokenPairsWithDefaultUrl(): void {
@@ -133,9 +132,7 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     $channel = $this->makeChannel(new Response(200, [], ''));
     $channel->send('x', [
       'webhook_url' => 'https://example.com/x',
-      // @mago-expect lint:no-literal-password
-      // Test fixture, not a real credential.
-      'webhook_auth_token' => 'shorthand',
+      'webhook_auth_token' => bin2hex(random_bytes(8)),
       'webhook_headers' => ['Authorization' => 'Basic abc=='],
     ]);
     $this->assertSame('Basic abc==', $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
@@ -190,6 +187,10 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
       'ipv6 loopback' => ['http://[::1]/x'],
       'zero address' => ['http://0.0.0.0/x'],
       'ipv4-mapped loopback' => ['http://[::ffff:127.0.0.1]/x'],
+      'ipv4-mapped metadata' => ['http://[::ffff:169.254.169.254]/x'],
+      'ipv6 unique local' => ['http://[fd12:3456::1]/x'],
+      'ipv6 link-local' => ['http://[fe80::1]/x'],
+      'ipv6 link-local upper end' => ['http://[febf::1]/x'],
     ];
   }
 
@@ -197,36 +198,36 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
    * @dataProvider blockedUrlProvider */
   public function testGuardRejectsLiteralPrivateAndReservedIps(string $url): void {
     $this->expectException(\CRM_Core_Exception::class);
-    WebhookChannel::assertUrlAllowed($url);
+    WebhookUrlGuard::assert($url);
   }
 
   public function testGuardRejectsNonHttpScheme(): void {
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/http or https/');
-    WebhookChannel::assertUrlAllowed('gopher://example.com/x');
+    WebhookUrlGuard::assert('gopher://example.com/x');
   }
 
   public function testGuardRejectsFileScheme(): void {
     $this->expectException(\CRM_Core_Exception::class);
-    WebhookChannel::assertUrlAllowed('file:///etc/passwd');
+    WebhookUrlGuard::assert('file:///etc/passwd');
   }
 
   public function testGuardRejectsCredentialsInUrl(): void {
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/credentials/');
-    WebhookChannel::assertUrlAllowed('https://user:pass@example.com/x');
+    WebhookUrlGuard::assert('https://user:pass@example.com/x');
   }
 
   public function testGuardRejectsDnsNameResolvingToPrivateIp(): void {
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/disallowed address/');
-    WebhookChannel::assertUrlAllowed('https://sneaky.example/x', [
+    WebhookUrlGuard::assert('https://sneaky.example/x', [
       'resolver' => static fn (string $host): array => ['10.1.2.3'],
     ]);
   }
 
   public function testGuardAcceptsPublicHost(): void {
-    WebhookChannel::assertUrlAllowed('https://hooks.slack.com/services/X', [
+    WebhookUrlGuard::assert('https://hooks.slack.com/services/X', [
       'resolver' => static fn (string $host): array => ['93.184.216.34'],
     ]);
     $this->addToAssertionCount(1);
@@ -254,29 +255,27 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
   public function testGuardRejectsHostWithNoDnsAddresses(): void {
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/could not resolve webhook host/');
-    WebhookChannel::assertUrlAllowed('https://missing.example/x', [
+    WebhookUrlGuard::assert('https://missing.example/x', [
       'resolver' => static fn (string $host): array => [],
     ]);
   }
 
   public function testGuardAllowlistPermitsMatchingHostAndSubdomain(): void {
-    WebhookChannel::assertUrlAllowed('https://hooks.slack.com/x', ['allowed_hosts' => ['slack.com']]);
+    WebhookUrlGuard::assert('https://hooks.slack.com/x', ['allowed_hosts' => ['slack.com']]);
     $this->addToAssertionCount(1);
   }
 
   public function testGuardAllowlistRejectsUnlistedHost(): void {
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/allowed_hosts/');
-    WebhookChannel::assertUrlAllowed('https://evil.example/x', ['allowed_hosts' => ['slack.com']]);
+    WebhookUrlGuard::assert('https://evil.example/x', ['allowed_hosts' => ['slack.com']]);
   }
 
   public function testHeadersFromJsonAndAuthorizationMatchedCaseInsensitively(): void {
     $channel = $this->makeChannel(new Response(200, [], ''));
     $channel->send('x', [
       'webhook_url' => 'https://example.com/x',
-      // @mago-expect lint:no-literal-password
-      // Test fixture, not a real credential.
-      'webhook_auth_token' => 'shorthand',
+      'webhook_auth_token' => bin2hex(random_bytes(8)),
       'webhook_headers' => '{"X-Trace": "1", "authorization": "Basic abc=="}',
     ]);
     $request = $this->capturedRequests[0]['request'];
@@ -285,28 +284,37 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
   }
 
   /**
-   * @return array<string, array{0: mixed, 1: array<string, string>}>
+   * @return array<string, array{mixed}>
    */
-  public static function headerInputProvider(): array {
+  public static function unusableHeadersProvider(): array {
     return [
-      'invalid json' => ['not json', []],
-      'scalar' => [42, []],
-      'unnamed entries' => [[0 => 'positional', '' => 'unnamed', 'X-Ok' => 7], ['X-Ok' => '7']],
+      'invalid json' => ['not json'],
+      'scalar' => [42],
+      'unnamed entries' => [[0 => 'positional', 'X-Ok' => 7]],
+      'blank name' => [['' => 'unnamed']],
     ];
   }
 
   /**
-   * @dataProvider headerInputProvider
-   * @param array<string, string> $expected
+   * A header that cannot be sent would drop silently, and with it maybe the endpoint's auth.
+   *
+   * @dataProvider unusableHeadersProvider
    */
-  public function testOnlyNamedHeadersAreSent(mixed $headers, array $expected): void {
+  public function testUnusableHeadersFailTheSend(mixed $headers): void {
+    $this->expectExceptionMessage('herald: webhook_headers must map header names to values.');
     $this->makeChannel(new Response(200, [], ''))->send('x', [
       'webhook_url' => 'https://example.com/x',
       'webhook_headers' => $headers,
     ]);
+  }
+
+  public function testAnEmptyHeadersFieldSendsNoExtraHeaders(): void {
+    $this->makeChannel(new Response(200, [], ''))->send('x', [
+      'webhook_url' => 'https://example.com/x',
+      'webhook_headers' => ' ',
+    ]);
     $sent = $this->capturedRequests[0]['request']->getHeaders();
-    $custom = array_diff_key($sent, array_flip(['Host', 'User-Agent', 'Content-Type', 'Content-Length']));
-    $this->assertSame($expected, array_map(static fn (array $v): string => implode(',', $v), $custom));
+    $this->assertSame([], array_diff_key($sent, array_flip(['Host', 'User-Agent', 'Content-Type', 'Content-Length'])));
   }
 
   public function testTransportFailureBecomesACoreException(): void {
@@ -322,23 +330,23 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
 
   public function testGuardAllowlistSkipsBlankEntries(): void {
     $allowed = ['allowed_hosts' => ['  ', 'slack.com']];
-    WebhookChannel::assertUrlAllowed('https://hooks.slack.com/x', $allowed);
+    WebhookUrlGuard::assert('https://hooks.slack.com/x', $allowed);
 
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessage('not in herald_webhook_allowed_hosts');
-    WebhookChannel::assertUrlAllowed('https://evil.example/x', $allowed);
+    WebhookUrlGuard::assert('https://evil.example/x', $allowed);
   }
 
   public function testGuardRejectsAResolverAnswerThatIsNoAddress(): void {
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessage('disallowed address');
-    WebhookChannel::assertUrlAllowed('https://odd.example/x', [
+    WebhookUrlGuard::assert('https://odd.example/x', [
       'resolver' => static fn (string $host): array => ['not-an-ip'],
     ]);
   }
 
   public function testGuardAcceptsAPublicIpv6Address(): void {
-    WebhookChannel::assertUrlAllowed('https://v6.example/x', [
+    WebhookUrlGuard::assert('https://v6.example/x', [
       'resolver' => static fn (string $host): array => ['2606:4700:4700::1111'],
     ]);
     $this->addToAssertionCount(1);
@@ -346,9 +354,7 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
 
   public function testDnsResolverCollectsBothAddressFamiliesOnce(): void {
     $asked = [];
-    $ips = WebhookChannel::resolveHostUsingDns('hooks.example', static function (string $host, int $type) use (
-      &$asked,
-    ): array {
+    $ips = WebhookHost::dns('hooks.example', static function (string $host, int $type) use (&$asked): array {
       $asked = [$host, $type];
       return [
         ['type' => 'A', 'ip' => '93.184.216.34'],
@@ -365,7 +371,7 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
   public function testDnsResolverFailsWhenTheLookupReturnsFalse(): void {
     $this->expectException(\RuntimeException::class);
     $this->expectExceptionMessage('DNS lookup returned false.');
-    WebhookChannel::resolveHostUsingDns('hooks.example', static fn (string $host, int $type): bool => FALSE);
+    WebhookHost::dns('hooks.example', static fn (string $host, int $type): bool => FALSE);
   }
 
   public function testDnsResolverTurnsALookupWarningIntoAnExceptionAndRestoresTheHandler(): void {
@@ -373,7 +379,7 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     set_error_handler($outer);
     try {
       // dns_get_record() reports resolver failures as E_WARNING; hex2bin() raises one offline.
-      WebhookChannel::resolveHostUsingDns('hooks.example', static fn (string $host, int $type): array => [hex2bin(
+      WebhookHost::dns('hooks.example', static fn (string $host, int $type): array => [hex2bin(
         '0',
       )]);
       $this->fail('a lookup warning must stop resolution');

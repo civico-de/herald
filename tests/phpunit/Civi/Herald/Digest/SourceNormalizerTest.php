@@ -36,4 +36,16 @@ class SourceNormalizerTest extends TestCase {
     $this->assertSame('First', $normalizer->normalize('Bank TX 123'));
   }
 
+  public function testARuleTheAdminScreenWouldRefuseIsLeftOut(): void {
+    $normalizer = new SourceNormalizer([
+      ['match' => '/(unclosed', 'type' => 'regex', 'label' => 'Broken'],
+      ['match' => 'Bank', 'type' => 'contains', 'label' => ''],
+      'not a rule',
+      ['match' => 'Bank', 'type' => 'prefix', 'label' => 'Bank'],
+    ]);
+
+    $this->assertSame('Bank', $normalizer->normalize('Bank TX 123'));
+    $this->assertSame('(unclosed', $normalizer->normalize('(unclosed'));
+  }
+
 }

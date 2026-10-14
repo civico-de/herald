@@ -4,6 +4,9 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Digest;
 
+use Civi\Herald\Admin\SourceRule;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+
 /**
  * Applies the first configured source-normalization rule that matches.
  */
@@ -23,7 +26,7 @@ final class SourceNormalizer {
    * @param array<mixed>|null $rules
    */
   public function __construct(?array $rules = NULL) {
-    $this->rules = self::validatedRules($rules ?? self::settingRules());
+    $this->rules = $rules === NULL ? self::settingRules() : self::validatedRules($rules);
   }
 
   public function isEnabled(): bool {
@@ -35,9 +38,7 @@ final class SourceNormalizer {
       $matches = match ($rule['type']) {
         'contains' => str_contains($source, $rule['match']),
         'prefix' => str_starts_with($source, $rule['match']),
-        // @mago-expect lint:no-error-control-operator
-        // Deliberate: admin-supplied regexes may be invalid; the warning is not actionable.
-        'regex' => @preg_match($rule['match'], $source) === 1,
+        'regex' => preg_match($rule['match'], $source) === 1,
         default => FALSE,
       };
       if ($matches) {
@@ -48,7 +49,7 @@ final class SourceNormalizer {
   }
 
   /**
-   * @return array<mixed>
+   * @return list<array{match: string, type: string, label: string}>
    */
   private static function settingRules(): array {
     if (self::$cachedRules !== NULL) {
@@ -66,42 +67,37 @@ final class SourceNormalizer {
   }
 
   /**
-   * Read the setting, tolerating a Civi that cannot answer.
-   *
-   * No booted container means no rules. class_exists('\Civi') is not enough:
-   * the classloader is up long before the container, and the read dies in PEAR.
-   *
    * @return array<mixed>
    */
   private static function readSetting(): array {
-    try {
-      $configured = \Civi::settings()->get('herald_source_normalization');
-    }
-    catch (\Throwable $e) {
-      return [];
-    }
+    $configured = \Civi::settings()->get('herald_source_normalization');
     return is_array($configured) ? $configured : [];
   }
 
   /**
-   * Ignore malformed rules so an optional presentation setting cannot break alerts.
+   * Setting.set skips the admin screen's checks; a rule that fails them is left
+   * out with a warning, so a presentation setting cannot break alerts.
    *
    * @param array<mixed> $rules
    * @return list<array{match: string, type: string, label: string}>
    */
   private static function validatedRules(array $rules): array {
     $valid = [];
-    foreach ($rules as $rule) {
-      if (!is_array($rule)) {
+    foreach (array_values($rules) as $i => $rule) {
+      $rule = is_array($rule) ? $rule : [];
+      $problems = SourceRule::problems($rule['match'] ?? NULL, $rule['type'] ?? NULL, $rule['label'] ?? NULL);
+      if ($problems !== []) {
+        \Civi::log('herald')->warning('herald: source rule {rule} left out', [
+          'rule' => $i + 1,
+          'problems' => $problems,
+        ]);
         continue;
       }
-      $match = $rule['match'] ?? NULL;
-      $type = $rule['type'] ?? NULL;
-      $label = $rule['label'] ?? NULL;
-      if (!is_string($match) || !is_string($label) || !in_array($type, ['contains', 'prefix', 'regex'], TRUE)) {
-        continue;
-      }
-      $valid[] = ['match' => $match, 'type' => $type, 'label' => $label];
+      $valid[] = [
+        'match' => Cast::toString($rule['match']),
+        'type' => Cast::toString($rule['type']),
+        'label' => Cast::toString($rule['label']),
+      ];
     }
     return $valid;
   }
