@@ -37,13 +37,13 @@ On a contribution trigger, the variables also include the contribution, its camp
 
 ### Send digest
 
-The action "Herald: Send digest" sends a digest each time the rule fires. Its form picks one of the digests set up under Administer » Herald » Digests, see [Setting up a digest](digests.md#setting-up-a-digest), and has the delivery fields of "Send notification". The rule list shows the action as `Sends the digest "…".`, or as `Digest "…" does not exist.` once the digest's name has changed or the digest is deleted.
+The action "Herald: Send digest" sends a digest each time the rule fires. In its form you pick one of the digests set up under Administer » Herald » Digests, see [Setting up a digest](digests.md#setting-up-a-digest), and fill in the delivery fields as for "Send notification". The rule list shows the action as `Sends the digest "…".` Once the digest is renamed or deleted, it shows `Digest "…" does not exist.`
 
 ## CiviRules triggers
 
 ### Schedule
 
-The trigger "Herald: Schedule" fires once at the full hour on the chosen weekdays, in CiviCRM's timezone, and carries no contact. It is meant for actions such as "Herald: Send digest", see [Scheduled digests](recipes.md#scheduled-digests). Its form has two fields:
+The trigger "Herald: Schedule" fires once, on the hour, on the chosen weekdays, in CiviCRM's timezone, and carries no contact. It is meant for actions such as "Herald: Send digest", see [Scheduled digests](recipes.md#scheduled-digests). Its form has two fields:
 
 | Field | Meaning |
 |---|---|
@@ -69,13 +69,21 @@ The condition "Herald: Field transition" is true when a field's value before and
 
 The form does not save an entity that does not exist, a field the entity does not have, a suffix the field does not offer, or a search filter such as `groups`, which holds no value. Field names are case-sensitive. The form also refuses `>`, `<`, `>=` and `<=` with a value that is not a number. An option name is text, so use these operators on the field without a suffix.
 
-The operators are `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` and `not_empty`. "- any value -" leaves that side open. The ordering operators need numbers on both sides. `=` and `!=` compare numbers when both sides are numbers, and trimmed text otherwise. An empty value equals an empty field. Numbers compare exactly, however many digits they have. A number with an exponent, such as `1e3`, compares as a floating-point number, which is exact to about 15 digits. Money and Float fields also reach herald as floating-point numbers, and an amount of 19.99 still equals `19.99`. Write decimals with a point, not a comma. Any other operator, which only the API can pass, fails the condition with an error.
+The operators are `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` and `not_empty`. "- any value -" leaves that side open. Any other operator, which only the API can pass, fails the condition with an error.
+
+`>`, `<`, `>=` and `<=` need numbers on both sides. `=` and `!=` compare numbers when both sides are numbers, and trimmed text otherwise. An empty value equals an empty field. Write decimals with a point, not a comma.
+
+Numbers compare exactly, however many digits they have. A number with an exponent, such as `1e3`, compares as a floating-point number, which is exact to about 15 digits. Money and Float fields also reach herald as floating-point numbers, and an amount of 19.99 still equals `19.99`.
 
 - With both sides open, the condition is never true.
 - With only one side configured, the value must also have changed. Unrelated edits of a record that is already in the target state therefore do not fire again. A field that stays empty has not changed.
 - With both sides configured, the two tests alone decide.
 
-The value before the edit comes from the copy CiviRules keeps of the record. For a field with a suffix, herald looks up the option of the stored ID. An empty stored value counts as empty, and a stored value without an option counts as missing. When CiviRules has no value, herald uses its own copy, taken just before the edit. That copy lasts only as long as the request, and a delayed action rechecks its conditions later in the cron run. CiviRules keeps custom fields under different names, so for them herald's copy is the only source: on a delayed action, tick "Don't recheck condition upon processing of delayed action", or the condition never fires. When the value is still unknown, the condition is false, because a missed alert is better than a false one. The value after the edit is read from the stored record, so a partial update that did not write the field is judged by its real value.
+The value before the edit comes from the copy CiviRules keeps of the record. For a field with a suffix, herald looks up the option of the stored ID. An empty stored value counts as empty, and a stored value without an option counts as missing. When CiviRules has no value, herald uses its own copy, taken just before the edit. When the value is still unknown, the condition is false, because a missed alert is better than a false one.
+
+herald's own copy lasts only as long as the request, but a delayed action rechecks its conditions later, in the cron run. CiviRules keeps custom fields under different names, so for them herald's copy is the only source. On a delayed action with a custom field, tick "Don't recheck condition upon processing of delayed action", or the condition never fires.
+
+The value after the edit is read from the stored record, so a partial update that did not write the field is judged by its real value.
 
 herald takes its copy only of fields that active rules watch. A long-running queue or command line worker sees a newly configured field only after a restart.
 
@@ -104,7 +112,7 @@ The entity `Herald` offers these actions. Every action needs the permission "adm
 | getParkedAlerts | ids, optional | Lists [Parked alerts](delivery.md#parked-alerts) without their bodies. |
 | reactivateParkedAlerts | ids, optional | Puts parked alerts back into the buffer. Without ids, all of them. |
 | renderTemplate | workflow, vars | Renders a template without sending it. |
-| saveTopic | topic, route, previousName | Validates one route and stores it in `herald_topics`; with previousName it renames that topic in place. What the Topic routes screen calls. |
+| saveTopic | topic, route, previousName | Validates one route and stores it in `herald_topics`; with previousName it renames that topic in place. The Topic routes screen uses this action. |
 | deleteTopic | topic | Removes one route from `herald_topics`. |
 | saveSourceRules | rules | Validates and stores `herald_source_normalization`. Errors name the rule. |
 | saveAllowedHosts | hosts | Validates and stores `herald_webhook_allowed_hosts`. Blank entries are skipped. |
@@ -112,7 +120,7 @@ The entity `Herald` offers these actions. Every action needs the permission "adm
 | saveMonitorChecks | expected, snooze | Validates and stores `herald_monitor_expected` and `herald_monitor_snooze`. A snooze must end in the future unless it is unchanged. |
 | testTelegram | message, chatId, channel | Sends a test message. The channel defaults to telegram. |
 
-The save actions store the same shape as `Setting.set`, which keeps working. They reject invalid input with a list of every problem and store nothing in that case.
+The save actions store exactly the shape `Setting.set` takes. `Setting.set` still works, but it does not validate. The save actions reject invalid input with a list of every problem and then store nothing.
 
 `send` needs a channel and a message. `publish` needs exactly one of message and template. Both reject a format other than text or html. For `publish`, the format applies to a message only, because a rendered template is always HTML.
 
@@ -174,9 +182,9 @@ The titles appear in the language CiviCRM used when it created or last updated t
 
 The templates are in English. A German translation is included and used when CiviCRM runs in German.
 
-An edit you make to a shipped template survives until a herald release changes that template. The release then overwrites your edit. To keep a customised version, copy it under a workflow name of your own. The Message Templates form has no field for the workflow name, so add the copy there under "User-driven Messages" and then set its name with cv, for example `cv api4 MessageTemplate.update +w id=123 +v workflow_name=herald_my_alert`. herald renders only the default version of a template. The API and the scheduled jobs accept any workflow name, while the CiviRules forms list only templates whose workflow name starts with `herald_`. Name your copy `herald_my_alert`, for example, and it appears there too.
+An edit you make to a shipped template survives until a herald release changes that template. The release then overwrites your edit. To keep a customised version, copy it under a workflow name of your own. The Message Templates form has no field for the workflow name, so add the copy there under "User-driven Messages" and then set its name with cv, for example `cv api4 MessageTemplate.update +w id=123 +v workflow_name=herald_my_alert`. The API and the scheduled jobs accept any workflow name, but the CiviRules forms list only names that start with `herald_`, so a name like `herald_my_alert` makes the copy appear there too.
 
-A template that does not exist fails with the error 'MessageTemplate "…" not found. Is the herald extension enabled?'. A template with neither an HTML nor a text body fails too.
+herald renders only the default version of a template. Naming a template that does not exist fails with the error `MessageTemplate "…" not found. Is the herald extension enabled?`. A template with neither an HTML nor a text body fails too.
 
 ### Escaping
 

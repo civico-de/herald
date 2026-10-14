@@ -126,7 +126,7 @@ herald checks every URL before it sends:
 - By default it must not resolve to a private, reserved, link-local or cloud metadata address.
 - Requests do not follow redirects, so give the final URL.
 
-To lock delivery to known services, list their host names under Administer » Herald » Webhook allowed hosts, one per line. Saving rejects an invalid host name and any entry with `https://`, a path or a port. With cv, set `herald_webhook_allowed_hosts`, for example `["hooks.slack.com"]`. Subdomains of a listed host are allowed too. Once the list is not empty, only those hosts are reached, and they may be internal addresses.
+To lock delivery to known services, list their host names under Administer » Herald » Webhook allowed hosts, one per line. Saving rejects an invalid host name and any entry with `https://`, a path or a port. With cv, set `herald_webhook_allowed_hosts`, for example `["hooks.slack.com"]`. Subdomains of a listed host are allowed too. Once the list has entries, herald reaches only those hosts, and they may resolve to internal addresses.
 
 ## ntfy
 
@@ -159,7 +159,7 @@ The settings are `herald_pushover_app_token`, which is required, and `herald_pus
 | `pushover_url_title` | The label of that link. |
 | `pushover_html` | Send the HTML message instead of plain text. Pushover supports a small subset of HTML. |
 
-Pushover requires retry and expire for emergency messages. herald fills in the defaults when you leave them out, and moves values outside the limits back inside.
+Pushover requires retry and expire for emergency messages. herald fills in the defaults when you leave them out, and sets values outside the limits to the nearest limit.
 
 ## Email
 

@@ -22,9 +22,9 @@ Jede CiviRules-Aktion von herald hat einen Zustellmodus. Topic-Routen nehmen den
 
 Jeder andere Modus lässt den Versand scheitern. Das Aktionsformular speichert keinen Modus ohne seinen Pflichtparameter.
 
-Im Gruppenmodus spielen Abonnements und Bezüge keine Rolle. Ein Gruppenmitglied ohne verwendbare Einstellungen erhält stattdessen eine E-Mail an die eigene Adresse. Das gilt auch für ein Mitglied, das Telegram gewählt, die Chat-ID aber leer gelassen hat.
-
 Im Abonnent:innen-Modus wird ein Kontakt ohne gewählten Kanal oder ohne das Ziel, das dieser Kanal braucht, übersprungen.
+
+Im Gruppenmodus spielen Abonnements und Bezüge keine Rolle. Ein Gruppenmitglied ohne verwendbare Einstellungen erhält stattdessen eine E-Mail an die eigene Adresse. Das gilt auch für ein Mitglied, das Telegram gewählt, die Chat-ID aber leer gelassen hat.
 
 Der Adresslisten-Modus sendet immer E-Mail. Trennen Sie die Adressen durch Kommas, Semikolons oder Zeilenumbrüche. Er eignet sich für Funktionsadressen und Empfänger:innen, die keine Kontakte sind.
 
@@ -39,7 +39,7 @@ Zwei Optionen gelten für die Kontaktmodi, also Abonnent:innen und Gruppe:
 
 Ein Info-Eintrag im CiviCRM-Protokoll zählt die ausgelassenen Kontakte nach Grund: `suspended` (gesperrt), `scope_mismatch` (Bezug passt nicht), `no_channel` (kein Kanal gewählt) und `no_recipient` (keine Adresse, kein Chat, kein Topic für den Kanal).
 
-Schlägt die Zustellung an eine Empfänger:in fehl, hält das die übrigen nicht auf. herald protokolliert eine Warnung und macht mit dem nächsten Kontakt weiter. Die Zustellung als Ganzes schlägt nur fehl, wenn alle Empfänger:innen fehlgeschlagen sind oder wenn es niemanden gab, an den gesendet werden konnte: keine Abonnent:innen, eine leere Gruppe oder eine leere Adressliste. Sobald mindestens eine Empfänger:in die Nachricht erhalten hat, gilt die Zustellung als erledigt, und an die fehlgeschlagenen Empfänger:innen wird nicht erneut zugestellt.
+Scheitert die Zustellung an einzelne Empfänger:innen, hält das die übrigen nicht auf. herald protokolliert eine Warnung und macht mit dem nächsten Kontakt weiter. Die Zustellung als Ganzes schlägt nur fehl, wenn sie bei allen Empfänger:innen fehlgeschlagen ist oder wenn es niemanden gab, an den herald senden konnte: keine Abonnent:innen, eine leere Gruppe oder eine leere Adressliste. Sobald mindestens eine Person die Nachricht erhalten hat, gilt die Zustellung als erledigt, und herald versucht keine weitere Zustellung an die anderen.
 
 ## Abonnements
 
@@ -90,13 +90,13 @@ Ein Einstellungsdatensatz lässt sich auf einen einzelnen Datensatz beschränken
 
 Auf welchen Datensatz sich eine Regel bezieht, legt das Feld „Abo-Bezug“ an der Aktion „Herald: Send notification (generic)“ fest. Zur Auswahl stehen Event, Mitgliedschaft und Teilnehmer:in, und herald übernimmt die ID aus dem Trigger. Event funktioniert auch bei Triggern auf Teilnahmen, über das Event der Teilnahme.
 
-Ein Einstellungsdatensatz ohne Bezug erhält alles, was er abonniert hat. Ein Datensatz mit Bezug gilt für alle seine Abonnements und erhält daher keine Benachrichtigungen ohne Bezug mehr, etwa Beitragsmeldungen oder Reports. Die Report-Aktion hat keinen Bezug. Das Profil zur Selbstverwaltung enthält die Bezugsfelder nicht, Admins setzen sie also am Kontakt.
+Ein Einstellungsdatensatz ohne Bezug erhält alles, was er abonniert hat. Der Bezug gilt für alle Abonnements des Datensatzes. Ein Datensatz mit Bezug erhält daher keine Benachrichtigungen ohne Bezug mehr, etwa Beitragsmeldungen, und auch keine Reports, denn die Report-Aktion hat keinen Bezug. Das Profil zur Selbstverwaltung enthält die Bezugsfelder nicht, Admins setzen sie also am Kontakt.
 
 ## Topics
 
 Bei Topics nennt der Absender nur ein Topic, und die Einstellung `herald_topics` entscheidet über Kanal, Ziel und Sammeln. Ein Skript oder eine andere Extension muss also nie eine Chat-ID oder eine URL kennen.
 
-Die Routen finden Sie unter Administrieren » Herald » Topic-Routen. Die Liste zeigt jedes Topic mit seinem Kanal, seinem Zustellmodus und seinem Sammelfenster. „Topic hinzufügen“ und „Bearbeiten“ öffnen ein Formular mit den Zustellfeldern und den Optionen, die der Kanal des Topics deklariert. Schlüssel ohne eigenes Feld, etwa `channel_config`, gehören als JSON-Objekt in „Weitere Parameter“. Beim Speichern wird die Route geprüft, und bei einem Problem wird nichts gespeichert: ein nicht registrierter Kanal, ein Wert vom falschen Typ, ein Zustellmodus ohne seinen Pflichtparameter oder ein bereits vergebener Topic-Name. Ein umbenanntes Topic behält seinen Platz in der Liste. „Löschen“ fragt vorher nach; wer an ein gelöschtes Topic veröffentlicht, nutzt dann die Route default.
+Die Routen finden Sie unter Administrieren » Herald » Topic-Routen. Die Liste zeigt jedes Topic mit seinem Kanal, seinem Zustellmodus und seinem Sammelfenster. „Topic hinzufügen“ und „Bearbeiten“ öffnen ein Formular mit den Zustellfeldern und den Optionen, die der Kanal des Topics deklariert. Schlüssel ohne eigenes Feld, etwa `channel_config`, gehören als JSON-Objekt in „Weitere Parameter“. Beim Speichern prüft herald die Route und speichert nichts, wenn es eines dieser Probleme findet: ein nicht registrierter Kanal, ein Wert vom falschen Typ, ein Zustellmodus ohne seinen Pflichtparameter oder ein bereits vergebener Topic-Name. Ein umbenanntes Topic behält seinen Platz in der Liste. „Löschen“ fragt vorher nach; wer an ein gelöschtes Topic veröffentlicht, nutzt dann die Route default.
 
 So setzen Sie alle Routen auf einmal mit cv:
 
@@ -120,7 +120,7 @@ cv api4 Herald.publish topic=revenue template=herald_contribution_alert_complete
 
 Ein Routeneintrag nimmt dieselben Parameter auf wie eine Aktion, darunter `channel_config`, `delivery_mode` und `aggregate_minutes`. Die Werte im Eintrag des Topics überschreiben die des Eintrags default. Der Kanal ist standardmäßig Telegram. Ein Topic ohne eigenen Eintrag und ohne Eintrag default schlägt mit dem Fehler „no route for topic“ fehl.
 
-`Herald.publish` nimmt entweder `message` oder ein `template` mit `vars` entgegen, nie beides. Eine Nachricht ist HTML, genau wie eine gerenderte Vorlage. Mit `format=text` senden Sie Klartext, den HTML-Kanäle dann maskiert anzeigen. Das Format gilt nur für Nachrichten. `amount` geht in die Summe in der Kopfzeile einer Sammelnachricht ein.
+`Herald.publish` nimmt entweder `message` oder ein `template` mit `vars` entgegen, nie beides. Eine Nachricht ist HTML, genau wie eine gerenderte Vorlage. Mit `format=text` ist die Nachricht Klartext: Zeichen wie `<` und `&` erscheinen unverändert, auch in Kanälen, die HTML darstellen. Das Format gilt nur für Nachrichten. `amount` geht in die Summe in der Kopfzeile einer Sammelnachricht ein.
 
 Der Check-Monitor veröffentlicht in das Topic, das in `herald_monitor_topic` steht, standardmäßig ops.
 
@@ -135,7 +135,7 @@ Ein Wert über 0 legt die gerenderte Meldung in der Tabelle `civicrm_herald_buff
 - Eine einzelne wartende Meldung wird unverändert verschickt. Das Sammeln hat sie nur verzögert.
 - Mehrere Meldungen erhalten eine Kopfzeile mit ihrer Anzahl, gefolgt von den einzelnen Nachrichten. Tragen die Meldungen einen Betrag, wie es Beitragsmeldungen tun, zeigt die Kopfzeile auch die Summe, zum Beispiel „📬 7 Meldungen, gesamt 385,00 € (gesammelt über 5 min)“. Der Betrag verwendet das Währungsformat der Site.
 - Eine gesammelte E-Mail erhält diese Kopfzeile als Betreff.
-- Ausgegeben werden höchstens `herald_buffer_max_items` Nachrichten, standardmäßig 25. Der Rest wird als „… und N weitere“ zusammengefasst, und die Kopfzeile zählt weiterhin jede Meldung. Mit 0 werden alle ausgegeben. Ein Import oder eine Massenänderung des Status kann Tausende Meldungen in ein Fenster bringen.
+- Ein Import oder eine Massenänderung des Status kann Tausende Meldungen in ein Fenster bringen. Deshalb gibt herald höchstens `herald_buffer_max_items` Nachrichten aus, standardmäßig 25. Der Rest wird als „… und N weitere“ zusammengefasst, und die Kopfzeile zählt weiterhin jede Meldung. Mit 0 gibt herald alle aus.
 - Telegram kürzt eine Nachricht, die noch immer über seiner Grenze von 4096 Zeichen liegt, und vermerkt das in der Nachricht, siehe [Telegram](channels.md#telegram). Andere Kanäle senden den vollständigen Text, halten Sie `herald_buffer_max_items` also niedrig genug für deren Grenzen.
 - Die längste Verzögerung ist das Fenster plus das Cron-Intervall. Wählen Sie das Fenster pro Regel, zum Beispiel 5 Minuten für Ticketverkäufe und 60 für ausstehende Spenden.
 

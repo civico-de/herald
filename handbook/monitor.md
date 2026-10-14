@@ -103,7 +103,7 @@ The setting `herald_monitor_state` holds the last state of each check. herald ma
 ## Guarantees
 
 - Each run takes a lock. A run that overlaps with another one skips instead of sending twice.
-- The state of each check is saved right after its alert is published. A crash halfway through a run does not repeat the alerts before it. Only a crash in the moment between a publish and its save can send that one alert twice.
+- The state of each check is saved right after its alert is published. A crash halfway through a run does not repeat the alerts before it. Only a crash between publishing an alert and saving the check's state can send that one alert twice.
 - When a publish fails, the check keeps its old state, so the next run reports the change again. The job run then ends with the error "herald monitor: N transition(s) could not be published, see the CiviCRM log", and each failure is a warning in that log.
 - When the topic route aggregates, a published alert is only buffered. The flush job delivers it later.
 

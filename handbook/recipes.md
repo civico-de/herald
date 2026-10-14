@@ -79,11 +79,9 @@ These rules help when events are maintained by a sync rather than by hand, so a 
 
 A sync usually takes an event down by deactivating it rather than deleting it, so "Event deactivated" is the rule that catches a removed event. Build it with herald's Field transition, not with a Field Value Comparison on is_active. A Field Value Comparison sees only the value after the edit, so it also fires on every other edit of an event that is already inactive. The Field transition fires only when the value really changes from 1 to 0.
 
-Abandoned checkouts go from an incomplete transaction to Cancelled. Limiting the old status of the cancellation rule keeps them from triggering an alert. Limiting "New registration" to Registered keeps waitlist and pending entries out.
+Abandoned checkouts go from an incomplete transaction to Cancelled. The cancellation rule accepts only Registered or Pending from pay later as the old status, so they trigger no alert. Limiting "New registration" to Registered keeps waitlist and pending entries out.
 
 A registration paid online starts as "Pending from incomplete transaction" and becomes Registered once the payment goes through. To catch it, add a second rule on "Event Participant is changed" with "Compare Old Participant Status to New Participant Status" from "Pending from incomplete transaction" to Registered, and use the same template.
-
-The registration, cancellation and membership templates show the contact as a masked name such as "Ja** Do*". The newsletter template adds a masked email address. That is enough to recognise a signup or spot spam in a group chat without exposing who it is.
 
 ## Memberships and newsletter signups
 
@@ -93,6 +91,8 @@ Both use "Herald: Send notification (generic)".
 |---|---|---|---|
 | New membership | Membership is added | Optionally the membership type | Herald: New membership signup |
 | Newsletter signup | Contact is added to Group | Group is: the newsletter groups | Herald: New group/newsletter subscription |
+
+The registration, cancellation, membership and newsletter templates show the contact as a masked name such as "Ja** Do*", and the newsletter template adds a masked email address. That is enough to recognise a signup or spot spam in a group chat without revealing who it is.
 
 Signups arrive in bursts after a mailing or an import. An aggregation window of 5 to 15 minutes keeps the chat readable.
 
@@ -109,7 +109,7 @@ A weekly contribution digest every Monday at 8:00:
 
 The rule list shows the schedule as "Every Monday at 08:00" and the action as `Sends the digest "Weekly contributions".` For a daily digest, leave Weekdays empty, give the digest the period "Yesterday" and give its contribution block the template "Herald: Daily contribution digest".
 
-The trigger is checked each time CiviRules' scheduled job runs, so the digest goes out with the first cron run after the full hour. Whether a slot has been sent is read from the rule's own log:
+CiviRules checks the trigger each time its scheduled job runs, so the digest goes out with the first cron run after the hour. Whether a slot has been sent is read from the rule's own log:
 
 - If cron misses the hour, the next run catches up. When cron runs every 15 minutes but skips everything between 7:45 and 9:00, the 8 o'clock digest goes out at 9:00.
 - After a longer outage, only the latest slot is sent. Three missed Mondays give one digest, not three.

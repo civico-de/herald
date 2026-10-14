@@ -27,7 +27,7 @@ Skripte und andere Extensions können Nachrichten an ein benanntes Topic wie ops
 
 Ein Report fasst die Beiträge eines Zeitraums zusammen, listet die Zeilen einer SearchKit-Anzeige auf oder enthält Zahlen, die eine andere Extension liefert. Reports richten Sie unter Administrieren » Herald » Reports ein. Meist werden sie täglich oder wöchentlich verschickt, ausgelöst von einer Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
 
-Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet, wenn ein Check zu scheitern beginnt und wenn er wieder besteht, und erinnert an Checks, die weiter scheitern. Auf einer gesunden Site bleibt es still. Siehe [Check-Monitor](monitor.md).
+Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet, wenn ein Check fehlschlägt und wenn er wieder in Ordnung ist, und erinnert an Checks, die weiter fehlschlagen. Auf einer gesunden Site bleibt es still. Siehe [Check-Monitor](monitor.md).
 
 ## Voraussetzungen
 
@@ -42,8 +42,6 @@ cv ext:enable herald
 ```
 
 Ein Git-Checkout enthält kein Verzeichnis `vendor/`. Führen Sie darin `composer install --no-dev` aus, bevor Sie die Extension aktivieren. Ohne `vendor/` bricht jeder Seitenaufruf mit einem Fehler ab, sobald herald aktiviert ist.
-
-Beim Deinstallieren entfernt herald seine CiviRules-Bausteine, und CiviRules entfernt sie aus jeder Regel, die sie nutzt. Eine Regel ohne ihre herald-Bedingung würde danach öfter auslösen als vorher. Deshalb schaltet herald zuerst jede aktive Regel ab, die einen seiner Trigger, eine seiner Bedingungen oder Aktionen nutzt. Das CiviCRM-Log nennt die IDs dieser Regeln. Beim Deinstallieren löscht herald außerdem seine Tabellen und damit die Reports und jede Meldung, die noch im Puffer wartet, auch die geparkten.
 
 ## Erste Schritte
 
@@ -68,9 +66,13 @@ Richten Sie nun eine Regel ein, die jeden abgeschlossenen Beitrag meldet:
 
 Die übrigen Kanäle richten Sie genauso ein. Ihre Einstellungen finden Sie unter [Kanäle](channels.md).
 
+## Deinstallation
+
+Beim Deinstallieren entfernt herald seine CiviRules-Bausteine, und CiviRules entfernt sie aus jeder Regel, die sie nutzt. Eine Regel ohne ihre herald-Bedingung würde danach öfter auslösen als vorher. Deshalb schaltet herald zuerst jede aktive Regel ab, die einen seiner Trigger, eine seiner Bedingungen oder Aktionen nutzt. Das CiviCRM-Protokoll nennt die IDs dieser Regeln. Beim Deinstallieren löscht herald außerdem seine Tabellen und damit die Reports und jede Meldung, die noch im Puffer wartet, auch die geparkten.
+
 ## Wie es weitergeht
 
-- [Rezepte](recipes.md) zeigt vollständige Einrichtungen für Spenden, Ticketverkäufe, Events, Anmeldungen und geplante Reports.
+- [Rezepte](recipes.md) zeigt vollständige Beispiele für Spenden, Ticketverkäufe, Events, Anmeldungen und geplante Reports.
 - [Kanäle](channels.md) beschreibt die Einstellungen, Optionen und Grenzen jedes Kanals.
 - [Zustellung](delivery.md) erklärt Empfänger:innen, Abonnements, Topics, das Sammeln von Meldungen und was passiert, wenn eine Zustellung fehlschlägt.
 - [Reports](digests.md) beschreibt die Report-Blöcke, ihre Filter und ihre Vorlagenvariablen.

@@ -66,7 +66,7 @@ rules-reenable.php switches the recorded rules back on, removes the file and pri
 
 ### Checking other rules
 
-note-foreign-rules.php runs once herald's rules are back on. It reports broken handlers of the other active rules on stderr, without failing. It is the only step that loads the classes of rules without a herald handler. A class that crashes PHP when it loads, such as one with an unimplemented abstract method, fails this last step and marks the deploy as failed. By then herald's rules are already back on, and this failure does not switch them off again. A handler from another extension that is attached to one of herald's rules is checked by the preflight and does block switching the rules back on.
+note-foreign-rules.php runs once herald's rules are back on. It is the only step that loads the classes of rules without a herald handler, and it reports broken ones on stderr without failing. A handler from another extension that is attached to one of herald's rules is not left to this step: the preflight checks it, and it blocks switching the rules back on. A class that crashes PHP when it loads, such as one with an unimplemented abstract method, does fail this last step and marks the deploy as failed. By then herald's rules are already back on, and this failure does not switch them off again.
 
 ## When something goes wrong
 

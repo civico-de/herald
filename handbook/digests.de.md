@@ -26,7 +26,7 @@ Die Reports finden Sie unter Administrieren » Herald » Reports. „Report hinz
 
 Darunter folgen die Blöcke, mindestens einer, in der Reihenfolge, in der sie in der Nachricht stehen. Jeder Block hat einen Typ, einen Titel und bei Bedarf einen eigenen Zeitraum. Beitrags- und Suchblöcke haben außerdem eine Vorlage. Bleibt sie leer, gilt die Standardvorlage des Blocktyps. Die übrigen Felder hängen vom Typ ab und sind unter [Blocktypen](#blocktypen) beschrieben.
 
-Beim Speichern wird der ganze Report geprüft, bevor etwas geschrieben wird. Das Formular lehnt ab:
+Beim Speichern prüft herald den ganzen Report, bevor es etwas schreibt. Das Formular lehnt ab:
 
 - einen Namen, der schon vergeben ist oder falsche Zeichen enthält,
 - einen Suchblock ohne Anzeige,
@@ -34,7 +34,7 @@ Beim Speichern wird der ganze Report geprüft, bevor etwas geschrieben wird. Das
 - eine Klassenzahl unter 1,
 - Histogrammgrenzen, die nicht aus mindestens zwei aufsteigenden Zahlen bestehen.
 
-Eine Meldung zu einem Block nennt ihn, zum Beispiel „Block 2: ein Suchblock braucht eine Suchanzeige.“ Über APIv4 gelten dieselben Prüfungen für jeden Datensatz von `HeraldDigest` und `HeraldDigestBlock`. Ein dort ohne Blöcke gespeicherter Report scheitert beim Versand.
+Eine Fehlermeldung zu einem Block nennt ihn, zum Beispiel „Block 2: ein Suchblock braucht eine Suchanzeige.“ Über APIv4 gelten dieselben Prüfungen für jeden Datensatz von `HeraldDigest` und `HeraldDigestBlock`. Ein Report, der dort ohne Blöcke gespeichert wurde, scheitert beim Versand.
 
 Skripte und Deployments können einen Report mit cv anlegen. Die Verkettung speichert die Blöcke in der angegebenen Reihenfolge. JSON über mehrere Zeilen muss über die Standardeingabe kommen, daher `--in=json`:
 
@@ -55,11 +55,11 @@ JSON
 
 ### Was eine Änderung kaputt macht
 
-Regeln und Skripte wählen einen Report über seinen Namen. Nachdem Sie den Namen eines Reports geändert oder den Report gelöscht haben, scheitern sie mit der Meldung `Den Report „weekly_report“ gibt es nicht.`, bis sie einen anderen nennen. Die Regelliste zeigt dieselbe Meldung anstelle des Reporttitels. Den Titel können Sie jederzeit ändern.
+Regeln und Skripte wählen einen Report über seinen Namen. Nachdem Sie den Namen eines Reports geändert oder den Report gelöscht haben, scheitern sie mit der Fehlermeldung `Den Report „weekly_report“ gibt es nicht.`, bis sie einen anderen nennen. Die Regelliste zeigt dieselbe Meldung anstelle des Reporttitels. Den Titel können Sie jederzeit ändern.
 
 Eine Kampagne oder ein Finanztyp, nach dem ein Block filtert, lässt sich nicht löschen, solange der Block existiert. Der Versuch endet mit einem Datenbankfehler. Ohne seinen Filter würde der Block jeden Beitrag zählen. Ändern oder entfernen Sie zuerst den Block.
 
-Eine Suchanzeige lässt sich löschen, ebenso ihre gespeicherte Suche, mit der auch ihre Anzeigen gelöscht werden. Der Block, der sie gezeigt hat, steht dann ohne Anzeige da, und der Report scheitert beim Versand mit der Meldung, die auch das Formular gezeigt hätte. Wählen Sie eine andere Anzeige oder entfernen Sie den Block.
+Wird eine Suchanzeige gelöscht oder ihre gespeicherte Suche, die ihre Anzeigen mitlöscht, steht der Block ohne Anzeige da. Der Report scheitert dann beim Versand mit der Fehlermeldung, die auch das Formular gezeigt hätte. Wählen Sie eine andere Anzeige oder entfernen Sie den Block.
 
 ## Einen Report verschicken
 
@@ -118,7 +118,7 @@ Der Fortschritt einer Kampagne übernimmt Titel und Ziel aus dem Kampagnendatens
 
 Ein Suchblock zeigt die Zeilen einer SearchKit-Anzeige, die Sie im Feld „Suchanzeige“ (`search_display_id`) wählen. Die Anzeige bauen Sie wie gewohnt in SearchKit, als Tabelle, Liste oder Raster. Nur diese bietet das Feld an, denn die übrigen Anzeigetypen haben keine Zeilen zum Verschicken. Um Anzahlen zu zeigen, gruppieren Sie die Suche, zum Beispiel Mitgliedschaften nach Typ.
 
-Die Standardvorlage gibt eine Zeile pro Ergebniszeile aus. Was darin steht, bestimmt die Anzeige: ihre Wertspalten in ihrer Reihenfolge und so formatiert wie in der Anzeige, ein Ja/Nein-Feld also als „Ja“ und ein Datum im Datumsformat der Site. Es erscheinen nur Feld- und HTML-Spalten. Links, Schaltflächen, Menüs, Bilder und verschachtelte Suchen entfallen. Eine HTML-Spalte kommt als Text an, ohne ihr Markup. Es gilt die Sortierung der Anzeige. Eine Anzeige ohne eigene Sortierung zeigt die Zeilen unsortiert, auch wenn die Suche eine Reihenfolge hat. Auch ihr Limit gilt, bei einer Anzeige mit Seitenumbruch die erste Seite. Geben Sie der Anzeige ein Limit, denn jede Zeile landet in der Nachricht, und nur Telegram kürzt eine zu lange Nachricht.
+Die Standardvorlage gibt eine Zeile pro Ergebniszeile aus. Was darin steht, bestimmt die Anzeige: ihre Wertspalten in ihrer Reihenfolge und so formatiert wie in der Anzeige, ein Ja/Nein-Feld also als „Ja“ und ein Datum im Datumsformat der Site. Es erscheinen nur Feld- und HTML-Spalten. Links, Schaltflächen, Menüs, Bilder und verschachtelte Suchen entfallen. Eine HTML-Spalte kommt als Text an, ohne ihr Markup. Es gilt die Sortierung der Anzeige. Eine Anzeige ohne eigene Sortierung zeigt die Zeilen unsortiert, auch wenn die Suche eine Reihenfolge hat. Auch ihr Limit gilt, und von einer Anzeige mit Seitenumbruch geht nur die erste Seite in den Report. Geben Sie der Anzeige ein Limit, denn jede Zeile landet in der Nachricht, und nur Telegram kürzt eine zu lange Nachricht.
 
 herald führt die Anzeige ohne Berechtigungsprüfung aus, so wie seine eigenen Beitragsabfragen. Wer einen Report konfigurieren darf, kann deshalb die Zeilen jeder Anzeige an einen Kanal schicken.
 
@@ -144,13 +144,13 @@ Die Antwort wird als HTML eingefügt, der Listener maskiert seine eigenen Daten 
 
 Das Upgrade behält bei, was der Report bisher verschickt hat:
 
-- Einen Zeitraum, den herald nicht kannte, hat es als gestern gelesen, und so bleibt es.
+- Ein unbekannter Zeitraum galt bisher als gestern und gilt weiterhin so.
 - Histogrammgrenzen, die keine aufsteigenden Zahlen sind, entfallen mit einer Warnung im Upgrade-Protokoll, und das Histogramm wählt seine Klassen selbst.
-- Eine Klassenzahl unter 0 hat eine einzige Klasse gezeichnet und wird zu 1. Mit der Klassenzahl 0 scheiterte der Report, sobald sich zwei Beträge unterschieden. Diese Klassenzahl wird zum Standardwert 8, mit einer Warnung im Upgrade-Protokoll.
-- Ein Suchblock bekommt eine neue Tabellenanzeige seiner Suche mit der Bezeichnung „Herald: <Titel des Reports>“, mit den Spalten, der Sortierung und dem Limit der Suche und ohne Seitenumbruch. Seine Werte erscheinen nun formatiert, so wie die Anzeige sie zeigt.
-- Ein Statusfilter auf Completed entfällt, weil die Datensätze ohnehin abgeschlossene Beiträge zählen.
+- Eine negative Klassenzahl hat eine einzige Klasse gezeichnet und wird zu 1. Mit der Klassenzahl 0 scheiterte der Report, sobald sich zwei Beträge unterschieden; sie wird zum Standardwert 8, mit einer Warnung im Upgrade-Protokoll.
+- Ein Suchblock bekommt eine neue Tabellenanzeige seiner Suche mit der Bezeichnung `Herald: <Titel des Reports>`, mit den Spalten, der Sortierung und dem Limit der Suche und ohne Seitenumbruch. Seine Werte erscheinen nun formatiert, so wie die Anzeige sie zeigt.
+- Ein Statusfilter auf Completed entfällt, weil Report-Datensätze ohnehin nur abgeschlossene Beiträge zählen.
 
-Ein Report, den die Datensätze nicht nachbilden können, bleibt, wie er war. Das Upgrade-Protokoll enthält dann die Warnung „digest left inline, it cannot run until fixed“ mit dem Grund, und Regel oder Job scheitern, bis sie einen Report-Datensatz nennen. Die meisten dieser Reports konnten nie laufen:
+Ein Report, den ein Report-Datensatz nicht nachbilden kann, bleibt, wie er war. Das Upgrade-Protokoll enthält dann die Warnung „digest left inline, it cannot run until fixed“ mit dem Grund, und Regel oder Job scheitern, bis sie einen Report-Datensatz nennen. Die meisten dieser Reports konnten nie laufen:
 
 - Eine Blockliste, die kein JSON-Array aus Objekten ist.
 - Ein Block unbekannten Typs.
@@ -158,10 +158,10 @@ Ein Report, den die Datensätze nicht nachbilden können, bleibt, wie er war. Da
 - Eine gespeicherte Suche, die es nicht mehr gibt oder deren Entität mit ihrer Extension verschwunden ist.
 - Eine Kampagne oder ein Finanztyp, die es nicht mehr gibt.
 
-Die übrigen verlangen etwas, das die Datensätze nicht können:
+Die übrigen verlangen etwas, das Report-Datensätze nicht können:
 
 - Eine gespeicherte Suche, die ihre ersten Zeilen überspringt. Eine Anzeige beginnt immer bei der ersten Zeile.
-- Ein Statusfilter auf einen anderen Status als Completed, den die Datensätze nicht mehr anbieten. Dazu gehört auch Completed in einem Report, der die ausstehenden Beträge ohne die Aufschlüsselung nach Positionen zeigte: Der Filter galt dann auch für die ausstehenden Beträge, sie zählten also abgeschlossene Beiträge.
+- Ein Statusfilter auf einen anderen Status als Completed. Solche Filter bieten Report-Datensätze nicht mehr an. Dazu gehört auch ein Filter auf Completed in einem Report, der die ausstehenden Beträge ohne Aufschlüsselung nach Positionen zeigte. Dort galt der Filter auch für die ausstehenden Beträge, sie zählten also abgeschlossene Beiträge.
 
 Listener für Abschnitte bekamen in älteren Versionen die Einstellungen des Reports unter `params` in `$context`. Diesen Schlüssel gibt es nicht mehr. Ein Listener, der dort einen Filter gelesen hat, muss nun den Report-Datensatz über seinen Namen aus `digest` laden.
 
@@ -173,7 +173,7 @@ Das Report-Formular ist ein Afform, herald braucht deshalb die Extension Form Co
 
 Beitragsquellen sind oft technisch, etwa die Referenz eines Zahlungsanbieters oder das Transaktionspräfix eines Bankimports. Die Einstellung `herald_source_normalization` ordnet ihnen lesbare Bezeichnungen zu. Die Bezeichnungen erscheinen in der Aufschlüsselung des Reports und als Quelle in Beitragsbenachrichtigungen. Standardmäßig ist die Einstellung leer, und die Quellen bleiben, wie sie sind.
 
-Die Regeln finden Sie unter Administrieren » Herald » Namen der Beitragsquellen. Jede Zeile enthält den Quelltext, die Art des Vergleichs und den anzuzeigenden Namen. Die Pfeil-Schaltflächen ändern die Reihenfolge, in der die Regeln geprüft werden. Beim Speichern werden eine unvollständige Regel und ein regulärer Ausdruck, der sich nicht kompilieren lässt, abgelehnt, mit der Nummer der Regel.
+Die Regeln finden Sie unter Administrieren » Herald » Namen der Beitragsquellen. Jede Zeile enthält den Quelltext, die Art des Vergleichs und den anzuzeigenden Namen. Die Pfeil-Schaltflächen ändern die Reihenfolge, in der die Regeln geprüft werden. Beim Speichern lehnt die Seite unvollständige Regeln und reguläre Ausdrücke ab, die sich nicht kompilieren lassen, und nennt die Nummer der Regel.
 
 Mit cv:
 
@@ -209,6 +209,6 @@ Die Vorlagen für Beitragsblöcke sowie die Vorlagen für den täglichen und den
 | histogram | Das Histogramm als vorformatierter Text. Es ist leer, wenn das Histogramm ausgeschaltet ist. |
 | block_title | Der Titel des Blocks. |
 
-Vorlagen für Suchblöcke erhalten block_title, count, also die Anzahl der Zeilen, labels, die Spaltenüberschriften in ihrer Reihenfolge, und rows. Jede Zeile hat cells, die Spaltenwerte in ihrer Reihenfolge, und values, dieselben Werte nach dem Feld der Spalte. In den Schlüsseln wird jedes Zeichen, das kein Buchstabe, keine Ziffer und kein Unterstrich ist, zu einem Unterstrich. Die Spalte `contact_type:label` wird zu `contact_type_label`, und `COUNT(id) AS n` wird zu `n`. Zeigen zwei Spalten dasselbe Feld, enthält values die erste davon.
+Vorlagen für Suchblöcke erhalten `block_title`, `count` (die Anzahl der Zeilen), `labels` (die Spaltenüberschriften in ihrer Reihenfolge) und `rows`. Jede Zeile hat `cells`, die Spaltenwerte in ihrer Reihenfolge, und `values`, dieselben Werte mit dem Feld der Spalte als Schlüssel. In den Schlüsseln wird jedes Zeichen, das kein Buchstabe, keine Ziffer und kein Unterstrich ist, zu einem Unterstrich. Die Spalte `contact_type:label` wird zu `contact_type_label`, und `COUNT(id) AS n` wird zu `n`. Zeigen zwei Spalten dasselbe Feld, enthält `values` die erste davon.
 
 In einer Vorlage sind das Smarty-Variablen wie `{$totals.amount|crmMoney}`.

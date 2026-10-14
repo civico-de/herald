@@ -7,7 +7,7 @@ order: 70
 
 Diese Seite erklärt, wie Sie herald auf einer laufenden Site aktualisieren, ohne dass während des Codewechsels etwas kaputtgeht.
 
-Die CiviRules-Aktionen und -Bedingungen von herald laufen innerhalb des Speichervorgangs jedes Datensatzes, auf den ihre Regeln reagieren. Lässt sich eine ihrer Klassen nicht laden, schlägt dieser Speichervorgang fehl: Verloren geht dann der Beitrag, die Registrierung oder die Änderung am Event, nicht nur die Meldung. Die Skripte im Verzeichnis bin von herald schalten die Regeln von herald deshalb ab, während sich der Code ändert. Sie schalten die Regeln erst wieder ein, wenn sich jeder Handler laden lässt. Auf einer Site ohne CiviRules vermerkt jedes Skript, dass es nichts zu prüfen gibt, und läuft erfolgreich durch.
+Die CiviRules-Aktionen und -Bedingungen von herald laufen innerhalb des Speichervorgangs jedes Datensatzes, auf den ihre Regeln reagieren. Lässt sich eine ihrer Klassen nicht laden, schlägt dieser Speichervorgang fehl: Verloren geht dann der Beitrag, die Registrierung oder die Änderung am Event, nicht nur die Meldung. Die Skripte im Verzeichnis bin von herald schalten seine Regeln deshalb ab, während sich der Code ändert. Sie schalten die Regeln erst wieder ein, wenn sich jeder Handler laden lässt. Auf einer Site ohne CiviRules vermerkt jedes Skript, dass es nichts zu prüfen gibt, und läuft erfolgreich durch.
 
 ## Schritte
 
@@ -38,7 +38,7 @@ rules-reenable.php prüft nicht, ob der Preflight bestanden wurde. Führen Sie e
 
 ### Die Regeln abschalten
 
-rules-disable.php sucht jede aktive Regel mit einem Trigger, einer Bedingung oder einer Aktion von herald. Es schreibt ihre IDs in die Datei herald_deploy_disabled_rules im privaten Verzeichnis von CiviCRM und schaltet diese Regeln dann ab. IDs, die ein früherer, fehlgeschlagener Deploy in der Datei hinterlassen hat, bleiben erhalten. Die Ausgabe lautet:
+rules-disable.php sucht jede aktive Regel mit einem Trigger, einer Bedingung oder einer Aktion von herald. Es schreibt ihre IDs in die Datei herald_deploy_disabled_rules im privaten Verzeichnis von CiviCRM und schaltet diese Regeln dann ab. IDs, die ein früheres fehlgeschlagenes Deployment in der Datei hinterlassen hat, bleiben erhalten. Die Ausgabe lautet:
 
 ```
 [herald deploy] disabled 4 herald rule(s) for the swap: 3,7,8,12 (marker now holds 4)
@@ -66,11 +66,11 @@ rules-reenable.php schaltet die vermerkten Regeln wieder ein, entfernt die Datei
 
 ### Andere Regeln prüfen
 
-note-foreign-rules.php läuft, sobald die Regeln von herald wieder an sind. Es meldet fehlerhafte Handler der übrigen aktiven Regeln auf stderr, ohne fehlzuschlagen. Es ist der einzige Schritt, der die Klassen von Regeln ohne herald-Handler lädt. Eine Klasse, die PHP beim Laden abstürzen lässt, etwa eine mit einer nicht implementierten abstrakten Methode, lässt diesen letzten Schritt fehlschlagen und markiert den Deploy als fehlgeschlagen. Die Regeln von herald sind dann bereits wieder an, und dieser Fehler schaltet sie nicht wieder ab. Ein Handler einer anderen Extension, der an einer Regel von herald hängt, wird vom Preflight geprüft und verhindert sehr wohl, dass die Regeln wieder eingeschaltet werden.
+note-foreign-rules.php läuft, sobald die herald-Regeln wieder an sind. Es ist der einzige Schritt, der die Klassen von Regeln ohne herald-Handler lädt, und meldet fehlerhafte Handler auf stderr, ohne fehlzuschlagen. Ein Handler einer anderen Extension, der an einer herald-Regel hängt, gehört nicht zu diesem Schritt: Ihn prüft der Preflight, und er verhindert, dass die Regeln wieder eingeschaltet werden. Eine Klasse, die PHP beim Laden abstürzen lässt, etwa eine mit einer nicht implementierten abstrakten Methode, lässt dagegen diesen letzten Schritt fehlschlagen und markiert das Deployment als fehlgeschlagen. Die herald-Regeln sind dann bereits wieder an, und dieser Fehler schaltet sie nicht wieder ab.
 
 ## Wenn etwas schiefgeht
 
-- Eine Klasse von herald, die sich überhaupt nicht laden lässt, bringt PHP spätestens im Preflight zum Absturz. Der Preflight endet dann mit einem Fehler, und die Regeln von herald bleiben aus. Bei kaltem Klassen-Cache kann schon ein früherer Schritt, der CiviCRM startet, auf den Absturz stoßen. `cv flush` zeigt die Klasse und die Datei.
+- Eine Klasse von herald, die sich überhaupt nicht laden lässt, bringt PHP spätestens im Preflight zum Absturz. Der Preflight endet dann mit einem Fehler, und die herald-Regeln bleiben aus. Bei kaltem Klassen-Cache kann schon ein früherer Schritt, der CiviCRM startet, auf den Absturz stoßen. `cv flush` zeigt die Klasse und die Datei.
 - Solange die Datei aus dem ersten Schritt existiert, zeigt der Systemstatus von CiviCRM die Warnung „Herald: Regeln durch einen Deploy abgeschaltet“. Sie listet die IDs der Regeln und den Befehl auf, der sie wieder einschaltet.
-- Der nächste erfolgreiche Deploy schaltet die Regeln aus einem fehlgeschlagenen Deploy wieder ein. Das gilt auch für eine Regel, die ein Admin in der Zwischenzeit absichtlich abgeschaltet hat.
-- Ein Release, das einen Handler ausmustert, stellt die Regeln auf dessen Nachfolger um, nicht aber die Warteschlange der verzögerten Aktionen von CiviRules. Eine vor dem Deploy eingereihte Aktion, die einen ausgemusterten Handler nennt, schlägt bei ihrer Ausführung fehl, und CiviRules protokolliert das. Deployen Sie, wenn keine verzögerte Aktion von herald wartet.
+- Das nächste erfolgreiche Deployment schaltet die Regeln aus einem fehlgeschlagenen Deployment wieder ein. Das gilt auch für eine Regel, die ein Admin in der Zwischenzeit absichtlich abgeschaltet hat.
+- Ein Release, das einen Handler ausmustert, stellt die Regeln auf dessen Nachfolger um, nicht aber die Warteschlange der verzögerten Aktionen von CiviRules. Eine vor dem Deployment eingereihte Aktion, die einen ausgemusterten Handler nennt, schlägt bei ihrer Ausführung fehl, und CiviRules protokolliert das. Führen Sie das Deployment aus, wenn keine verzögerte Aktion von herald wartet.

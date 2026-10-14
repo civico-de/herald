@@ -34,7 +34,7 @@ Saving checks the whole digest before anything is written. The form refuses:
 - a bucket count below 1,
 - histogram edges that are not at least two numbers in ascending order.
 
-A message about a block names it, for example "Block 2: a search block needs a search display." Through APIv4 the same checks apply to each `HeraldDigest` and `HeraldDigestBlock` record. A digest saved there without blocks fails when it is sent.
+An error about a block names it, for example "Block 2: a search block needs a search display." Through APIv4 the same checks apply to each `HeraldDigest` and `HeraldDigestBlock` record. A digest saved there without blocks fails when it is sent.
 
 Scripts and deploys can create a digest with cv. The chain saves the blocks in the order given. JSON spread over several lines has to come through standard input, hence `--in=json`:
 
@@ -59,7 +59,7 @@ Rules and scripts pick a digest by its name. After you change a digest's name or
 
 A campaign or a financial type that a block filters on cannot be deleted while the block exists, and the attempt ends in a database error. Without its filter the block would count every contribution. Change or remove the block first.
 
-A search display can be deleted, and so can its saved search, which takes its displays with it. The block that showed it keeps no display, and the digest fails when it is sent, with the message the form would have shown. Pick another display or remove the block.
+Deleting a search display, or the saved search it belongs to, which deletes its displays too, leaves the block without a display. The digest then fails when it is sent, with the message the form would have shown. Pick another display or remove the block.
 
 ## Sending a digest
 
@@ -118,7 +118,7 @@ The campaign progress takes the title and the goal from the Campaign record. It 
 
 A search block shows the rows of a SearchKit display, picked in the field Search Display (`search_display_id`). Build the display in SearchKit as usual, as a table, list or grid; the field offers only these, because the other display types have no rows to send. To show counts, group the search, for example memberships by type.
 
-The default template prints one line per row. The display decides what goes into it: its value columns appear in their order and formatted as in the display, so a yes/no field reads "Yes" and a date reads as the site formats dates. Only field and HTML columns appear. Links, buttons, menus, images and subsearches are left out. An HTML column arrives as text, without its markup. The display's sort applies. A display without a sort of its own shows the rows unsorted, even when the search has an order. Its limit applies too, and the first page if it has a pager. Give the display a limit, because every row goes into the message and only Telegram shortens a message that is too long.
+The default template prints one line per row. The display decides what goes into it: its value columns appear in their order and formatted as in the display, so a yes/no field reads "Yes" and a date reads as the site formats dates. Only field and HTML columns appear. Links, buttons, menus, images and subsearches are left out. An HTML column arrives as text, without its markup. The display's sort applies. A display without a sort of its own shows the rows unsorted, even when the search has an order. Its limit applies too, and a display with a pager sends only its first page. Give the display a limit, because every row goes into the message and only Telegram shortens a message that is too long.
 
 herald runs the display without permission checks, as it does with its own contribution queries. Whoever can configure a digest can therefore send the rows of any display to a channel.
 
@@ -144,13 +144,13 @@ Older releases kept a digest inside the settings of its rule action or scheduled
 
 The upgrade keeps what the digest sent before:
 
-- A period herald did not know was read as yesterday, and it still is.
+- An unknown period counted as yesterday and still does.
 - Histogram edges that are not ascending numbers are dropped with a warning in the upgrade log, and the histogram picks its own buckets.
-- A histogram bucket count below 0 drew one bucket and becomes 1. With a count of 0 the digest failed as soon as two amounts differed. That count becomes the default 8, with a warning in the upgrade log.
-- A search block gets a new table display of its search, labelled "Herald: <digest title>", with the search's columns, sort and limit and no pager. Its values now appear formatted, as the display shows them.
-- A status filter of Completed is dropped, because records count completed contributions anyway.
+- A negative bucket count drew a single bucket and becomes 1. A count of 0 made the digest fail as soon as two amounts differed; it becomes the default 8, with a warning in the upgrade log.
+- A search block gets a new table display of its search, labelled `Herald: <digest title>`, with the search's columns, sort and limit and no pager. Its values now appear formatted, as the display shows them.
+- A status filter of Completed is dropped, because digest records count only completed contributions anyway.
 
-A digest the records cannot reproduce is left as it was. The upgrade log has the warning "digest left inline, it cannot run until fixed" with the reason, and the rule or job fails until it names a digest record. Most of these digests could never have run:
+A digest that a digest record cannot reproduce is left as it was. The upgrade log has the warning "digest left inline, it cannot run until fixed" with the reason, and the rule or job fails until it names a digest record. Most of these digests could never have run:
 
 - A block list that is not a JSON array of objects.
 - A block of unknown type.
@@ -158,10 +158,10 @@ A digest the records cannot reproduce is left as it was. The upgrade log has the
 - A saved search that no longer exists, or whose entity is gone with its extension.
 - A campaign or financial type that no longer exists.
 
-The others ask for something records cannot do:
+The others ask for something digest records cannot do:
 
 - A saved search that skips its first rows. A display always starts at the first row.
-- A status filter other than Completed, which records no longer offer. That includes Completed in a digest that showed the pending amounts without the line item breakdown: the filter then applied to the pending amounts too, so they counted completed contributions.
+- A status filter other than Completed, which digest records no longer offer. This includes a Completed filter in a digest that showed the pending amounts without the line item breakdown. There the filter also applied to the pending amounts, so they counted completed contributions.
 
 Section listeners of older releases received the digest's settings under `params` in `$context`. That key is gone, so a listener that read a filter from it must now load the digest record by its name from `digest`.
 
@@ -173,7 +173,7 @@ The digest form is an Afform, so herald needs the extension Form Core (`org.civi
 
 Contribution sources are often technical, such as a payment processor's reference or the transaction prefix of a bank import. The setting `herald_source_normalization` maps them to readable labels. The labels appear in the digest breakdown and in the source of contribution notifications. The setting is empty by default, which leaves sources as they are.
 
-The rules are under Administer » Herald » Contribution source names. Each row holds the source text, how it is matched and the name to show. The arrow buttons change the order in which the rules are tried. Saving rejects an incomplete rule and a regular expression that does not compile, and names the rule.
+The rules are under Administer » Herald » Contribution source names. Each row holds the source text, how it is matched and the name to show. The arrow buttons change the order in which the rules are tried. Saving rejects an incomplete rule and a regular expression that does not compile, and names the rule by its number.
 
 With cv:
 
@@ -209,6 +209,6 @@ Contribution block templates and the daily and weekly digest templates receive:
 | histogram | The histogram as preformatted text. It is empty when the histogram is off. |
 | block_title | The block's title. |
 
-Search block templates receive block_title, count, which is the number of rows, labels, the column headings in order, and rows. Each row has cells, the column values in order, and values, the same values keyed by the column's field. In the keys, every character that is not a letter, digit or underscore becomes an underscore. The column `contact_type:label` becomes `contact_type_label`, and `COUNT(id) AS n` becomes `n`. When two columns show the same field, values holds the first of them.
+Search block templates receive `block_title`, `count` (the number of rows), `labels` (the column headings in order) and `rows`. Each row has `cells`, the column values in order, and `values`, the same values keyed by the column's field. In the keys, every character that is not a letter, digit or underscore becomes an underscore. The column `contact_type:label` becomes `contact_type_label`, and `COUNT(id) AS n` becomes `n`. When two columns show the same field, `values` holds the first of them.
 
 In a template, these are Smarty variables such as `{$totals.amount|crmMoney}`.

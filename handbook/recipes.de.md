@@ -5,7 +5,7 @@ order: 10
 
 # Rezepte
 
-Hier finden Sie vollständige Einrichtungen für häufige Meldungen. Sie bestehen aus CiviRules-Regeln und geplanten Jobs in der CiviCRM-Oberfläche und kommen ohne Code aus.
+Diese Seite zeigt vollständige Beispiele für häufige Meldungen. Sie bestehen aus CiviRules-Regeln und geplanten Jobs in der CiviCRM-Oberfläche und kommen ohne Code aus.
 
 Regeln verwalten Sie unter „Administer, CiviRules, Manage Rules“ (Administrieren, CiviRules, Regeln verwalten). Die Namen der Trigger und Bedingungen unten stammen aus CiviRules und sind mit ihrer englischen Bezeichnung angegeben. Aktionen und Bedingungen, deren Name mit „Herald:“ beginnt, bringt herald mit. Jede herald-Aktion hat ein Formular, in dem die Vorlagen nach ihrem Titel aufgelistet sind.
 
@@ -81,11 +81,9 @@ Diese Regeln helfen, wenn Events nicht von Hand, sondern per Synchronisation gep
 
 Eine Synchronisation nimmt ein Event meist offline, indem sie es deaktiviert statt löscht. Deshalb erkennt die Regel „Event deaktiviert“ ein entferntes Event. Bauen Sie sie mit der herald-Bedingung Field transition, nicht mit einer Field Value Comparison auf is_active. Eine Field Value Comparison sieht nur den Wert nach der Änderung und löst deshalb auch bei jeder anderen Änderung eines bereits inaktiven Events aus. Field transition löst nur aus, wenn der Wert tatsächlich von 1 auf 0 wechselt.
 
-Abgebrochene Bestellvorgänge wechseln von einer unvollständigen Transaktion zu Cancelled. Wenn Sie den alten Status der Stornoregel einschränken, lösen sie keine Meldung aus. Wenn Sie „Neue Registrierung“ auf Registered beschränken, bleiben Wartelisten- und ausstehende Einträge außen vor.
+Abgebrochene Bestellvorgänge wechseln von einer unvollständigen Transaktion zu Cancelled. Die Stornoregel lässt als alten Status nur Registered und Pending from pay later zu, deshalb lösen sie keine Meldung aus. Weil „Neue Registrierung“ auf Registered beschränkt ist, bleiben Wartelisten- und ausstehende Einträge außen vor.
 
 Eine online bezahlte Registrierung beginnt als „Pending from incomplete transaction“ (ausstehend wegen unvollständiger Transaktion) und wird zu Registered, sobald die Zahlung durch ist. Um sie zu erfassen, legen Sie eine zweite Regel auf „Event Participant is changed“ an, mit „Compare Old Participant Status to New Participant Status“ von „Pending from incomplete transaction“ nach Registered, und verwenden dieselbe Vorlage.
-
-Die Vorlagen für Registrierung, Stornierung und Mitgliedschaft zeigen den Kontakt mit maskiertem Namen, etwa „Ja** Do*“. Die Newsletter-Vorlage ergänzt eine maskierte E-Mail-Adresse. Das reicht, um in einem Gruppenchat eine Anmeldung zu erkennen oder Spam zu bemerken, ohne preiszugeben, um wen es sich handelt.
 
 ## Mitgliedschaften und Newsletter-Anmeldungen
 
@@ -95,6 +93,8 @@ Beide verwenden „Herald: Send notification (generic)“.
 |---|---|---|---|
 | Neue Mitgliedschaft | Membership is added | Optional der Mitgliedschaftstyp | Herald: Neue Mitgliedschaftsanmeldung |
 | Newsletter-Anmeldung | Contact is added to Group | Group is: die Newsletter-Gruppen | Herald: Neue Gruppen-/Newsletter-Anmeldung |
+
+Die Vorlagen für Registrierung, Stornierung, Mitgliedschaft und Newsletter zeigen den Kontakt mit maskiertem Namen, etwa „Ja** Do*“, die Newsletter-Vorlage zusätzlich mit maskierter E-Mail-Adresse. Das reicht, um in einem Gruppenchat eine Anmeldung zu erkennen oder Spam zu bemerken, ohne preiszugeben, um wen es sich handelt.
 
 Anmeldungen kommen nach einem Mailing oder einem Import gehäuft. Ein Sammelfenster von 5 bis 15 Minuten hält den Chat lesbar.
 
@@ -111,7 +111,7 @@ Ein wöchentlicher Beitragsreport jeden Montag um 8:00 Uhr:
 
 Die Regelliste zeigt den Zeitplan als „Jeden Montag um 08:00“ und die Aktion als `Verschickt den Report „Weekly contributions“.` Für einen täglichen Report lassen Sie „Wochentage“ leer, geben dem Report den Zeitraum „Gestern“ und seinem Beitragsblock die Vorlage „Herald: Täglicher Beitragsreport“.
 
-Der Trigger wird bei jedem Lauf des geplanten Jobs von CiviRules geprüft, der Report wird also mit dem ersten Cron-Lauf nach der vollen Stunde verschickt. Ob ein Termin schon verschickt wurde, steht im Protokoll der Regel selbst:
+CiviRules prüft den Trigger bei jedem Lauf seines geplanten Jobs. Der Report wird also mit dem ersten Cron-Lauf nach der vollen Stunde verschickt. Ob ein Termin schon verschickt wurde, steht im Protokoll der Regel selbst:
 
 - Verpasst Cron die Stunde, holt der nächste Lauf sie nach. Läuft Cron alle 15 Minuten, fällt aber zwischen 7:45 Uhr und 9:00 Uhr aus, wird der Report für 8 Uhr um 9:00 Uhr verschickt.
 - Nach einem längeren Ausfall wird nur der jüngste Termin verschickt. Drei verpasste Montage ergeben einen Report, nicht drei.

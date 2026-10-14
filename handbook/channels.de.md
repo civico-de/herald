@@ -21,13 +21,13 @@ Ein Kanal stellt eine Nachricht an genau ein Ziel zu: einen Chat, ein Smartphone
 
 ## Einen Kanal konfigurieren
 
-Zugangsdaten und Ersatzziele sind Einstellungen. Die meisten davon finden Sie auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen. Sie können die Einstellungen auch mit cv setzen:
+Zugangsdaten und Standardziele sind Einstellungen. Die meisten davon finden Sie auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen. Sie können die Einstellungen auch mit cv setzen:
 
 ```bash
 cv setting:set herald_telegram_bot_token=<bot-token>
 ```
 
-Jede Zustellung kann ein eigenes Ziel und eigene Optionen angeben. Diese Schlüssel pro Aufruf haben Vorrang vor den Ersatzeinstellungen. Wohin sie gehören, hängt vom Aufrufer ab:
+Jede Zustellung kann ein eigenes Ziel und eigene Optionen angeben. Diese Schlüssel pro Aufruf haben Vorrang vor den Standardeinstellungen. Wohin sie gehören, hängt vom Aufrufer ab:
 
 - Eine CiviRules-Aktion hat Formularfelder für die Telegram-Optionen. Alle anderen Schlüssel gehören als JSON-Objekt in das Feld „Kanalspezifische Konfiguration“.
 - Eine Topic-Route nimmt die Schlüssel in ihrem Eintrag auf, entweder direkt oder in `channel_config`.
@@ -65,7 +65,7 @@ Legen Sie mit @BotFather einen Bot an und speichern Sie sein Token in `herald_te
 
 | Schlüssel | Bedeutung |
 |---|---|
-| `chat_id` | Empfangender Chat oder empfangende Gruppe. Leer verwendet den Standard-Chat. |
+| `chat_id` | Empfangender Chat oder empfangende Gruppe. Ohne Angabe gilt der Standard-Chat. |
 | `parse_mode` | `HTML` ist der Standard. `MarkdownV2` und ein leerer Wert sind die Alternativen. |
 | `disable_notification` | Ohne Ton zustellen. |
 | `disable_web_page_preview` | Keine Link-Vorschauen anzeigen. |
@@ -93,7 +93,7 @@ Der Webhook-Kanal sendet eine HTTP-Anfrage an eine URL. Die Einstellungen sind `
 
 | Schlüssel | Bedeutung |
 |---|---|
-| `webhook_url` | Endpunkt. Leer verwendet `herald_webhook_default_url`. |
+| `webhook_url` | Endpunkt. Ohne Angabe gilt `herald_webhook_default_url`. |
 | `webhook_method` | `POST` ist der Standard, `PUT` die Alternative. |
 | `webhook_body_format` | Wie der Body aufgebaut wird, siehe unten. Der Standard ist `text`. |
 | `webhook_body_key` | JSON-Schlüssel für das Format json. Der Standard ist `text`. |
@@ -109,7 +109,7 @@ Die Body-Formate:
 | `slack` | `{"text": "<the plain text>"}`, wobei die Zeichen & < > so maskiert sind, wie Slack es erwartet |
 | `discord` | `{"content": "<the plain text>"}` |
 
-Ein Slack-Incoming-Webhook in der „Kanalspezifischen Konfiguration“ einer Aktion:
+Ein Slack-Incoming-Webhook im Feld „Kanalspezifische Konfiguration“ einer Aktion:
 
 ```json
 {
@@ -126,7 +126,7 @@ herald prüft jede URL vor dem Senden:
 - Standardmäßig darf sie nicht auf eine private, reservierte, link-lokale oder Cloud-Metadaten-Adresse auflösen.
 - Anfragen folgen keinen Weiterleitungen, geben Sie also die endgültige URL an.
 
-Um die Zustellung auf bekannte Dienste zu beschränken, tragen Sie deren Hostnamen unter Administrieren » Herald » Erlaubte Webhook-Hosts ein, einen pro Zeile. Beim Speichern werden ungültige Hostnamen und alle Einträge mit `https://`, einem Pfad oder einem Port abgelehnt. Mit cv setzen Sie `herald_webhook_allowed_hosts`, zum Beispiel `["hooks.slack.com"]`. Subdomains eines eingetragenen Hosts sind ebenfalls erlaubt. Sobald die Liste nicht leer ist, werden nur diese Hosts erreicht, und sie dürfen auch interne Adressen haben.
+Um die Zustellung auf bekannte Dienste zu beschränken, tragen Sie deren Hostnamen unter Administrieren » Herald » Erlaubte Webhook-Hosts ein, einen pro Zeile. Beim Speichern werden ungültige Hostnamen und alle Einträge mit `https://`, einem Pfad oder einem Port abgelehnt. Mit cv setzen Sie `herald_webhook_allowed_hosts`, zum Beispiel `["hooks.slack.com"]`. Subdomains eines eingetragenen Hosts sind ebenfalls erlaubt. Sobald die Liste Einträge enthält, erreicht herald nur noch diese Hosts, und sie dürfen auch auf interne Adressen auflösen.
 
 ## ntfy
 
@@ -134,7 +134,7 @@ Die Einstellungen sind `herald_ntfy_server`, `herald_ntfy_default_topic` und `he
 
 | Schlüssel | Bedeutung |
 |---|---|
-| `ntfy_topic` | Topic. Leer verwendet `herald_ntfy_default_topic`. |
+| `ntfy_topic` | Topic. Ohne Angabe gilt `herald_ntfy_default_topic`. |
 | `ntfy_title` | Titel der Benachrichtigung. |
 | `ntfy_priority` | 1 für die niedrigste bis 5 für die höchste Priorität, oder einer der Prioritätsnamen von ntfy. |
 | `ntfy_tags` | Kommagetrennte Tags. Emoji-Tag-Namen erscheinen als Emoji. |
@@ -149,7 +149,7 @@ Die Einstellungen sind `herald_pushover_app_token`, das Pflicht ist, und `herald
 
 | Schlüssel | Bedeutung |
 |---|---|
-| `pushover_user_key` | Benutzer- oder Gruppenschlüssel. Leer verwendet den Standardschlüssel. |
+| `pushover_user_key` | Benutzer- oder Gruppenschlüssel. Ohne Angabe gilt der Standardschlüssel. |
 | `pushover_title` | Titel der Benachrichtigung. |
 | `pushover_priority` | Von -2 für lautlos bis 2 für Notfall. |
 | `pushover_retry` | Nur bei Notfall: Sekunden zwischen den Wiederholungen. Der Standard ist 60, das Minimum 30. |
@@ -169,7 +169,7 @@ Die Einstellungen sind `herald_email_from` und `herald_email_default_to`. Die Ab
 
 | Schlüssel | Bedeutung |
 |---|---|
-| `email_to` | Empfängeradresse. Leer verwendet `herald_email_default_to`. |
+| `email_to` | Empfängeradresse. Ohne Angabe gilt `herald_email_default_to`. |
 | `email_to_name` | Anzeigename zur Empfängeradresse. |
 | `email_subject` | Betreff. Ohne ihn verwenden Aktionen, Topics und Reports den Betreff der Vorlage. Der letzte Ersatz ist „Notification“. |
 | `email_format` | `html` ist der Standard und erhält die Zeilenumbrüche der Vorlage. `text` sendet Klartext. |
@@ -196,9 +196,9 @@ Typ und Status sind Optionsnamen, keine Zahlen, und müssen auf der Site aktiv s
 
 ## Testnachricht
 
-Die Seite Administrieren » Herald » Testnachricht sendet eine echte Nachricht. „Einen Kanal“ sendet über einen Kanal, mit dem Ziel und den Optionen, die Sie auf der Seite eintragen. Leere Felder übernehmen die Standardwerte der Einstellungsseite. „Eine Topic-Route“ schickt die Nachricht über eine Route, wie eine echte Meldung. Sammelt die Route, puffert sie die Nachricht bis zum nächsten Flush, und die Seite weist darauf hin.
+Die Seite Administrieren » Herald » Testnachricht sendet eine echte Nachricht. „Einen Kanal“ sendet über einen Kanal, mit dem Ziel und den Optionen, die Sie auf der Seite eintragen. Leere Felder übernehmen die Standardwerte der Einstellungsseite. „Eine Topic-Route“ schickt die Nachricht über eine Route, wie eine echte Meldung. Sammelt die Route, puffert sie die Nachricht, bis der Puffer das nächste Mal geleert wird, und die Seite weist darauf hin.
 
-Eingabefehler listet die Seite auf. Einen Zustellfehler des Kanals selbst sehen Benutzer:innen mit der Berechtigung „view debug output“ vollständig. Alle anderen sehen eine Fehler-ID, unter der das CiviCRM-Protokoll die Meldung enthält.
+Eingabefehler listet die Seite auf. Einen Zustellfehler des Kanals selbst sehen Benutzer:innen mit der Berechtigung „view debug output“ vollständig. Alle anderen sehen eine Fehler-ID, unter der das CiviCRM-Protokoll die Fehlermeldung enthält.
 
 Mit cv tun `Herald.send` und `Herald.publish` dasselbe:
 
@@ -239,4 +239,4 @@ Diese Konfigurationsfehler melden die Kanäle. Bei einer direkten Zustellung err
 
 Kanäle sind Teil des Codes von herald. Implementieren Sie `Civi\Herald\Channel\ChannelInterface` und registrieren Sie die Klasse in `ChannelRegistry::default()`.
 
-`getConfigSchema()` deklariert die Schlüssel des Kanals. `Herald.getChannels` zeigt sie an, und `Herald.send` ermittelt daraus `unknown_config_keys`. `getSemanticFields()` bildet den gemeinsamen Betreff und das Format auf die Schlüssel des Kanals ab, sodass Aufrufer sie nicht fest einprogrammieren müssen. Die Aktionsformulare haben eigene Felder nur für Telegram, die Schlüssel eines neuen Kanals gehören also in die „Kanalspezifische Konfiguration“.
+`getConfigSchema()` deklariert die Schlüssel des Kanals. `Herald.getChannels` zeigt sie an, und `Herald.send` ermittelt daraus `unknown_config_keys`. `getSemanticFields()` bildet den gemeinsamen Betreff und das Format auf die Schlüssel des Kanals ab, sodass Aufrufer sie nicht fest einprogrammieren müssen. Die Aktionsformulare haben eigene Felder nur für Telegram, die Schlüssel eines neuen Kanals gehören also in das Feld „Kanalspezifische Konfiguration“.

@@ -37,7 +37,7 @@ Bei einem Beitrags-Trigger enthalten die Variablen außerdem den Beitrag, den Fo
 
 ### Report senden
 
-Die Aktion „Herald: Send digest“ verschickt bei jedem Auslösen der Regel einen Report. Ihr Formular wählt einen der Reports, die unter Administrieren » Herald » Reports eingerichtet sind, siehe [Einen Report einrichten](digests.md#einen-report-einrichten), und hat die Zustellfelder von „Send notification“. Die Regelliste zeigt die Aktion als `Verschickt den Report „…“.` oder, sobald sich der Name des Reports geändert hat oder der Report gelöscht ist, als `Den Report „…“ gibt es nicht.`
+Die Aktion „Herald: Send digest“ verschickt bei jedem Auslösen der Regel einen Report. Im Formular wählen Sie einen der Reports, die unter Administrieren » Herald » Reports eingerichtet sind, siehe [Einen Report einrichten](digests.md#einen-report-einrichten), und legen die Zustellfelder wie bei „Send notification“ fest. Die Regelliste zeigt die Aktion als `Verschickt den Report „…“.` Wurde der Report umbenannt oder gelöscht, steht dort `Den Report „…“ gibt es nicht.`
 
 ## CiviRules-Trigger
 
@@ -47,7 +47,7 @@ Der Trigger „Herald: Schedule“ löst an den gewählten Wochentagen einmal zu
 
 | Feld | Bedeutung |
 |---|---|
-| Wochentage | Beliebig viele Tage von Montag bis Sonntag. Leer bedeutet jeden Tag. |
+| Wochentage | Beliebig viele Tage von Montag bis Sonntag. Ohne Auswahl jeden Tag. |
 | Uhrzeit | Die Stunde, von 00:00 bis 23:00. |
 
 Die Regelliste beschreibt den Zeitplan, zum Beispiel „Jeden Montag um 08:00“ oder „Täglich um 08:00“. Der Trigger speichert `weekdays` (ISO-Nummern, 1 für Montag bis 7 für Sonntag), `hour` und `since`, den Zeitpunkt, zu dem das Formular gespeichert wurde.
@@ -69,13 +69,21 @@ Die Bedingung „Herald: Field transition“ ist wahr, wenn der Wert eines Felde
 
 Das Formular speichert keine Entität, die es nicht gibt, kein Feld, das die Entität nicht hat, kein Suffix, das das Feld nicht anbietet, und keinen Suchfilter wie `groups`, der keinen Wert hat. Bei Feldnamen zählt die Groß- und Kleinschreibung. Außerdem lehnt das Formular `>`, `<`, `>=` und `<=` ab, wenn der Wert keine Zahl ist. Ein Optionsname ist Text, verwenden Sie diese Operatoren also am Feld ohne Suffix.
 
-Die Operatoren sind `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` und `not_empty`. „- beliebiger Wert -“ lässt diese Seite offen. Die Vergleichsoperatoren für größer und kleiner brauchen auf beiden Seiten Zahlen. `=` und `!=` vergleichen Zahlen, wenn beide Seiten Zahlen sind, und sonst Text ohne führende und folgende Leerzeichen. Ein leerer Wert ist gleich einem leeren Feld. Zahlen werden exakt verglichen, egal wie viele Stellen sie haben. Eine Zahl mit Exponent wie `1e3` wird als Gleitkommazahl verglichen und ist damit auf etwa 15 Stellen genau. Auch Felder vom Typ Money und Float kommen als Gleitkommazahlen bei herald an, und ein Betrag von 19.99 ist trotzdem gleich `19.99`. Schreiben Sie Dezimalzahlen mit Punkt, nicht mit Komma. Jeder andere Operator, den nur die API übergeben kann, lässt die Bedingung mit einem Fehler scheitern.
+Die Operatoren sind `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` und `not_empty`. „- beliebiger Wert -“ lässt diese Seite offen. Jeder andere Operator, den nur die API übergeben kann, lässt die Bedingung mit einem Fehler scheitern.
+
+`>`, `<`, `>=` und `<=` brauchen auf beiden Seiten Zahlen. `=` und `!=` vergleichen Zahlen, wenn beide Seiten Zahlen sind, und sonst Text ohne führende und folgende Leerzeichen. Ein leerer Wert ist gleich einem leeren Feld. Schreiben Sie Dezimalzahlen mit Punkt, nicht mit Komma.
+
+Zahlen werden exakt verglichen, egal wie viele Stellen sie haben. Eine Zahl mit Exponent wie `1e3` wird als Gleitkommazahl verglichen und ist damit auf etwa 15 Stellen genau. Auch Felder vom Typ Money und Float kommen als Gleitkommazahlen bei herald an, und ein Betrag von 19.99 ist trotzdem gleich `19.99`.
 
 - Sind beide Seiten offen, ist die Bedingung nie wahr.
 - Ist nur eine Seite konfiguriert, muss sich der Wert außerdem geändert haben. Andere Änderungen an einem Datensatz, der bereits im Zielzustand ist, lösen daher nicht erneut aus. Ein Feld, das leer bleibt, hat sich nicht geändert.
 - Sind beide Seiten konfiguriert, entscheiden allein die beiden Prüfungen.
 
-Der Wert vor der Änderung stammt aus der Kopie, die CiviRules vom Datensatz aufbewahrt. Bei einem Feld mit Suffix schlägt herald die Option zur gespeicherten ID nach. Ein leerer gespeicherter Wert gilt als leer, ein gespeicherter Wert ohne Option als fehlend. Hat CiviRules keinen Wert, verwendet herald seine eigene Kopie, die direkt vor der Änderung entsteht. Diese Kopie lebt nur so lange wie die Anfrage, eine verzögerte Aktion prüft ihre Bedingungen aber erst später im Cron-Lauf. Benutzerdefinierte Felder führt CiviRules unter anderen Namen, für sie ist heralds Kopie also die einzige Quelle: Setzen Sie bei einer verzögerten Aktion „Don't recheck condition upon processing of delayed action“, sonst löst die Bedingung nie aus. Ist der Wert dann noch unbekannt, ist die Bedingung falsch, denn eine verpasste Meldung ist besser als eine falsche. Der Wert nach der Änderung wird aus dem gespeicherten Datensatz gelesen. Eine Teilaktualisierung, die das Feld nicht schreibt, wird daher nach dem tatsächlich gespeicherten Wert beurteilt.
+Der Wert vor der Änderung stammt aus der Kopie, die CiviRules vom Datensatz aufbewahrt. Bei einem Feld mit Suffix schlägt herald die Option zur gespeicherten ID nach. Ein leerer gespeicherter Wert gilt als leer, ein gespeicherter Wert ohne Option als fehlend. Hat CiviRules keinen Wert, verwendet herald seine eigene Kopie, die direkt vor der Änderung entsteht. Ist der Wert dann noch unbekannt, ist die Bedingung falsch, denn eine verpasste Meldung ist besser als eine falsche.
+
+Die eigene Kopie von herald lebt nur so lange wie die Anfrage, eine verzögerte Aktion prüft ihre Bedingungen aber erst später im Cron-Lauf. Benutzerdefinierte Felder führt CiviRules unter anderen Namen, für sie ist die Kopie von herald also die einzige Quelle. Setzen Sie bei einer verzögerten Aktion mit benutzerdefiniertem Feld „Don't recheck condition upon processing of delayed action“, sonst löst die Bedingung nie aus.
+
+Der Wert nach der Änderung wird aus dem gespeicherten Datensatz gelesen. Eine Teilaktualisierung, die das Feld nicht schreibt, wird daher nach dem tatsächlich gespeicherten Wert beurteilt.
 
 herald kopiert nur Felder, die aktive Regeln beobachten. Ein lange laufender Queue- oder Kommandozeilen-Worker sieht ein neu konfiguriertes Feld erst nach einem Neustart.
 
@@ -104,7 +112,7 @@ Die Entität `Herald` bietet diese Aktionen. Jede Aktion erfordert die Berechtig
 | getParkedAlerts | ids, optional | Listet [geparkte Meldungen](delivery.md#geparkte-meldungen) ohne ihre Nachrichtentexte auf. |
 | reactivateParkedAlerts | ids, optional | Legt geparkte Meldungen zurück in den Puffer. Ohne ids alle. |
 | renderTemplate | workflow, vars | Rendert eine Vorlage, ohne sie zu senden. |
-| saveTopic | topic, route, previousName | Prüft eine Route und speichert sie in `herald_topics`; mit previousName wird dieses Topic an seinem Platz umbenannt. Das ruft die Seite „Topic-Routen“ auf. |
+| saveTopic | topic, route, previousName | Prüft eine Route und speichert sie in `herald_topics`; mit previousName wird dieses Topic an seinem Platz umbenannt. Die Seite „Topic-Routen“ verwendet diese Aktion. |
 | deleteTopic | topic | Entfernt eine Route aus `herald_topics`. |
 | saveSourceRules | rules | Prüft und speichert `herald_source_normalization`. Fehler nennen die Regel. |
 | saveAllowedHosts | hosts | Prüft und speichert `herald_webhook_allowed_hosts`. Leere Einträge werden übersprungen. |
@@ -112,7 +120,7 @@ Die Entität `Herald` bietet diese Aktionen. Jede Aktion erfordert die Berechtig
 | saveMonitorChecks | expected, snooze | Prüft und speichert `herald_monitor_expected` und `herald_monitor_snooze`. Eine Stummschaltung muss in der Zukunft enden, sofern sie nicht unverändert ist. |
 | testTelegram | message, chatId, channel | Sendet eine Testnachricht. Der Kanal ist standardmäßig telegram. |
 
-Die Speicheraktionen speichern dieselbe Form wie `Setting.set`, das weiter funktioniert. Ungültige Eingaben lehnen sie mit einer Liste aller Probleme ab und speichern dann nichts.
+Die Speicheraktionen speichern genau die Form, die `Setting.set` erwartet. `Setting.set` funktioniert weiterhin, prüft aber nichts. Ungültige Eingaben lehnen die Speicheraktionen mit einer Liste aller Probleme ab und speichern dann nichts.
 
 `send` braucht einen Kanal und eine Nachricht. `publish` braucht genau eines von message und template. Beide lehnen ein anderes Format als text oder html ab. Bei `publish` gilt das Format nur für eine Nachricht, denn eine gerenderte Vorlage ist immer HTML.
 
@@ -170,13 +178,13 @@ Die Vorlagen von herald sind CiviCRM-Nachrichtenvorlagen. Sie bearbeiten sie unt
 | Herald: Neue Gruppen-/Newsletter-Anmeldung | herald_group_subscription_alert | Einen Kontakt, der einer Gruppe hinzugefügt wurde, mit maskiertem Kontakt |
 | Herald: Statuswechsel eines Monitor-Checks | herald_monitor_alert | Einen Wechsel im Check-Monitor. Variablen: check, status, detail, renotify |
 
-Die Titel erscheinen in der Sprache, in der CiviCRM die Vorlagen angelegt oder zuletzt aktualisiert hat. Auf einer englischsprachigen Installation heißt „Herald: Neuer abgeschlossener Beitrag“ zum Beispiel „Herald: New completed contribution“. Der Workflow-Name ist in jeder Sprache gleich.
+Die Titel erscheinen in der Sprache, in der CiviCRM die Vorlagen angelegt oder zuletzt aktualisiert hat. Auf einer englischsprachigen Site heißt „Herald: Neuer abgeschlossener Beitrag“ zum Beispiel „Herald: New completed contribution“. Der Workflow-Name ist in jeder Sprache gleich.
 
 Die Vorlagen sind auf Englisch geschrieben. Eine deutsche Übersetzung liegt bei und wird verwendet, wenn CiviCRM auf Deutsch läuft.
 
-Eine Änderung, die Sie an einer mitgelieferten Vorlage vornehmen, bleibt erhalten, bis ein herald-Release genau diese Vorlage ändert. Das Release überschreibt dann Ihre Änderung. Um eine angepasste Fassung zu behalten, kopieren Sie sie unter einem eigenen Workflow-Namen. Das Formular für Nachrichtenvorlagen hat kein Feld für den Workflow-Namen. Legen Sie die Kopie dort im Reiter „User-driven Messages“ an und setzen Sie den Namen danach mit cv, etwa `cv api4 MessageTemplate.update +w id=123 +v workflow_name=herald_meine_meldung`. herald rendert nur die Standardfassung einer Vorlage. Die API und die geplanten Jobs akzeptieren jeden Workflow-Namen, die CiviRules-Formulare listen dagegen nur Vorlagen, deren Workflow-Name mit `herald_` beginnt. Nennen Sie Ihre Kopie etwa `herald_meine_meldung`, dann erscheint sie auch dort.
+Eine Änderung, die Sie an einer mitgelieferten Vorlage vornehmen, bleibt erhalten, bis ein herald-Release genau diese Vorlage ändert. Das Release überschreibt dann Ihre Änderung. Um eine angepasste Fassung zu behalten, kopieren Sie sie unter einem eigenen Workflow-Namen. Das Formular für Nachrichtenvorlagen hat kein Feld für den Workflow-Namen. Legen Sie die Kopie dort im Reiter „User-driven Messages“ an und setzen Sie den Namen danach mit cv, etwa `cv api4 MessageTemplate.update +w id=123 +v workflow_name=herald_meine_meldung`. Die API und die geplanten Jobs akzeptieren jeden Workflow-Namen, die CiviRules-Formulare listen aber nur Namen, die mit `herald_` beginnen. Mit einem Namen wie `herald_meine_meldung` erscheint die Kopie also auch dort.
 
-Eine Vorlage, die es nicht gibt, scheitert mit dem Fehler 'MessageTemplate "…" not found. Is the herald extension enabled?'. Eine Vorlage ohne HTML- und ohne Textinhalt scheitert ebenfalls.
+herald rendert nur die Standardfassung einer Vorlage. Nennt ein Aufruf eine Vorlage, die es nicht gibt, scheitert er mit dem Fehler `MessageTemplate "…" not found. Is the herald extension enabled?`. Eine Vorlage ohne HTML- und ohne Textinhalt scheitert ebenfalls.
 
 ### Maskierung
 
@@ -222,13 +230,13 @@ Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'nam
 | `herald_telegram_default_chat_id` | leer | Der Standard-Chat für Telegram. |
 | `herald_webhook_default_url` | leer | Die Standard-URL für Webhooks. |
 | `herald_webhook_default_auth_token` | leer | Ein Bearer-Token, das nur an die Standard-URL gesendet wird. |
-| `herald_webhook_allowed_hosts` | leer | Webhook-Hosts, die erreicht werden dürfen. Leer erlaubt jede öffentliche Adresse und sperrt private. |
+| `herald_webhook_allowed_hosts` | leer | Webhook-Hosts, die erreicht werden dürfen. Ist die Liste leer, ist jede öffentliche Adresse erlaubt und jede private gesperrt. |
 | `herald_ntfy_server` | https://ntfy.sh | Der ntfy-Server. |
 | `herald_ntfy_default_topic` | leer | Das Standard-Topic für ntfy. |
 | `herald_ntfy_token` | leer | Ein Bearer-Token für geschützte ntfy-Topics. |
 | `herald_pushover_app_token` | leer | Das Anwendungs-Token für Pushover. |
 | `herald_pushover_default_user_key` | leer | Der Standard-Benutzer- oder -Gruppenschlüssel für Pushover. |
-| `herald_email_from` | leer | Der From-Header. Leer verwendet den Standard der Site. |
+| `herald_email_from` | leer | Der From-Header. Ohne Angabe gilt der Standard der Site. |
 | `herald_email_default_to` | leer | Der Standardempfänger für E-Mails. |
 | `herald_topics` | leer | Die Routen der [Topics](delivery.md#topics). |
 | `herald_buffer_max_attempts` | 5 | Fehlgeschlagene Zustellungen, bevor eine gesammelte Gruppe geparkt wird. |

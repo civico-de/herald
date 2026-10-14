@@ -22,9 +22,9 @@ Every herald CiviRules action has a delivery mode. Topic routes take the same pa
 
 Any other mode fails the send. The action form does not save a mode without its required parameter.
 
-In group mode, subscriptions and scopes do not matter. A group member without usable preferences gets an email at their own address instead. That includes a member who chose Telegram but left the chat ID empty.
-
 In subscriber mode, a contact without a chosen channel, or without the recipient that channel needs, is skipped.
+
+In group mode, subscriptions and scopes do not matter. A group member without usable preferences gets an email at their own address instead. That includes a member who chose Telegram but left the chat ID empty.
 
 Address mode always sends email. Separate the addresses with commas, semicolons or line breaks. It suits operational recipients who are not contacts.
 
@@ -39,7 +39,7 @@ Two options apply to the contact modes, subscribers and group:
 
 An info entry in the CiviCRM log counts the contacts left out, by reason: `suspended`, `scope_mismatch`, `no_channel` (no channel chosen) and `no_recipient` (no address, chat or topic for the channel).
 
-One failing recipient does not stop the others. herald logs a warning and moves on to the next contact. The delivery as a whole fails only when every recipient failed, or when there was nobody to send to: no subscriber, an empty group or an empty address list. Once at least one recipient got the message, the delivery counts as done and the failed recipients are not retried.
+A failed delivery to one recipient does not stop the others. herald logs a warning and moves on to the next contact. The delivery as a whole fails only when every recipient failed, or when there was nobody to send to: no subscriber, an empty group or an empty address list. Once at least one recipient got the message, the delivery counts as done, and herald does not retry the others.
 
 ## Subscribers
 
@@ -90,7 +90,7 @@ A preference record can be limited to one record, such as the event with ID 42. 
 
 A rule says which record it is about with the field "Subscription scope entity" on the action "Herald: Send notification (generic)". The choices are Event, Membership and Participant, and herald takes the ID from the trigger. Event also works on participant triggers, through the participant's event.
 
-A preference record without a scope receives everything it subscribed to. A scoped record applies to all its subscriptions, so it no longer receives notifications without a scope, such as contribution alerts or digests. The digest action has no scope. The self-service profile does not include the scope fields, so admins set them on the contact.
+A preference record without a scope receives everything it subscribed to. The scope applies to all subscriptions of the record. A scoped record therefore receives no notifications without a scope, such as contribution alerts, and no digests, because the digest action has no scope. The self-service profile does not include the scope fields, so admins set them on the contact.
 
 ## Topics
 
@@ -120,7 +120,7 @@ cv api4 Herald.publish topic=revenue template=herald_contribution_alert_complete
 
 A route entry takes the same parameters as an action, including `channel_config`, `delivery_mode` and `aggregate_minutes`. herald merges the topic's entry over the default entry. The channel defaults to Telegram. A topic without an entry and without a default entry fails with the error "no route for topic".
 
-`Herald.publish` takes either `message` or a `template` with `vars`, never both. A message is HTML, like a rendered template. Add `format=text` to send plain text, which HTML channels then show escaped. The format applies to messages only. `amount` adds to the total in the header of an aggregated message.
+`Herald.publish` takes either `message` or a `template` with `vars`, never both. A message is HTML, like a rendered template. With `format=text` the message is plain text: characters such as `<` and `&` appear as they are, also on channels that render HTML. The format applies to messages only. `amount` adds to the total in the header of an aggregated message.
 
 The check monitor publishes to the topic named in `herald_monitor_topic`, which is ops by default.
 
@@ -135,7 +135,7 @@ A value above 0 stores the rendered alert in the table `civicrm_herald_buffer`. 
 - A single waiting alert goes out unchanged. Aggregation only delayed it.
 - Several alerts get a header with their count, followed by the individual messages. When the alerts carry an amount, as contribution alerts do, the header also shows the sum, for example "📬 7 messages, total 385.00 € (collected over 5 min)". The amount uses the site's money format.
 - An aggregated email gets that header line as its subject.
-- At most `herald_buffer_max_items` messages are printed, 25 by default. The rest is summed up as "… and N more", and the header still counts every alert. Set 0 to print all of them. An import or a bulk status change can put thousands of alerts into one window.
+- An import or a bulk status change can put thousands of alerts into one window, so at most `herald_buffer_max_items` messages are printed, 25 by default. The rest is summed up as "… and N more", and the header still counts every alert. Set 0 to print all of them.
 - Telegram shortens a message that is still over its limit of 4096 characters and says so in the message, see [Telegram](channels.md#telegram). Other channels send the full text, so keep `herald_buffer_max_items` low enough for their limits.
 - The longest delay is the window plus the cron interval. Choose the window per rule, for example 5 minutes for ticket sales and 60 for pending donations.
 

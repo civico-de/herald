@@ -35,15 +35,15 @@ cv api4 Herald.testTelegram message='<b>herald works</b>'
 
 To get a message for every completed contribution, create a CiviRules rule:
 
-1. Trigger "Contribution is added".
-2. Condition "Contribution Status is (not) one of" with Completed.
-3. Action "Herald: Send notification (generic)" with the template "Herald: New completed contribution" and the channel Telegram.
+1. Choose the trigger "Contribution is added".
+2. Add the condition "Contribution Status is (not) one of" with Completed.
+3. Add the action "Herald: Send notification (generic)" with the template "Herald: New completed contribution" and the channel Telegram.
 
-A weekly summary with an amount histogram is a rule on herald's own trigger:
+A weekly summary with an amount histogram needs a digest and a rule on herald's own trigger:
 
-1. Digest under Administer » Herald » Digests with the period "Last 7 days" and one contribution block with the template "Herald: Weekly contribution digest".
-2. Trigger "Herald: Schedule" with Monday under Weekdays and 08:00 under Time.
-3. Action "Herald: Send digest" with that digest and the channel Telegram.
+1. Under Administer » Herald » Digests, add a digest with the period "Last 7 days" and one contribution block with the template "Herald: Weekly contribution digest".
+2. Create a rule with the trigger "Herald: Schedule", with Monday under Weekdays and 08:00 under Time.
+3. Add the action "Herald: Send digest" with that digest and the channel Telegram.
 
 Every Monday at 8:00 the chat gets the total, a line per contribution source and the histogram. herald picks the buckets from the amounts. Each bar counts contributions, and the bracket holds their sum:
 
