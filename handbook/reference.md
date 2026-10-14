@@ -69,7 +69,7 @@ The condition "Herald: Field transition" is true when a field's value before and
 
 The form does not save an entity that does not exist or a field the entity does not have.
 
-The operators are `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` and `not_empty`. "- any value -" leaves that side open. The ordering operators need numbers on both sides. `=` and `!=` compare numbers when both sides are numbers, and trimmed text otherwise. Numbers compare exactly, however many digits they have. Any other operator, which only the API can pass, fails the condition with an error.
+The operators are `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` and `not_empty`. "- any value -" leaves that side open. The ordering operators need numbers on both sides. `=` and `!=` compare numbers when both sides are numbers, and trimmed text otherwise. Numbers compare exactly, however many digits they have. A number with an exponent, such as `1e3`, compares as a floating-point number, which is exact to about 15 digits. Any other operator, which only the API can pass, fails the condition with an error.
 
 - With both sides open, the condition is never true.
 - With only one side configured, the value must also have changed. Unrelated edits of a record that is already in the target state therefore do not fire again.

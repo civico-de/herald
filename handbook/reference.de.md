@@ -69,7 +69,7 @@ Die Bedingung „Herald: Field transition“ ist wahr, wenn der Wert eines Felde
 
 Das Formular speichert keine Entität, die es nicht gibt, und kein Feld, das die Entität nicht hat.
 
-Die Operatoren sind `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` und `not_empty`. „- beliebiger Wert -“ lässt diese Seite offen. Die Vergleichsoperatoren für größer und kleiner brauchen auf beiden Seiten Zahlen. `=` und `!=` vergleichen Zahlen, wenn beide Seiten Zahlen sind, und sonst Text ohne führende und folgende Leerzeichen. Zahlen werden exakt verglichen, egal wie viele Stellen sie haben. Jeder andere Operator, den nur die API übergeben kann, lässt die Bedingung mit einem Fehler scheitern.
+Die Operatoren sind `=`, `!=`, `>`, `<`, `>=`, `<=`, `is_empty` und `not_empty`. „- beliebiger Wert -“ lässt diese Seite offen. Die Vergleichsoperatoren für größer und kleiner brauchen auf beiden Seiten Zahlen. `=` und `!=` vergleichen Zahlen, wenn beide Seiten Zahlen sind, und sonst Text ohne führende und folgende Leerzeichen. Zahlen werden exakt verglichen, egal wie viele Stellen sie haben. Eine Zahl mit Exponent wie `1e3` wird als Gleitkommazahl verglichen und ist damit auf etwa 15 Stellen genau. Jeder andere Operator, den nur die API übergeben kann, lässt die Bedingung mit einem Fehler scheitern.
 
 - Sind beide Seiten offen, ist die Bedingung nie wahr.
 - Ist nur eine Seite konfiguriert, muss sich der Wert außerdem geändert haben. Andere Änderungen an einem Datensatz, der bereits im Zielzustand ist, lösen daher nicht erneut aus.
