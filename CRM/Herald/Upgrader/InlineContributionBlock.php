@@ -27,7 +27,6 @@ final class CRM_Herald_Upgrader_InlineContributionBlock {
   public static function values(array $block, string $digestName): array {
     $block = array_filter($block, static fn (mixed $value): bool => $value !== NULL) + self::DEFAULTS;
     $pattern = Cast::toString($block['source_pattern'] ?? '');
-    $count = Cast::toInt($block['bucket_count']);
     return [
       'campaign_id' => self::id($block['campaign_id']),
       'financial_type_id' => self::id($block['financial_type_id']),
@@ -37,10 +36,28 @@ final class CRM_Herald_Upgrader_InlineContributionBlock {
       // Older forms stored "0" or "" for an unchecked box.
       'show_pending' => !empty($block['show_pending']),
       'show_histogram' => !empty($block['show_histogram']),
-      // Older releases failed on 0 and drew one bucket below it; blank meant the default.
-      'bucket_count' => $count > 0 ? $count : 8,
+      'bucket_count' => self::bucketCount($block, $digestName),
       'bucket_edges' => self::edges($block['bucket_edges'], $digestName),
     ];
+  }
+
+  /**
+   * Older releases drew one bucket below 0 and failed on 0 once two amounts
+   * differed; blank meant the default.
+   *
+   * @param array<string, mixed> $block
+   */
+  private static function bucketCount(array $block, string $digestName): int {
+    $count = Cast::toInt($block['bucket_count'], 8);
+    if ($count !== 0) {
+      return max(1, $count);
+    }
+    if (!empty($block['show_histogram'])) {
+      \Civi::log('herald')->warning('herald: histogram bucket count 0 replaced with the default 8', [
+        'digest' => $digestName,
+      ]);
+    }
+    return 8;
   }
 
   private static function number(mixed $value): mixed {

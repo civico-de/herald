@@ -28,6 +28,44 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
   }
 
   /**
+   * The warnings the herald log channel receives while $run runs.
+   *
+   * @return list<string>
+   */
+  private function heraldWarnings(callable $run): array {
+    $logger = new class extends \Psr\Log\AbstractLogger {
+
+      /**
+       * @var list<string>
+       */
+      public array $warnings = [];
+
+      public function log($level, string|\Stringable $message, array $context = []): void {
+        if ($level === \Psr\Log\LogLevel::WARNING) {
+          $this->warnings[] = (string) $message;
+        }
+      }
+
+    };
+    // LogManager caches one logger per channel and has no setter.
+    $channels = \Closure::bind(
+      fn &(): array => $this->channels,
+      \Civi::container()->get('psr_log_manager'),
+      \Civi\Core\LogManager::class,
+    );
+    $cache = &$channels();
+    $previous = $cache;
+    $cache['herald'] = $logger;
+    try {
+      $run();
+    }
+    finally {
+      $cache = $previous;
+    }
+    return $logger->warnings;
+  }
+
+  /**
    * @return array{digest: array<string, mixed>, blocks: list<array<string, mixed>>}
    */
   private function stored(string $name): array {
@@ -193,12 +231,59 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
     );
 
     CRM_Herald_Upgrader_InlineDigest::extract(['bucket_count' => '0', 'status' => 0], 'old_zero', 'Old zero');
+    CRM_Herald_Upgrader_InlineDigest::extract(['bucket_count' => -3], 'old_negative', 'Old negative');
 
     $block = $this->stored('old_filters')['blocks'][0];
     self::assertSame([' Bank%', '[0,10,100.5]'], [$block['source_pattern'], $block['bucket_edges']]);
     self::assertFalse($this->stored('old_no_histogram')['blocks'][0]['show_histogram']);
     $zero = $this->stored('old_zero')['blocks'][0];
     self::assertSame([TRUE, 8], [$zero['show_histogram'], $zero['bucket_count']]);
+    // A count below 0 drew a single bucket.
+    self::assertSame(1, $this->stored('old_negative')['blocks'][0]['bucket_count']);
+  }
+
+  public function testAStatusFilterRecordsReportTheSameIsDropped(): void {
+    CRM_Herald_Upgrader_InlineDigest::extract(
+      ['status' => 'Completed', 'show_pending' => '0'],
+      'old_completed',
+      'Old completed',
+    );
+    CRM_Herald_Upgrader_InlineDigest::extract(
+      ['status' => 'Completed', 'group_by' => 'line_item'],
+      'old_items',
+      'Old items',
+    );
+    CRM_Herald_Upgrader_InlineDigest::extract(
+      ['blocks' => '[{"type": "section", "key": "myext.seats", "status": "Pending"}]'],
+      'old_section',
+      'Old section',
+    );
+
+    self::assertFalse($this->stored('old_completed')['blocks'][0]['show_pending']);
+    self::assertSame('line_item', $this->stored('old_items')['blocks'][0]['group_by']);
+    self::assertSame('myext.seats', $this->stored('old_section')['blocks'][0]['section_key']);
+  }
+
+  public function testOnlyACountOfZeroForAHistogramWarns(): void {
+    $warnings = $this->heraldWarnings(static function (): void {
+      CRM_Herald_Upgrader_InlineDigest::extract(['bucket_count' => ''], 'old_blank', 'Old blank');
+      CRM_Herald_Upgrader_InlineDigest::extract(['bucket_count' => '5'], 'old_five', 'Old five');
+      CRM_Herald_Upgrader_InlineDigest::extract(
+        ['bucket_count' => '0', 'show_histogram' => '0'],
+        'old_hidden',
+        'Old hidden',
+      );
+    });
+    self::assertSame([], $warnings);
+    self::assertSame([8, 5], [
+      $this->stored('old_blank')['blocks'][0]['bucket_count'],
+      $this->stored('old_five')['blocks'][0]['bucket_count'],
+    ]);
+
+    $warnings = $this->heraldWarnings(static function (): void {
+      CRM_Herald_Upgrader_InlineDigest::extract(['bucket_count' => '0'], 'old_zero', 'Old zero');
+    });
+    self::assertSame(['herald: histogram bucket count 0 replaced with the default 8'], $warnings);
   }
 
   public function testUnreadableEdgesAreDroppedAsTheyWereIgnored(): void {
@@ -225,6 +310,8 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
     self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(['blocks' => '[{"type": ""}]'], 'old_type', 'Old type'));
     // Records have no status filter; reporting Completed instead would change the numbers unnoticed.
     self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(['status' => 'Pending'], 'old_status', 'Old status'));
+    // The pending pool read the status too, so it reported completed contributions.
+    self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(['status' => 'Completed'], 'old_pool', 'Old pool'));
     // A status the old filter kept matched no contribution at all.
     self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(['status' => FALSE], 'old_false', 'Old false'));
     self::assertSame(

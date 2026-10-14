@@ -25,13 +25,8 @@ final class CRM_Herald_Upgrader_InlineDigestBlocks {
     }
     // Without a list the params are the one block, which shares the digest's period.
     $raw = $raw === [] ? [array_diff_key($params, ['period' => TRUE])] : array_values($raw);
-    // Older releases read NULL, "" and 0 as no status filter.
-    $statuses = array_filter(
-      array_column($raw, 'status'),
-      static fn (mixed $s): bool => $s !== NULL && $s !== '' && $s !== 0,
-    );
-    if ($statuses !== []) {
-      return 'a contribution status filter is no longer available';
+    if (array_filter($raw, CRM_Herald_Upgrader_InlineStatus::readable(...)) !== $raw) {
+      return 'a contribution status filter other than Completed is no longer available';
     }
     return array_map(static fn (array $block): array => self::block(Cast::namedOnly($block), $digestName), $raw);
   }
