@@ -110,7 +110,7 @@ With the line item breakdown, the totals, the counts and the pending amounts com
 
 The histogram shows the completed contributions of the period that match the filters, and ignores amounts of zero or less. It always uses whole contribution amounts, so with the line item breakdown its financial type filter applies to the contribution. With nothing to show, it says "(no data)".
 
-Without fixed edges, herald picks bucket edges that fit the amounts. Fixed edges suit a campaign with fixed donation tiers, such as a major donor campaign. Give at least two values, for example `[0, 100, 1000, 10000, 100000, 1000000]`. Amounts below the first or above the last edge land in extra buckets labelled "<low" and "≥high". With the histogram switched off, the edges are not checked.
+Without fixed edges, herald picks bucket edges that fit the amounts. Fixed edges suit a campaign with donation tiers, such as a major donor campaign. Give at least two values, for example `[0, 100, 1000, 10000, 100000, 1000000]`. Amounts below the first or above the last edge land in extra buckets labelled "<low" and "≥high". With the histogram switched off, the edges are not checked.
 
 The campaign progress takes the title and the goal from the Campaign record. It counts every completed contribution of the campaign that matches the financial type and source filters, regardless of the period. With the line item breakdown it counts the campaign's items instead. A campaign without a goal shows no progress line.
 
@@ -146,24 +146,24 @@ The upgrade keeps what the digest sent before:
 
 - A period herald did not know was read as yesterday, and it still is.
 - Histogram edges that are not ascending numbers are dropped with a warning in the upgrade log, and the histogram picks its own buckets.
-- A histogram bucket count below 0 drew one bucket and becomes 1. A count of 0 failed as soon as two amounts differed. It becomes the default 8, with a warning in the upgrade log.
+- A histogram bucket count below 0 drew one bucket and becomes 1. With a count of 0 the digest failed as soon as two amounts differed. That count becomes the default 8, with a warning in the upgrade log.
 - A search block gets a new table display of its search, labelled "Herald: <digest title>", with the search's columns, sort and limit and no pager. Its values now appear formatted, as the display shows them.
 - A status filter of Completed is dropped, because records count completed contributions anyway.
 
-A digest the records cannot reproduce is left as it was. The upgrade log has the warning "digest left inline, it cannot run until fixed" with the reason, and the rule or job fails until it names a digest. Most of these digests could never have run:
+A digest the records cannot reproduce is left as it was. The upgrade log has the warning "digest left inline, it cannot run until fixed" with the reason, and the rule or job fails until it names a digest record. Most of these digests could never have run:
 
-- a block list that is not a JSON array of objects
-- a block of unknown type
-- a section block without a key
-- a saved search that no longer exists, or whose entity is gone with its extension
-- a campaign or financial type that no longer exists
+- A block list that is not a JSON array of objects.
+- A block of unknown type.
+- A section block without a key.
+- A saved search that no longer exists, or whose entity is gone with its extension.
+- A campaign or financial type that no longer exists.
 
 The others ask for something records cannot do:
 
 - A saved search that skips its first rows. A display always starts at the first row.
-- A status filter other than Completed, which records no longer offer. That includes Completed in a digest that showed the pending amounts without the line item breakdown, as those amounts then counted completed contributions too.
+- A status filter other than Completed, which records no longer offer. That includes Completed in a digest that showed the pending amounts without the line item breakdown: the filter then applied to the pending amounts too, so they counted completed contributions.
 
-Section listeners of older releases received the digest's settings under `params` in `$context`. That key is gone, so a listener that read a filter from it now loads the digest record by its name from `digest`.
+Section listeners of older releases received the digest's settings under `params` in `$context`. That key is gone, so a listener that read a filter from it must now load the digest record by its name from `digest`.
 
 A delayed action that was already waiting in the CiviRules queue during the upgrade still carries the old settings and fails once. The next time the rule fires, it uses the new settings.
 

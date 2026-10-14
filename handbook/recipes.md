@@ -13,7 +13,7 @@ Each recipe sends to Telegram. Leave the chat ID empty to use the default chat f
 
 ## Donations
 
-Four rules cover the life of a donation: paid at once, announced as a bank transfer, received later, and a summary each morning.
+Three rules follow a donation (paid at once, announced as a bank transfer, received later), and a fourth sends a summary each morning.
 
 | Rule | Trigger | Conditions | Template |
 |---|---|---|---|
@@ -22,7 +22,7 @@ Four rules cover the life of a donation: paid at once, announced as a bank trans
 | Transfer received | Contribution is changed | Herald: Field transition, see below, and Contribution Status is (not) one of: Completed | Herald: Contribution status changed |
 | Daily summary | Herald: Schedule, see [Scheduled digests](#scheduled-digests) | | Herald: Daily contribution digest, in the digest's contribution block |
 
-The first three use the action "Herald: Send notification (generic)", the daily summary uses "Herald: Send digest".
+The first three use the action "Herald: Send notification (generic)"; the daily summary uses "Herald: Send digest".
 
 The financial type condition on "Transfer announced" matters when the site sells tickets. A pending event order is also a pending contribution and would otherwise be announced as a donation. Tickets get their own rules below.
 
@@ -35,7 +35,7 @@ The financial type condition on "Transfer announced" matters when the site sells
 | Before | = Pending |
 | After | any value |
 
-The condition reads the status before the edit from the copy CiviRules keeps of the record, so it works with delayed actions too. A custom field needs one more setting there, see [Field transition](reference.md#field-transition).
+The condition reads the status before the edit from the copy CiviRules keeps of the record, so it works with delayed actions too. With a custom field, a delayed action needs one more setting, see [Field transition](reference.md#field-transition).
 
 Campaign progress needs no setup. A contribution that belongs to a campaign brings the campaign's title, total and count. When the campaign has a revenue goal, it also brings the goal and the percentage reached. See [Contribution variables](reference.md#contribution-variables).
 
@@ -79,7 +79,7 @@ These rules help when events are maintained by a sync rather than by hand, so a 
 
 A sync usually takes an event down by deactivating it rather than deleting it, so "Event deactivated" is the rule that catches a removed event. Build it with herald's Field transition, not with a Field Value Comparison on is_active. A Field Value Comparison sees only the value after the edit, so it also fires on every other edit of an event that is already inactive. The Field transition fires only when the value really changes from 1 to 0.
 
-Abandoned checkouts go from an incomplete transaction to Cancelled. Limiting the old status of the cancellation rule keeps them from sending an alert. Limiting "New registration" to Registered keeps waitlist and pending entries out.
+Abandoned checkouts go from an incomplete transaction to Cancelled. Limiting the old status of the cancellation rule keeps them from triggering an alert. Limiting "New registration" to Registered keeps waitlist and pending entries out.
 
 A registration paid online starts as "Pending from incomplete transaction" and becomes Registered once the payment goes through. To catch it, add a second rule on "Event Participant is changed" with "Compare Old Participant Status to New Participant Status" from "Pending from incomplete transaction" to Registered, and use the same template.
 
@@ -107,7 +107,7 @@ A weekly contribution digest every Monday at 8:00:
 3. In the trigger's form, choose Monday under Weekdays and 08:00 under Time. Leave Weekdays empty to send every day. The time is in CiviCRM's timezone.
 4. Add the action "Herald: Send digest", pick the digest, and set the channel and, for Telegram, the chat ID.
 
-The rule list shows the schedule as "Every Monday at 08:00" and the action as `Sends the digest "Weekly contributions".` For a daily digest, leave Weekdays empty and give the digest the period "Yesterday" and the template "Herald: Daily contribution digest".
+The rule list shows the schedule as "Every Monday at 08:00" and the action as `Sends the digest "Weekly contributions".` For a daily digest, leave Weekdays empty, give the digest the period "Yesterday" and give its contribution block the template "Herald: Daily contribution digest".
 
 The trigger is checked each time CiviRules' scheduled job runs, so the digest goes out with the first cron run after the full hour. Whether a slot has been sent is read from the rule's own log:
 
@@ -130,7 +130,7 @@ Scripts and the server's crontab can call `Herald.notifyDigest` directly, at a f
 
 This call is not limited to the Production environment.
 
-A CiviCRM scheduled job of `Herald.notifyDigest`, set to Hourly with `"sendHour": 8` in its parameters, also works, but it cannot pick weekdays and it can skip a day: CiviCRM moves each job's next run later by up to one cron interval, and when that drift pushes the job past the whole hour, no run falls inside it that day.
+A CiviCRM scheduled job of `Herald.notifyDigest`, set to Hourly with `"sendHour": 8` in its parameters, also works, but it cannot pick weekdays and it can skip a day: CiviCRM moves each job's next run later by up to one cron interval, and when that drift moves a run from just before the hour to just after it, no run falls inside the hour that day.
 
 ## Notifications for each person
 

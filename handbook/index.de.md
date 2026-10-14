@@ -10,7 +10,7 @@ herald richtet sich an alle, die eine CiviCRM-Site betreiben und wissen möchten
 
 ## Was herald kann
 
-herald stellt über sechs Kanäle zu: Telegram; einen generischen Webhook für Slack, Discord, Mattermost oder einen eigenen Endpunkt; ntfy; Pushover; E-Mail über den ausgehenden Mailversand von CiviCRM; und zugewiesene CiviCRM-Aktivitäten. Neue Kanäle kommen im Code von herald hinzu. Siehe [Kanäle](channels.md).
+herald stellt über sechs Kanäle zu: Telegram, ntfy, Pushover, einen generischen Webhook (für Slack, Discord, Mattermost oder einen eigenen Endpunkt), E-Mail über den ausgehenden Mailversand von CiviCRM und zugewiesene CiviCRM-Aktivitäten. Neue Kanäle kommen im Code von herald hinzu. Siehe [Kanäle](channels.md).
 
 Die Nachrichten stammen aus CiviCRM-Nachrichtenvorlagen, sodass Admins den Wortlaut unter „Mailings, Message Templates“ (Mailings, Nachrichtenvorlagen) anpassen können. herald bringt Vorlagen für Beiträge, Ticketverkäufe, Events, Mitgliedschaften, Gruppenanmeldungen, Reports und Health-Checks mit. Die Vorlagen sind auf Englisch geschrieben, eine deutsche Übersetzung liegt bei.
 
@@ -25,7 +25,7 @@ Eine Benachrichtigung kann an ein einzelnes Ziel gehen, an alle Kontakte, die di
 
 Skripte und andere Extensions können Nachrichten an ein benanntes Topic wie ops schicken. Eine Einstellung legt fest, welchen Kanal und welches Ziel jedes Topic erreicht. Wer eine Nachricht schickt, muss also nie eine Chat-ID oder eine URL kennen.
 
-Ein Report fasst die Beiträge eines Zeitraums zusammen, listet die Zeilen einer SearchKit-Anzeige auf oder enthält Zahlen, die eine andere Extension liefert. Reports richten Sie unter Administrieren » Herald » Reports ein. Meist gehen sie täglich oder wöchentlich hinaus, ausgelöst von einer Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
+Ein Report fasst die Beiträge eines Zeitraums zusammen, listet die Zeilen einer SearchKit-Anzeige auf oder enthält Zahlen, die eine andere Extension liefert. Reports richten Sie unter Administrieren » Herald » Reports ein. Meist werden sie täglich oder wöchentlich verschickt, ausgelöst von einer Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
 
 Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet, wenn ein Check zu scheitern beginnt und wenn er wieder besteht, und erinnert an Checks, die weiter scheitern. Auf einer gesunden Site bleibt es still. Siehe [Check-Monitor](monitor.md).
 

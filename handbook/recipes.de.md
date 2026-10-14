@@ -15,7 +15,7 @@ Die Beitragsstatus heißen in CiviCRM unter anderem Completed (abgeschlossen), P
 
 ## Spenden
 
-Vier Regeln decken den Weg einer Spende ab: sofort bezahlt, als Überweisung angekündigt, später eingegangen und eine Zusammenfassung jeden Morgen.
+Drei Regeln begleiten eine Spende: sofort bezahlt, als Überweisung angekündigt, später eingegangen. Eine vierte verschickt jeden Morgen eine Zusammenfassung.
 
 | Regel | Trigger | Bedingungen | Vorlage |
 |---|---|---|---|
@@ -37,7 +37,7 @@ Die Bedingung auf den Finanztyp bei „Überweisung angekündigt“ ist wichtig,
 | Vorher | = Pending |
 | Nachher | beliebiger Wert |
 
-Die Bedingung liest den Status vor der Änderung aus der Kopie, die CiviRules vom Datensatz aufbewahrt, und funktioniert daher auch mit verzögerten Aktionen. Ein benutzerdefiniertes Feld braucht dort eine zusätzliche Einstellung, siehe [Feldwechsel](reference.md#feldwechsel).
+Die Bedingung liest den Status vor der Änderung aus der Kopie, die CiviRules vom Datensatz aufbewahrt, und funktioniert daher auch mit verzögerten Aktionen. Bei einem benutzerdefinierten Feld braucht eine verzögerte Aktion eine zusätzliche Einstellung, siehe [Feldwechsel](reference.md#feldwechsel).
 
 Der Fortschritt einer Kampagne braucht keine Einrichtung. Ein Beitrag, der zu einer Kampagne gehört, bringt Titel, Summe und Anzahl der Kampagne mit. Hat die Kampagne ein Umsatzziel, kommen das Ziel und der erreichte Prozentsatz hinzu. Siehe [Beitragsvariablen](reference.md#beitragsvariablen).
 
@@ -106,17 +106,17 @@ Ein wöchentlicher Beitragsreport jeden Montag um 8:00 Uhr:
 
 1. Legen Sie unter Administrieren » Herald » Reports einen Report mit dem Titel „Weekly contributions“, dem Namen `weekly_contributions`, dem Zeitraum „Letzte 7 Tage“ und einem Beitragsblock mit der Vorlage „Herald: Wöchentlicher Beitragsreport“ an.
 2. Legen Sie eine CiviRules-Regel an und wählen Sie den Trigger „Herald: Schedule“.
-3. Wählen Sie im Formular des Triggers unter „Wochentage“ den Montag und unter „Uhrzeit“ 08:00. Bleibt „Wochentage“ leer, geht der Report jeden Tag hinaus. Die Uhrzeit gilt in der Zeitzone von CiviCRM.
+3. Wählen Sie im Formular des Triggers unter „Wochentage“ den Montag und unter „Uhrzeit“ 08:00. Bleibt „Wochentage“ leer, wird der Report jeden Tag verschickt. Die Uhrzeit gilt in der Zeitzone von CiviCRM.
 4. Fügen Sie die Aktion „Herald: Send digest“ hinzu, wählen Sie den Report, und setzen Sie den Kanal und bei Telegram die Chat-ID.
 
-Die Regelliste zeigt den Zeitplan als „Jeden Montag um 08:00“ und die Aktion als `Verschickt den Report „Weekly contributions“.` Für einen täglichen Report lassen Sie „Wochentage“ leer und geben dem Report den Zeitraum „Gestern“ und die Vorlage „Herald: Täglicher Beitragsreport“.
+Die Regelliste zeigt den Zeitplan als „Jeden Montag um 08:00“ und die Aktion als `Verschickt den Report „Weekly contributions“.` Für einen täglichen Report lassen Sie „Wochentage“ leer, geben dem Report den Zeitraum „Gestern“ und seinem Beitragsblock die Vorlage „Herald: Täglicher Beitragsreport“.
 
-Der Trigger wird bei jedem Lauf des geplanten Jobs von CiviRules geprüft, der Report geht also mit dem ersten Cron-Lauf nach der vollen Stunde hinaus. Ob ein Termin schon verschickt wurde, steht im Protokoll der Regel selbst:
+Der Trigger wird bei jedem Lauf des geplanten Jobs von CiviRules geprüft, der Report wird also mit dem ersten Cron-Lauf nach der vollen Stunde verschickt. Ob ein Termin schon verschickt wurde, steht im Protokoll der Regel selbst:
 
-- Verpasst Cron die Stunde, holt der nächste Lauf sie nach. Läuft Cron alle 15 Minuten, fällt aber zwischen 7:45 Uhr und 9:00 Uhr aus, geht der Report für 8 Uhr um 9:00 Uhr hinaus.
+- Verpasst Cron die Stunde, holt der nächste Lauf sie nach. Läuft Cron alle 15 Minuten, fällt aber zwischen 7:45 Uhr und 9:00 Uhr aus, wird der Report für 8 Uhr um 9:00 Uhr verschickt.
 - Nach einem längeren Ausfall wird nur der jüngste Termin verschickt. Drei verpasste Montage ergeben einen Report, nicht drei.
 - Eine neue Regel oder eine, deren Zeitplan gerade gespeichert wurde, verschickt nie einen Termin von vor diesem Zeitpunkt.
-- Ein Lauf zählt auch, wenn das Senden fehlschlägt, etwa weil der Kanal nicht eingerichtet ist. Der Fehler wird protokolliert, und der nächste Report geht zum nächsten Termin hinaus.
+- Ein Lauf zählt auch, wenn das Senden fehlschlägt, etwa weil der Kanal nicht eingerichtet ist. Der Fehler wird protokolliert, und der nächste Report wird zum nächsten Termin verschickt.
 
 CiviCRM führt geplante Jobs, auch den von CiviRules, nur in der Umgebung Production aus.
 
@@ -132,7 +132,7 @@ Skripte und die Crontab des Servers können `Herald.notifyDigest` direkt aufrufe
 
 Dieser Aufruf ist nicht auf die Umgebung Production beschränkt.
 
-Ein geplanter Job von CiviCRM für `Herald.notifyDigest`, auf Hourly (stündlich) gestellt und mit `"sendHour": 8` in den Parametern, funktioniert ebenfalls. Er kann aber keine Wochentage wählen und kann einen Tag auslassen: CiviCRM schiebt den nächsten Lauf jedes Jobs um bis zu ein Cron-Intervall nach hinten, Rutscht der Job dadurch über die ganze Stunde hinweg, fällt an diesem Tag kein Lauf in sie.
+Ein geplanter Job von CiviCRM für `Herald.notifyDigest`, auf Hourly (stündlich) gestellt und mit `"sendHour": 8` in den Parametern, funktioniert ebenfalls. Er kann aber keine Wochentage wählen und kann einen Tag auslassen: CiviCRM schiebt den nächsten Lauf jedes Jobs um bis zu ein Cron-Intervall nach hinten. Rückt ein Lauf dadurch von kurz vor der vollen Stunde auf kurz danach, fällt an diesem Tag kein Lauf in diese Stunde.
 
 ## Benachrichtigungen pro Person
 

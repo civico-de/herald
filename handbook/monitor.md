@@ -72,7 +72,7 @@ All settings are optional. By default herald reports the first failing run and t
 
 These four are on the Herald settings screen, Administer » Herald » Settings. Snoozes and expected checks are on Administer » Herald » Monitor checks.
 
-That screen lists every check an enabled extension offers, every expected or snoozed check and every check the monitor has a state for. Each row shows the last reported status in words, the failing and healthy runs in a row, the last failure alert and whether an enabled extension still offers the check. The screen does not run the checks and does not show their details.
+That screen lists every check an enabled extension offers, every expected or snoozed check and every check the monitor has a state for. Each row shows the last reported status in words, the failing and healthy runs in a row, when a failure was last reported and whether an enabled extension still offers the check. The screen does not run the checks and does not show their details.
 
 ### Snoozing a check
 

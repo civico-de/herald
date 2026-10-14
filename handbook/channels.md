@@ -196,7 +196,7 @@ Type and status are option names, not numbers, and must be active on the site.
 
 ## Test message
 
-Administer » Herald » Test message sends a real message. "A channel" sends through one channel to the recipient and options entered on the screen; empty fields fall back to the defaults on the settings screen. "A topic route" publishes through a route, the way a real alert travels. A route that aggregates buffers the message until the next flush, and the screen says so.
+Administer » Herald » Test message sends a real message. "A channel" sends through one channel, with the target and options you enter on the screen. Empty fields fall back to the defaults on the settings screen. "A topic route" publishes through a route, as a real alert would. If the route aggregates, it buffers the message until the next flush, and the screen says so.
 
 Input errors are listed on the screen. A delivery error from the channel itself is shown in full to users with the permission "view debug output". Others see an error ID, and the CiviCRM log holds the message under that ID.
 
@@ -223,7 +223,7 @@ These are the configuration errors the channels raise. In a direct delivery they
 | webhook host resolves to a disallowed address | The URL points to a private or internal address. Add the host to `herald_webhook_allowed_hosts` if that is intended. |
 | webhook URL must use http or https | Fix the URL. |
 | webhook URL must not contain credentials | Remove the user name and password from the URL. Use `webhook_auth_token` or `webhook_headers` instead. |
-| webhook_headers must map header names to text or numbers | Write the headers as a JSON object of names and values, for example `{"X-Source": "civicrm"}`. `true`, `false`, lists and nested objects are not header values. |
+| webhook_headers must map header names to text or numbers | Write the headers as a JSON object of names and values, for example `{"X-Source": "civicrm"}`. `true`, `false`, `null`, lists and nested objects are not header values. |
 | could not resolve webhook host | Check the host name and the server's DNS. |
 | ntfy channel requires ntfy_topic | Set a topic on the action or `herald_ntfy_default_topic`. |
 | Pushover app token not configured | Set `herald_pushover_app_token`. |
@@ -239,4 +239,4 @@ These are the configuration errors the channels raise. In a direct delivery they
 
 Channels live in herald's code. Implement `Civi\Herald\Channel\ChannelInterface` and register the class in `ChannelRegistry::default()`.
 
-`getConfigSchema()` declares the channel's keys. `Herald.getChannels` and the list `unknown_config_keys` read it. `getSemanticFields()` maps the shared subject and format onto the channel's keys, so callers need not hard-code them. The action forms have dedicated fields only for Telegram, so the keys of a new channel go into "Channel-specific config".
+`getConfigSchema()` declares the channel's keys. `Herald.getChannels` lists them, and `Herald.send` uses them to fill `unknown_config_keys`. `getSemanticFields()` maps the shared subject and format onto the channel's keys, so callers need not hard-code them. The action forms have dedicated fields only for Telegram, so the keys of a new channel go into "Channel-specific config".

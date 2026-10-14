@@ -10,7 +10,7 @@ It is meant for the people who run a CiviCRM site and want to know what happens 
 
 ## What it does
 
-herald delivers through six channels: Telegram; a generic webhook for Slack, Discord, Mattermost or your own endpoint; ntfy; Pushover; email through CiviCRM's outbound mailer; and assigned CiviCRM activities. New channels are added in herald's code. See [Channels](channels.md).
+herald delivers through six channels: Telegram, ntfy, Pushover, a generic webhook (for Slack, Discord, Mattermost or your own endpoint), email through CiviCRM's outbound mailer, and assigned CiviCRM activities. New channels are added in herald's code. See [Channels](channels.md).
 
 Messages come from CiviCRM message templates, so admins can edit the wording under Mailings, Message Templates. herald ships templates for contributions, ticket sales, events, memberships, group signups, digests and health checks. The templates are in English, and a German translation is included.
 

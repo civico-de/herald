@@ -20,7 +20,7 @@ Ein Report (im Code Digest genannt) fasst einen Zeitraum in einer Nachricht zusa
 Die Reports finden Sie unter Administrieren » Herald » Reports. „Report hinzufügen“ öffnet das Formular, und jede Zeile der Liste hat „Bearbeiten“ und „Löschen“.
 
 - **Titel** bezeichnet den Report in Listen und in CiviRules.
-- **Name**: Darüber wählen Regeln und Skripte den Report aus. Er besteht aus Kleinbuchstaben, Ziffern und Unterstrichen und muss eindeutig sein.
+- **Name** ist der Schlüssel, über den Regeln und Skripte den Report auswählen. Er besteht aus Kleinbuchstaben, Ziffern und Unterstrichen und muss eindeutig sein.
 - **Zeitraum** gilt für jeden Block, der keinen eigenen setzt: gestern, heute, die letzten 7 oder die letzten 30 Tage.
 - **Kopfzeile** ist eine optionale Zeile über den Blöcken. Sie wird als HTML eingefügt, zum Beispiel `📊 <b>Daily report</b>`.
 
@@ -110,7 +110,7 @@ Bei der Aufschlüsselung nach Positionen stammen Summen, Anzahlen und ausstehend
 
 Das Histogramm zeigt die abgeschlossenen Beiträge des Zeitraums, die zu den Filtern passen, und ignoriert Beträge von null oder weniger. Es verwendet immer ganze Beitragsbeträge, bei der Aufschlüsselung nach Positionen gilt sein Filter auf den Finanztyp also für den Beitrag. Gibt es nichts anzuzeigen, steht dort „(no data)“.
 
-Ohne feste Grenzen wählt herald Klassengrenzen, die zu den Beträgen passen. Feste Grenzen eignen sich für eine Kampagne mit festen Spendenstufen, etwa eine Großspendenkampagne. Geben Sie mindestens zwei Werte an, zum Beispiel `[0, 100, 1000, 10000, 100000, 1000000]`. Beträge unterhalb der ersten oder oberhalb der letzten Grenze landen in zusätzlichen Klassen mit den Beschriftungen „<low“ und „≥high“. Ist das Histogramm ausgeschaltet, werden die Grenzen nicht geprüft.
+Ohne feste Grenzen wählt herald Klassengrenzen, die zu den Beträgen passen. Feste Grenzen eignen sich für eine Kampagne mit Spendenstufen, etwa eine Großspendenkampagne. Geben Sie mindestens zwei Werte an, zum Beispiel `[0, 100, 1000, 10000, 100000, 1000000]`. Beträge unterhalb der ersten oder oberhalb der letzten Grenze landen in zusätzlichen Klassen mit den Beschriftungen „<low“ und „≥high“. Ist das Histogramm ausgeschaltet, werden die Grenzen nicht geprüft.
 
 Der Fortschritt einer Kampagne übernimmt Titel und Ziel aus dem Kampagnendatensatz. Er zählt jeden abgeschlossenen Beitrag der Kampagne, der zu den Filtern auf Finanztyp und Quelle passt, unabhängig vom Zeitraum. Bei der Aufschlüsselung nach Positionen zählt er stattdessen die Positionen der Kampagne. Eine Kampagne ohne Ziel zeigt keine Fortschrittszeile.
 
@@ -146,24 +146,24 @@ Das Upgrade behält bei, was der Report bisher verschickt hat:
 
 - Einen Zeitraum, den herald nicht kannte, hat es als gestern gelesen, und so bleibt es.
 - Histogrammgrenzen, die keine aufsteigenden Zahlen sind, entfallen mit einer Warnung im Upgrade-Protokoll, und das Histogramm wählt seine Klassen selbst.
-- Eine Klassenzahl unter 0 hat eine einzige Klasse gezeichnet und wird zu 1. Die Klassenzahl 0 ist gescheitert, sobald sich zwei Beträge unterschieden. Sie wird zum Standardwert 8, mit einer Warnung im Upgrade-Protokoll.
+- Eine Klassenzahl unter 0 hat eine einzige Klasse gezeichnet und wird zu 1. Mit der Klassenzahl 0 scheiterte der Report, sobald sich zwei Beträge unterschieden. Diese Klassenzahl wird zum Standardwert 8, mit einer Warnung im Upgrade-Protokoll.
 - Ein Suchblock bekommt eine neue Tabellenanzeige seiner Suche mit der Bezeichnung „Herald: <Titel des Reports>“, mit den Spalten, der Sortierung und dem Limit der Suche und ohne Seitenumbruch. Seine Werte erscheinen nun formatiert, so wie die Anzeige sie zeigt.
 - Ein Statusfilter auf Completed entfällt, weil die Datensätze ohnehin abgeschlossene Beiträge zählen.
 
-Ein Report, den die Datensätze nicht nachbilden können, bleibt, wie er war. Das Upgrade-Protokoll enthält dann die Warnung „digest left inline, it cannot run until fixed“ mit dem Grund, und die Regel oder der Job scheitert, bis sie einen Report nennt. Die meisten dieser Reports konnten nie laufen:
+Ein Report, den die Datensätze nicht nachbilden können, bleibt, wie er war. Das Upgrade-Protokoll enthält dann die Warnung „digest left inline, it cannot run until fixed“ mit dem Grund, und Regel oder Job scheitern, bis sie einen Report-Datensatz nennen. Die meisten dieser Reports konnten nie laufen:
 
-- eine Blockliste, die kein JSON-Array aus Objekten ist
-- ein Block unbekannten Typs
-- ein Abschnittsblock ohne Schlüssel
-- eine gespeicherte Suche, die es nicht mehr gibt oder deren Entität mit ihrer Extension verschwunden ist
-- eine Kampagne oder ein Finanztyp, die es nicht mehr gibt
+- Eine Blockliste, die kein JSON-Array aus Objekten ist.
+- Ein Block unbekannten Typs.
+- Ein Abschnittsblock ohne Schlüssel.
+- Eine gespeicherte Suche, die es nicht mehr gibt oder deren Entität mit ihrer Extension verschwunden ist.
+- Eine Kampagne oder ein Finanztyp, die es nicht mehr gibt.
 
 Die übrigen verlangen etwas, das die Datensätze nicht können:
 
 - Eine gespeicherte Suche, die ihre ersten Zeilen überspringt. Eine Anzeige beginnt immer bei der ersten Zeile.
-- Ein Statusfilter auf einen anderen Status als Completed, den die Datensätze nicht mehr anbieten. Dazu gehört auch Completed in einem Report, der die ausstehenden Beträge ohne die Aufschlüsselung nach Positionen zeigte, denn diese Beträge zählten dann ebenfalls abgeschlossene Beiträge.
+- Ein Statusfilter auf einen anderen Status als Completed, den die Datensätze nicht mehr anbieten. Dazu gehört auch Completed in einem Report, der die ausstehenden Beträge ohne die Aufschlüsselung nach Positionen zeigte: Der Filter galt dann auch für die ausstehenden Beträge, sie zählten also abgeschlossene Beiträge.
 
-Listener für Abschnitte bekamen in älteren Versionen die Einstellungen des Reports unter `params` in `$context`. Diesen Schlüssel gibt es nicht mehr. Ein Listener, der dort einen Filter gelesen hat, lädt nun den Report-Datensatz über seinen Namen aus `digest`.
+Listener für Abschnitte bekamen in älteren Versionen die Einstellungen des Reports unter `params` in `$context`. Diesen Schlüssel gibt es nicht mehr. Ein Listener, der dort einen Filter gelesen hat, muss nun den Report-Datensatz über seinen Namen aus `digest` laden.
 
 Eine verzögerte Aktion, die beim Upgrade schon in der Warteschlange von CiviRules wartete, trägt noch die alten Einstellungen und scheitert einmal. Beim nächsten Auslösen nimmt die Regel die neuen.
 

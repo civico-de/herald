@@ -60,7 +60,7 @@ Admins can fill these in on the contact record. For self-service, herald install
 
 CiviCRM opens the profile for the logged-in contact, who can see and edit only their own record.
 
-To use the subscriptions, set an action's delivery mode to "Subscribers" and choose the subscription type. The action's own recipient is ignored in this mode. Only presentation options travel from the rule to the subscribers' channels:
+To use the subscriptions, set an action's delivery mode to "Subscribers" and choose the subscription type. The action's own recipient is ignored in this mode. Only presentation options are passed from the rule to the subscribers' channels:
 
 - Telegram: `parse_mode`, `disable_notification`, `disable_web_page_preview`
 - webhook: `webhook_body_format`, `webhook_body_key`
@@ -68,7 +68,7 @@ To use the subscriptions, set an action's delivery mode to "Subscribers" and cho
 - Pushover: `pushover_title`, `pushover_priority`, `pushover_sound`, `pushover_url`, `pushover_url_title`, `pushover_html`, `pushover_retry`, `pushover_expire`
 - email: `email_subject`, `email_format`
 
-Recipients, tokens, headers, CC and BCC never travel. A contact's webhook URL therefore never receives the site's webhook token.
+Recipients, tokens, headers, CC and BCC are never passed on. A contact's webhook URL therefore never receives the site's webhook token.
 
 herald ships these subscription types:
 
@@ -126,7 +126,7 @@ The check monitor publishes to the topic named in `herald_monitor_topic`, which 
 
 ## Aggregation
 
-Alerts that come in bursts can be collected and sent as one message. Set `aggregate_minutes` on an action or a topic route, in the action form the field "Aggregate window in minutes". The default 0 sends at once.
+Alerts that come in bursts can be collected and sent as one message. Set `aggregate_minutes` on an action or a topic route; in the action form it is the field "Aggregate window in minutes". The default 0 sends at once.
 
 A value above 0 stores the rendered alert in the table `civicrm_herald_buffer`. The scheduled job "Herald: Flush alert aggregation buffer" runs on every cron run. Once the oldest waiting alert of a group is older than its window, the whole group goes out as one message.
 
@@ -154,7 +154,7 @@ cv api4 Herald.reactivateParkedAlerts '{"ids": [12, 13]}'
 
 The list shows each alert's ID, the reason it was parked, the number of attempts, the last error and its dates. Without `ids`, `reactivateParkedAlerts` reactivates every parked alert.
 
-For reactivated alerts the count of attempts starts again. They keep the parameters stored when they were buffered. Fixing the rule or the route therefore does not repair a wrong recipient that was set on the action. Subscriber and group recipients are looked up again at delivery, so fixing a contact's preferences does help.
+Reactivating an alert resets its attempt count. They keep the parameters stored when they were buffered. Fixing the rule or the route therefore does not repair a wrong recipient that was set on the action. Subscriber and group recipients are looked up again at delivery, so fixing a contact's preferences does help.
 
 The check monitor reports parked alerts and a stuck buffer, see [Built in checks](monitor.md#built-in-checks).
 
