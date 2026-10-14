@@ -31,11 +31,6 @@ class FieldTransitionTest extends TestCase {
       'less than' => ['<', '3', '5', TRUE],
       'gte boundary' => ['>=', '5', '5', TRUE],
       'lte boundary' => ['<=', '5', '5', TRUE],
-      'is_empty on null' => ['is_empty', NULL, '', TRUE],
-      'is_empty on empty string' => ['is_empty', '', '', TRUE],
-      'is_empty on zero is false' => ['is_empty', '0', '', FALSE],
-      'not_empty on value' => ['not_empty', 'x', '', TRUE],
-      'not_empty on null' => ['not_empty', NULL, '', FALSE],
       'equals on array is false' => ['=', ['x'], 'x', FALSE],
       // Numeric equality only while float is lossless; huge integers must not
       // collapse (9007199254740992.0 === 9007199254740993.0 as floats).
@@ -63,7 +58,28 @@ class FieldTransitionTest extends TestCase {
   }
 
   /**
+   * NULL, "" and [] are one empty value, whichever API read them.
+   *
+   * @return array<string, array{0: string, 1: mixed, 2: string, 3: bool}>
+   */
+  public static function emptyCompareCases(): array {
+    return [
+      'is_empty on null' => ['is_empty', NULL, '', TRUE],
+      'is_empty on empty string' => ['is_empty', '', '', TRUE],
+      'is_empty on zero is false' => ['is_empty', '0', '', FALSE],
+      'not_empty on value' => ['not_empty', 'x', '', TRUE],
+      'not_empty on null' => ['not_empty', NULL, '', FALSE],
+      'equals empty on null' => ['=', NULL, '', TRUE],
+      'equals empty on empty list' => ['=', [], ' ', TRUE],
+      'not equals empty on null' => ['!=', NULL, '', FALSE],
+      'equals value on null' => ['=', NULL, 'x', FALSE],
+      'equals empty on zero' => ['=', '0', '', FALSE],
+    ];
+  }
+
+  /**
    * @dataProvider compareCases
+   * @dataProvider emptyCompareCases
    */
   public function testCompare(string $operator, mixed $actual, string $expected, bool $result): void {
     $this->assertSame($result, FieldValues::compare($operator, $actual, $expected));

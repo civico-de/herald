@@ -35,6 +35,16 @@ class StoredRowTest extends TestCase implements HeadlessInterface, Transactional
     );
   }
 
+  /**
+   * APIv3 returns "" for an empty column, where APIv4 returns NULL.
+   */
+  public function testAnEmptyOptionFieldIsKnownAndEmpty(): void {
+    $this->assertSame(
+      ['known' => TRUE, 'value' => NULL],
+      StoredRow::value('Contact', 'gender_id:name', ['gender_id' => '']),
+    );
+  }
+
   public function testAnUnsuffixedFieldKeepsTheRawValue(): void {
     $this->assertSame(
       ['known' => TRUE, 'value' => '3'],

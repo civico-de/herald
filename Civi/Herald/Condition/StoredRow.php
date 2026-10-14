@@ -39,17 +39,20 @@ final class StoredRow {
       $raw = $spec['serialize'] && is_string($stored)
         ? \CRM_Core_DAO::unSerializeField($stored, $spec['serialize'])
         : $stored;
-      if ($raw === NULL || $name === $field) {
+      if ($name === $field) {
         return ['known' => TRUE, 'value' => $raw];
       }
+      // APIv3 returns "" for an empty column.
+      if ($raw === NULL || $raw === '') {
+        return ['known' => TRUE, 'value' => NULL];
+      }
       $keys = is_array($raw) ? array_map(self::optionKey(...), $raw) : self::optionKey($raw);
-      $value = FormattingUtil::replacePseudoconstant(
-        FormattingUtil::getPseudoconstantList($spec, $field, $row),
-        $keys,
-      );
+      $options = FormattingUtil::getPseudoconstantList($spec, $field, $row);
       // APIv3 returns the label for an unpadded multi-value ID; a miss is no answer.
-      $complete = is_array($keys) ? count((array) $value) === count($keys) : $value !== NULL;
-      return $complete ? ['known' => TRUE, 'value' => $value] : self::UNKNOWN;
+      if (array_diff((array) $keys, array_keys($options)) !== []) {
+        return self::UNKNOWN;
+      }
+      return ['known' => TRUE, 'value' => FormattingUtil::replacePseudoconstant($options, $keys)];
     }
     catch (\CRM_Core_Exception) {
       return self::UNKNOWN;

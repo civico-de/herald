@@ -58,6 +58,9 @@ final class FieldValues {
   }
 
   private static function equals(mixed $actual, string $expected): bool {
+    if (in_array($actual, self::EMPTY, TRUE)) {
+      return trim($expected) === '';
+    }
     if (!is_scalar($actual)) {
       return FALSE;
     }
