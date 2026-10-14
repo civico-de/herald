@@ -151,7 +151,7 @@ Eine Änderung an einer Vorlage, die einen Report mit dieser Vorlage kaputt mach
 
 Ältere Versionen haben einen Report als Liste von Blöcken in den Einstellungen seiner Regelaktion oder seines geplanten Jobs abgelegt. Das Upgrade macht aus jedem einen Report-Datensatz und lässt in der Aktion nur die Zustelleinstellungen und den Namen des Reports stehen. Der Report einer Regelaktion heißt `rule_action_<id>` und übernimmt den Titel der Regel, der Report eines Jobs heißt `job_<id>` und übernimmt den Namen des Jobs. Sie können sie danach umbenennen. Wählen Sie den Report dann in jeder Regelaktion, die ihn verschickt hat, neu aus, und passen Sie die Jobs und Skripte an, die ihn nennen.
 
-Jeder alte Report bekommt eine eigene Nachrichtenvorlage „Herald: <Titel>“ mit der Kopfzeile, den Blocktiteln und einem Text, der ausgibt, was die Blöcke bisher ausgegeben haben: Summen, Aufschlüsselung, ausstehende Beträge, Kampagnenfortschritt und Histogramm. Aus den Blöcken werden Quellen:
+Jeder alte Report bekommt eine eigene Nachrichtenvorlage `Herald: <Titel>` mit der Kopfzeile, den Blocktiteln und einem Text, der ausgibt, was die Blöcke bisher ausgegeben haben: Summen, Aufschlüsselung, ausstehende Beträge, Kampagnenfortschritt und Histogramm. Aus den Blöcken werden Quellen:
 
 - Ein Beitragsblock verwendet die mitgelieferten Suchen. Mit einem Filter oder einem anderen Zeitraum als gestern bekommt er Kopien davon mit der Bezeichnung `Herald: <Titel>: …`. Ein Kampagnenfilter setzt voraus, dass CiviCampaign aktiviert ist.
 - Ein Suchblock bekommt eine neue Tabellenanzeige seiner Suche, mit den Spalten, der Sortierung und dem Limit der Suche und ohne Seitenumbruch.

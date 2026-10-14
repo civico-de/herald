@@ -151,7 +151,7 @@ A template edit that breaks a digest using the template is refused, both in the 
 
 Older releases kept a digest inside the settings of its rule action or scheduled job, as a list of blocks. The upgrade turns each of them into a digest record and leaves only the delivery settings and the digest's name in the action. A rule action's digest is named `rule_action_<id>` and takes the rule's title, a job's digest is named `job_<id>` and takes the job's name. You can rename them afterwards. Then pick the digest again in each rule action that sent it, and update the jobs and scripts that name it.
 
-Each old digest gets its own message template, "Herald: <title>", with the header, the block titles and a text that prints what the blocks printed before: totals, the breakdown, the pending amounts, the campaign progress and the histogram. The blocks become sources:
+Each old digest gets its own message template, `Herald: <title>`, with the header, the block titles and a text that prints what the blocks printed before: totals, the breakdown, the pending amounts, the campaign progress and the histogram. The blocks become sources:
 
 - A contribution block uses the shipped searches. With a filter or another period than yesterday, it gets copies of them, labelled `Herald: <title>: …`. A campaign filter needs CiviCampaign enabled.
 - A search block gets a new table display of its search, with the search's columns, sort and limit and no pager.
