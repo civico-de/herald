@@ -2,6 +2,8 @@
 
 declare(strict_types = 1);
 
+// ckconform-ignore-file raw-sql -- runs on upgrade and reconcile also while CiviRules is disabled and its APIv4 entities are missing; the table name comes from a fixed list
+
 /**
  * CiviRules instantiates handlers from civirule_action/condition/trigger.class_name,
  * so a class rename is a data migration; migrateRenamedClasses() also covers

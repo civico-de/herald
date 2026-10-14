@@ -30,7 +30,10 @@ final class CRM_Herald_Upgrader_BufferTable {
     // Core names each index index_<columns>, as schema/ does.
     CRM_Core_BAO_SchemaHandler::createIndexes([$table => $indexed]);
     // No API sets table options; the SQL generator creates every table with this one.
-    CRM_Core_DAO::executeQuery("ALTER TABLE `{$table}` ROW_FORMAT=DYNAMIC", i18nRewrite: FALSE);
+    CRM_Core_DAO::executeQuery(
+      'ALTER TABLE `' . \Civi\Herald\Buffer\AlertBuffer::TABLE . '` ROW_FORMAT=DYNAMIC',
+      i18nRewrite: FALSE,
+    );
   }
 
 }
