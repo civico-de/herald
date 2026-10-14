@@ -19,6 +19,15 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
 
   private const UNTOUCHED = 'a:1:{s:6:"marker";s:7:"foreign";}';
 
+  private const TRANSITION = [
+    'entity' => 'Membership',
+    'field' => 'status_id',
+    'from_operator' => '=',
+    'from_value' => '2',
+    'to_operator' => '=',
+    'to_value' => '3',
+  ];
+
   /**
    * Stands in for the form's first template option until the form is built.
    */
@@ -303,15 +312,52 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     );
   }
 
-  public function testFieldTransitionForm(): void {
-    $values = [
-      'entity' => 'Membership',
-      'field' => 'status_id',
-      'from_operator' => '=',
-      'from_value' => '2',
-      'to_operator' => '=',
-      'to_value' => '3',
+  /**
+   * @return array<string, array{0: array<string, string>, 1: string, 2: string}>
+   */
+  public static function uncheckableTransitions(): array {
+    return [
+      'unknown entity' => [['entity' => 'Membershipp'], 'entity', '"Membershipp" cannot be checked'],
+      'unknown field' => [['field' => 'statusid'], 'field', 'Membership has no field "statusid".'],
+      'unknown operator' => [['to_operator' => '=='], '_qf_default', 'unknown field transition operator "=="'],
     ];
+  }
+
+  /**
+   * @dataProvider uncheckableTransitions
+   * @param array<string, string> $change
+   */
+  public function testTheConditionFormNamesWhatItCannotCheck(array $change, string $element, string $error): void {
+    $form = $this->transitionForm();
+    $form->_submitValues = array_replace(self::TRANSITION, $change);
+    $form->_flagSubmitted = TRUE;
+
+    $this->assertFalse($form->validate());
+    $this->assertStringContainsString($error, (string) ($form->_errors[$element] ?? ''));
+  }
+
+  public function testACheckableTransitionPasses(): void {
+    $form = $this->transitionForm();
+    $form->_submitValues = self::TRANSITION;
+    $form->_flagSubmitted = TRUE;
+
+    $this->assertTrue($form->validate(), json_encode($form->_errors, JSON_THROW_ON_ERROR));
+  }
+
+  private function transitionForm(): CRM_Core_Form {
+    $handlerId = (int) CRM_Core_DAO::singleValueQuery(
+      'SELECT id FROM civirule_condition WHERE class_name = %1',
+      [1 => [CRM_Herald_CivirulesAdapter_Condition_FieldTransition::class, 'String']],
+    );
+    $id = $this->insert(self::CONDITION, $handlerId, $this->rule('herald_test_transition'));
+    return $this->open(
+      (string) (new CRM_Herald_CivirulesAdapter_Condition_FieldTransition())->getExtraDataInputUrl($id),
+      CRM_Herald_CivirulesAdapter_Form_FieldTransition::class,
+    );
+  }
+
+  public function testFieldTransitionForm(): void {
+    $values = self::TRANSITION;
     $this->assertRoundTrip(
       self::CONDITION,
       CRM_Herald_CivirulesAdapter_Condition_FieldTransition::class,

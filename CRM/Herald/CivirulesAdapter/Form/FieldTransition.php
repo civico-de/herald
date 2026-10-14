@@ -3,6 +3,7 @@
 declare(strict_types = 1);
 
 use Civi\Herald\Condition\FieldTransition;
+use Civi\Herald\Condition\FieldTransitionParams;
 use Civi\Herald\Condition\FieldTransitionWatchList;
 use CRM_Herald_ExtensionUtil as E;
 
@@ -25,10 +26,42 @@ if (class_exists('CRM_CivirulesConditions_Form_Form')) {
       $this->add('text', 'from_value', E::ts('Before: value'), ['size' => 30]);
       $this->add('select', 'to_operator', E::ts('After: operator'), $operators, required: FALSE);
       $this->add('text', 'to_value', E::ts('After: value'), ['size' => 30]);
+      $this->addFormRule($this->errorsIn(...));
       $this->addButtons([
         ['type' => 'next', 'name' => E::ts('Save'), 'isDefault' => TRUE],
         ['type' => 'cancel', 'name' => E::ts('Cancel')],
       ]);
+    }
+
+    /**
+     * A misspelt entity or field would leave the condition silently false.
+     *
+     * @param array<string, mixed> $values
+     * @return array<string, string>|true
+     */
+    private function errorsIn(array $values): array|bool {
+      $params = FieldTransitionParams::decode($values);
+      try {
+        FieldTransition::side($params['from_operator'], $params['from_value']);
+        FieldTransition::side($params['to_operator'], $params['to_value']);
+      }
+      catch (\CRM_Core_Exception $e) {
+        return ['_qf_default' => $e->getMessage()];
+      }
+      try {
+        $fields = civicrm_api4($params['entity'], 'getFields', [
+          'checkPermissions' => FALSE,
+          'where' => [['name', '=', $params['field']]],
+        ]);
+      }
+      catch (\CRM_Core_Exception $e) {
+        return ['entity' => E::ts('"%1" cannot be checked: %2', [1 => $params['entity'], 2 => $e->getMessage()])];
+      }
+      return (
+        $fields->count() > 0
+          ? TRUE
+          : ['field' => E::ts('%1 has no field "%2".', [1 => $params['entity'], 2 => $params['field']])]
+      );
     }
 
     /**
@@ -37,42 +70,17 @@ if (class_exists('CRM_CivirulesConditions_Form_Form')) {
     public function setDefaultValues() {
       /** @var array<string, mixed> $defaults */
       $defaults = parent::setDefaultValues();
-      $params = $this->getConditionParameters();
-      foreach (['entity', 'field', 'from_operator', 'from_value', 'to_operator', 'to_value'] as $key) {
-        if (!array_key_exists($key, $params)) {
-          continue;
-        }
-        $defaults[$key] = $params[$key];
-      }
-      return $defaults;
+      return array_merge($defaults, FieldTransitionParams::decode($this->ruleCondition->condition_params ?? NULL));
     }
 
     public function postProcess(): void {
-      $values = $this->exportValues();
-      $params = [];
-      foreach (['entity', 'field', 'from_operator', 'from_value', 'to_operator', 'to_value'] as $key) {
-        $value = $values[$key] ?? '';
-        $params[$key] = is_scalar($value) ? trim((string) $value) : '';
-      }
-      $this->ruleCondition->condition_params = serialize($params);
+      $this->ruleCondition->condition_params = serialize(FieldTransitionParams::decode($this->exportValues()));
       $this->ruleCondition->save();
       // The pre-hook snapshot watch list is request-cached; drop it so a rule
       // saved and triggered in one process sees the fresh configuration.
       FieldTransitionWatchList::reset();
       \CRM_Core_Session::setStatus(E::ts('herald condition saved.'), '', 'success');
       parent::postProcess();
-    }
-
-    /**
-     * @return array<array-key, mixed>
-     */
-    protected function getConditionParameters(): array {
-      $raw = $this->ruleCondition->condition_params ?? '';
-      if (!$raw) {
-        return [];
-      }
-      $params = unserialize($raw, ['allowed_classes' => FALSE]);
-      return is_array($params) ? $params : [];
     }
 
   }
