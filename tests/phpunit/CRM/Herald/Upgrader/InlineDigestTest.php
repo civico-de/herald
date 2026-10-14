@@ -149,9 +149,13 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
       'Old no histogram',
     );
 
+    CRM_Herald_Upgrader_InlineDigest::extract(['bucket_count' => '0', 'status' => 0], 'old_zero', 'Old zero');
+
     $block = $this->stored('old_filters')['blocks'][0];
     self::assertSame([' Bank%', '[0,10,100.5]'], [$block['source_pattern'], $block['bucket_edges']]);
     self::assertFalse($this->stored('old_no_histogram')['blocks'][0]['show_histogram']);
+    $zero = $this->stored('old_zero')['blocks'][0];
+    self::assertSame([TRUE, 8], [$zero['show_histogram'], $zero['bucket_count']]);
   }
 
   public function testUnreadableEdgesAreDroppedAsTheyWereIgnored(): void {
@@ -178,6 +182,8 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
     self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(['blocks' => '[{"type": ""}]'], 'old_type', 'Old type'));
     // Records have no status filter; reporting Completed instead would change the numbers unnoticed.
     self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(['status' => 'Pending'], 'old_status', 'Old status'));
+    // A status the old filter kept matched no contribution at all.
+    self::assertNull(CRM_Herald_Upgrader_InlineDigest::extract(['status' => FALSE], 'old_false', 'Old false'));
     self::assertSame(
       0,
       HeraldDigest::get(checkPermissions: FALSE)->addWhere('name', 'LIKE', 'old\\_%')->execute()->count(),
@@ -258,6 +264,30 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
       $parameters,
     );
     self::assertSame('Weekly numbers', $this->stored("job_{$id}")['digest']['title']);
+  }
+
+  public function testAJobWithoutActionParamsKeepsSendingTheDefaultDigest(): void {
+    $id = (int) Job::create(checkPermissions: FALSE)
+      ->setValues([
+        'name' => 'Plain digest',
+        'run_frequency' => 'Daily',
+        'api_entity' => 'Herald',
+        'api_action' => 'notifyDigest',
+        'parameters' => json_encode(['version' => 4, 'sendHour' => 7]),
+      ])
+      ->execute()
+      ->single()['id'];
+
+    self::assertSame(1, CRM_Herald_Upgrader_InlineDigestJobs::migrate());
+
+    self::assertSame(
+      ['version' => 4, 'sendHour' => 7, 'digest' => "job_{$id}", 'actionParams' => []],
+      json_decode(
+        (string) Job::get(checkPermissions: FALSE)->addWhere('id', '=', $id)->execute()->single()['parameters'],
+        TRUE,
+      ),
+    );
+    self::assertSame('contribution', $this->stored("job_{$id}")['blocks'][0]['type']);
   }
 
 }

@@ -27,8 +27,7 @@ final class CRM_Herald_Upgrader_InlineContributionBlock {
   public static function values(array $block, string $digestName): array {
     $block = array_filter($block, static fn (mixed $value): bool => $value !== NULL) + self::DEFAULTS;
     $pattern = Cast::toString($block['source_pattern'] ?? '');
-    $histogram = !empty($block['show_histogram']);
-    $count = self::id($block['bucket_count']) ?? 8;
+    $count = Cast::toInt($block['bucket_count']);
     return [
       'campaign_id' => self::id($block['campaign_id']),
       'financial_type_id' => self::id($block['financial_type_id']),
@@ -37,9 +36,9 @@ final class CRM_Herald_Upgrader_InlineContributionBlock {
       'group_by' => $block['group_by'] === 'line_item' ? 'line_item' : 'source',
       // Older forms stored "0" or "" for an unchecked box.
       'show_pending' => !empty($block['show_pending']),
-      'show_histogram' => $histogram,
-      // Without histogram the count is unused, and the record takes no count below 1.
-      'bucket_count' => $histogram || $count > 0 ? $count : 8,
+      'show_histogram' => !empty($block['show_histogram']),
+      // A count below 1 drew no histogram; such a digest got 0 from an empty form field.
+      'bucket_count' => $count > 0 ? $count : 8,
       'bucket_edges' => self::edges($block['bucket_edges'], $digestName),
     ];
   }
@@ -49,7 +48,7 @@ final class CRM_Herald_Upgrader_InlineContributionBlock {
   }
 
   /**
-   * A positive id or count; 0 and "" mean none.
+   * A positive id; 0 and "" mean none.
    */
   private static function id(mixed $value): ?int {
     $id = Cast::toInt($value);

@@ -7,6 +7,9 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 /**
  * "Send digest" actions whose digest still sits in their parameters get a
  * HeraldDigest of their own (CRM_Herald_Upgrader_InlineDigest).
+ *
+ * Reads the CiviRules tables directly: they hold the actions while CiviRules
+ * is disabled, and the API unserializes action_params only from CiviRules 3.36.
  */
 final class CRM_Herald_CivirulesAdapter_InlineDigests {
 
@@ -14,34 +17,65 @@ final class CRM_Herald_CivirulesAdapter_InlineDigests {
    * @return int Number of rule actions rewritten.
    */
   public static function migrate(): int {
-    if (!CRM_Herald_CivirulesAdapter_Availability::isInstalled()) {
+    if (!CRM_Core_DAO::checkTableExists('civirule_rule_action')) {
       return 0;
     }
     /** @var list<array<string, mixed>> $actions */
-    $actions = \Civi\Api4\CiviRulesRuleAction::get(checkPermissions: FALSE)
-      ->addSelect('id', 'action_params', 'rule_id.label')
-      ->addWhere('action_id.class_name', '=', 'CRM_Herald_CivirulesAdapter_Action_Digest')
+    $actions = CRM_Utils_SQL_Select::from('civirule_rule_action ra')
+      ->join('a', 'INNER JOIN civirule_action a ON a.id = ra.action_id')
+      ->join('r', 'LEFT JOIN civirule_rule r ON r.id = ra.rule_id')
+      ->select(['ra.id', 'ra.action_params', 'r.label'])
+      ->where('a.class_name = @class', ['class' => 'CRM_Herald_CivirulesAdapter_Action_Digest'])
       ->execute()
-      ->getArrayCopy();
+      ->fetchAll();
     $migrated = 0;
     foreach ($actions as $action) {
-      $params = is_array($action['action_params'] ?? NULL) ? Cast::namedOnly($action['action_params']) : [];
-      if (!CRM_Herald_Upgrader_InlineDigest::isInline($params)) {
-        continue;
-      }
-      $id = Cast::toInt($action['id']);
-      $title = Cast::toString($action['rule_id.label'] ?? '') ?: "Rule action {$id}";
-      $delivery = CRM_Herald_Upgrader_InlineDigest::extract($params, "rule_action_{$id}", $title);
-      if ($delivery === NULL) {
-        continue;
-      }
-      \Civi\Api4\CiviRulesRuleAction::update(checkPermissions: FALSE)
-        ->addWhere('id', '=', $id)
-        ->addValue('action_params', $delivery)
-        ->execute();
-      $migrated++;
+      CRM_Core_Transaction::create()->run(static function () use ($action, &$migrated): void {
+        $migrated += self::rewrite($action);
+      });
     }
     return $migrated;
+  }
+
+  /**
+   * The digest and the action that names it are written together, so a failed upgrade can run again.
+   *
+   * @param array<string, mixed> $action
+   */
+  private static function rewrite(array $action): int {
+    $id = Cast::toInt($action['id']);
+    $params = self::params(Cast::toString($action['action_params'] ?? ''), $id);
+    if ($params === NULL || !CRM_Herald_Upgrader_InlineDigest::isInline($params)) {
+      return 0;
+    }
+    $title = Cast::toString($action['label'] ?? '') ?: "Rule action {$id}";
+    $delivery = CRM_Herald_Upgrader_InlineDigest::extract($params, "rule_action_{$id}", $title);
+    if ($delivery === NULL) {
+      return 0;
+    }
+    // ckconform-ignore raw-sql -- CiviRules' API is gone while it is disabled, and core has no UPDATE builder.
+    CRM_Core_DAO::executeQuery(
+      'UPDATE civirule_rule_action SET action_params = %1 WHERE id = %2',
+      [1 => [serialize($delivery), 'String'], 2 => [$id, 'Integer']],
+    );
+    return 1;
+  }
+
+  /**
+   * CiviRules stores the params PHP-serialized and reads empty ones as none.
+   *
+   * @return array<string, mixed>|null
+   */
+  private static function params(string $serialized, int $id): ?array {
+    if ($serialized === '') {
+      return [];
+    }
+    $params = unserialize($serialized, ['allowed_classes' => FALSE]);
+    if (is_array($params)) {
+      return Cast::namedOnly($params);
+    }
+    \Civi::log('herald')->warning('herald: rule action params unreadable, digest left inline', ['rule_action' => $id]);
+    return NULL;
   }
 
 }

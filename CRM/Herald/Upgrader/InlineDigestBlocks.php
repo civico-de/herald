@@ -25,9 +25,10 @@ final class CRM_Herald_Upgrader_InlineDigestBlocks {
     }
     // Without a list the params are the one block, which shares the digest's period.
     $raw = $raw === [] ? [array_diff_key($params, ['period' => TRUE])] : array_values($raw);
+    // Older releases read NULL, "" and 0 as no status filter.
     $statuses = array_filter(
       array_column($raw, 'status'),
-      static fn (mixed $s): bool => trim(Cast::toString($s)) !== '',
+      static fn (mixed $s): bool => $s !== NULL && $s !== '' && $s !== 0,
     );
     if ($statuses !== []) {
       return 'a contribution status filter is no longer available';
@@ -52,7 +53,7 @@ final class CRM_Herald_Upgrader_InlineDigestBlocks {
         'template' => self::text($block, 'template'),
       ]
       + match ($type) {
-        'search' => ['saved_search_id' => self::savedSearchId(Cast::toString($block['search'] ?? ''))],
+        'search' => ['saved_search_id' => CRM_Herald_Upgrader_InlineSearch::id(Cast::toString($block['search'] ?? ''))],
         'section' => ['section_key' => self::text($block, 'key')],
         default => CRM_Herald_Upgrader_InlineContributionBlock::values($block, $digestName),
       }
@@ -65,16 +66,6 @@ final class CRM_Herald_Upgrader_InlineDigestBlocks {
   private static function text(array $block, string $key): ?string {
     $value = trim(Cast::toString($block[$key] ?? ''));
     return $value === '' ? NULL : $value;
-  }
-
-  private static function savedSearchId(string $name): ?int {
-    $id =
-      \Civi\Api4\SavedSearch::get(checkPermissions: FALSE)
-        ->addSelect('id')
-        ->addWhere('name', '=', $name)
-        ->execute()
-        ->first()['id'] ?? NULL;
-    return $id === NULL ? NULL : Cast::toInt($id);
   }
 
 }
