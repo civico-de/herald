@@ -8,6 +8,15 @@ use CRM_Herald_ExtensionUtil as E;
 
 class ChannelRegistry {
 
+  private const BUILT_IN = [
+    TelegramChannel::class,
+    WebhookChannel::class,
+    NtfyChannel::class,
+    PushoverChannel::class,
+    EmailChannel::class,
+    ActivityChannel::class,
+  ];
+
   /**
    * @var array<string, ChannelInterface> */
   private array $channels = [];
@@ -48,18 +57,15 @@ class ChannelRegistry {
     };
   }
 
-  // @mago-expect lint:halstead
   public static function default(): self {
     /** @var self|null $instance */
     static $instance = NULL;
-    if ($instance === NULL) {
-      $instance = new self();
-      $instance->register(new TelegramChannel());
-      $instance->register(new WebhookChannel());
-      $instance->register(new NtfyChannel());
-      $instance->register(new PushoverChannel());
-      $instance->register(new EmailChannel());
-      $instance->register(new ActivityChannel());
+    if ($instance !== NULL) {
+      return $instance;
+    }
+    $instance = new self();
+    foreach (self::BUILT_IN as $class) {
+      $instance->register(new $class());
     }
     return $instance;
   }
