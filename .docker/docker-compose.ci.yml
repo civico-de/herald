@@ -54,7 +54,7 @@ services:
 
 # BEGIN CIVIKITCHEN MANAGED db
   db:
-    image: mariadb:10.11
+    image: mariadb:11.4
     # Civi\Test's schema rebuild creates triggers as the app user; with binary
     # logging the server refuses that unless it trusts non-SUPER creators.
     command: --log-bin-trust-function-creators=1
