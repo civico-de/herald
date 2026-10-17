@@ -105,7 +105,7 @@ The entity `Herald` offers these actions. The actions need the permission "admin
 | send | channel, message, subject, format, config | Delivers a finished message through one channel. This is the entry point for other extensions. The result lists `unknown_config_keys`. |
 | publish | topic, message or template with vars, format, amount | Delivers through the route in `herald_topics`, see [Topics](delivery.md#topics). |
 | notify | actionParams, triggerContext | What "Send notification" calls. |
-| notifyDigest | digest, actionParams, sendHour | What "Send digest" calls, and scripts, see [Sending a digest](digests.md#sending-a-digest). |
+| notifyDigest | digest, actionParams, sendHour, daily, skipEmpty | What "Send digest" calls, and scripts, see [Sending a digest](digests.md#sending-a-digest). |
 | checkSchedule | ruleId, schedule | What "Herald: Schedule" calls. Returns `due`, `slot`, `last_run` and `not_before`. |
 | checkFieldTransition | entity, entityId, field, fromOperator, fromValue, toOperator, toValue, originalValue, hasOriginal | What "Field transition" calls. Returns `matched`. |
 | getChannels | channel, optional | Lists the channels and the keys they accept. |

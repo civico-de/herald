@@ -156,3 +156,5 @@ A CiviCRM scheduled job of `Herald.notifyDigest`, set to Hourly with `"sendHour"
 ## Notifications for each person
 
 When several staff members want different notifications on their own channels, use subscriber mode instead of one rule per person. Each contact chooses a channel and the kinds of notifications they want, and one rule reaches all subscribers. The setup and the self-service profile are described in [Subscribers](delivery.md#subscribers).
+Add `"daily": true` and the job can run on every cron run instead: set it to Always with `"sendHour": 8, "daily": true` in its parameters, and the digest goes out with the first cron run at or after 8 o'clock, once a day. With `"skipEmpty": true` it stays unsent on a day its searches found nothing. See [Sending a digest](digests.md#sending-a-digest).
+

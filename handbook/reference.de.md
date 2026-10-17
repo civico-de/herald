@@ -105,7 +105,7 @@ Die Entität `Herald` bietet diese Aktionen. Die Aktionen erfordern die Berechti
 | send | channel, message, subject, format, config | Stellt eine fertige Nachricht über einen Kanal zu. Das ist der Einstiegspunkt für andere Extensions. Das Ergebnis listet `unknown_config_keys` auf. |
 | publish | topic, message oder template mit vars, format, amount | Stellt über die Route in `herald_topics` zu, siehe [Topics](delivery.md#topics). |
 | notify | actionParams, triggerContext | Wird von „Send notification“ aufgerufen. |
-| notifyDigest | digest, actionParams, sendHour | Wird von „Send digest“ und von Skripten aufgerufen, siehe [Einen Report verschicken](digests.md#einen-report-verschicken). |
+| notifyDigest | digest, actionParams, sendHour, daily, skipEmpty | Wird von „Send digest“ und von Skripten aufgerufen, siehe [Einen Report verschicken](digests.md#einen-report-verschicken). |
 | checkSchedule | ruleId, schedule | Wird von „Herald: Schedule“ aufgerufen. Gibt `due`, `slot`, `last_run` und `not_before` zurück. |
 | checkFieldTransition | entity, entityId, field, fromOperator, fromValue, toOperator, toValue, originalValue, hasOriginal | Wird von „Field transition“ aufgerufen. Gibt `matched` zurück. |
 | getChannels | channel, optional | Listet die Kanäle und die Schlüssel auf, die sie akzeptieren. |

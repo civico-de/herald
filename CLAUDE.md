@@ -57,6 +57,8 @@ they cannot see:
     is not marked modified.
 - **Schedule:** a slot fires once, after `created_date` or `since`, never
   `modified_date` (the deploy touches it). CiviRules dates are PHP wall clock.
+  `Herald.notifyDigest` with `daily` claims the day in `SendWindow` (locked,
+  read fresh) before composing, so a failed digest is not retried that day.
 - **Payloads:** post-hook payloads of partial updates carry only the written
   fields, so complete them from the stored row.
 - **Vendor:** `civico-de/stdlib` is Strauss-prefixed into

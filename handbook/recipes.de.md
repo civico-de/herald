@@ -158,3 +158,5 @@ Ein geplanter Job von CiviCRM für `Herald.notifyDigest`, auf Hourly (stündlich
 ## Benachrichtigungen pro Person
 
 Wenn mehrere Mitarbeitende unterschiedliche Benachrichtigungen über ihre eigenen Kanäle erhalten möchten, verwenden Sie den Abonnent:innen-Modus statt einer Regel pro Person. Jeder Kontakt wählt einen Kanal und die Arten von Benachrichtigungen, die er möchte, und eine einzige Regel erreicht alle Abonnent:innen. Die Einrichtung und das Profil zur Selbstverwaltung beschreibt der Abschnitt [Abonnements](delivery.md#abonnements).
+Mit `"daily": true` kann der Job stattdessen bei jedem Cron-Lauf laufen: Stellen Sie ihn auf Always und tragen Sie `"sendHour": 8, "daily": true` in die Parameter ein. Der Report wird dann mit dem ersten Cron-Lauf ab 8 Uhr verschickt, einmal am Tag. Mit `"skipEmpty": true` bleibt er an einem Tag aus, an dem seine Suchen nichts gefunden haben. Siehe [Einen Report verschicken](digests.md#einen-report-verschicken).
+

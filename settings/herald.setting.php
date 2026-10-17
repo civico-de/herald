@@ -252,6 +252,20 @@ return [
       'Internal: last observed status per monitor check (used to detect transitions). Not meant for manual editing.',
     ),
     'title' => E::ts('Monitor State (internal)'),
+  'herald_digest_sent_days' => [
+    'group_name' => 'Herald Settings',
+    'group' => 'herald',
+    'name' => 'herald_digest_sent_days',
+    'type' => 'Array',
+    'default' => [],
+    'add' => '5.81',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => E::ts(
+      'Internal: the day each digest sent with "daily" last went out, per delivery settings. Removing an entry lets that digest go out again today. Not meant for manual editing.',
+    ),
+    'title' => E::ts('Digests Sent Today (internal)'),
+  ],
   ],
   'herald_monitor_open_after' => [
     'group_name' => 'Herald Settings',

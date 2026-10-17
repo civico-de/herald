@@ -11,9 +11,9 @@ use Civi\Herald\Digest\Composer;
 use Civi\Herald\Digest\Definition;
 use Civi\Herald\Digest\DigestProblem;
 use Civi\Herald\Digest\DigestRules;
+use Civi\Herald\Digest\NothingToReport;
 use Civi\Herald\Dispatch\Dispatcher;
-use Civi\Herald\Schedule\Clock;
-use Civi\Herald\Schedule\ScheduleParams;
+use Civi\Herald\Schedule\SendWindow;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
@@ -24,6 +24,8 @@ use CRM_Herald_ExtensionUtil as E;
  * @method $this setDigest(string $digest)
  * @method $this setActionParams(array<string, mixed> $actionParams)
  * @method $this setSendHour(?int $sendHour)
+ * @method $this setDaily(bool $daily)
+ * @method $this setSkipEmpty(bool $skipEmpty)
  */
 class NotifyDigest extends AbstractScheduledJob {
 
@@ -51,11 +53,31 @@ class NotifyDigest extends AbstractScheduledJob {
    */
   protected ?int $sendHour = NULL;
 
+  /**
+   * With sendHour: send on the first run at or after sendHour, once a day per
+   * digest and delivery settings, so a job can run on every cron run.
+   *
+   * @var bool
+   */
+  protected bool $daily = FALSE;
+
+  /**
+   * Send nothing when every source is a search display without rows.
+   *
+   * @var bool
+   */
+  protected bool $skipEmpty = FALSE;
+
   public function _run(Result $result): void {
-    $sendHour = $this->sendHour === NULL ? NULL : ScheduleParams::hour($this->sendHour, 'sendHour');
-    $hour = (int) Clock::now()->format('G');
-    if ($sendHour !== NULL && $sendHour !== $hour) {
-      $result[] = ['mode' => 'skipped', 'send_hour' => $sendHour, 'current_hour' => $hour];
+    $skipped = $this->daily
+      ? SendWindow::dailyFromHour(
+        $this->sendHour ?? throw new \CRM_Core_Exception('herald: daily needs a sendHour'),
+        $this->digest,
+        $this->actionParams,
+      )
+      : SendWindow::duringHour($this->sendHour);
+    if ($skipped !== NULL) {
+      $result[] = $skipped;
       return;
     }
     $dispatcher = new Dispatcher();
@@ -67,7 +89,13 @@ class NotifyDigest extends AbstractScheduledJob {
       }
       $digest = Definition::load($this->digest);
       $title = $digest['title'];
-      $message = (new Composer())->compose($digest);
+      $composer = new Composer();
+      $values = $composer->values($digest);
+      if ($this->skipEmpty && NothingToReport::in($digest, $values)) {
+        $result[] = ['mode' => 'skipped', 'empty' => TRUE, 'sources' => count($digest['sources'])];
+        return;
+      }
+      $message = $composer->render($digest, $values);
     }
     catch (\Throwable $e) {
       $this->notifyFailure($dispatcher, $title, $e);
