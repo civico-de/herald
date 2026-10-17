@@ -55,17 +55,19 @@ Ein Bankimport, der Beiträge im Status Completed anlegt, würde für jede gebuc
 
 Dieselbe Quelle kann mit dem umgekehrten Operator auch eine eigene Regel steuern.
 
-### Quellen normalisieren
+### Felder bereinigen
 
-Beitragsquellen sind oft technisch, etwa die Referenz eines Zahlungsanbieters oder das Transaktionspräfix eines Bankimports. Die Einstellung `herald_source_normalization` ordnet ihnen lesbare Bezeichnungen zu. Beitragsbenachrichtigungen zeigen sie als Quelle. Standardmäßig ist die Einstellung leer, und die Quellen bleiben, wie sie sind.
+Freitext wird oft unterschiedlich geschrieben. Eine Beitragsquelle enthält etwa die Referenz eines Zahlungsanbieters oder das Transaktionspräfix eines Bankimports, und eine Gruppierung danach ergibt eine Zeile je Schreibweise. Ein bereinigtes Feld gibt solchen Werten einen Namen je Gruppe. Die Einstellung `herald_cleaned_fields` enthält sie und ist standardmäßig leer.
 
-Die Regeln finden Sie unter Administrieren » Herald » Namen der Beitragsquellen. Jede Zeile enthält den Quelltext, die Art des Vergleichs und den anzuzeigenden Namen. Die Pfeil-Schaltflächen ändern die Reihenfolge, in der die Regeln geprüft werden. Beim Speichern lehnt die Seite unvollständige Regeln und reguläre Ausdrücke ab, die sich nicht kompilieren lassen, und nennt die Nummer der Regel.
+Die Felder finden Sie unter Administrieren » Herald » Bereinigte Felder. Jeder Block nennt einen Datensatztyp und eines seiner Textfelder, darunter die Regeln: den Text, die Art des Vergleichs und den anzuzeigenden Namen. Die Pfeil-Schaltflächen ändern die Reihenfolge, in der die Regeln geprüft werden. „Name für andere Werte“ ist optional und benennt jeden Wert, auf den keine Regel passt. Beim Speichern lehnt die Seite ein Feld ab, das kein Textfeld eines Datensatztyps ist oder zweimal vorkommt, außerdem unvollständige Regeln und reguläre Ausdrücke, die sich nicht kompilieren lassen.
+
+Jedes Feld erhält einen Zwilling namens `herald_clean_<feld>`, in den Feldlisten „(bereinigt)“, etwa `herald_clean_source` bei Beiträgen. Suchen können ihn wie jedes Feld anzeigen, filtern und gruppieren, sodass eine Report-Quelle Beiträge je bereinigter Quelle zählen kann. Beitragsbenachrichtigungen zeigen den bereinigten Wert in `{$contribution.source}` und in jedem anderen bereinigten Beitragsfeld.
 
 Mit cv:
 
 ```bash
-cv api4 --in=json Setting.set <<'JSON'
-{"values": {"herald_source_normalization": [
+cv api4 --in=json Herald.saveCleanedFields <<'JSON'
+{"fields": [{"entity": "Contribution", "field": "source", "fallback": "", "rules": [
   {"match": "Bank TX", "type": "contains", "label": "Bank transfer"},
   {"match": "Transfer", "type": "prefix", "label": "Bank transfer"},
   {"match": "^pi_[A-Za-z0-9]+$", "type": "regex", "label": "Stripe"}
@@ -74,9 +76,10 @@ JSON
 ```
 
 - Die Regeln werden der Reihe nach geprüft, und der erste Treffer gewinnt.
-- Der Typ ist contains, prefix oder regex. Bei contains und prefix zählt die Groß- und Kleinschreibung.
-- Ein regulärer Ausdruck verwendet die preg-Syntax von PHP, einschließlich der Begrenzungszeichen.
-- Eine fehlerhafte Regel, die in die Einstellung gelangt, wird ignoriert, sodass ein Tippfehler keine Meldung verhindern kann. Die Seite und `Herald.saveSourceRules` lehnen sie ab, bevor sie gespeichert wird.
+- Der Typ ist contains, prefix oder regex. Die Groß- und Kleinschreibung zählt nicht.
+- Ein regulärer Ausdruck verwendet die Syntax der Datenbank, ohne Begrenzungszeichen.
+- Ein leerer Wert bleibt leer, auch mit einem Namen für andere Werte.
+- Eine fehlerhafte Regel, die über `Setting.set` in die Einstellung gelangt, wird ignoriert, sodass ein Tippfehler weder eine Meldung noch eine Suche verhindern kann.
 
 ## Ticketverkauf
 
@@ -155,8 +158,8 @@ Dieser Aufruf ist nicht auf die Umgebung Production beschränkt.
 
 Ein geplanter Job von CiviCRM für `Herald.notifyDigest`, auf Hourly (stündlich) gestellt und mit `"sendHour": 8` in den Parametern, funktioniert ebenfalls. Er kann aber keine Wochentage wählen und kann einen Tag auslassen. Ein stündlicher Job läuft erst wieder, wenn seit seinem letzten Lauf eine volle Stunde vergangen ist. Läuft Cron alle 15 Minuten und lief der Job um 7:45:05 Uhr, kommt der Cron-Lauf um 8:45 Uhr ein paar Sekunden zu früh. Der Job läuft erst um 9:00 Uhr wieder, und die Stunde ab 8 Uhr bekommt an diesem Tag keinen Lauf.
 
+Mit `"daily": true` kann der Job stattdessen bei jedem Cron-Lauf laufen: Stellen Sie ihn auf Always und tragen Sie `"sendHour": 8, "daily": true` in die Parameter ein. Der Report wird dann mit dem ersten Cron-Lauf ab 8 Uhr verschickt, einmal am Tag. Mit `"skipEmpty": true` bleibt er an einem Tag aus, an dem seine Suchen nichts gefunden haben. Siehe [Einen Report verschicken](digests.md#einen-report-verschicken).
+
 ## Benachrichtigungen pro Person
 
 Wenn mehrere Mitarbeitende unterschiedliche Benachrichtigungen über ihre eigenen Kanäle erhalten möchten, verwenden Sie den Abonnent:innen-Modus statt einer Regel pro Person. Jeder Kontakt wählt einen Kanal und die Arten von Benachrichtigungen, die er möchte, und eine einzige Regel erreicht alle Abonnent:innen. Die Einrichtung und das Profil zur Selbstverwaltung beschreibt der Abschnitt [Abonnements](delivery.md#abonnements).
-Mit `"daily": true` kann der Job stattdessen bei jedem Cron-Lauf laufen: Stellen Sie ihn auf Always und tragen Sie `"sendHour": 8, "daily": true` in die Parameter ein. Der Report wird dann mit dem ersten Cron-Lauf ab 8 Uhr verschickt, einmal am Tag. Mit `"skipEmpty": true` bleibt er an einem Tag aus, an dem seine Suchen nichts gefunden haben. Siehe [Einen Report verschicken](digests.md#einen-report-verschicken).
-

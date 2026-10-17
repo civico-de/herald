@@ -101,4 +101,13 @@ abstract class CRM_Herald_Upgrader_Steps extends \CRM_Extension_Upgrader_Base {
     return TRUE;
   }
 
+  /**
+   * The contribution-source rules become a cleaned field.
+   */
+  public function upgrade_1013(): bool {
+    $moved = CRM_Herald_Upgrader_CleanedSource::move();
+    $this->ctx->log->info("herald: moved the source rules of {$moved} domain(s) into cleaned fields");
+    return TRUE;
+  }
+
 }

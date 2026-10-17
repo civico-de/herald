@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 class ContributionVarsTest extends TestCase implements HeadlessInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   /**
@@ -65,7 +65,7 @@ class ContributionVarsTest extends TestCase implements HeadlessInterface {
         $this->fakeCampaignTotal(),
         $this->statusResolver(),
         $this->campaignResolver($campaigns),
-        new SourceNormalizer([]),
+        static fn (int $id): array => [],
       ),
     );
   }
@@ -87,7 +87,7 @@ class ContributionVarsTest extends TestCase implements HeadlessInterface {
     $this->assertSame('Completed', $vars['to_status']);
   }
 
-  public function testContributionSourceCanBeNormalized(): void {
+  public function testCleanedFieldsReplaceTheRawValues(): void {
     $vars = ContributionVars::build(
       ['id' => 1, 'source' => 'Bank TX 123', 'contribution_status_id' => 1],
       NULL,
@@ -95,11 +95,11 @@ class ContributionVarsTest extends TestCase implements HeadlessInterface {
         $this->fakeCampaignTotal(),
         $this->statusResolver(),
         $this->campaignResolver([]),
-        new SourceNormalizer([['match' => 'Bank TX', 'type' => 'contains', 'label' => 'Ueberweisung']]),
+        static fn (int $id): array => $id === 1 ? ['source' => 'Transfer'] : [],
       ),
     );
 
-    $this->assertSame('Ueberweisung', $vars['contribution']['source']);
+    $this->assertSame('Transfer', $vars['contribution']['source']);
   }
 
   public function testCampaignBlockComesFromTheContributionsCampaign(): void {

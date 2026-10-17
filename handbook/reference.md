@@ -116,7 +116,7 @@ The entity `Herald` offers these actions. The actions need the permission "admin
 | getDigestPlaceholders | source, digest | The placeholders and the snippet of one source, as the digest form shows them. |
 | saveTopic | topic, route, previousName | Validates one route and stores it in `herald_topics`; with previousName it renames that topic in place. The Topic routes screen uses this action. |
 | deleteTopic | topic | Removes one route from `herald_topics`. |
-| saveSourceRules | rules | Validates and stores `herald_source_normalization`. Errors name the rule. |
+| saveCleanedFields | fields | Validates and stores `herald_cleaned_fields`. Errors name the field and the rule. |
 | saveAllowedHosts | hosts | Validates and stores `herald_webhook_allowed_hosts`. Blank entries are skipped. |
 | getMonitorChecks | none | Lists every offered, expected, snoozed or tracked check with its stored state, without details and without running the checks. |
 | saveMonitorChecks | expected, snooze | Validates and stores `herald_monitor_expected` and `herald_monitor_snooze`. A snooze must end in the future unless it is unchanged. |
@@ -211,7 +211,7 @@ When a lookup fails, herald logs an error and leaves the variable out instead of
 
 | Variable | Content |
 |---|---|
-| contribution | The contribution's fields, such as total_amount, currency, receive_date and source. The source is shown after [Source normalisation](recipes.md#source-normalisation). |
+| contribution | The contribution's fields, such as total_amount, currency, receive_date and source. Cleaned fields show their cleaned value, see [Cleaned fields](recipes.md#cleaned-fields). |
 | campaign.title, campaign.total, campaign.count | The contribution's campaign: its title and the total and number of its completed contributions. |
 | campaign.goal, campaign.percent | The campaign's revenue goal and the share reached, rounded to one decimal. Both are 0 when the campaign has no goal. |
 | from_status, to_status | The status names before and after the edit. from_status is empty when the status before the edit is unknown. |
@@ -222,7 +222,7 @@ Digests have no fixed variables; their sources name them, see [Placeholders](dig
 
 ## Settings
 
-Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value'`. Settings that hold a list or a map take JSON. The plain settings are also on the Herald settings screen, Administer » Herald » Settings (`civicrm/admin/setting/herald`). The list and map settings have their own screens on `civicrm/admin/herald`: Topic routes, Contribution source names, Webhook allowed hosts and Monitor checks. The settings screen links to them. All of them need "administer CiviCRM".
+Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value'`. Settings that hold a list or a map take JSON. The plain settings are also on the Herald settings screen, Administer » Herald » Settings (`civicrm/admin/setting/herald`). The list and map settings have their own screens on `civicrm/admin/herald`: Topic routes, Cleaned fields, Webhook allowed hosts and Monitor checks. The settings screen links to them. All of them need "administer CiviCRM".
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -241,7 +241,7 @@ Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value
 | `herald_topics` | empty | [Topic](delivery.md#topics) routes. |
 | `herald_buffer_max_attempts` | 5 | Failed deliveries before an aggregated group is parked. |
 | `herald_buffer_max_items` | 25 | Messages printed in one aggregated message. 0 prints all. |
-| `herald_source_normalization` | empty | Readable labels for sources, see [Source normalisation](recipes.md#source-normalisation). |
+| `herald_cleaned_fields` | empty | Text fields whose values rules group under one name, see [Cleaned fields](recipes.md#cleaned-fields). |
 | `herald_monitor_topic` | ops | The topic for monitor alerts. |
 | `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours`, `herald_monitor_snooze`, `herald_monitor_expected` | see [Tuning](monitor.md#tuning) | Monitor tuning. |
 | `herald_monitor_state` | empty | The monitor's own state. Do not edit it. |

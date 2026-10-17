@@ -26,7 +26,7 @@ namespace Civi\Api4;
  *
  * Admin screen saves, validated writes of the array settings (Setting.set
  * stays the unchecked bulk path):
- *   cv api4 Herald.saveTopic / deleteTopic / saveSourceRules / saveAllowedHosts
+ *   cv api4 Herald.saveTopic / deleteTopic / saveCleanedFields / saveAllowedHosts
  *   cv api4 Herald.getMonitorChecks / saveMonitorChecks
  *
  * Diagnostics:
@@ -122,8 +122,8 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
       ->setCheckPermissions($checkPermissions);
   }
 
-  public static function saveSourceRules(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\SaveSourceRules {
-    return (new \Civi\Herald\Api4\Action\SaveSourceRules(__CLASS__, 'saveSourceRules'))
+  public static function saveCleanedFields(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\SaveCleanedFields {
+    return (new \Civi\Herald\Api4\Action\SaveCleanedFields(__CLASS__, 'saveCleanedFields'))
       ->setCheckPermissions($checkPermissions);
   }
 

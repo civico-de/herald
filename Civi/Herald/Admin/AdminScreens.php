@@ -6,12 +6,12 @@ namespace Civi\Herald\Admin;
 
 use Civi\Core\HookInterface;
 use Civi\Core\Service\AutoService;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
- * The admin screens beside the settings form: their links on that form (the
- * heraldAdmin screens, the digest list, parked alerts), and the SearchKit task
- * that reactivates parked alerts.
+ * The admin screens beside the settings form: the links to them, read from the
+ * Administer » Herald menu, and the SearchKit task that reactivates parked alerts.
  *
  * @service herald.admin_screens
  */
@@ -31,7 +31,7 @@ final class AdminScreens extends AutoService implements HookInterface {
   public static function screens(): array {
     return [
       'topics' => E::ts('Topic routes'),
-      'sources' => E::ts('Contribution source names'),
+      'cleaning' => E::ts('Cleaned fields'),
       'hosts' => E::ts('Webhook allowed hosts'),
       'monitor' => E::ts('Monitor checks'),
       'test' => E::ts('Test message'),
@@ -39,24 +39,65 @@ final class AdminScreens extends AutoService implements HookInterface {
     ];
   }
 
+  /**
+   * The active entries of the Administer » Herald menu, in its order, so every
+   * screen the menu offers is linked from the overview and the settings form.
+   *
+   * @return list<array{name: string, label: string, url: string, description: string}>
+   */
+  public static function links(): array {
+    $descriptions = [
+      'herald_topics' => E::ts('where each topic is delivered.'),
+      'herald_cleaning' => E::ts('rules that turn free text into clean groups for searches and notifications.'),
+      'herald_hosts' => E::ts('which hosts the webhook channel may call.'),
+      'herald_monitor' => E::ts('expected checks and snoozes.'),
+      'herald_test' => E::ts('send a message through a channel or a topic.'),
+      'herald_preview' => E::ts('render a herald template with sample values.'),
+      'herald_digests' => E::ts('summaries from searches and sections, sent on a schedule.'),
+      'herald_parked_alerts' => E::ts('alerts the flush job could not deliver, and their reactivation.'),
+    ];
+    $items = \Civi\Api4\Navigation::get(checkPermissions: FALSE)
+      ->addSelect('name', 'label', 'url')
+      ->addWhere('parent_id.name', '=', 'herald')
+      ->addWhere('is_active', '=', TRUE)
+      ->addWhere('domain_id', '=', 'current_domain')
+      ->addOrderBy('weight')
+      ->execute();
+    $links = [];
+    /** @var array{name: mixed, label: mixed, url: mixed} $item */
+    foreach ($items as $item) {
+      $name = Cast::toString($item['name']);
+      $links[] = [
+        'name' => $name,
+        'label' => Cast::toString($item['label']),
+        'url' => self::absolute(Cast::toString($item['url'])),
+        'description' => $descriptions[$name] ?? '',
+      ];
+    }
+    return $links;
+  }
+
+  /**
+   * Settings of the heraldAdmin Angular module.
+   *
+   * @return array{links: list<array{name: string, label: string, url: string, description: string}>}
+   */
+  public static function angularSettings(): array {
+    return ['links' => self::links()];
+  }
+
   public function hook_civicrm_buildForm(string $formName, \CRM_Core_Form $form): void {
     if (!$form instanceof \CRM_Admin_Form_Generic || $form->getSettingPageFilter() !== 'herald') {
       return;
     }
     $items = '';
-    foreach (self::screens() as $route => $title) {
-      $url = \CRM_Utils_System::url(self::BASE_PATH, '', FALSE, '/' . $route);
-      $items .= '<li><a href="' . $url . '">' . htmlspecialchars($title) . '</a></li>';
+    foreach (self::links() as $link) {
+      if ($link['name'] === 'herald_settings') {
+        continue;
+      }
+      $items .=
+        '<li><a href="' . htmlspecialchars($link['url']) . '">' . htmlspecialchars($link['label']) . '</a></li>';
     }
-    $digests = \CRM_Utils_System::url(self::DIGESTS_PATH, 'reset=1');
-    $items .= '<li><a href="' . $digests . '">' . htmlspecialchars(E::ts('Digests')) . '</a></li>';
-    $parked = \CRM_Utils_System::url(
-      'civicrm/search',
-      '',
-      FALSE,
-      '/display/Herald_Parked_Alerts/Herald_Parked_Alerts_Table',
-    );
-    $items .= '<li><a href="' . $parked . '">' . htmlspecialchars(E::ts('Parked alerts')) . '</a></li>';
     \CRM_Core_Region::instance('crm-setting-form-herald-top')->add([
       'markup' =>
         '<nav class="help" aria-labelledby="herald-admin-links"><p id="herald-admin-links">'
@@ -65,6 +106,20 @@ final class AdminScreens extends AutoService implements HookInterface {
           . $items
           . '</ul></nav>',
     ]);
+  }
+
+  /**
+   * A menu URL such as civicrm/admin/herald#/topics as a link on this site.
+   */
+  private static function absolute(string $url): string {
+    $parts = parse_url($url);
+    return \CRM_Utils_System::url(
+      $parts['path'] ?? '',
+      $parts['query'] ?? '',
+      FALSE,
+      $parts['fragment'] ?? NULL,
+      FALSE,
+    );
   }
 
   /**

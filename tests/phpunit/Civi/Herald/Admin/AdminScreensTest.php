@@ -46,7 +46,7 @@ class AdminScreensTest extends AdminTestCase {
       [
         'herald_settings',
         'herald_topics',
-        'herald_sources',
+        'herald_cleaning',
         'herald_hosts',
         'herald_monitor',
         'herald_test',
@@ -72,6 +72,28 @@ class AdminScreensTest extends AdminTestCase {
     );
   }
 
+  public function testTheOverviewLinksEveryMenuEntry(): void {
+    $links = AdminScreens::angularSettings()['links'];
+    $this->assertSame(
+      [
+        'herald_settings',
+        'herald_topics',
+        'herald_cleaning',
+        'herald_hosts',
+        'herald_monitor',
+        'herald_test',
+        'herald_preview',
+        'herald_digests',
+        'herald_parked_alerts',
+      ],
+      array_column($links, 'name'),
+    );
+    $this->assertStringEndsWith('civicrm/admin/herald#/topics', $links[1]['url']);
+    $this->assertMatchesRegularExpression('#civicrm/admin/herald/digests[?&]reset=1$#', $links[7]['url']);
+    // Every screen but the settings form says what it is for.
+    $this->assertNotContains('', array_column(array_slice($links, 1), 'description'));
+  }
+
   public function testTheSettingsPageLinksTheScreens(): void {
     $form = new \CRM_Admin_Form_Generic();
     $form->urlPath = ['civicrm', 'admin', 'setting', 'herald'];
@@ -80,6 +102,7 @@ class AdminScreensTest extends AdminTestCase {
     $this->assertStringContainsString('civicrm/admin/herald', $html);
     $this->assertStringContainsString('#/monitor', $html);
     $this->assertStringContainsString('Herald_Parked_Alerts_Table', $html);
+    $this->assertStringContainsString('civicrm/admin/herald/digests', $html);
 
     $other = new \CRM_Admin_Form_Generic();
     $other->urlPath = ['civicrm', 'admin', 'setting', 'smtp'];

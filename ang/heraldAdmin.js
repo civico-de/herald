@@ -17,7 +17,7 @@
         .when("/topics", page("topics", "HeraldAdminTopicsCtrl"))
         .when("/topics/new", page("topic", "HeraldAdminTopicCtrl"))
         .when("/topics/edit/:name", page("topic", "HeraldAdminTopicCtrl"))
-        .when("/sources", page("sources", "HeraldAdminSourcesCtrl"))
+        .when("/cleaning", page("cleaning", "HeraldAdminCleaningCtrl"))
         .when("/hosts", page("hosts", "HeraldAdminHostsCtrl"))
         .when("/monitor", page("monitor", "HeraldAdminMonitorCtrl"))
         .when("/test", page("test", "HeraldAdminTestCtrl"))
@@ -228,9 +228,7 @@
   module.controller("HeraldAdminIndexCtrl", [
     function () {
       this.ts = ts;
-      this.settingsUrl = CRM.url("civicrm/admin/setting/herald", { reset: 1 });
-      this.parkedUrl =
-        CRM.url("civicrm/search") + "#/display/Herald_Parked_Alerts/Herald_Parked_Alerts_Table";
+      this.links = CRM.heraldAdmin.links;
     },
   ]);
 })(angular);

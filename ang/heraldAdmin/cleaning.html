@@ -1,0 +1,82 @@
+<div class="herald-admin">
+  <h1 crm-page-title>{{:: $ctrl.ts('Cleaned fields') }}</h1>
+  <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
+  <p>
+    {{:: $ctrl.ts('Free text is often written in many ways. Rules give such values one name; the first matching rule wins. Each field gets a cleaned twin, "(cleaned)", that searches can show, filter and group by, and notifications show the cleaned value.') }}
+  </p>
+  <div ng-include="'~/heraldAdmin/messages.html'"></div>
+  <form ng-if="$ctrl.loaded" ng-submit="$ctrl.save()" novalidate>
+    <p ng-if="!$ctrl.fields.length">{{:: $ctrl.ts('No cleaned fields: searches and notifications show every value as written.') }}</p>
+    <fieldset class="herald-cleaned-field" ng-repeat="entry in $ctrl.fields track by $index" ng-init="b = $index">
+      <legend>{{ $ctrl.legend(entry, b) }}</legend>
+      <p>
+        <label for="herald-clean-{{ b }}-entity">{{:: $ctrl.ts('Record type') }}</label>
+        <select class="crm-form-select" id="herald-clean-{{ b }}-entity" ng-model="entry.entity" ng-change="$ctrl.entityChanged(entry)" ng-options="e.name as e.title for e in $ctrl.entities">
+          <option value="">{{:: $ctrl.ts('- select -') }}</option>
+        </select>
+        <label for="herald-clean-{{ b }}-field">{{:: $ctrl.ts('Field') }}</label>
+        <select class="crm-form-select" id="herald-clean-{{ b }}-field" ng-model="entry.field" ng-disabled="!entry.entity" ng-options="f.name as f.title for f in $ctrl.fieldsOf(entry.entity)">
+          <option value="">{{:: $ctrl.ts('- select -') }}</option>
+        </select>
+      </p>
+      <table class="display" ng-if="entry.rules.length">
+        <caption class="sr-only">{{ $ctrl.ts('Rules of %1, in the order they are tried', {1: $ctrl.legend(entry, b)}) }}</caption>
+        <thead>
+          <tr>
+            <th scope="col">{{:: $ctrl.ts('Position') }}</th>
+            <th scope="col">{{:: $ctrl.ts('Text') }}</th>
+            <th scope="col">{{:: $ctrl.ts('Match') }}</th>
+            <th scope="col">{{:: $ctrl.ts('Name to show') }}</th>
+            <th scope="col"><span class="sr-only">{{:: $ctrl.ts('Actions') }}</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr ng-repeat="rule in entry.rules">
+            <td>{{ $index + 1 }}</td>
+            <td>
+              <label class="sr-only" for="herald-clean-{{ b }}-match-{{ $index }}">{{ $ctrl.ts('Text of rule %1', {1: $index + 1}) }}</label>
+              <input type="text" class="crm-form-text" id="herald-clean-{{ b }}-match-{{ $index }}" ng-model="rule.match" />
+            </td>
+            <td>
+              <label class="sr-only" for="herald-clean-{{ b }}-type-{{ $index }}">{{ $ctrl.ts('Match of rule %1', {1: $index + 1}) }}</label>
+              <select class="crm-form-select" id="herald-clean-{{ b }}-type-{{ $index }}" ng-model="rule.type" ng-options="t.value as t.label for t in $ctrl.types"></select>
+            </td>
+            <td>
+              <label class="sr-only" for="herald-clean-{{ b }}-label-{{ $index }}">{{ $ctrl.ts('Name to show for rule %1', {1: $index + 1}) }}</label>
+              <input type="text" class="crm-form-text" id="herald-clean-{{ b }}-label-{{ $index }}" ng-model="rule.label" />
+            </td>
+            <td>
+              <button type="button" class="btn btn-xs btn-secondary" id="herald-clean-{{ b }}-up-{{ $index }}" ng-if="!$first" ng-click="$ctrl.move(b, $index, -1)">
+                <i class="crm-i fa-arrow-up" aria-hidden="true"></i><span class="sr-only">{{ $ctrl.ts('Move rule %1 up', {1: $index + 1}) }}</span>
+              </button>
+              <button type="button" class="btn btn-xs btn-secondary" id="herald-clean-{{ b }}-down-{{ $index }}" ng-if="!$last" ng-click="$ctrl.move(b, $index, 1)">
+                <i class="crm-i fa-arrow-down" aria-hidden="true"></i><span class="sr-only">{{ $ctrl.ts('Move rule %1 down', {1: $index + 1}) }}</span>
+              </button>
+              <button type="button" class="btn btn-xs btn-danger" ng-click="$ctrl.removeRule(b, $index)">
+                {{:: $ctrl.ts('Remove') }}<span class="sr-only"> {{ $ctrl.ts('rule %1', {1: $index + 1}) }}</span>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <p>
+        <label for="herald-clean-{{ b }}-fallback">{{:: $ctrl.ts('Name for other values') }}</label>
+        <input type="text" class="crm-form-text" id="herald-clean-{{ b }}-fallback" ng-model="entry.fallback" aria-describedby="herald-clean-{{ b }}-fallback-help" />
+        <span class="description" id="herald-clean-{{ b }}-fallback-help">{{:: $ctrl.ts('Optional. Empty keeps a value no rule matches as written; empty values stay empty.') }}</span>
+      </p>
+      <p>
+        <button type="button" class="btn btn-secondary" id="herald-clean-{{ b }}-add" ng-click="$ctrl.addRule(b)"><i class="crm-i fa-plus" aria-hidden="true"></i> {{:: $ctrl.ts('Add rule') }}</button>
+        <button type="button" class="btn btn-danger" ng-click="$ctrl.removeField(b)">
+          {{:: $ctrl.ts('Remove field') }}<span class="sr-only"> {{ $ctrl.legend(entry, b) }}</span>
+        </button>
+      </p>
+    </fieldset>
+    <p class="description">
+      {{:: $ctrl.ts('Matching ignores case. A regular expression uses the database syntax without delimiters, for example ^SEPA. It is checked when you save.') }}
+    </p>
+    <p>
+      <button type="button" class="btn btn-secondary" id="herald-clean-add" ng-click="$ctrl.addField()"><i class="crm-i fa-plus" aria-hidden="true"></i> {{:: $ctrl.ts('Add field') }}</button>
+      <button type="submit" class="btn btn-primary" ng-disabled="$ctrl.saving">{{:: $ctrl.ts('Save') }}</button>
+    </p>
+  </form>
+</div>

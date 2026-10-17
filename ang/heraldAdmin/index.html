@@ -2,34 +2,10 @@
   <h1 crm-page-title>{{:: $ctrl.ts('Herald administration') }}</h1>
   <p>{{:: $ctrl.ts('The settings form holds the single values; the lists and maps are edited here.') }}</p>
   <ul>
-    <li><a ng-href="{{:: $ctrl.settingsUrl }}">{{:: $ctrl.ts('Settings') }}</a></li>
-    <li>
-      <a href="#/topics">{{:: $ctrl.ts('Topic routes') }}</a>:
-      {{:: $ctrl.ts('where each topic is delivered.') }}
-    </li>
-    <li>
-      <a href="#/sources">{{:: $ctrl.ts('Contribution source names') }}</a>:
-      {{:: $ctrl.ts('readable names for contribution sources in notifications.') }}
-    </li>
-    <li>
-      <a href="#/hosts">{{:: $ctrl.ts('Webhook allowed hosts') }}</a>:
-      {{:: $ctrl.ts('which hosts the webhook channel may call.') }}
-    </li>
-    <li>
-      <a href="#/monitor">{{:: $ctrl.ts('Monitor checks') }}</a>:
-      {{:: $ctrl.ts('expected checks and snoozes.') }}
-    </li>
-    <li>
-      <a href="#/test">{{:: $ctrl.ts('Test message') }}</a>:
-      {{:: $ctrl.ts('send a message through a channel or a topic.') }}
-    </li>
-    <li>
-      <a href="#/preview">{{:: $ctrl.ts('Template preview') }}</a>:
-      {{:: $ctrl.ts('render a herald template with sample values.') }}
-    </li>
-    <li>
-      <a ng-href="{{:: $ctrl.parkedUrl }}">{{:: $ctrl.ts('Parked alerts') }}</a>:
-      {{:: $ctrl.ts('alerts the flush job could not deliver, and their reactivation.') }}
+    <li ng-repeat="link in $ctrl.links">
+      <a ng-href="{{:: link.url }}">{{:: link.label }}</a><span ng-if=":: link.description"
+        >: {{:: link.description }}</span
+      >
     </li>
   </ul>
 </div>

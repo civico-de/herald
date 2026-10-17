@@ -6,26 +6,25 @@ use CRM_Herald_ExtensionUtil as E;
 
 return [
   // Example (documentation only; the active default stays empty):
-  // [
-  //   ['match' => 'Bank TX', 'type' => 'contains', 'label' => 'Ueberweisung'],
-  //   ['match' => 'Ueberweisung', 'type' => 'prefix', 'label' => 'Ueberweisung'],
-  // ]
-  'herald_source_normalization' => [
+  // [['entity' => 'Contribution', 'field' => 'source', 'fallback' => 'Other', 'rules' => [
+  //   ['match' => 'Bank TX', 'type' => 'contains', 'label' => 'Transfer'],
+  // ]]]
+  'herald_cleaned_fields' => [
     'group_name' => 'Herald Settings',
     'group' => 'herald',
-    'name' => 'herald_source_normalization',
+    'name' => 'herald_cleaned_fields',
     'type' => 'Array',
     'default' => [],
     'add' => '5.81',
     'is_domain' => 1,
     'is_contact' => 0,
     'description' => E::ts(
-      'Ordered contribution-source rules (contains, prefix, or regex); the first match wins. Empty disables normalization.',
+      'Text fields with ordered rules (contains, prefix, or regex); the first match names the group. Each adds a cleaned field for searches and notifications.',
     ),
     'help_text' => E::ts(
       'Each entry has entity, field, rules (match, type, label) and fallback keys. Regex matches use the database syntax without delimiters.',
     ),
-    'title' => E::ts('Contribution Source Normalization'),
+    'title' => E::ts('Cleaned Fields'),
   ],
   'herald_telegram_bot_token' => [
     'group_name' => 'Herald Settings',
@@ -252,6 +251,7 @@ return [
       'Internal: last observed status per monitor check (used to detect transitions). Not meant for manual editing.',
     ),
     'title' => E::ts('Monitor State (internal)'),
+  ],
   'herald_digest_sent_days' => [
     'group_name' => 'Herald Settings',
     'group' => 'herald',
@@ -265,7 +265,6 @@ return [
       'Internal: the day each digest sent with "daily" last went out, per delivery settings. Removing an entry lets that digest go out again today. Not meant for manual editing.',
     ),
     'title' => E::ts('Digests Sent Today (internal)'),
-  ],
   ],
   'herald_monitor_open_after' => [
     'group_name' => 'Herald Settings',

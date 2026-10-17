@@ -42,8 +42,9 @@ final class ContributionVars {
     ?int $previousStatusId,
     ContributionLookups $lookups = new ContributionLookups(),
   ): array {
-    if (is_string($contribution['source'] ?? NULL)) {
-      $contribution['source'] = $lookups->sources->normalize($contribution['source']);
+    $id = Cast::toInt($contribution['id'] ?? 0);
+    if ($id > 0) {
+      $contribution = array_replace($contribution, ($lookups->cleaned)($id));
     }
     $statusName = $lookups->statusName;
     return [

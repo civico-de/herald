@@ -12,4 +12,5 @@ return [
   'partials' => ['ang/heraldAdmin'],
   'requires' => ['crmUi', 'crmUtil', 'ngRoute', 'api4'],
   'basePages' => ['civicrm/admin/herald'],
+  'settingsFactory' => [\Civi\Herald\Admin\AdminScreens::class, 'angularSettings'],
 ];

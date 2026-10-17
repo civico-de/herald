@@ -53,17 +53,19 @@ A bank import that creates Completed contributions would fire "Paid at once" for
 
 The same source can drive a rule of its own with the opposite operator.
 
-### Source normalisation
+### Cleaned fields
 
-Contribution sources are often technical, such as a payment processor's reference or the transaction prefix of a bank import. The setting `herald_source_normalization` maps them to readable labels, which contribution notifications show as the source. The setting is empty by default, which leaves sources as they are.
+Free text is often written in many ways. A contribution source holds a payment processor's reference or the transaction prefix of a bank import, so grouping by it gives one row per spelling. A cleaned field gives such values one name per group. The setting `herald_cleaned_fields` holds them and is empty by default.
 
-The rules are under Administer » Herald » Contribution source names. Each row holds the source text, how it is matched and the name to show. The arrow buttons change the order in which the rules are tried. Saving rejects an incomplete rule and a regular expression that does not compile, and names the rule by its number.
+The fields are under Administer » Herald » Cleaned fields. Each block names a record type and one of its text fields, then the rules: the text, how it is matched and the name to show. The arrow buttons change the order in which the rules are tried. "Name for other values" is optional and names every value no rule matches. Saving rejects a field that is not a text field of a record type, a field named twice, an incomplete rule and a regular expression that does not compile.
+
+Each field gets a twin named `herald_clean_<field>`, "(cleaned)" in the field lists, for example `herald_clean_source` on contributions. Searches can show, filter and group by it like any field, so a digest source can count contributions per cleaned source. Contribution notifications show the cleaned value in `{$contribution.source}` and every other cleaned contribution field.
 
 With cv:
 
 ```bash
-cv api4 --in=json Setting.set <<'JSON'
-{"values": {"herald_source_normalization": [
+cv api4 --in=json Herald.saveCleanedFields <<'JSON'
+{"fields": [{"entity": "Contribution", "field": "source", "fallback": "", "rules": [
   {"match": "Bank TX", "type": "contains", "label": "Bank transfer"},
   {"match": "Transfer", "type": "prefix", "label": "Bank transfer"},
   {"match": "^pi_[A-Za-z0-9]+$", "type": "regex", "label": "Stripe"}
@@ -72,9 +74,10 @@ JSON
 ```
 
 - The rules are tried in order, and the first match wins.
-- The type is contains, prefix or regex. Contains and prefix are case-sensitive.
-- A regex uses PHP's preg syntax, including the delimiters.
-- A malformed rule that reaches the setting is ignored, so a typo cannot break an alert. The screen and `Herald.saveSourceRules` reject it before it is stored.
+- The type is contains, prefix or regex. Matching ignores case.
+- A regex uses the database's syntax, without delimiters.
+- An empty value stays empty, also with a name for other values.
+- A malformed rule that reaches the setting through `Setting.set` is ignored, so a typo cannot break an alert or a search.
 
 ## Ticket sales
 
@@ -153,8 +156,8 @@ This call is not limited to the Production environment.
 
 A CiviCRM scheduled job of `Herald.notifyDigest`, set to Hourly with `"sendHour": 8` in its parameters, also works, but it cannot pick weekdays and it can skip a day. An hourly job runs again only once a full hour has passed since its last run. With cron every 15 minutes and a run at 7:45:05, the cron run at 8:45 comes a few seconds too early, the job next runs at 9:00, and the 8 o'clock hour gets no run that day.
 
+Add `"daily": true` and the job can run on every cron run instead: set it to Always with `"sendHour": 8, "daily": true` in its parameters, and the digest goes out with the first cron run at or after 8 o'clock, once a day. With `"skipEmpty": true` it stays unsent on a day its searches found nothing. See [Sending a digest](digests.md#sending-a-digest).
+
 ## Notifications for each person
 
 When several staff members want different notifications on their own channels, use subscriber mode instead of one rule per person. Each contact chooses a channel and the kinds of notifications they want, and one rule reaches all subscribers. The setup and the self-service profile are described in [Subscribers](delivery.md#subscribers).
-Add `"daily": true` and the job can run on every cron run instead: set it to Always with `"sendHour": 8, "daily": true` in its parameters, and the digest goes out with the first cron run at or after 8 o'clock, once a day. With `"skipEmpty": true` it stays unsent on a day its searches found nothing. See [Sending a digest](digests.md#sending-a-digest).
-

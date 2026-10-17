@@ -116,7 +116,7 @@ Die Entität `Herald` bietet diese Aktionen. Die Aktionen erfordern die Berechti
 | getDigestPlaceholders | source, digest | Die Platzhalter und der Textbaustein einer Quelle, wie das Report-Formular sie zeigt. |
 | saveTopic | topic, route, previousName | Prüft eine Route und speichert sie in `herald_topics`; mit previousName wird dieses Topic an seinem Platz umbenannt. Die Seite „Topic-Routen“ verwendet diese Aktion. |
 | deleteTopic | topic | Entfernt eine Route aus `herald_topics`. |
-| saveSourceRules | rules | Prüft und speichert `herald_source_normalization`. Fehler nennen die Regel. |
+| saveCleanedFields | fields | Prüft und speichert `herald_cleaned_fields`. Fehler nennen das Feld und die Regel. |
 | saveAllowedHosts | hosts | Prüft und speichert `herald_webhook_allowed_hosts`. Leere Einträge werden übersprungen. |
 | getMonitorChecks | keine | Listet jeden angebotenen, erwarteten, stummgeschalteten oder verfolgten Check mit seinem gespeicherten Zustand, ohne Details und ohne die Checks auszuführen. |
 | saveMonitorChecks | expected, snooze | Prüft und speichert `herald_monitor_expected` und `herald_monitor_snooze`. Eine Stummschaltung muss in der Zukunft enden, sofern sie nicht unverändert ist. |
@@ -211,7 +211,7 @@ Schlägt eine Abfrage fehl, protokolliert herald einen Fehler und lässt die Var
 
 | Variable | Inhalt |
 |---|---|
-| contribution | Die Felder des Beitrags, etwa total_amount, currency, receive_date und source. Die Quelle erscheint nach der [Normalisierung der Quellen](recipes.md#quellen-normalisieren). |
+| contribution | Die Felder des Beitrags, etwa total_amount, currency, receive_date und source. Bereinigte Felder zeigen ihren bereinigten Wert, siehe [Felder bereinigen](recipes.md#felder-bereinigen). |
 | campaign.title, campaign.total, campaign.count | Die Kampagne des Beitrags: ihr Titel sowie Summe und Anzahl ihrer abgeschlossenen Beiträge. |
 | campaign.goal, campaign.percent | Das Umsatzziel der Kampagne und der erreichte Anteil, auf eine Nachkommastelle gerundet. Beide sind 0, wenn die Kampagne kein Ziel hat. |
 | from_status, to_status | Die Statusnamen vor und nach der Änderung. from_status ist leer, wenn der Status vor der Änderung unbekannt ist. |
@@ -222,7 +222,7 @@ Reports haben keine festen Variablen; ihre Quellen benennen sie, siehe [Platzhal
 
 ## Einstellungen
 
-Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'name=value'`. Einstellungen, die eine Liste oder eine Zuordnung enthalten, nehmen JSON auf. Die einfachen Einstellungen finden Sie auch auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen (`civicrm/admin/setting/herald`). Die Listen- und Zuordnungseinstellungen haben eigene Seiten unter `civicrm/admin/herald`: Topic-Routen, Namen der Beitragsquellen, Erlaubte Webhook-Hosts und Monitor-Checks. Die Einstellungsseite verlinkt sie. Alle erfordern „administer CiviCRM“.
+Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'name=value'`. Einstellungen, die eine Liste oder eine Zuordnung enthalten, nehmen JSON auf. Die einfachen Einstellungen finden Sie auch auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen (`civicrm/admin/setting/herald`). Die Listen- und Zuordnungseinstellungen haben eigene Seiten unter `civicrm/admin/herald`: Topic-Routen, Bereinigte Felder, Erlaubte Webhook-Hosts und Monitor-Checks. Die Einstellungsseite verlinkt sie. Alle erfordern „administer CiviCRM“.
 
 | Einstellung | Standard | Bedeutung |
 |---|---|---|
@@ -241,7 +241,7 @@ Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'nam
 | `herald_topics` | leer | Die Routen der [Topics](delivery.md#topics). |
 | `herald_buffer_max_attempts` | 5 | Fehlgeschlagene Zustellungen, bevor eine gesammelte Gruppe geparkt wird. |
 | `herald_buffer_max_items` | 25 | Ausgegebene Nachrichten in einer Sammelnachricht. 0 gibt alle aus. |
-| `herald_source_normalization` | leer | Lesbare Bezeichnungen für Quellen, siehe [Quellen normalisieren](recipes.md#quellen-normalisieren). |
+| `herald_cleaned_fields` | leer | Textfelder, deren Werte Regeln unter einem Namen gruppieren, siehe [Felder bereinigen](recipes.md#felder-bereinigen). |
 | `herald_monitor_topic` | ops | Das Topic für Meldungen des Monitors. |
 | `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours`, `herald_monitor_snooze`, `herald_monitor_expected` | siehe [Feinabstimmung](monitor.md#feinabstimmung) | Feinabstimmung des Monitors. |
 | `herald_monitor_state` | leer | Der eigene Zustand des Monitors. Nicht bearbeiten. |
