@@ -28,19 +28,12 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
 
   private const TOTALS = 'Sum: {$block1.sum|crmMoney}, Count: {$block1.count}';
 
-  private const BY_FORM =
-    "{foreach from=\$block1_breakdown.rows item=row}\n"
-      . "• Form: {\$row.form}, Sum: {\$row.sum|crmMoney}, Count: {\$row.count}\n{/foreach}";
+  private const BY_FORM = '<pre>{$block1_breakdown.rows|herald_bars:"sum":"form":"money"}</pre>';
 
   private const PENDING = '🏦 Pending: Sum: {$block1_pending.sum|crmMoney}, Count: {$block1_pending.count}';
 
   public function setUpHeadless() {
-    // APIv4 hides Contribution.campaign_id while CiviCampaign is off; enabling it commits.
-    return \Civi\Test::headless()
-      ->install('org.civicoop.civirules')
-      ->installMe(__DIR__)
-      ->callback(static fn () => \CRM_Core_BAO_ConfigSetting::enableComponent('CiviCampaign'), 'herald-civicampaign')
-      ->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   protected function setUp(): void {
@@ -291,16 +284,8 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
     finally {
       \CRM_Utils_Time::resetTime();
     }
-    // The SQL clock is not the test clock; only the real day decides.
-    $today = new DateTimeImmutable('today');
-    $expected = 0;
-    foreach (['2026-10-14' => 1, '2026-10-13' => 10, '2026-10-07' => 100, '2026-10-06' => 1000] as $day => $amount) {
-      $days = (int) (new DateTimeImmutable($day))
-        ->diff($today)
-        ->format('%r%a');
-      $expected += $days >= 1 && $days <= 7 ? $amount : 0;
-    }
-    self::assertEquals($expected, $values['block1']['sum'] ?? 0);
+    // The period follows the test clock: 7 to 13 October, today left out.
+    self::assertEquals(110, $values['block1']['sum'] ?? 0);
   }
 
   public function testFiltersAndCampaignProgressBecomeCopies(): void {
@@ -442,7 +427,7 @@ class CRM_Herald_Upgrader_InlineDigestTest extends TestCase implements HeadlessI
     $histogram = static fn (string $name): string => (string) preg_replace(
       '/.*<pre>(.*)<\/pre>.*/s',
       '$1',
-      Definition::load($name)['template']['msg_html'] ?? '',
+      Definition::load($name)['msg_html'],
     );
     self::assertSame(
       [

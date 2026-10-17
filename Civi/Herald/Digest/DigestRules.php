@@ -5,12 +5,13 @@ declare(strict_types = 1);
 namespace Civi\Herald\Digest;
 
 use Civi\Herald\Dispatch\ChannelConfig;
+use Civi\Herald\Dispatch\ChannelSubject;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
  * What a digest must satisfy: a name rules can reference and no other digest
- * has, a message template, and sources with distinct names that can run (SourceRules).
+ * has, a text, and sources with distinct names that can run (SourceRules).
  *
  * @phpstan-import-type Digest from Definition
  */
@@ -18,7 +19,7 @@ final class DigestRules {
 
   /**
    * Problems of the given HeraldDigest values; absent fields are not checked,
-   * except the template of a new digest.
+   * except the text of a new digest.
    *
    * @param array<array-key, mixed> $values
    * @param int|null $id The digest being updated, NULL for a new one
@@ -26,12 +27,12 @@ final class DigestRules {
    */
   public static function recordProblems(array $values, ?int $id): array {
     $name = Cast::toString($values['name'] ?? '');
-    // A new digest needs a template; an update only when it writes the field.
-    $checked = $id === NULL || array_key_exists('message_template_id', $values);
-    $missing = $checked && Definition::idOf($values['message_template_id'] ?? NULL) === NULL;
+    // A new digest needs a text; an update only when it writes the field.
+    $checked = $id === NULL || array_key_exists('msg_html', $values);
+    $missing = $checked && trim(Cast::toString($values['msg_html'] ?? '')) === '';
     return array_filter([
       'name' => $name === '' ? NULL : self::nameProblem($name, $id),
-      'message_template_id' => $missing ? E::ts('Choose the message template of the digest.') : NULL,
+      'msg_html' => $missing ? E::ts('Write the text of the digest.') : NULL,
     ]);
   }
 
@@ -42,26 +43,43 @@ final class DigestRules {
    * @return list<string>
    */
   public static function sendProblems(array $digest): array {
-    $problems = $digest['template'] === NULL ? [self::noTemplate($digest)] : [];
+    $problems = trim($digest['msg_html']) === '' ? [self::noText($digest)] : [];
     return [...$problems, ...SourceRules::listProblems($digest['sources'])];
   }
 
   /**
-   * Why delivery settings cannot send a digest, or NULL: its subject is the template's.
+   * Why delivery settings cannot send a digest, or NULL: its subject is its own.
    *
    * @param array<string, mixed> $params Delivery settings, channel_config included
    */
   public static function deliveryProblem(array $params): ?string {
-    return trim(Cast::toString(ChannelConfig::of($params)['email_subject'] ?? '')) === ''
-      ? NULL
-      : E::ts('A digest takes its subject from its message template; remove email_subject from the delivery settings.');
+    $subjectKey = ChannelSubject::subjectKeyIn(ChannelConfig::of($params));
+    return (
+      $subjectKey === NULL
+        ? NULL
+        : E::ts('A digest has its own subject; remove %1 from the delivery settings.', [1 => $subjectKey])
+    );
+  }
+
+  /**
+   * Problems of an API save: the record's, else a new subject or text that
+   * does not render with the stored sources.
+   *
+   * @param array<string, mixed> $new
+   * @param array<string, mixed> $old The stored digest, empty for a new one
+   * @return array<string, string> field => problem
+   */
+  public static function saveProblems(array $new, array $old): array {
+    $problems = self::recordProblems($new, Definition::idOf($old['id'] ?? NULL));
+    $text = $problems === [] ? (new Composer())->textProblem($new, $old) : NULL;
+    return $text === NULL ? $problems : ['msg_html' => $text];
   }
 
   /**
    * @param Digest $digest
    */
-  public static function noTemplate(array $digest): string {
-    return E::ts('Digest "%1" has no message template; choose one in the digest form.', [1 => $digest['title']]);
+  public static function noText(array $digest): string {
+    return E::ts('Digest "%1" has no text; write one in the digest form.', [1 => $digest['title']]);
   }
 
   private static function nameProblem(string $name, ?int $id): ?string {

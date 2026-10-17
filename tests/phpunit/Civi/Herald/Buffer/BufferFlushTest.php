@@ -21,7 +21,7 @@ class BufferFlushTest extends TestCase implements HeadlessInterface, HookInterfa
   private const GROUP = 'herald-test-flush';
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function setUp(): void {
@@ -46,7 +46,7 @@ class BufferFlushTest extends TestCase implements HeadlessInterface, HookInterfa
         'email_to' => 'ops@example.org',
         'email_format' => 'text',
         // What the alert's own event rendered — one per buffered row.
-        'email_subject' => $subject,
+        'subject' => $subject,
       ],
       $amount,
     );

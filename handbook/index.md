@@ -25,7 +25,7 @@ A notification can go to one recipient, to every contact who subscribed to that 
 
 Scripts and other extensions can publish to a named topic such as ops. A setting decides which channel and recipient each topic reaches, so the publisher never needs to know a chat ID or a URL.
 
-A digest is a message template filled from SearchKit displays, such as yesterday's contributions, and from numbers another extension provides. You set them up under Administer » Herald » Digests, and they usually go out daily or weekly, from a rule on the trigger "Herald: Schedule". See [Digests](digests.md).
+A digest is a subject and a text filled from SearchKit displays, such as yesterday's contributions, and from numbers another extension provides. You set them up under Administer » Herald » Digests, and they usually go out daily or weekly, from a rule on the trigger "Herald: Schedule". See [Digests](digests.md).
 
 The check monitor runs health checks that extensions contribute. It reports when a check starts failing and when it recovers, and reminds you about checks that keep failing. See [Check monitor](monitor.md).
 
@@ -75,7 +75,7 @@ Uninstalling herald removes its CiviRules building blocks, and CiviRules removes
 - [Recipes](recipes.md) walks through complete setups for donations, ticket sales, events, signups and scheduled digests.
 - [Channels](channels.md) covers each channel's settings, options and limits.
 - [Delivery](delivery.md) explains recipients, subscriptions, topics, aggregation and what happens when a delivery fails.
-- [Digests](digests.md) describes templates, sources, placeholders and the shipped searches.
+- [Digests](digests.md) describes the text, sources, placeholders and the shipped searches.
 - [Check monitor](monitor.md) shows how to contribute a health check and how to tune the alerts.
 - [Reference](reference.md) lists the CiviRules actions, triggers and conditions, the API, the scheduled jobs, the templates, the settings and the hooks.
 - [Deployment](deploy.md) explains how to update herald without breaking the writes its rules run in.

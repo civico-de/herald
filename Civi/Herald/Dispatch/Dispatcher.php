@@ -88,10 +88,10 @@ class Dispatcher {
    * @return 'buffered'|'sent'
    */
   public function dispatchRendered(array $params, string $body, ?string $subject, ?float $amount): string {
-    // Must be computed before ChannelConfig::withSubject() mixes a per-event
+    // Must be computed before ChannelSubject::withSubject() mixes a per-event
     // rendered subject into $params — see groupHash().
     $groupHash = self::groupHash($params);
-    $params = ChannelConfig::withSubject($params, $subject);
+    $params = ChannelSubject::withSubject($params, $subject);
     $aggregateMinutes = Cast::toInt($params['aggregate_minutes'] ?? 0);
     if ($aggregateMinutes > 0) {
       ($this->buffer ?? new AlertBuffer())->add($groupHash, $aggregateMinutes, $body, $params, $amount);

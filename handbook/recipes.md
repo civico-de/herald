@@ -65,9 +65,9 @@ With cv:
 cv api4 --in=json Setting.set <<'JSON'
 {"values": {"herald_source_normalization": [
   {"match": "Bank TX", "type": "contains", "label": "Bank transfer"},
-  {"match": "Ueberweisung", "type": "prefix", "label": "Bank transfer"},
-  {"match": "/^pi_[A-Za-z0-9]+$/", "type": "regex", "label": "Stripe"}
-]}}
+  {"match": "Transfer", "type": "prefix", "label": "Bank transfer"},
+  {"match": "^pi_[A-Za-z0-9]+$", "type": "regex", "label": "Stripe"}
+]}]}
 JSON
 ```
 
@@ -123,7 +123,7 @@ A digest that goes out at a fixed time is a CiviRules rule with the trigger "Her
 
 A weekly contribution digest every Monday at 8:00:
 
-1. Add a message template "Weekly contributions" on the tab "User-driven Messages" of Mailings » Message Templates. Under Administer » Herald » Digests, add a digest with the title "Weekly contributions", the name `weekly_contributions` and that template. Give it a source `donations` with the display "Digest: contributions last week", copy the snippet the form offers into the template, and check the preview.
+1. Under Administer » Herald » Digests, add a digest with the title "Weekly contributions" and the name `weekly_contributions`. Give it a source `donations` with the display "Digest: contributions last week", copy the snippet the form offers into the text, and check the preview.
 2. Create a CiviRules rule and choose the trigger "Herald: Schedule".
 3. In the trigger's form, choose Monday under Weekdays and 08:00 under Time. Leave Weekdays empty to send every day. The time is in CiviCRM's timezone.
 4. Add the action "Herald: Send digest", pick the digest, and set the channel and, for Telegram, the chat ID.

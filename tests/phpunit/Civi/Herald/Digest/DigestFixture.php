@@ -5,13 +5,13 @@ declare(strict_types = 1);
 namespace Civi\Herald\Digest;
 
 /**
- * A stored digest with a message template of its own, for tests.
+ * A stored digest, for tests.
  */
 final class DigestFixture {
 
   /**
    * @param list<array<string, mixed>> $sources HeraldDigestSource values without digest_id
-   * @return array{id: int, template_id: int}
+   * @return array{id: int}
    */
   public static function create(
     string $name,
@@ -20,12 +20,8 @@ final class DigestFixture {
     array $sources = [],
     string $subject = '',
   ): array {
-    $templateId = \Civi\Api4\MessageTemplate::create(checkPermissions: FALSE)
-      ->setValues(['msg_title' => 'Herald test: ' . $name, 'msg_subject' => $subject, 'msg_html' => $html])
-      ->execute()
-      ->single()['id'];
     $id = \Civi\Api4\HeraldDigest::create(checkPermissions: FALSE)
-      ->setValues(['name' => $name, 'title' => $title, 'message_template_id' => $templateId])
+      ->setValues(['name' => $name, 'title' => $title, 'msg_subject' => $subject, 'msg_html' => $html])
       ->execute()
       ->single()['id'];
     foreach ($sources as $source) {
@@ -33,7 +29,7 @@ final class DigestFixture {
         ->setValues(['digest_id' => $id] + $source)
         ->execute();
     }
-    return ['id' => (int) $id, 'template_id' => (int) $templateId];
+    return ['id' => (int) $id];
   }
 
 }

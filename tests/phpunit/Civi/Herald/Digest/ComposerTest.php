@@ -31,7 +31,7 @@ class ComposerTest extends TestCase implements HeadlessInterface, HookInterface,
   private array $displays = [];
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   protected function setUp(): void {
@@ -92,13 +92,12 @@ class ComposerTest extends TestCase implements HeadlessInterface, HookInterface,
    * A digest whose search sources name their display by role ('filled', 'empty') or by id.
    *
    * @param list<array<string, mixed>>|null $sources
-   * @return array{name: string, title: string, template: ?array{msg_subject: string, msg_html: string, msg_text: string}, sources: list<array{name: string, type: string, search_display_id: ?int, section_key: ?string}>}
+   * @return array{name: string, title: string, msg_subject: string, msg_html: string, sources: list<array{name: string, type: string, search_display_id: ?int, section_key: ?string}>}
    */
   private function digest(
     string $html,
     string $subject = '',
     ?array $sources = NULL,
-    string $text = '',
     array $change = [],
   ): array {
     $sources = array_map(
@@ -113,11 +112,11 @@ class ComposerTest extends TestCase implements HeadlessInterface, HookInterface,
         ['name' => 'seats', 'type' => 'section', 'search_display_id' => NULL, 'section_key' => 'test.seats'],
       ],
     );
-    $template = ['msg_subject' => $subject, 'msg_html' => $html, 'msg_text' => $text];
     return [
       'name' => 'daily',
       'title' => 'Daily report',
-      'template' => array_key_exists('template', $change) ? $change['template'] : $template,
+      'msg_subject' => $subject,
+      'msg_html' => $change['msg_html'] ?? $html,
       'sources' => $sources,
     ];
   }
@@ -147,10 +146,10 @@ class ComposerTest extends TestCase implements HeadlessInterface, HookInterface,
     );
   }
 
-  public function testATextTemplateIsEscapedWhole(): void {
-    $message = $this->composer()->compose($this->digest('', '', NULL, "Form: {\$donations.form}\n<b>not markup</b>"));
+  public function testValuesAreEscapedIntoTheText(): void {
+    $message = $this->composer()->compose($this->digest("Form: {\$donations.form}\n<b>markup</b>"));
 
-    self::assertSame("Form: Spring &lt;appeal&gt;\n&lt;b&gt;not markup&lt;/b&gt;", $message['body']);
+    self::assertSame("Form: Spring &lt;appeal&gt;\n<b>markup</b>", $message['body']);
   }
 
   public function testADigestWithoutSourcesIsAReminder(): void {
@@ -246,9 +245,9 @@ class ComposerTest extends TestCase implements HeadlessInterface, HookInterface,
   public static function unsendableDigests(): array {
     $search = ['name' => 'donations', 'type' => 'search', 'search_display_id' => 'filled', 'section_key' => NULL];
     return [
-      'no template' => [
-        ['template' => NULL],
-        'Digest "Daily report" has no message template; choose one in the digest form.',
+      'no text' => [
+        ['msg_html' => " \n"],
+        'Digest "Daily report" has no text; write one in the digest form.',
       ],
       'two sources of one name' => [['sources' => [$search, $search]], 'Two sources are named donations.'],
       'a section without key' => [

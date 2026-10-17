@@ -8,7 +8,7 @@ use Civi\Api4\Generic\AbstractAction;
 use Civi\Api4\Generic\Result;
 use Civi\Herald\Buffer\AlertBuffer;
 use Civi\Herald\Channel\PlainText;
-use Civi\Herald\Dispatch\ChannelConfig;
+use Civi\Herald\Dispatch\ChannelSubject;
 use Civi\Herald\Dispatch\Delivery;
 use Civi\Herald\Dispatch\Dispatcher;
 use Civi\Herald\Renderer\TemplateRenderer;
@@ -102,7 +102,7 @@ class Publish extends AbstractAction {
     if ($this->template !== '') {
       $parts = (new TemplateRenderer())->renderParts($this->template, $this->vars);
       $body = $parts['body'];
-      $params = ChannelConfig::withSubject($params, $parts['subject']);
+      $params = ChannelSubject::withSubject($params, $parts['subject']);
     }
 
     $rawMinutes = $params['aggregate_minutes'] ?? 0;

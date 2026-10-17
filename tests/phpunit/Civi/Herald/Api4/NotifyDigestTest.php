@@ -27,14 +27,14 @@ class NotifyDigestTest extends TestCase implements HeadlessInterface, HookInterf
   private const DELIVERY = ['channel' => 'email', 'email_to' => 'ops@example.org'];
 
   /**
-   * @var array{id: int, template_id: int}
+   * @var array{id: int}
    */
   private array $digest;
 
   private ?\Throwable $sectionError = NULL;
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function setUp(): void {
@@ -140,6 +140,23 @@ class NotifyDigestTest extends TestCase implements HeadlessInterface, HookInterf
     self::assertStringContainsString('138 seats', $mails[0]['body']);
   }
 
+  public function testAnActivityIsNamedAfterTheDigestSubject(): void {
+    $contactId = \Civi\Api4\Contact::create(checkPermissions: FALSE)
+      ->setValues(['contact_type' => 'Individual', 'first_name' => 'Digest', 'last_name' => 'Reader'])
+      ->execute()
+      ->single()['id'];
+
+    $this->notify(['channel' => 'activity', 'activity_assignee_contact_id' => $contactId]);
+
+    $activity = \Civi\Api4\Activity::get(checkPermissions: FALSE)
+      ->addSelect('subject', 'details')
+      ->addWhere('activity_type_id:name', '=', 'herald_notification')
+      ->execute()
+      ->single();
+    self::assertSame('Seats: 138', $activity['subject']);
+    self::assertStringContainsString('138 seats', (string) $activity['details']);
+  }
+
   public function testTheResultNamesTheModeAndTheSources(): void {
     self::assertSame(['mode' => 'sent', 'sources' => 1], $this->notify());
   }
@@ -180,6 +197,16 @@ class NotifyDigestTest extends TestCase implements HeadlessInterface, HookInterf
   /**
    * Local wall time in CiviCRM's timezone.
    */
+  /**
+   * A stored digest without text; the API refuses to write one.
+   */
+  private function clearText(): void {
+    \CRM_Core_DAO::executeQuery(
+      "UPDATE civicrm_herald_digest SET msg_html = '' WHERE id = %1",
+      [1 => [$this->digest['id'], 'Positive']],
+    );
+  }
+
   private function setClock(string $local): void {
     \CRM_Utils_Time::setTime((new \DateTimeImmutable($local, Clock::zone()))->getTimestamp());
   }
@@ -198,6 +225,7 @@ class NotifyDigestTest extends TestCase implements HeadlessInterface, HookInterf
   public static function deliveriesWithASubject(): array {
     return [
       'email_subject' => [self::DELIVERY + ['email_subject' => 'Morning numbers']],
+      'another channel\'s subject' => [self::DELIVERY + ['activity_subject' => 'Morning numbers']],
       'in channel_config' => [
         self::DELIVERY + ['channel_config' => json_encode(['email_subject' => 'Morning numbers'])],
       ],
@@ -212,16 +240,14 @@ class NotifyDigestTest extends TestCase implements HeadlessInterface, HookInterf
     $e = $this->failure(fn () => $this->notify($delivery));
 
     self::assertInstanceOf(DigestProblem::class, $e);
-    self::assertStringContainsString('A digest takes its subject from its message template', $e->getMessage());
+    self::assertStringContainsString('A digest has its own subject', $e->getMessage());
     $mails = self::spooled();
     self::assertCount(1, $mails);
     self::assertStringContainsString('could not be composed', $mails[0]['body']);
   }
 
   public function testADigestThatCannotBeComposedTellsItsRecipients(): void {
-    \Civi\Api4\MessageTemplate::delete(checkPermissions: FALSE)
-      ->addWhere('id', '=', $this->digest['template_id'])
-      ->execute();
+    $this->clearText();
 
     $e = $this->failure($this->notify(...));
 
@@ -229,7 +255,7 @@ class NotifyDigestTest extends TestCase implements HeadlessInterface, HookInterf
     $mails = self::spooled();
     self::assertSame(['Digest "Herald test digest" failed'], array_column($mails, 'subject'));
     self::assertStringContainsString('could not be composed: Digest', $mails[0]['body']);
-    self::assertStringContainsString('has no message template; choose one in the digest form.', $mails[0]['body']);
+    self::assertStringContainsString('has no text; write one in the digest form.', $mails[0]['body']);
   }
 
   public function testAnUnknownDigestTellsItsRecipientsByName(): void {
@@ -251,9 +277,7 @@ class NotifyDigestTest extends TestCase implements HeadlessInterface, HookInterf
   }
 
   public function testANoticeThatCannotBeDeliveredLeavesTheProblemRaised(): void {
-    \Civi\Api4\MessageTemplate::delete(checkPermissions: FALSE)
-      ->addWhere('id', '=', $this->digest['template_id'])
-      ->execute();
+    $this->clearText();
 
     $e = $this->failure(fn () => $this->notify(['channel' => 'email']));
 

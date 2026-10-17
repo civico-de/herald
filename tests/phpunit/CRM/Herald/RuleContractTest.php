@@ -33,7 +33,7 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
   ];
 
   public function setUpHeadless(): \Civi\Test\CiviEnvBuilder {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   protected function setUp(): void {

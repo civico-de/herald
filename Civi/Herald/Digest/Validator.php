@@ -12,8 +12,8 @@ use CRM_Herald_ExtensionUtil as E;
 
 /**
  * Refuses API saves of digests and sources that could not be sent
- * (DigestRules, SourceRules); the digest form is checked by FormValidator,
- * template edits by TemplateValidator.
+ * (DigestRules, SourceRules, a text that does not render); the digest form
+ * is checked by FormValidator.
  *
  * @service herald.digest_validator
  */
@@ -32,7 +32,7 @@ final class Validator extends AutoService implements HookInterface {
    */
   private static function validateDigests(ValidateValuesEvent $e): void {
     foreach (self::diffs($e) as $r => [$new, $old]) {
-      foreach (DigestRules::recordProblems($new, Definition::idOf($old['id'] ?? NULL)) as $field => $problem) {
+      foreach (DigestRules::saveProblems($new, $old) as $field => $problem) {
         $e->addError($r, $field, 'herald_digest', $problem);
       }
     }

@@ -5,10 +5,11 @@ declare(strict_types = 1);
 namespace Civi\Herald\Digest;
 
 use Civi\Herald\Renderer\TemplateRenderer;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
- * Fills a digest's message template with the values of its sources
+ * Fills a digest's subject and text with the values of its sources
  * ({$name.value}, {$name.rows}): search displays and extension sections.
  *
  * @phpstan-import-type Digest from Definition
@@ -61,6 +62,34 @@ final class Composer {
   }
 
   /**
+   * Why an update's subject or text does not render with the stored sources, or
+   * NULL. A source that does not load now fails at send; the text stays editable.
+   *
+   * @param array<string, mixed> $new
+   * @param array<string, mixed> $old The stored digest, empty for a new one
+   */
+  public function textProblem(array $new, array $old): ?string {
+    if (!isset($old['name']) || !ComposedText::isNew($new)) {
+      return NULL;
+    }
+    $stored = Definition::load(Cast::toString($old['name']));
+    $digest = Definition::of($new + $stored, $stored['sources']);
+    try {
+      $values = $this->values($digest);
+    }
+    catch (\CRM_Core_Exception) {
+      return NULL;
+    }
+    try {
+      $this->render($digest, $values);
+    }
+    catch (DigestProblem $problem) {
+      return E::ts('Digest "%1": %2', [1 => $digest['title'], 2 => $problem->getMessage()]);
+    }
+    return NULL;
+  }
+
+  /**
    * The values of each source by its name.
    *
    * @param Digest $digest
@@ -83,7 +112,7 @@ final class Composer {
   }
 
   /**
-   * Subject and body; without a subject in the template the title is the subject.
+   * Subject and body; without a subject the title is the subject.
    *
    * @param Digest $digest
    * @param array<string, array<string, mixed>> $values
@@ -91,12 +120,13 @@ final class Composer {
    * @throws DigestProblem
    */
   public function render(array $digest, array $values): array {
-    $template = $digest['template'] ?? throw new DigestProblem([DigestRules::noTemplate($digest)]);
+    if (trim($digest['msg_html']) === '') {
+      throw new DigestProblem([DigestRules::noText($digest)]);
+    }
     HistogramModifier::register();
-    $used =
-      $template['msg_subject']
-      . "\n"
-      . (trim($template['msg_html']) !== '' ? $template['msg_html'] : $template['msg_text']);
+    BarsModifier::register();
+    $template = ['msg_subject' => $digest['msg_subject'], 'msg_html' => $digest['msg_html']];
+    $used = $template['msg_subject'] . "\n" . $template['msg_html'];
     $parts = TemplateCheck::render($used, fn (): array => $this->renderer->renderMessage($template, $values));
     $subject = trim((string) $parts['subject']);
     return [

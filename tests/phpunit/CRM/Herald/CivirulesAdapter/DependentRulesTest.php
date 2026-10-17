@@ -20,7 +20,7 @@ class CRM_Herald_CivirulesAdapter_DependentRulesTest extends TestCase implements
   TransactionalInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function testSwitchesOffRulesThatUseAHeraldHandlerOnly(): void {

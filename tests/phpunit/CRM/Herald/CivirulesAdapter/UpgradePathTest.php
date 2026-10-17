@@ -31,10 +31,7 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
   private const NEW_CLASS = 'CRM_Herald_CivirulesAdapter_Action_Notification';
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()
-      ->install('org.civicoop.civirules')
-      ->installMe(__DIR__)
-      ->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function testPreRenameRuleSurvivesTheUpgrade(): void {

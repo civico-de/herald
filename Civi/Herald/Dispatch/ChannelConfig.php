@@ -39,6 +39,7 @@ final class ChannelConfig {
     'pushover_expire',
     'email_subject',
     'email_format',
+    ChannelSubject::KEY,
   ];
 
   /**
@@ -63,20 +64,6 @@ final class ChannelConfig {
    */
   public static function subscriberSafe(array $config): array {
     return Cast::namedOnly(array_intersect_key($config, array_flip(self::SUBSCRIBER_SAFE_KEYS)));
-  }
-
-  /**
-   * Default email_subject to the template's rendered subject. An explicit
-   * email_subject wins, as does one in `channel_config`, which of() merges later.
-   *
-   * @param array<string, mixed> $params
-   * @return array<string, mixed>
-   */
-  public static function withSubject(array $params, ?string $subject): array {
-    if ($subject !== NULL && $subject !== '' && empty($params['email_subject'])) {
-      $params['email_subject'] = $subject;
-    }
-    return $params;
   }
 
   /**

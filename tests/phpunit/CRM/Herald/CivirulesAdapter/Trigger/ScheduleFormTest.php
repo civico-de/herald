@@ -17,7 +17,7 @@ class CRM_Herald_CivirulesAdapter_Trigger_ScheduleFormTest extends TestCase impl
   TransactionalInterface {
 
   public function setUpHeadless(): \Civi\Test\CiviEnvBuilder {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   protected function tearDown(): void {

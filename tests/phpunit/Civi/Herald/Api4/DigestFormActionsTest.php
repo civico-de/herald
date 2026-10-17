@@ -26,7 +26,7 @@ class DigestFormActionsTest extends TestCase implements HeadlessInterface, HookI
   private array $context = [];
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   /**
@@ -37,13 +37,6 @@ class DigestFormActionsTest extends TestCase implements HeadlessInterface, HookI
   public function hook_civicrm_heraldDigestSections(array $keys, array $context, array &$sections): void {
     $this->context = $context;
     $sections['test.seats'] = ['booked' => 138, 'paid' => 120];
-  }
-
-  private static function template(string $html, string $subject = ''): int {
-    return (int) \Civi\Api4\MessageTemplate::create(checkPermissions: FALSE)
-      ->setValues(['msg_title' => 'Herald form test', 'msg_subject' => $subject, 'msg_html' => $html])
-      ->execute()
-      ->single()['id'];
   }
 
   /**
@@ -99,12 +92,15 @@ class DigestFormActionsTest extends TestCase implements HeadlessInterface, HookI
   }
 
   public function testThePreviewComposesTheDigestAsEmailShowsIt(): void {
-    $template = self::template("Booked: {\$seats.booked}\nPaid: {\$seats.paid}", 'Seats {$seats.booked}');
-
     self::assertSame(
       ['body' => "Booked: 138<br>\nPaid: 120", 'subject' => 'Seats 138', 'problems' => []],
       Herald::previewDigest(checkPermissions: FALSE)
-        ->setDigest(['name' => 'daily', 'title' => 'Daily', 'message_template_id' => $template])
+        ->setDigest([
+          'name' => 'daily',
+          'title' => 'Daily',
+          'msg_subject' => 'Seats {$seats.booked}',
+          'msg_html' => "Booked: {\$seats.booked}\nPaid: {\$seats.paid}",
+        ])
         ->setSources([self::SEATS])
         ->execute()
         ->single(),
@@ -112,10 +108,8 @@ class DigestFormActionsTest extends TestCase implements HeadlessInterface, HookI
   }
 
   public function testAPreviewThatCannotBeComposedNamesItsProblems(): void {
-    $template = self::template('{$seats.bookd}');
-
     $preview = Herald::previewDigest(checkPermissions: FALSE)
-      ->setDigest(['name' => 'daily', 'title' => 'Daily', 'message_template_id' => $template])
+      ->setDigest(['name' => 'daily', 'title' => 'Daily', 'msg_html' => '{$seats.bookd}'])
       ->setSources([self::SEATS])
       ->execute()
       ->single();

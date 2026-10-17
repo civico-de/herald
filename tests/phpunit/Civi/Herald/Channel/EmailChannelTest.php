@@ -19,7 +19,7 @@ class EmailChannelTest extends TestCase implements HeadlessInterface, HookInterf
   private array $sentMails = [];
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function setUp(): void {

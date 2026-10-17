@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 class DefinitionTest extends TestCase implements HeadlessInterface, TransactionalInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   private function display(): int {
@@ -51,11 +51,8 @@ class DefinitionTest extends TestCase implements HeadlessInterface, Transactiona
       [
         'name' => 'weekly',
         'title' => 'Weekly',
-        'template' => [
-          'msg_subject' => 'Week {$seats.booked}',
-          'msg_html' => '<b>{$seats.booked}</b>',
-          'msg_text' => '',
-        ],
+        'msg_subject' => 'Week {$seats.booked}',
+        'msg_html' => '<b>{$seats.booked}</b>',
         'sources' => [
           ['name' => 'seats', 'type' => 'section', 'search_display_id' => NULL, 'section_key' => 'myext.seats'],
           ['name' => 'members', 'type' => 'search', 'search_display_id' => $display, 'section_key' => NULL],
@@ -66,15 +63,13 @@ class DefinitionTest extends TestCase implements HeadlessInterface, Transactiona
   }
 
   public function testWhatWasDeletedSinceLoadsAsMissing(): void {
-    $digest = DigestFixture::create('weekly', 'Weekly', sources: [
+    DigestFixture::create('weekly', 'Weekly', sources: [
       ['name' => 'members', 'type' => 'search', 'search_display_id' => $this->display()],
     ]);
-    \Civi\Api4\MessageTemplate::delete(checkPermissions: FALSE)->addWhere('id', '=', $digest['template_id'])->execute();
     \Civi\Api4\SearchDisplay::delete(checkPermissions: FALSE)->addWhere('label', '=', 'Members')->execute();
 
     $definition = Definition::load('weekly');
 
-    self::assertNull($definition['template']);
     self::assertNull($definition['sources'][0]['search_display_id']);
   }
 
@@ -82,10 +77,11 @@ class DefinitionTest extends TestCase implements HeadlessInterface, Transactiona
     self::assertSame([
       'name' => 'weekly',
       'title' => 'Weekly',
-      'template' => NULL,
+      'msg_subject' => '',
+      'msg_html' => '',
       'sources' => [['name' => 'members', 'type' => 'search', 'search_display_id' => 12, 'section_key' => NULL]],
     ], Definition::of(
-      ['name' => 'weekly', 'title' => 'Weekly', 'message_template_id' => ''],
+      ['name' => 'weekly', 'title' => 'Weekly', 'msg_subject' => NULL],
       [['name' => 'members', 'type' => 'search', 'search_display_id' => '12', 'section_key' => ' ']],
     ));
   }

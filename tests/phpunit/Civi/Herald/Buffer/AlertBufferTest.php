@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 class AlertBufferTest extends TestCase implements HeadlessInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function testSingleBodyPassesThroughUnchanged(): void {
@@ -96,16 +96,16 @@ class AlertBufferTest extends TestCase implements HeadlessInterface {
    */
   public function testAggregateGetsASubjectDescribingTheAggregate(): void {
     $delivery = AggregateSummary::composeDelivery(
-      ['channel' => 'email', 'email_to' => 'ops@example.org', 'email_subject' => '✅ Donation #5'],
+      ['channel' => 'email', 'email_to' => 'ops@example.org', 'subject' => '✅ Donation #5'],
       ['🎟 one', '🎟 two', '🎟 three'],
       15,
       [60.0, 35.0, 200.0],
     );
 
-    $this->assertStringStartsWith('📬 3 messages, total ', $delivery['email_subject']);
-    $this->assertStringContainsString('(collected over 15 min)', $delivery['email_subject']);
+    $this->assertStringStartsWith('📬 3 messages, total ', $delivery['subject']);
+    $this->assertStringContainsString('(collected over 15 min)', $delivery['subject']);
     // A subject is not markup.
-    $this->assertStringNotContainsString('<b>', $delivery['email_subject']);
+    $this->assertStringNotContainsString('<b>', $delivery['subject']);
     // Everything that routes the message stays untouched.
     $this->assertSame('ops@example.org', $delivery['email_to']);
     $this->assertSame('email', $delivery['channel']);
@@ -117,17 +117,17 @@ class AlertBufferTest extends TestCase implements HeadlessInterface {
    */
   public function testSingleBodyKeepsItsOwnSubject(): void {
     $delivery = AggregateSummary::composeDelivery(
-      ['email_subject' => '✅ Donation #5'],
+      ['subject' => '✅ Donation #5'],
       ['🎟 one', '  '],
       15,
       [60.0],
     );
-    $this->assertSame('✅ Donation #5', $delivery['email_subject']);
+    $this->assertSame('✅ Donation #5', $delivery['subject']);
   }
 
   public function testAggregateSubjectOmitsTheSumWithoutAmounts(): void {
     $delivery = AggregateSummary::composeDelivery([], ['a', 'b'], 5);
-    $this->assertSame('📬 2 messages (collected over 5 min)', $delivery['email_subject']);
+    $this->assertSame('📬 2 messages (collected over 5 min)', $delivery['subject']);
   }
 
   // --- serialisation of the delivery params ---------------------------------

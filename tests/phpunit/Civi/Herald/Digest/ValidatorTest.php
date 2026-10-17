@@ -7,15 +7,14 @@ namespace Civi\Herald\Digest;
 use Civi\Api4\Afform;
 use Civi\Api4\HeraldDigest;
 use Civi\Api4\HeraldDigestSource;
-use Civi\Api4\MessageTemplate;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Digests, sources and templates that could not be sent are refused on save,
- * through the API, the digest form and the legacy template form.
+ * Digests and sources that could not be sent are refused on save, through
+ * the API and the digest form.
  *
  * @group headless
  */
@@ -24,7 +23,7 @@ class ValidatorTest extends TestCase implements HeadlessInterface, HookInterface
   private const SEATS = ['name' => 'seats', 'type' => 'section', 'section_key' => 'test.seats'];
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   /**
@@ -102,7 +101,8 @@ class ValidatorTest extends TestCase implements HeadlessInterface, HookInterface
   public static function brokenDigests(): array {
     return [
       'name with spaces' => [['name' => 'Weekly report'], 'Use lowercase letters'],
-      'no template' => [['name' => 'weekly'], 'Choose the message template of the digest.'],
+      'no text' => [['name' => 'weekly'], 'Write the text of the digest.'],
+      'a blank text' => [['name' => 'weekly', 'msg_html' => " \n"], 'Write the text of the digest.'],
     ];
   }
 
@@ -116,16 +116,24 @@ class ValidatorTest extends TestCase implements HeadlessInterface, HookInterface
       ->execute());
   }
 
-  public function testAnUpdateKeepsTheTemplateItDoesNotWrite(): void {
+  public function testAnUpdateKeepsTheTextItDoesNotWrite(): void {
     $id = DigestFixture::create('weekly', 'Weekly')['id'];
     HeraldDigest::update(checkPermissions: FALSE)->addWhere('id', '=', $id)->addValue('title', 'Renamed')->execute();
     $this->assertRefused(
-      'Choose the message template of the digest.',
+      'Write the text of the digest.',
       static fn () => HeraldDigest::update(checkPermissions: FALSE)
         ->addWhere('id', '=', $id)
-        ->addValue('message_template_id', '')
+        ->addValue('msg_html', '')
         ->execute(),
     );
+  }
+
+  public function testSubjectAndTextAreStoredAsWritten(): void {
+    $text = "<b>{\$seats.booked}</b> &lt;3 {if \$seats.booked > 2}full{/if}";
+    $subject = '{if $seats.booked > 2}Full{/if} <seats>';
+    $id = DigestFixture::create('weekly', 'Weekly', $text, subject: $subject)['id'];
+    $stored = HeraldDigest::get(checkPermissions: FALSE)->addWhere('id', '=', $id)->execute()->single();
+    self::assertSame([$subject, $text], [$stored['msg_subject'], $stored['msg_html']]);
   }
 
   public function testANameIsUsedByOneDigestOnly(): void {
@@ -198,74 +206,48 @@ class ValidatorTest extends TestCase implements HeadlessInterface, HookInterface
     );
   }
 
-  public function testATemplateEditIsCheckedAgainstTheDigestsUsingIt(): void {
-    $digest = DigestFixture::create('weekly', 'Weekly', '{$seats.booked} seats', [self::SEATS]);
-    $unused = DigestFixture::create('daily', 'Daily');
-    HeraldDigest::delete(checkPermissions: FALSE)->addWhere('id', '=', $unused['id'])->execute();
-
-    MessageTemplate::update(checkPermissions: FALSE)
-      ->addWhere('id', '=', $digest['template_id'])
+  public function testATextEditIsCheckedAgainstTheStoredSources(): void {
+    $id = DigestFixture::create('weekly', 'Weekly', '{$seats.booked} seats', [self::SEATS])['id'];
+    HeraldDigest::update(checkPermissions: FALSE)
+      ->addWhere('id', '=', $id)
       ->addValue('msg_html', 'Booked: {$seats.booked}')
       ->execute();
     $this->assertRefused(
       'Digest "Weekly": {$seats.bookd} is not a placeholder of this digest.',
-      static fn () => MessageTemplate::update(checkPermissions: FALSE)
-        ->addWhere('id', '=', $digest['template_id'])
+      static fn () => HeraldDigest::update(checkPermissions: FALSE)
+        ->addWhere('id', '=', $id)
         ->addValue('msg_subject', '{$seats.bookd} seats')
         ->execute(),
     );
-    // No digest uses it any more: herald does not check it.
-    MessageTemplate::update(checkPermissions: FALSE)
-      ->addWhere('id', '=', $unused['template_id'])
-      ->addValue('msg_html', '{$seats.bookd}')
-      ->execute();
   }
 
-  public function testATemplateStaysEditableWhileASourceOfItsDigestIsBroken(): void {
-    $digest = DigestFixture::create('weekly', 'Weekly', '{$members.count}', [
+  public function testATextStaysEditableWhileASourceIsBroken(): void {
+    $id = DigestFixture::create('weekly', 'Weekly', '{$members.count}', [
       ['name' => 'members', 'type' => 'search', 'search_display_id' => $this->display()],
-    ]);
+    ])['id'];
     \Civi\Api4\SearchDisplay::delete(checkPermissions: FALSE)->addWhere('label', '=', 'Members')->execute();
 
-    MessageTemplate::update(checkPermissions: FALSE)
-      ->addWhere('id', '=', $digest['template_id'])
+    HeraldDigest::update(checkPermissions: FALSE)
+      ->addWhere('id', '=', $id)
       ->addValue('msg_html', '{$members.cuont}')
       ->execute();
-    self::assertSame('{$members.cuont}', Definition::template($digest['template_id'])['msg_html'] ?? NULL);
+    self::assertSame('{$members.cuont}', Definition::load('weekly')['msg_html']);
   }
 
-  /**
-   * The validation errors of the legacy template form, saving $html into the template.
-   *
-   * @return array<string, string>
-   */
-  private static function legacyFormErrors(int $templateId, string $html): array {
-    $values = ['msg_title' => 'Herald test: weekly', 'msg_subject' => '', 'msg_html' => $html, 'msg_text' => ''];
-    $form = new \Civi\Test\FormWrapper('CRM_Admin_Form_MessageTemplates', $values, [
-      'id' => $templateId,
-      'action' => 'update',
-    ]);
-    return (array) $form->processForm(\Civi\Test\FormWrapper::VALIDATED)->getValidationOutput();
-  }
-
-  public function testTheLegacyTemplateFormIsChecked(): void {
-    $digest = DigestFixture::create('weekly', 'Weekly', '{$seats.booked} seats', [self::SEATS]);
-
-    self::assertSame([], self::legacyFormErrors($digest['template_id'], 'Booked: {$seats.booked}'));
-    self::assertSame(
-      ['msg_html' => 'Digest "Weekly": {$seats.bookd} is not a placeholder of this digest.'],
-      self::legacyFormErrors($digest['template_id'], '{$seats.bookd}'),
+  public function testOnlyTheTextTheFormComposedSkipsTheApiCheck(): void {
+    $id = DigestFixture::create('weekly', 'Weekly', '{$seats.booked} seats', [self::SEATS])['id'];
+    $this->submit(
+      ['name' => 'weekly', 'title' => 'Weekly', 'msg_html' => '{$places.booked} places'],
+      [['name' => 'places'] + self::SEATS],
+      ['HeraldDigest1' => $id],
     );
-  }
-
-  public function testOtherFormsAreLeftAlone(): void {
-    $fields = [];
-    $files = [];
-    $errors = [];
-    // A form without an _id property: reading it would warn on every form of the site.
-    $form = new \CRM_Core_Form();
-    \CRM_Utils_Hook::validateForm('CRM_Core_Form', $fields, $files, $form, $errors);
-    self::assertSame([], $errors);
+    $this->assertRefused(
+      '{$places.bookd} is not a placeholder of this digest.',
+      static fn () => HeraldDigest::update(checkPermissions: FALSE)
+        ->addWhere('id', '=', $id)
+        ->addValue('msg_html', '{$places.bookd} places')
+        ->execute(),
+    );
   }
 
   /**
@@ -288,13 +270,6 @@ class ValidatorTest extends TestCase implements HeadlessInterface, HookInterface
       ->execute();
   }
 
-  private static function template(string $html): int {
-    return (int) MessageTemplate::create(checkPermissions: FALSE)
-      ->setValues(['msg_title' => 'Herald test: form', 'msg_html' => $html])
-      ->execute()
-      ->single()['id'];
-  }
-
   private static function digestCount(string $name): int {
     return HeraldDigest::get(checkPermissions: FALSE)->addWhere('name', '=', $name)->execute()->count();
   }
@@ -303,7 +278,7 @@ class ValidatorTest extends TestCase implements HeadlessInterface, HookInterface
     $this->submit([
       'name' => 'weekly',
       'title' => 'Weekly',
-      'message_template_id' => self::template('{$seats.booked}'),
+      'msg_html' => '{$seats.booked}',
     ], [
       ['name' => 'seats', 'type' => 'section', 'section_key' => 'test.seats'],
     ]);
@@ -319,35 +294,45 @@ class ValidatorTest extends TestCase implements HeadlessInterface, HookInterface
 
   public function testTheFormRefusesABrokenSourceBeforeWritingTheDigest(): void {
     $this->assertRefused('Source 2: A search source needs a search display.', fn () => $this->submit(
-      ['name' => 'weekly', 'title' => 'Weekly', 'message_template_id' => self::template('{$seats.booked}')],
+      ['name' => 'weekly', 'title' => 'Weekly', 'msg_html' => '{$seats.booked}'],
       [self::SEATS, ['name' => '', 'type' => 'search']],
     ));
     self::assertSame(0, self::digestCount('weekly'));
   }
 
-  public function testTheFormChecksTheTemplateAgainstTheSubmittedSources(): void {
+  public function testTheFormChecksTheTextAgainstTheSubmittedSources(): void {
     $this->assertRefused('{$seats.bookd} is not a placeholder of this digest.', fn () => $this->submit(
-      ['name' => 'weekly', 'title' => 'Weekly', 'message_template_id' => self::template('{$seats.bookd}')],
+      ['name' => 'weekly', 'title' => 'Weekly', 'msg_html' => '{$seats.bookd}'],
       [self::SEATS],
     ));
     self::assertSame(0, self::digestCount('weekly'));
   }
 
-  public function testTheFormNamesAMissingTemplateOnce(): void {
+  public function testTheFormNamesAMissingTextOnce(): void {
     try {
       $this->submit(['name' => 'weekly', 'title' => 'Weekly'], []);
-      self::fail('saved without a template');
+      self::fail('saved without a text');
     }
     catch (\CRM_Core_Exception $e) {
-      self::assertStringContainsString('Choose the message template of the digest.', $e->getMessage());
-      self::assertStringNotContainsString('has no message template', $e->getMessage());
+      self::assertStringContainsString('Write the text of the digest.', $e->getMessage());
+      self::assertStringNotContainsString('has no text', $e->getMessage());
     }
+  }
+
+  public function testTheFormChangesASourceAndTheTextTogether(): void {
+    $digest = DigestFixture::create('weekly', 'Weekly', '{$seats.booked} seats', [self::SEATS]);
+    $this->submit(
+      ['name' => 'weekly', 'title' => 'Weekly', 'msg_html' => '{$places.booked} places'],
+      [['name' => 'places'] + self::SEATS],
+      ['HeraldDigest1' => $digest['id']],
+    );
+    self::assertSame('{$places.booked} places', Definition::load('weekly')['msg_html']);
   }
 
   public function testTheFormKeepsTheNameOfTheDigestItEdits(): void {
     $digest = DigestFixture::create('weekly', 'Weekly');
     $this->submit(
-      ['name' => 'weekly', 'title' => 'Renamed', 'message_template_id' => $digest['template_id']],
+      ['name' => 'weekly', 'title' => 'Renamed', 'msg_html' => '<p>Static digest</p>'],
       [],
       ['HeraldDigest1' => $digest['id']],
     );
@@ -360,7 +345,7 @@ class ValidatorTest extends TestCase implements HeadlessInterface, HookInterface
       fn () => $this->submit([
         'name' => 'weekly',
         'title' => 'Copy',
-        'message_template_id' => $digest['template_id'],
+        'msg_html' => '<p>Static digest</p>',
       ], []),
     );
   }

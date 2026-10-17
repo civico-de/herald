@@ -34,27 +34,8 @@ final class HistogramModifier {
    * @throws DigestProblem
    */
   public static function apply(mixed $rows, mixed $column = NULL, mixed $buckets = 8): string {
-    $name = is_string($column) ? $column : '';
-    if (!is_array($rows) || !array_is_list($rows) || $name === '') {
-      throw new DigestProblem([E::ts(
-        'herald_histogram needs the rows of a source and a column, e.g. {$amounts.rows|herald_histogram:"amount"}.',
-      )]);
-    }
-    $amounts = [];
-    foreach ($rows as $row) {
-      if (!is_array($row) || !array_key_exists($name, $row)) {
-        throw new DigestProblem([E::ts('herald_histogram: the rows have no column "%1".', [1 => $name])]);
-      }
-      $value = $row[$name];
-      if ($value !== NULL && !is_numeric($value)) {
-        throw new DigestProblem([E::ts('herald_histogram: the column "%1" holds a value that is not a number.', [
-          1 => $name,
-        ])]);
-      }
-      if ($value !== NULL) {
-        $amounts[] = (float) $value;
-      }
-    }
+    [$rows, $column] = ChartRows::of(self::NAME, $rows, $column);
+    $amounts = array_values(array_filter(ChartRows::numbers(self::NAME, $rows, $column), is_float(...)));
     [$count, $edges] = self::buckets($buckets);
     return HistogramFormatter::render(HistogramFormatter::compute($amounts, $count, $edges));
   }

@@ -135,7 +135,7 @@ The settings are `herald_ntfy_server`, `herald_ntfy_default_topic` and `herald_n
 | Key | Meaning |
 |---|---|
 | `ntfy_topic` | Topic. Empty uses `herald_ntfy_default_topic`. |
-| `ntfy_title` | Notification title. |
+| `ntfy_title` | Notification title. Without it, the subject of the template or digest. |
 | `ntfy_priority` | 1 for the lowest to 5 for the highest, or one of ntfy's priority names. |
 | `ntfy_tags` | Comma-separated tags. Emoji tag names show as emoji. |
 | `ntfy_click` | URL that opens when the notification is tapped. |
@@ -150,7 +150,7 @@ The settings are `herald_pushover_app_token`, which is required, and `herald_pus
 | Key | Meaning |
 |---|---|
 | `pushover_user_key` | User or group key. Empty uses the default key. |
-| `pushover_title` | Notification title. |
+| `pushover_title` | Notification title. Without it, the subject of the template or digest. |
 | `pushover_priority` | From -2 for silent to 2 for emergency. |
 | `pushover_retry` | Emergency only: seconds between repeats. The default is 60, the minimum 30. |
 | `pushover_expire` | Emergency only: seconds until the repeats stop. The default is 3600, the maximum 10800. |
@@ -171,7 +171,7 @@ The settings are `herald_email_from` and `herald_email_default_to`. The From add
 |---|---|
 | `email_to` | Recipient. Empty uses `herald_email_default_to`. |
 | `email_to_name` | Recipient display name. |
-| `email_subject` | Subject. Without it, actions, topics and digests use the template's subject. The last fallback is "Notification". |
+| `email_subject` | Subject. Without it, actions and topics use the template's subject. Digests always use their own. The last fallback is "Notification". |
 | `email_format` | `html` is the default and keeps the template's line breaks. `text` sends plain text. |
 | `email_cc` | Comma-separated CC addresses. |
 | `email_bcc` | Comma-separated BCC addresses. |
@@ -189,7 +189,7 @@ The activity channel records a notification in CiviCRM as an activity and assign
 | `activity_target_contact_id` | The contact the activity is about. Optional. |
 | `activity_type` | Activity type name. The default `herald_notification` ships with herald. |
 | `activity_status` | Activity status name. The default is `Scheduled`. |
-| `activity_subject` | Subject. Defaults to the start of the message, up to 255 characters. |
+| `activity_subject` | Subject. Without it, the subject of the template or digest, else the start of the message, up to 255 characters. |
 | `activity_format` | `html` is the default, `text` the alternative. |
 
 Type and status are option names, not numbers, and must be active on the site.

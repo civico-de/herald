@@ -36,7 +36,7 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, HookInterfac
   private $listener = NULL;
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   protected function setUp(): void {

@@ -19,33 +19,44 @@ use PHPUnit\Framework\TestCase;
 class DigestSearchesTest extends TestCase implements HeadlessInterface, TransactionalInterface {
 
   /**
-   * The snippet line of each shipped display, by search name without the period;
-   * a search without one row loops over its rows.
+   * The snippet line and chart of each shipped display, by search name without the
+   * period; bars stand in for the rows, a histogram follows them.
    */
   private const SNIPPETS = [
-    'Herald_Digest_Contributions' => [TRUE, 'Sum: {$x.sum|crmMoney}, Count: {$x.count}'],
+    'Herald_Digest_Contributions' => [TRUE, 'Sum: {$x.sum|crmMoney}, Count: {$x.count}', ''],
     'Herald_Digest_Contributions_By_Form' => [
       FALSE,
       'Form: {$row.form}, Sum: {$row.sum|crmMoney}, Count: {$row.count}',
+      'herald_bars:"sum":"form":"money"',
     ],
     'Herald_Digest_Contributions_By_Financial_Type' => [
       FALSE,
       'Financial type: {$row.financial_type}, Sum: {$row.sum|crmMoney}, Count: {$row.count}',
+      'herald_bars:"sum":"financial_type":"money"',
     ],
     'Herald_Digest_Line_Items' => [
       FALSE,
       'Item: {$row.item}, Price: {$row.price|crmMoney}, Quantity: {$row.quantity}, Sum: {$row.sum|crmMoney}',
+      'herald_bars:"sum":"item":"money"',
     ],
-    'Herald_Digest_Contribution_Amounts' => [FALSE, 'Amount: {$row.amount|crmMoney}'],
-    'Herald_Digest_Activities' => [FALSE, 'Type: {$row.type}, Status: {$row.status}, Count: {$row.count}'],
-    'Herald_Digest_Contributions_Pending' => [TRUE, 'Sum: {$x.sum|crmMoney}, Count: {$x.count}'],
-    'Herald_Digest_Activities_Overdue' => [FALSE, 'Type: {$row.type}, Count: {$row.count}'],
+    'Herald_Digest_Contribution_Amounts' => [FALSE, 'Amount: {$row.amount|crmMoney}', 'herald_histogram:"amount"'],
+    'Herald_Digest_Activities' => [
+      FALSE,
+      'Type: {$row.type}, Status: {$row.status}, Count: {$row.count}',
+      'herald_bars:"count":"type,status"',
+    ],
+    'Herald_Digest_Contributions_Pending' => [TRUE, 'Sum: {$x.sum|crmMoney}, Count: {$x.count}', ''],
+    'Herald_Digest_Activities_Overdue' => [
+      FALSE,
+      'Type: {$row.type}, Count: {$row.count}',
+      'herald_bars:"count":"type"',
+    ],
   ];
 
   private int $contact;
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   protected function setUp(): void {
@@ -131,17 +142,22 @@ class DigestSearchesTest extends TestCase implements HeadlessInterface, Transact
       'Herald_Digest_',
     )) as $display) {
       self::assertNull(SearchSource::problem($display['id']), $display['name']);
-      [$single, $line] = self::SNIPPETS[(string) preg_replace(
-        '/_(Yesterday|Last_Week)|_Table$/',
+      [$single, $line, $chart] = self::SNIPPETS[(string) preg_replace(
+        '/_(' . implode('|', array_keys(ShippedSearches::PERIODS)) . ')|_Table$/',
         '',
         $display['name'],
       )];
+      $loop = $single ? $line : "{foreach from=\$x.rows item=row}\n• {$line}\n{/foreach}";
       $snippets[$display['name']] = [
-        $single ? $line : "{foreach from=\$x.rows item=row}\n• {$line}\n{/foreach}",
+        match (TRUE) {
+          $chart === '' => $loop,
+          str_starts_with($chart, 'herald_bars') => "<pre>{\$x.rows|{$chart}}</pre>",
+          default => "{$loop}\n<pre>{\$x.rows|{$chart}}</pre>",
+        },
         Snippet::search('x', SearchSource::placeholders($display['id']))['snippet'],
       ];
     }
-    self::assertCount(14, $snippets);
+    self::assertCount(50, $snippets);
     foreach ($snippets as $display => [$expected, $actual]) {
       self::assertSame($expected, $actual, $display);
     }
@@ -186,11 +202,46 @@ class DigestSearchesTest extends TestCase implements HeadlessInterface, Transact
     self::assertEquals([10, 30], $amounts);
   }
 
-  public function testTheActivitySearchesCountWhatIsNotDeleted(): void {
+  public function testEachPeriodEndsWhereItsNameSays(): void {
+    foreach ([
+      '2026-10-14 08:00:00' => 70,
+      '2026-10-13 12:00:00' => 40,
+      '2026-10-08 12:00:00' => 8,
+      '2026-10-07 12:00:00' => 7,
+      '2026-10-01 12:00:00' => 1,
+      '2026-09-30 12:00:00' => 900,
+      '2026-01-02 12:00:00' => 2000,
+      '2025-12-31 12:00:00' => 30_000,
+      '2026-10-16 12:00:00' => 500_000,
+    ] as $date => $amount) {
+      $this->contribution($date, $amount);
+    }
+
+    $sums = [];
+    foreach (array_keys(ShippedSearches::PERIODS) as $period) {
+      $sums[$period] = self::values("Herald_Digest_Contributions_{$period}")['sum'];
+    }
+    self::assertEquals(
+      [
+        'Today' => 70,
+        'Yesterday' => 40,
+        'This_Week' => 110,
+        'Last_Week' => 15,
+        'Last_7_Days' => 118,
+        'This_Month' => 126,
+        'Last_Month' => 900,
+        'This_Year' => 3026,
+      ],
+      $sums,
+    );
+  }
+
+  public function testTheActivitySearchesCountWorkThatIsNotDeleted(): void {
     $this->activity('2026-10-13 09:00:00', 'Meeting', 'Completed');
     $this->activity('2026-10-13 15:00:00', 'Meeting', 'Completed');
     $this->activity('2026-10-13 11:00:00', 'Phone Call', 'Scheduled');
     $this->activity('2026-10-13 11:00:00', 'Meeting', 'Completed', deleted: TRUE);
+    $this->activity('2026-10-13 11:00:00', 'herald_notification', 'Scheduled');
     $this->activity('2026-10-05 11:00:00', 'Meeting', 'Completed');
     $this->activity('2026-10-01 11:00:00', 'Meeting', 'Scheduled');
     $this->activity('2026-10-01 11:00:00', 'Meeting', 'Completed');
@@ -227,17 +278,12 @@ class DigestSearchesTest extends TestCase implements HeadlessInterface, Transact
     finally {
       \Civi::service('settings_manager')->flush();
     }
-    self::assertSame(
-      [
-        'SavedSearch_Herald_Digest_Activities_Yesterday',
-        'SearchDisplay_Herald_Digest_Activities_Yesterday_Table',
-        'SavedSearch_Herald_Digest_Activities_Last_Week',
-        'SearchDisplay_Herald_Digest_Activities_Last_Week_Table',
-        'SavedSearch_Herald_Digest_Activities_Overdue',
-        'SearchDisplay_Herald_Digest_Activities_Overdue_Table',
-      ],
-      $declared,
-    );
+    $expected = [];
+    foreach ([...array_keys(ShippedSearches::PERIODS), 'Overdue'] as $period) {
+      $expected[] = "SavedSearch_Herald_Digest_Activities_{$period}";
+      $expected[] = "SearchDisplay_Herald_Digest_Activities_{$period}_Table";
+    }
+    self::assertSame($expected, $declared);
     self::assertContains('CiviContribute', \Civi::settings()->get('enable_components'));
   }
 

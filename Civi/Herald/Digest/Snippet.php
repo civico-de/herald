@@ -32,13 +32,20 @@ final class Snippet {
   }
 
   /**
-   * A search with one row is read directly, any other is looped over.
+   * A search with one row is read directly. A grouped one is drawn as bars, one
+   * per group; any other is looped over, with a histogram of its values.
    *
-   * @param array{fields: list<Field>, single: bool} $search
+   * @param array{fields: list<Field>, single: bool, grouped: bool} $search
    * @return Guide
    */
   public static function search(string $name, array $search): array {
     $fields = $search['fields'];
+    $rows = $name . '.' . Placeholders::ROWS;
+    $snippet = match (TRUE) {
+      $search['single'] => self::line($name, $fields),
+      $search['grouped'] => ChartSnippet::bars($name, $fields) ?? self::loop($rows, $fields),
+      default => rtrim(self::loop($rows, $fields) . "\n" . ChartSnippet::histogram($name, $fields)),
+    };
     return [
       'placeholders' => [
         ...self::placeholders($name, $fields),
@@ -47,9 +54,7 @@ final class Snippet {
           'label' => E::ts('Every row, with the names above'),
         ],
       ],
-      'snippet' => $search['single']
-        ? self::line($name, $fields)
-        : self::loop($name . '.' . Placeholders::ROWS, $fields),
+      'snippet' => $snippet,
     ];
   }
 

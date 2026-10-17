@@ -24,7 +24,7 @@ class PublishTest extends TestCase implements HeadlessInterface, HookInterface, 
   private const WORKFLOW = 'herald_test_publish';
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function setUp(): void {
@@ -139,7 +139,7 @@ class PublishTest extends TestCase implements HeadlessInterface, HookInterface, 
     $this->assertSame(
       2,
       (int) \CRM_Core_DAO::singleValueQuery(
-        "SELECT COUNT(DISTINCT JSON_UNQUOTE(JSON_EXTRACT(delivery, '$.email_subject'))) FROM civicrm_herald_buffer",
+        "SELECT COUNT(DISTINCT JSON_UNQUOTE(JSON_EXTRACT(delivery, '$.subject'))) FROM civicrm_herald_buffer",
       ),
     );
   }

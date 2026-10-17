@@ -20,7 +20,7 @@ class CRM_Herald_BufferSchemaUpgradeTest extends TestCase implements HeadlessInt
   private const SCHEMA = 'schema/HeraldBufferedAlert.entityType.php';
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   private function upgrade(string $step): void {

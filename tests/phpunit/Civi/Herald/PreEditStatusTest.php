@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
 class PreEditStatusTest extends TestCase implements HeadlessInterface, TransactionalInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   /**

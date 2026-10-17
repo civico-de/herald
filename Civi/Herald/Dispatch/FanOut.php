@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Dispatch;
 
+use Civi\Herald\Channel\ChannelInterface;
 use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
@@ -42,7 +43,11 @@ final class FanOut {
     $extras = ChannelConfig::subscriberSafe(ChannelConfig::of($params));
     self::sendEach('recipient', array_map(
       static fn (array $recipient): array => [
-        static fn () => $registry->get($recipient['channel'])->send($body, array_merge($extras, $recipient['config'])),
+        static fn () => self::sendTo(
+          $registry->get($recipient['channel']),
+          $body,
+          array_merge($extras, $recipient['config']),
+        ),
         ['contact_id' => $recipient['contact_id'], 'channel' => $recipient['channel']],
       ],
       $recipients,
@@ -60,7 +65,7 @@ final class FanOut {
       throw new NoRecipientsException('herald: address-list mode requires action parameter "email_addresses".');
     }
     $channel = ($registry ?? ChannelRegistry::default())->get('email');
-    $config = ChannelConfig::of($params);
+    $config = ChannelSubject::forChannel($channel, ChannelConfig::of($params));
     unset($config['email_addresses']);
     self::sendEach('address', array_map(
       static fn (string $address): array => [
@@ -113,6 +118,13 @@ final class FanOut {
         $lastError,
       ));
     }
+  }
+
+  /**
+   * @param array<string, mixed> $config
+   */
+  private static function sendTo(ChannelInterface $channel, string $body, array $config): void {
+    $channel->send($body, ChannelSubject::forChannel($channel, $config));
   }
 
 }

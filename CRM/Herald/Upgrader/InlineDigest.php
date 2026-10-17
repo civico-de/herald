@@ -10,7 +10,7 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Digests that older releases kept inside rule action and job parameters
- * become a HeraldDigest with its own message template and sources; the
+ * become a HeraldDigest with its own subject, text and sources; the
  * parameters keep only delivery settings and `digest`.
  */
 final class CRM_Herald_Upgrader_InlineDigest {
@@ -51,19 +51,13 @@ final class CRM_Herald_Upgrader_InlineDigest {
       $parts[] =
         ($blockTitle === '' ? '' : '<b>' . CRM_Herald_Upgrader_InlineTemplate::text($blockTitle) . "</b>\n") . $text;
     }
-    $templateId = Cast::toInt(
-      \Civi\Api4\MessageTemplate::create(checkPermissions: FALSE)
-        ->setValues([
-          'msg_title' => mb_substr($label, 0, 255),
-          'msg_subject' => CRM_Herald_Upgrader_InlineDelivery::subject($params, $blocks, $sources, $title),
-          'msg_html' => implode("\n\n", array_filter($parts, static fn (string $part): bool => $part !== '')),
-          'is_active' => TRUE,
-        ])
-        ->execute()
-        ->single()['id'],
-    );
     $digestId = \Civi\Api4\HeraldDigest::create(checkPermissions: FALSE)
-      ->setValues(['name' => $name, 'title' => $title, 'message_template_id' => $templateId])
+      ->setValues([
+        'name' => $name,
+        'title' => $title,
+        'msg_subject' => CRM_Herald_Upgrader_InlineDelivery::subject($params, $blocks, $sources, $title),
+        'msg_html' => implode("\n\n", array_filter($parts, static fn (string $part): bool => $part !== '')),
+      ])
       ->execute()
       ->single()['id'];
     \Civi\Api4\HeraldDigestSource::save(checkPermissions: FALSE)

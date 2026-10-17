@@ -23,7 +23,7 @@ class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInt
   private array $capturedRequests = [];
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function setUp(): void {

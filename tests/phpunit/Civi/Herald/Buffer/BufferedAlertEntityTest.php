@@ -21,7 +21,7 @@ class BufferedAlertEntityTest extends TestCase implements HeadlessInterface, Tra
   private const BODY = 'body with contact data';
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   protected function setUp(): void {

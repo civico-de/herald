@@ -16,13 +16,13 @@ use Civi\Herald\Digest\Definition;
  * there is none.
  *
  * Example:
- *   cv api4 Herald.previewDigest 'digest={"name":"daily","title":"Daily","message_template_id":70}' \
+ *   cv api4 Herald.previewDigest 'digest={"name":"daily","title":"Daily","msg_html":"{$donations.sum}"}' \
  *       'sources=[{"name":"donations","type":"search","search_display_id":12}]'
  */
 class PreviewDigest extends AbstractAction {
 
   /**
-   * HeraldDigest values: name, title, message_template_id.
+   * HeraldDigest values: name, title, msg_subject, msg_html.
    * @var array
    * @phpstan-var array<string, mixed>
    */

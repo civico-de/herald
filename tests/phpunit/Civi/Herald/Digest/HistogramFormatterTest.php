@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 class HistogramFormatterTest extends TestCase implements HeadlessInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function testEmptyInputReturnsEmpty(): void {

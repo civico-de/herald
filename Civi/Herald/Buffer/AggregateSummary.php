@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Buffer;
 
+use Civi\Herald\Dispatch\ChannelSubject;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
@@ -106,7 +107,7 @@ final class AggregateSummary {
   ): array {
     $count = count(self::nonBlank($bodies));
     if ($count > 1) {
-      $delivery['email_subject'] = self::line($count, $windowMinutes, $amounts);
+      $delivery[ChannelSubject::KEY] = self::line($count, $windowMinutes, $amounts);
     }
     return $delivery;
   }

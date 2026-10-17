@@ -22,7 +22,7 @@ return [
         'api_entity' => 'HeraldDigest',
         'api_params' => [
           'version' => 4,
-          'select' => ['id', 'title', 'name', 'message_template_id.msg_title'],
+          'select' => ['id', 'title', 'name', 'msg_subject'],
           'orderBy' => ['title' => 'ASC'],
         ],
       ],
@@ -67,8 +67,8 @@ return [
             ['type' => 'field', 'key' => 'name', 'label' => E::ts('Name'), 'sortable' => TRUE],
             [
               'type' => 'field',
-              'key' => 'message_template_id.msg_title',
-              'label' => E::ts('Message template'),
+              'key' => 'msg_subject',
+              'label' => E::ts('Subject'),
               'sortable' => TRUE,
             ],
             [

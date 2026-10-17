@@ -38,9 +38,9 @@ final class SearchSource {
 
   /**
    * The placeholder name, header and data type of each named column in
-   * display order, and whether the search yields one row.
+   * display order, whether the search yields one row and whether it groups.
    *
-   * @return array{fields: list<Field>, single: bool}
+   * @return array{fields: list<Field>, single: bool, grouped: bool}
    * @throws DigestProblem
    */
   public static function placeholders(int $displayId): array {
@@ -55,7 +55,7 @@ final class SearchSource {
         'type' => $search['types'][$columns[$index]['key']] ?? NULL,
       ];
     }
-    return ['fields' => $fields, 'single' => $search['single']];
+    return ['fields' => $fields, 'single' => $search['single'], 'grouped' => $search['grouped']];
   }
 
   /**

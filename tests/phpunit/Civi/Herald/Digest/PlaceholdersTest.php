@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 class PlaceholdersTest extends TestCase implements HeadlessInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   /**

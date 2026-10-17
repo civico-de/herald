@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 class CRM_Herald_Upgrader_DigestJobsTest extends TestCase implements HeadlessInterface, TransactionalInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   private function job(string $parameters): int {

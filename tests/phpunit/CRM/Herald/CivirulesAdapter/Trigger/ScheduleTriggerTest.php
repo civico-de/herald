@@ -37,7 +37,7 @@ class CRM_Herald_CivirulesAdapter_Trigger_ScheduleTriggerTest extends TestCase i
   private array $contacts = [];
 
   public function setUpHeadless(): \Civi\Test\CiviEnvBuilder {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   protected function tearDown(): void {
@@ -53,9 +53,6 @@ class CRM_Herald_CivirulesAdapter_Trigger_ScheduleTriggerTest extends TestCase i
       CRM_Core_DAO::executeQuery('DELETE FROM civirule_rule WHERE id = %1', [1 => [$rule, 'Integer']]);
     }
     \Civi\Api4\HeraldDigest::delete(checkPermissions: FALSE)->addWhere('name', '=', 'herald_test_weekly')->execute();
-    \Civi\Api4\MessageTemplate::delete(checkPermissions: FALSE)
-      ->addWhere('msg_title', '=', 'Herald test: herald_test_weekly')
-      ->execute();
     parent::tearDown();
   }
 

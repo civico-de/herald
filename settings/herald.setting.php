@@ -23,7 +23,7 @@ return [
       'Ordered contribution-source rules (contains, prefix, or regex); the first match wins. Empty disables normalization.',
     ),
     'help_text' => E::ts(
-      'Each rule has match, type, and label keys. Regex matches use PHP preg_match syntax including delimiters.',
+      'Each entry has entity, field, rules (match, type, label) and fallback keys. Regex matches use the database syntax without delimiters.',
     ),
     'title' => E::ts('Contribution Source Normalization'),
   ],

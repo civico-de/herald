@@ -21,7 +21,7 @@ class CheckScheduleTest extends TestCase implements HeadlessInterface, Transacti
   private const MONDAY_8 = ['weekdays' => [1], 'hour' => 8];
 
   public function setUpHeadless(): \Civi\Test\CiviEnvBuilder {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   protected function tearDown(): void {

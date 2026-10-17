@@ -20,7 +20,7 @@ use PHPUnit\Framework\TestCase;
 class SearchSourceTest extends TestCase implements HeadlessInterface, TransactionalInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   protected function setUp(): void {
@@ -88,6 +88,7 @@ class SearchSourceTest extends TestCase implements HeadlessInterface, Transactio
           ['name' => 'kontakte_gesamt', 'label' => 'Kontakte gesamt', 'type' => 'Integer'],
         ],
         'single' => FALSE,
+        'grouped' => TRUE,
       ],
       SearchSource::placeholders($id),
     );
@@ -109,6 +110,7 @@ class SearchSourceTest extends TestCase implements HeadlessInterface, Transactio
           ['name' => 'newest', 'label' => 'Newest', 'type' => 'Timestamp'],
         ],
         'single' => TRUE,
+        'grouped' => FALSE,
       ],
       SearchSource::placeholders($id),
     );
@@ -139,7 +141,7 @@ class SearchSourceTest extends TestCase implements HeadlessInterface, Transactio
 
     self::assertSame(['name' => 'Herald Test A', 'rows' => [['name' => 'Herald Test A']]], SearchSource::values($id));
     self::assertSame(
-      ['fields' => [['name' => 'name', 'label' => 'Name', 'type' => 'String']], 'single' => FALSE],
+      ['fields' => [['name' => 'name', 'label' => 'Name', 'type' => 'String']], 'single' => FALSE, 'grouped' => FALSE],
       SearchSource::placeholders($id),
     );
   }

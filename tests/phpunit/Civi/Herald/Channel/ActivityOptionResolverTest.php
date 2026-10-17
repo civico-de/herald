@@ -18,7 +18,7 @@ use PHPUnit\Framework\TestCase;
 class ActivityOptionResolverTest extends TestCase implements HeadlessInterface, TransactionalInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function testResolvesTheInstallationValue(): void {

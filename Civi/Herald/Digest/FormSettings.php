@@ -8,12 +8,12 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Settings of the Angular module heraldDigest (CRM.heraldDigest): the schema
- * defaults the digest form gives a new source.
+ * defaults the digest form gives a new source, and the ready-made sources it offers.
  */
 final class FormSettings {
 
   /**
-   * @return array{sourceDefaults: array<string, mixed>}
+   * @return array{sourceDefaults: array<string, mixed>, readyMade: array<string, mixed>}
    */
   public static function angular(): array {
     /** @var list<array<string, mixed>> $fields */
@@ -23,7 +23,17 @@ final class FormSettings {
       ->addWhere('default_value', 'IS NOT NULL')
       ->execute()
       ->getArrayCopy();
-    return ['sourceDefaults' => Cast::namedOnly(array_column($fields, 'default_value', 'name'))];
+    return [
+      'sourceDefaults' => Cast::namedOnly(array_column($fields, 'default_value', 'name')),
+      'readyMade' => [
+        'figures' => ShippedSearches::figureLabels(),
+        'periods' => array_map(
+          static fn (string $label): string => mb_strtoupper(mb_substr($label, 0, 1)) . mb_substr($label, 1),
+          ShippedSearches::periodLabels(),
+        ),
+        'displays' => ShippedSearches::available(),
+      ],
+    ];
   }
 
 }

@@ -151,7 +151,7 @@ if (class_exists(\Civi\Api4\Herald::class)) {
 |---|---|---|---|
 | Herald: Flush alert aggregation buffer | yes | Always | Sends the aggregated groups whose window has passed. |
 | Herald: Run check monitor | yes | Always | Runs the [Check monitor](monitor.md). |
-| Herald.notifyDigest | no, create it yourself | Hourly with sendHour | Sends a digest without a rule, see [Without a rule](recipes.md#without-a-rule). |
+| Herald.notifyDigest | no, create it yourself | Hourly with sendHour, or Always with sendHour and daily | Sends a digest without a rule, see [Without a rule](recipes.md#without-a-rule). |
 
 Both shipped jobs take a lock, so a run that overlaps with another one does not send twice.
 

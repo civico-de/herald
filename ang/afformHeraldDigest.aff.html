@@ -1,14 +1,16 @@
 <af-form ctrl="afform">
   <af-entity type="HeraldDigest" name="HeraldDigest1" label="Digest" actions="{create: true, update: true}" security="RBAC" url-autofill="1" />
+  <div herald-digest-intro></div>
   <fieldset af-fieldset="HeraldDigest1" class="af-container">
     <af-field name="title" />
     <af-field name="name" defn="{help_post: 'Lowercase letters, digits and underscores. Rules and scripts pick the digest by this name.'}" />
-    <af-field name="message_template_id" defn="{required: true}" />
     <fieldset class="af-container" af-title="Sources">
-      <div af-join="HeraldDigestSource" actions="{update: true, delete: true}" af-repeat="Add source" class="af-container af-container-style-pane">
+      <div af-join="HeraldDigestSource" actions="{update: true, delete: true}" af-repeat="Add source" class="af-container herald-digest-sources">
         <div herald-digest-source class="af-container">
+          <div herald-digest-source-header></div>
           <af-field name="name" />
-          <af-field name="type" />
+          <af-field name="type" defn="{input_type: 'Hidden'}" />
+          <div herald-digest-source-kind></div>
           <div herald-digest-source-type="search" class="af-container">
             <af-field name="search_display_id" />
           </div>
@@ -18,6 +20,10 @@
           <div herald-digest-placeholders="HeraldDigest1"></div>
         </div>
       </div>
+    </fieldset>
+    <fieldset class="af-container" af-title="Message">
+      <af-field name="msg_subject" />
+      <af-field name="msg_html" defn="{required: true}" />
     </fieldset>
     <fieldset class="af-container" af-title="Preview">
       <div herald-digest-preview="HeraldDigest1"></div>

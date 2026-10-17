@@ -21,7 +21,7 @@ class SettingsPageTest extends TestCase implements HeadlessInterface {
   private const MASKED_INPUT = 'password';
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function testEveryScalarSettingIsOnTheAdminPage(): void {

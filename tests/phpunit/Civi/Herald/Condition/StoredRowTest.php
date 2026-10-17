@@ -20,7 +20,7 @@ class StoredRowTest extends TestCase implements HeadlessInterface, Transactional
   private const MULTI = 'preferred_communication_method';
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function testADisabledOptionStillResolvesToItsName(): void {

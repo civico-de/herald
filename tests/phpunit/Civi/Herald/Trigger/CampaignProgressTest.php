@@ -16,12 +16,7 @@ use PHPUnit\Framework\TestCase;
 class CampaignProgressTest extends TestCase implements HeadlessInterface, TransactionalInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()
-      ->installMe(__DIR__)
-      ->callback(static function () {
-        \CRM_Core_BAO_ConfigSetting::enableComponent('CiviCampaign');
-      }, 'enableCiviCampaign')
-      ->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function testTheProgressReadsTitleAndGoalOfTheCampaign(): void {

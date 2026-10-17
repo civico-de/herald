@@ -21,10 +21,7 @@ class CRM_Herald_CivirulesAdapter_ActionDelegationTest extends TestCase implemen
   TransactionalInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()
-      ->install('org.civicoop.civirules')
-      ->installMe(__DIR__)
-      ->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function testSendNotificationReachesTheDispatcher(): void {

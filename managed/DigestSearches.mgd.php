@@ -2,18 +2,19 @@
 
 declare(strict_types = 1);
 
+use Civi\Herald\Digest\ShippedSearches;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
  * Searches with a table display each, for digest sources: contributions and
- * activities per period, generated from $periods. None outputs contact data.
+ * activities per period. ShippedSearches lists them for the form. None outputs contact data.
  * Contribution searches exist only while CiviContribute is enabled.
  */
-$periods = [
-  'Yesterday' => ['filter' => 'previous.day', 'label' => E::ts('yesterday')],
-  'Last_Week' => ['filter' => 'previous.week', 'label' => E::ts('last week')],
-];
+$periods = [];
+foreach (ShippedSearches::periodLabels() as $key => $label) {
+  $periods[$key] = ['filter' => ShippedSearches::PERIODS[$key], 'label' => $label];
+}
 
 /**
  * A search and its table display. $query holds entity, params (APIv4), columns
@@ -78,7 +79,13 @@ $contribution = static fn (string $status): array => [
   ['is_test', '=', FALSE],
   ['is_template', '=', FALSE],
 ];
-$activity = [['is_deleted', '=', FALSE], ['is_test', '=', FALSE], ['is_current_revision', '=', TRUE]];
+// herald's own notifications are messages, not work: they would count as overdue.
+$activity = [
+  ['is_deleted', '=', FALSE],
+  ['is_test', '=', FALSE],
+  ['is_current_revision', '=', TRUE],
+  ['activity_type_id:name', '!=', 'herald_notification'],
+];
 
 $declarations = [];
 foreach ($periods as $key => $period) {

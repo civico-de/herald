@@ -1,9 +1,38 @@
-.herald-digest .herald-digest-snippet {
+.herald-digest .herald-digest-snippet,
+af-field[name="msg_html"] textarea {
   font-family: monospace;
   width: 100%;
   max-width: 60em;
   display: block;
   margin: 0 0 0.5em;
+}
+
+/* One card per source; the theme's tokens keep light and dark mode readable. */
+.herald-digest-sources > [af-repeat-item] {
+  border: var(--crm-border, 1px solid #c2c0c0);
+  border-radius: var(--crm-l-radius, 0.25rem);
+  background: var(--crm-paper, #fff);
+  padding: var(--crm-l-reg, 1rem);
+  margin-bottom: var(--crm-l-reg, 1rem);
+}
+
+/* Replaced by the labelled button of herald-digest-source-header. */
+#bootstrap-theme .herald-digest-sources > [af-repeat-item] > .af-repeat-remove-btn {
+  display: none;
+}
+
+.herald-digest-source-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--crm-l-reg, 1rem);
+  margin-bottom: var(--crm-l-medium, 0.5rem);
+  padding-bottom: var(--crm-l-medium, 0.5rem);
+  border-bottom: var(--crm-border, 1px solid #c2c0c0);
+}
+
+.herald-digest-source-header .herald-digest-source-title {
+  margin: 0;
 }
 
 .herald-digest .herald-digest-copied {
@@ -17,18 +46,33 @@
   background: #fff;
 }
 
-/* The theme's dark buttons put white on #919297 (3.1:1). */
+/* The theme's dark buttons put white on #919297 (3.1:1); it reads the colours from these variables. */
 @media (prefers-color-scheme: dark) {
-  .herald-digest .btn,
-  .herald-digest .btn:focus {
-    color: #fff;
-    background-color: #55565b;
-    border-color: #55565b;
+  afform-herald-digest .btn:not(.btn-danger) {
+    --crm-primary-color: #55565b;
+    --crm-primary-text-color: #fff;
   }
 
-  .herald-digest .btn:hover {
-    color: #fff;
-    background-color: #67686d;
-    border-color: #67686d;
+  afform-herald-digest .btn:not(.btn-danger):hover,
+  afform-herald-digest .btn:not(.btn-danger):focus {
+    --crm-primary-color: #67686d;
   }
+}
+
+#bootstrap-theme .herald-digest-ready-made af-field[name="search_display_id"] {
+  display: none;
+}
+
+#bootstrap-theme .herald-digest-source-kind {
+  margin: 0 0 var(--crm-l-reg);
+  padding: 0;
+  border: 0;
+}
+
+#bootstrap-theme .herald-digest-source-kind legend {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: inherit;
+  font-weight: bold;
 }

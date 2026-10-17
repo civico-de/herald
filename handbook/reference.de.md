@@ -151,7 +151,7 @@ if (class_exists(\Civi\Api4\Herald::class)) {
 |---|---|---|---|
 | Herald: Sammelpuffer für Meldungen leeren | ja | Always (bei jedem Cron-Lauf) | Sendet die gesammelten Gruppen, deren Fenster abgelaufen ist. |
 | Herald: Check-Monitor ausführen | ja | Always (bei jedem Cron-Lauf) | Führt den [Check-Monitor](monitor.md) aus. |
-| Herald.notifyDigest | nein, legen Sie ihn selbst an | Hourly mit sendHour | Verschickt einen Report ohne Regel, siehe [Ohne Regel](recipes.md#ohne-regel). |
+| Herald.notifyDigest | nein, legen Sie ihn selbst an | Hourly mit sendHour, oder Always mit sendHour und daily | Verschickt einen Report ohne Regel, siehe [Ohne Regel](recipes.md#ohne-regel). |
 
 Beide mitgelieferten Jobs setzen eine Sperre. Ein Lauf, der sich mit einem anderen überschneidet, sendet daher nicht doppelt.
 

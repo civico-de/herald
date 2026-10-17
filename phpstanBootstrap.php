@@ -53,9 +53,12 @@ spl_autoload_register(static fn (string $class): bool => $ckDaoBase($class, __DI
 
 /**
  * Autoload one extension directory in the civix layout: CRM_* and api_* by
- * underscore, Civi\* PSR-4, plus its own vendor/.
+ * underscore, Civi\* PSR-4, plus its own vendor/. Its root goes on the include
+ * path as civix's config hook puts it there, for classes that require their
+ * bundled packages by a relative path.
  */
 $ckRegister = static function (string $ckDir) use ($ckDaoBase): void {
+  set_include_path($ckDir . PATH_SEPARATOR . get_include_path());
   if (is_file($ckDir . '/vendor/autoload.php')) {
     require_once $ckDir . '/vendor/autoload.php';
   }

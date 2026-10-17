@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
 class CiviRulesVersionCheckTest extends TestCase implements HeadlessInterface, TransactionalInterface {
 
   public function setUpHeadless(): \Civi\Test\CiviEnvBuilder {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function testTheInstalledCiviRulesReportsNothing(): void {

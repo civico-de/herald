@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Dispatch;
 
+use Civi\Herald\Channel\ChannelRegistry;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -88,26 +89,49 @@ class ChannelConfigTest extends TestCase {
     );
   }
 
-  public function testTemplateSubjectBecomesEmailSubjectDefault(): void {
-    $params = ChannelConfig::withSubject(
-      ['channel' => 'email'],
-      '✅ 42,50 € — Stripe',
-    );
-    $this->assertSame('✅ 42,50 € — Stripe', $params['email_subject']);
+  /**
+   * @return array<string, array{string, string}>
+   */
+  public static function subjectKeys(): array {
+    return [
+      'email' => ['email', 'email_subject'],
+      'activity' => ['activity', 'activity_subject'],
+      'ntfy' => ['ntfy', 'ntfy_title'],
+      'pushover' => ['pushover', 'pushover_title'],
+    ];
   }
 
-  public function testExplicitEmailSubjectWinsOverTemplateSubject(): void {
-    $params = ChannelConfig::withSubject(
-      ['email_subject' => 'Manual subject'],
-      'Template subject',
+  /**
+   * @dataProvider subjectKeys
+   */
+  public function testTheTemplateSubjectReachesEachChannelUnderItsOwnKey(string $channel, string $key): void {
+    $config = ChannelSubject::forChannel(
+      ChannelRegistry::default()->get($channel),
+      ChannelSubject::withSubject(['channel' => $channel], '✅ 42,50 € — Stripe'),
     );
-    $this->assertSame('Manual subject', $params['email_subject']);
+    $this->assertSame('✅ 42,50 € — Stripe', $config[$key]);
+    $this->assertArrayNotHasKey(ChannelSubject::KEY, $config);
+  }
+
+  public function testAChannelWithoutASubjectGetsNone(): void {
+    $config = ChannelSubject::forChannel(
+      ChannelRegistry::default()->get('telegram'),
+      ChannelSubject::withSubject(['chat_id' => '42'], 'Template subject'),
+    );
+    $this->assertSame(['chat_id' => '42'], $config);
+  }
+
+  public function testExplicitSubjectKeyWinsOverTemplateSubject(): void {
+    $config = ChannelSubject::forChannel(
+      ChannelRegistry::default()->get('activity'),
+      ChannelSubject::withSubject(['activity_subject' => 'Manual subject'], 'Template subject'),
+    );
+    $this->assertSame('Manual subject', $config['activity_subject']);
   }
 
   public function testNoTemplateSubjectLeavesParamsUntouched(): void {
     foreach ([NULL, ''] as $subject) {
-      $params = ChannelConfig::withSubject(['channel' => 'email'], $subject);
-      $this->assertArrayNotHasKey('email_subject', $params);
+      $this->assertSame(['channel' => 'email'], ChannelSubject::withSubject(['channel' => 'email'], $subject));
     }
   }
 

@@ -5,7 +5,7 @@ declare(strict_types = 1);
 use CRM_Herald_ExtensionUtil as E;
 
 /**
- * A digest: one message template filled from its sources (HeraldDigestSource).
+ * A digest: a subject and text filled from its sources (HeraldDigestSource).
  * Rules and Herald.notifyDigest name it by `name`.
  */
 return [
@@ -15,7 +15,7 @@ return [
   'getInfo' => fn () => [
     'title' => E::ts('Herald Digest'),
     'title_plural' => E::ts('Herald Digests'),
-    'description' => E::ts('A summary message: one message template filled from searches and extension sections.'),
+    'description' => E::ts('A summary message: subject and text filled from searches and extension sections.'),
     'log' => FALSE,
     'label_field' => 'title',
   ],
@@ -52,20 +52,21 @@ return [
       'input_type' => 'Text',
       'required' => TRUE,
     ],
-    // Required on save (DigestRules); a deleted template leaves the digest to fail at send.
-    'message_template_id' => [
-      'title' => E::ts('Message Template'),
-      'sql_type' => 'int unsigned',
-      'input_type' => 'EntityRef',
-      'description' => E::ts('Subject and text of the digest, with the values of its sources as placeholders.'),
-      // User-driven templates only; autocomplete drops a NULL `filter`.
+    // Named like MessageTemplate's fields: APIv4 stores these verbatim instead of encoding < and >.
+    'msg_subject' => [
+      'title' => E::ts('Subject'),
+      'sql_type' => 'text',
+      'input_type' => 'Text',
+      'description' => E::ts('Placeholders work here too. Left empty, the title is the subject.'),
+    ],
+    // Required on save (DigestRules).
+    'msg_html' => [
+      'title' => E::ts('Text'),
+      'sql_type' => 'longtext',
+      'input_type' => 'TextArea',
+      'description' => E::ts('HTML and Smarty, with the values of the sources as placeholders.'),
       'input_attrs' => [
-        'where' => [['workflow_name', 'IS NULL']],
-      ],
-      'entity_reference' => [
-        'entity' => 'MessageTemplate',
-        'key' => 'id',
-        'on_delete' => 'SET NULL',
+        'rows' => 20,
       ],
     ],
   ],

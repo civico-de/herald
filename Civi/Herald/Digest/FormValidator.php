@@ -28,7 +28,10 @@ final class FormValidator extends AutoService implements HookInterface {
       // The record being edited is named in the form args, not in the submitted fields.
       $ids = self::list($request->getArgs()[$afName] ?? NULL);
       foreach (self::list($e->getSubmittedValues()[$afName] ?? NULL) as $i => $record) {
-        array_map($e->addError(...), self::problems(self::named($record), self::id($ids[$i] ?? NULL)));
+        $record = self::named($record);
+        array_map($e->addError(...), self::problems($record, self::id($ids[$i] ?? NULL)));
+        // A refused form saves nothing, so remembering its text is harmless.
+        ComposedText::remember(self::named($record['fields'] ?? NULL));
       }
     }
   }
@@ -46,8 +49,8 @@ final class FormValidator extends AutoService implements HookInterface {
       self::list(self::named($record['joins'] ?? NULL)['HeraldDigestSource'] ?? NULL),
     );
     $digest = Definition::of($fields, $sources);
-    // A missing template is already the field's problem.
-    $composed = array_diff((new Composer())->check($digest)['problems'], [DigestRules::noTemplate($digest)]);
+    // A missing text is already the field's problem.
+    $composed = array_diff((new Composer())->check($digest)['problems'], [DigestRules::noText($digest)]);
     return array_values(array_unique([...array_values(DigestRules::recordProblems($fields, $id)), ...$composed]));
   }
 

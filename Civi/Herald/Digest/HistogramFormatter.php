@@ -47,18 +47,11 @@ class HistogramFormatter {
     if ($maxCount === 0) {
       return E::ts('(no data)');
     }
-    $labelWidth = max([0, ...array_map(static fn ($b) => mb_strlen($b['label']), $buckets)]);
-    $lines = [];
-    foreach ($buckets as $bucket) {
-      $lines[] = sprintf(
-        '%s %s %d (%s)',
-        $bucket['label'] . str_repeat(' ', $labelWidth - mb_strlen($bucket['label'])),
-        str_repeat('█', (int) round(($bucket['count'] / $maxCount) * $maxBlocks)),
-        $bucket['count'],
-        NiceNumber::label($bucket['sum']),
-      );
-    }
-    return implode("\n", $lines);
+    return TextBars::render(array_map(static fn (array $bucket): array => [
+      'labels' => [$bucket['label']],
+      'value' => $bucket['count'] . ' (' . NiceNumber::label($bucket['sum']) . ')',
+      'size' => (float) $bucket['count'],
+    ], array_values($buckets)), $maxBlocks);
   }
 
 }

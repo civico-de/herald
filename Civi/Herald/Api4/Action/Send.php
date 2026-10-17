@@ -8,6 +8,7 @@ use Civi\Api4\Generic\AbstractAction;
 use Civi\Api4\Generic\Result;
 use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Channel\PlainText;
+use Civi\Herald\Dispatch\ChannelSubject;
 
 /**
  * Deliver an already-rendered message through one channel; the entry point
@@ -77,7 +78,12 @@ class Send extends AbstractAction {
     $schema = $channel->getConfigSchema();
     $unknown = array_values(array_diff(array_keys($this->config), array_keys($schema)));
 
-    $config = self::applySemantics($this->config, $channel->getSemanticFields(), $this->subject, $this->format);
+    $config = ChannelSubject::withSemantics(
+      $this->config,
+      $channel->getSemanticFields(),
+      $this->subject,
+      $this->format,
+    );
 
     $channel->send($this->format === 'text' ? PlainText::toHtml($this->message) : $this->message, $config);
 
@@ -87,27 +93,6 @@ class Send extends AbstractAction {
       'message_length' => strlen($this->message),
       'unknown_config_keys' => $unknown,
     ];
-  }
-
-  /**
-   * An explicit entry in $config wins over the semantic value.
-   *
-   * @param array<string, mixed> $config
-   * @param array<string, string> $semanticFields
-   * @return array<string, mixed>
-   */
-  public static function applySemantics(array $config, array $semanticFields, string $subject, string $format): array {
-    $values = ['subject' => $subject, 'format' => $format];
-    foreach ($values as $semantic => $value) {
-      if ($value === '' || !isset($semanticFields[$semantic])) {
-        continue;
-      }
-      $key = $semanticFields[$semantic];
-      if (!isset($config[$key])) {
-        $config[$key] = $value;
-      }
-    }
-    return $config;
   }
 
 }

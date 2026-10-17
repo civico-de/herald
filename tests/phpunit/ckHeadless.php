@@ -15,10 +15,18 @@ declare(strict_types = 1);
  * registry extensions. A dependency the site does not have is an install
  * error, not a silent skip.
  *
+ * Civi\Test reuses the scratch database while the step signatures match, and
+ * an install() step signs only the key; a no-op step signed with the
+ * extension's install files rebuilds it when one of them changes.
+ *
+ * $optional names extensions the code integrates with but does not require;
+ * they install after <requires>, before the extension itself.
+ *
  * Template-managed (rewritten by ckinit --update); chain further steps:
  *   ck_headless()->sqlFile(__DIR__ . '/fixtures.sql')->apply();
+ *   ck_headless('org.example.optional')->apply();
  */
-function ck_headless(): \Civi\Test\CiviEnvBuilder {
+function ck_headless(string ...$optional): \Civi\Test\CiviEnvBuilder {
   ck_restore_core_foreign_keys();
   $info = ck_extension_info(dirname(__DIR__, 2));
   $builder = \Civi\Test::headless();
@@ -28,9 +36,16 @@ function ck_headless(): \Civi\Test\CiviEnvBuilder {
   foreach ($info->requires->ext ?? [] as $required) {
     $builder = $builder->install([trim((string) $required)]);
   }
+  foreach ($optional as $key) {
+    $builder = $builder->install([$key]);
+  }
   $builder = $builder->install([trim((string) $info['key'])]);
-  // Last step, so it drains what every earlier step queued.
-  $builder = $builder->callback('ck_discard_bootstrap_status', 'ck-discard-bootstrap-status');
+  // Last step, so it drains what every earlier step queued. Its signature
+  // carries the install files, so editing them rebuilds the test database.
+  $builder = $builder->callback(
+    'ck_discard_bootstrap_status',
+    'ck-discard-bootstrap-status;' . ck_install_signature(dirname(__DIR__, 2), $info),
+  );
   if (!$builder instanceof \Civi\Test\CiviEnvBuilder) {
     throw new RuntimeException('ck_headless: callback() did not return the builder');
   }
@@ -60,6 +75,45 @@ function ck_restore_core_foreign_keys(): void {
       throw new RuntimeException('ck_headless: could not restore the core foreign keys');
     }
   });
+}
+
+/**
+ * A content hash of the files that decide what install() produces: info.xml,
+ * the main file, the upgrader class, every *.mgd.php, and schema/, xml/, sql/.
+ * Dot directories, vendor/ and node_modules/ belong to other packages or tools.
+ * Hashed once per process: setUpHeadless() runs before every test.
+ */
+function ck_install_signature(string $dir, SimpleXMLElement $info): string {
+  /** @var array<string, string> $signatures */
+  static $signatures = [];
+  if (isset($signatures[$dir])) {
+    return $signatures[$dir];
+  }
+  $stems = array_filter([trim((string) $info->file), str_replace(['_', '\\'], '/', trim((string) $info->upgrader))]);
+  $files = ['info.xml', ...array_map(static fn (string $stem): string => $stem . '.php', $stems)];
+  $tree = new RecursiveIteratorIterator(new RecursiveCallbackFilterIterator(
+    new RecursiveDirectoryIterator($dir, FilesystemIterator::SKIP_DOTS),
+    static fn (SplFileInfo $item): bool => (
+      !$item->isDir()
+      || !(
+        str_starts_with($item->getFilename(), '.') || in_array($item->getFilename(), ['vendor', 'node_modules'], TRUE)
+      )
+    ),
+  ));
+  /** @var SplFileInfo $item */
+  foreach ($tree as $item) {
+    $relative = substr($item->getPathname(), strlen($dir) + 1);
+    if (str_ends_with($relative, '.mgd.php') || preg_match('@^(schema|xml|sql)/@', $relative) === 1) {
+      $files[] = $relative;
+    }
+  }
+  $files = array_unique($files);
+  sort($files, SORT_STRING);
+  $digest = '';
+  foreach (array_filter($files, static fn (string $relative): bool => is_file($dir . '/' . $relative)) as $relative) {
+    $digest .= $relative . "\0" . hash_file('sha256', $dir . '/' . $relative) . "\n";
+  }
+  return $signatures[$dir] = 'ck-install-files:' . hash('sha256', $digest);
 }
 
 /**

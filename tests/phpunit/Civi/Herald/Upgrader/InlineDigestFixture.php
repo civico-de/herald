@@ -68,8 +68,8 @@ trait InlineDigestFixture {
     self::assertSame([], (new Composer())->check($digest)['problems']);
     return [
       'title' => $digest['title'],
-      'subject' => (string) $digest['template']['msg_subject'],
-      'html' => (string) $digest['template']['msg_html'],
+      'subject' => $digest['msg_subject'],
+      'html' => $digest['msg_html'],
       'sources' => $sources,
     ];
   }

@@ -67,9 +67,9 @@ Mit cv:
 cv api4 --in=json Setting.set <<'JSON'
 {"values": {"herald_source_normalization": [
   {"match": "Bank TX", "type": "contains", "label": "Bank transfer"},
-  {"match": "Ueberweisung", "type": "prefix", "label": "Bank transfer"},
-  {"match": "/^pi_[A-Za-z0-9]+$/", "type": "regex", "label": "Stripe"}
-]}}
+  {"match": "Transfer", "type": "prefix", "label": "Bank transfer"},
+  {"match": "^pi_[A-Za-z0-9]+$", "type": "regex", "label": "Stripe"}
+]}]}
 JSON
 ```
 
@@ -125,7 +125,7 @@ Ein Report, der zu einer festen Zeit verschickt wird, ist eine CiviRules-Regel m
 
 Ein wöchentlicher Beitragsreport jeden Montag um 8:00 Uhr:
 
-1. Legen Sie unter Mailings » Nachrichtenvorlagen im Reiter „User-driven Messages“ eine Vorlage „Wöchentliche Beiträge“ an. Legen Sie unter Administrieren » Herald » Reports einen Report mit dem Titel „Wöchentliche Beiträge“, dem Namen `weekly_contributions` und dieser Vorlage an. Geben Sie ihm eine Quelle `spenden` mit der Anzeige „Report: Beiträge letzte Woche“, kopieren Sie den Textbaustein aus dem Formular in die Vorlage und prüfen Sie die Vorschau.
+1. Legen Sie unter Administrieren » Herald » Reports einen Report mit dem Titel „Wöchentliche Beiträge“ und dem Namen `weekly_contributions` an. Geben Sie ihm eine Quelle `spenden` mit der Anzeige „Report: Beiträge letzte Woche“, kopieren Sie den Textbaustein aus dem Formular in den Text und prüfen Sie die Vorschau.
 2. Legen Sie eine CiviRules-Regel an und wählen Sie den Trigger „Herald: Schedule“.
 3. Wählen Sie im Formular des Triggers unter „Wochentage“ den Montag und unter „Uhrzeit“ 08:00. Bleibt „Wochentage“ leer, wird der Report jeden Tag verschickt. Die Uhrzeit gilt in der Zeitzone von CiviCRM.
 4. Fügen Sie die Aktion „Herald: Send digest“ hinzu, wählen Sie den Report, und setzen Sie den Kanal und bei Telegram die Chat-ID.

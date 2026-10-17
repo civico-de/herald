@@ -26,7 +26,7 @@ class ContextVarsBuildTest extends TestCase implements HeadlessInterface, Transa
   private array $shadowed = [];
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   protected function tearDown(): void {

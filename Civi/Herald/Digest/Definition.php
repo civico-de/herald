@@ -8,12 +8,10 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
- * A digest as Composer takes it: name, title, the values of its message
- * template (NULL once the template is deleted) and its sources.
+ * A digest as Composer takes it: name, title, subject and text, and its sources.
  *
- * @phpstan-type Template array{msg_subject: string, msg_html: string, msg_text: string}
  * @phpstan-type Source array{name: string, type: string, search_display_id: ?int, section_key: ?string}
- * @phpstan-type Digest array{name: string, title: string, template: ?Template, sources: list<Source>}
+ * @phpstan-type Digest array{name: string, title: string, msg_subject: string, msg_html: string, sources: list<Source>}
  */
 final class Definition {
 
@@ -23,7 +21,7 @@ final class Definition {
    */
   public static function load(string $name): array {
     $digest = \Civi\Api4\HeraldDigest::get(checkPermissions: FALSE)
-      ->addSelect('id', 'name', 'title', 'message_template_id')
+      ->addSelect('id', 'name', 'title', 'msg_subject', 'msg_html')
       ->addWhere('name', '=', $name)
       ->execute()
       ->first();
@@ -48,11 +46,11 @@ final class Definition {
    * @return Digest
    */
   public static function of(array $digest, array $sources): array {
-    $templateId = self::idOf($digest['message_template_id'] ?? NULL);
     return [
       'name' => Cast::toString($digest['name'] ?? ''),
       'title' => Cast::toString($digest['title'] ?? ''),
-      'template' => $templateId === NULL ? NULL : self::template($templateId),
+      'msg_subject' => Cast::toString($digest['msg_subject'] ?? ''),
+      'msg_html' => Cast::toString($digest['msg_html'] ?? ''),
       'sources' => array_map(self::source(...), $sources),
     ];
   }
@@ -62,30 +60,6 @@ final class Definition {
    */
   public static function idOf(mixed $value): ?int {
     return in_array($value, [NULL, ''], TRUE) ? NULL : Cast::toInt($value);
-  }
-
-  /**
-   * @return Template|null NULL when the template does not exist
-   */
-  public static function template(int $id): ?array {
-    $template = \Civi\Api4\MessageTemplate::get(checkPermissions: FALSE)
-      ->addSelect('msg_subject', 'msg_html', 'msg_text')
-      ->addWhere('id', '=', $id)
-      ->execute()
-      ->first();
-    return is_array($template) ? self::templateValues($template) : NULL;
-  }
-
-  /**
-   * @param array<array-key, mixed> $template
-   * @return Template
-   */
-  public static function templateValues(array $template): array {
-    return [
-      'msg_subject' => Cast::toString($template['msg_subject'] ?? ''),
-      'msg_html' => Cast::toString($template['msg_html'] ?? ''),
-      'msg_text' => Cast::toString($template['msg_text'] ?? ''),
-    ];
   }
 
   /**

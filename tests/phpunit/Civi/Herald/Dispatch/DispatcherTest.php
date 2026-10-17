@@ -21,7 +21,7 @@ class DispatcherTest extends TestCase {
     $raw = ['channel' => 'email', 'template' => 'alert', 'aggregate_minutes' => 15];
     $this->assertNotSame(
       Dispatcher::groupHash($raw),
-      Dispatcher::groupHash(ChannelConfig::withSubject($raw, '✅ Donation #5')),
+      Dispatcher::groupHash(ChannelSubject::withSubject($raw, '✅ Donation #5')),
     );
   }
 

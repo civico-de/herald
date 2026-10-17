@@ -60,9 +60,7 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
   private array $decoys = [];
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()
-      ->install('org.civicoop.civirules')
-      ->installMe(__DIR__)
+    return \Civi\Herald\HeadlessSite::standard()
       ->callback([self::class, 'createReferenceField'], 'herald_form_round_trip_reference_field')
       ->apply();
   }
@@ -321,8 +319,8 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     [$submitted, $expected] = $this->sendFields();
     // A digest brings its own template, subject included.
     unset($submitted['template'], $expected['template']);
-    $submitted['channel_config'] = '{"ntfy_title": "Hi"}';
-    $expected['channel_config'] = ['ntfy_title' => 'Hi'];
+    $submitted['channel_config'] = '{"ntfy_tags": "chart"}';
+    $expected['channel_config'] = ['ntfy_tags' => 'chart'];
     DigestFixture::create('herald_test_round_trip', 'Round trip');
     $this->assertRoundTrip(
       self::ACTION,
@@ -352,7 +350,7 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     $this->assertSame('{"email_subject": "Hi"}', $submitted['channel_config']);
     $this->assertFalse($form->validate());
     $this->assertStringContainsString(
-      'takes its subject from its message template',
+      'has its own subject',
       (string) ($form->_errors['_qf_default'] ?? ''),
     );
   }

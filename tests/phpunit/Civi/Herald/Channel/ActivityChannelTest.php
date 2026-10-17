@@ -20,7 +20,7 @@ class ActivityChannelTest extends TestCase implements HeadlessInterface, HookInt
   private ?array $created = NULL;
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function setUp(): void {

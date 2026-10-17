@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
 class HistogramModifierTest extends TestCase implements HeadlessInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   private const ROWS = [['amount' => 5], ['amount' => '12.50'], ['amount' => NULL], ['amount' => 300]];

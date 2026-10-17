@@ -16,7 +16,7 @@ use PHPUnit\Framework\TestCase;
 class ScheduleDescriptionTest extends TestCase implements HeadlessInterface, TransactionalInterface {
 
   public function setUpHeadless(): \Civi\Test\CiviEnvBuilder {
-    return \Civi\Test::headless()->install('org.civicoop.civirules')->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   /**

@@ -135,7 +135,7 @@ Die Einstellungen sind `herald_ntfy_server`, `herald_ntfy_default_topic` und `he
 | Schlüssel | Bedeutung |
 |---|---|
 | `ntfy_topic` | Topic. Ohne Angabe gilt `herald_ntfy_default_topic`. |
-| `ntfy_title` | Titel der Benachrichtigung. |
+| `ntfy_title` | Titel der Benachrichtigung. Ohne ihn der Betreff der Vorlage oder des Reports. |
 | `ntfy_priority` | 1 für die niedrigste bis 5 für die höchste Priorität, oder einer der Prioritätsnamen von ntfy. |
 | `ntfy_tags` | Kommagetrennte Tags. Emoji-Tag-Namen erscheinen als Emoji. |
 | `ntfy_click` | URL, die sich beim Antippen der Benachrichtigung öffnet. |
@@ -150,7 +150,7 @@ Die Einstellungen sind `herald_pushover_app_token`, das Pflicht ist, und `herald
 | Schlüssel | Bedeutung |
 |---|---|
 | `pushover_user_key` | Benutzer- oder Gruppenschlüssel. Ohne Angabe gilt der Standardschlüssel. |
-| `pushover_title` | Titel der Benachrichtigung. |
+| `pushover_title` | Titel der Benachrichtigung. Ohne ihn der Betreff der Vorlage oder des Reports. |
 | `pushover_priority` | Von -2 für lautlos bis 2 für Notfall. |
 | `pushover_retry` | Nur bei Notfall: Sekunden zwischen den Wiederholungen. Der Standard ist 60, das Minimum 30. |
 | `pushover_expire` | Nur bei Notfall: Sekunden, bis die Wiederholungen enden. Der Standard ist 3600, das Maximum 10800. |
@@ -171,7 +171,7 @@ Die Einstellungen sind `herald_email_from` und `herald_email_default_to`. Die Ab
 |---|---|
 | `email_to` | Empfängeradresse. Ohne Angabe gilt `herald_email_default_to`. |
 | `email_to_name` | Anzeigename zur Empfängeradresse. |
-| `email_subject` | Betreff. Ohne ihn verwenden Aktionen, Topics und Reports den Betreff der Vorlage. Der letzte Ersatz ist „Notification“. |
+| `email_subject` | Betreff. Ohne ihn verwenden Aktionen und Topics den Betreff der Vorlage. Reports verwenden immer ihren eigenen. Der letzte Ersatz ist „Notification“. |
 | `email_format` | `html` ist der Standard und erhält die Zeilenumbrüche der Vorlage. `text` sendet Klartext. |
 | `email_cc` | Kommagetrennte CC-Adressen. |
 | `email_bcc` | Kommagetrennte BCC-Adressen. |
@@ -189,7 +189,7 @@ Der Aktivitätskanal legt eine Benachrichtigung in CiviCRM als Aktivität an und
 | `activity_target_contact_id` | Der Kontakt, um den es in der Aktivität geht. Optional. |
 | `activity_type` | Name des Aktivitätstyps. Der Standard `herald_notification` wird mit herald ausgeliefert. |
 | `activity_status` | Name des Aktivitätsstatus. Der Standard ist `Scheduled`. |
-| `activity_subject` | Betreff. Standard ist der Anfang der Nachricht, bis zu 255 Zeichen. |
+| `activity_subject` | Betreff. Ohne ihn der Betreff der Vorlage oder des Reports, sonst der Anfang der Nachricht, bis zu 255 Zeichen. |
 | `activity_format` | `html` ist der Standard, `text` die Alternative. |
 
 Typ und Status sind Optionsnamen, keine Zahlen, und müssen auf der Site aktiv sein.

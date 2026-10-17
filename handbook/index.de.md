@@ -25,7 +25,7 @@ Eine Benachrichtigung kann an ein einzelnes Ziel gehen, an alle Kontakte, die di
 
 Skripte und andere Extensions können Nachrichten an ein benanntes Topic wie ops schicken. Eine Einstellung legt fest, welchen Kanal und welches Ziel jedes Topic erreicht. Wer eine Nachricht schickt, muss also nie eine Chat-ID oder eine URL kennen.
 
-Ein Report ist eine Nachrichtenvorlage, die aus SearchKit-Anzeigen gefüllt wird, etwa mit den Beiträgen von gestern, und aus Zahlen, die eine andere Extension liefert. Reports richten Sie unter Administrieren » Herald » Reports ein. Meist werden sie täglich oder wöchentlich verschickt, ausgelöst von einer Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
+Ein Report ist ein Betreff und ein Text, die aus SearchKit-Anzeigen gefüllt werden, etwa mit den Beiträgen von gestern, und aus Zahlen, die eine andere Extension liefert. Reports richten Sie unter Administrieren » Herald » Reports ein. Meist werden sie täglich oder wöchentlich verschickt, ausgelöst von einer Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
 
 Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet, wenn ein Check fehlschlägt und wenn er wieder in Ordnung ist, und erinnert an Checks, die weiter fehlschlagen. Siehe [Check-Monitor](monitor.md).
 
@@ -75,7 +75,7 @@ Beim Deinstallieren entfernt herald seine CiviRules-Bausteine, und CiviRules ent
 - [Rezepte](recipes.md) zeigt vollständige Beispiele für Spenden, Ticketverkäufe, Events, Anmeldungen und geplante Reports.
 - [Kanäle](channels.md) beschreibt die Einstellungen, Optionen und Grenzen jedes Kanals.
 - [Zustellung](delivery.md) erklärt Empfänger:innen, Abonnements, Topics, das Sammeln von Meldungen und was passiert, wenn eine Zustellung fehlschlägt.
-- [Reports](digests.md) beschreibt Vorlagen, Quellen, Platzhalter und die mitgelieferten Suchen.
+- [Reports](digests.md) beschreibt Text, Quellen, Platzhalter und die mitgelieferten Suchen.
 - [Check-Monitor](monitor.md) zeigt, wie Sie einen Health-Check beisteuern und die Meldungen feinjustieren.
 - [Referenz](reference.md) listet die CiviRules-Aktionen, -Trigger und -Bedingungen, die API, die geplanten Jobs, die Vorlagen, die Einstellungen und die Hooks auf.
 - [Deployment](deploy.md) erklärt, wie Sie herald aktualisieren, ohne die Schreibvorgänge zu stören, in denen seine Regeln laufen.

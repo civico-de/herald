@@ -17,10 +17,12 @@ use PHPUnit\Framework\TestCase;
 class LocaleReconcileTest extends TestCase implements HeadlessInterface {
 
   public function setUpHeadless() {
-    return \Civi\Test::headless()->installMe(__DIR__)->apply();
+    return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function testAReconcileInAnotherLanguageKeepsThePlaceholders(): void {
+    // A display still missing would be created in German, as on a German site.
+    self::reconcileIn('en_US');
     $display = (int) \Civi\Api4\SearchDisplay::get(checkPermissions: FALSE)
       ->addWhere('name', '=', 'Herald_Digest_Contributions_Yesterday_Table')
       ->execute()
