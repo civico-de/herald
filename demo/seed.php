@@ -29,7 +29,7 @@ if ($coordinator === NULL) {
   $coordinator = Contact::create(checkPermissions: FALSE)
     ->addValue('contact_type', 'Individual')
     ->addValue('first_name', 'Demo')
-    ->addValue('last_name', 'Koordination')
+    ->addValue('last_name', 'Coordinator')
     ->addValue('external_identifier', $externalIdentifier)
     ->execute()
     ->single();
