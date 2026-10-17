@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Admin;
 
+use Civi\Core\Locale;
 use Civi\Test\HeadlessInterface;
 use PHPUnit\Framework\TestCase;
 
@@ -17,7 +18,8 @@ class AfformStringsTest extends TestCase implements HeadlessInterface {
   }
 
   public function testTheDigestFormSpeaksTheSiteLanguage(): void {
-    \CRM_Core_I18n::singleton()->setLocale('de_DE');
+    // Explicit, as negotiating de_DE falls back to en_US on a site without core's German catalogue.
+    (new Locale(['nominal' => 'de_DE', 'ts' => 'de_DE', 'moneyFormat' => 'de_DE', 'uf' => 'de_DE']))->apply();
     try {
       $html = self::digestForm();
     }
