@@ -39,6 +39,14 @@ cv() { # through the dev stack, or directly inside the image (GitLab CI jobs)
   fi
 }
 
+sql() { # sql <query> — tab-separated rows; PII-free queries only (ids, counts, metadata)
+  if [ "${CK_IN_IMAGE:-}" = 1 ]; then
+    command mariadb -h db -N -B -ucivicrm -pcivicrm civicrm -e "$1" 2>/dev/null
+  else
+    (cd "$COMPOSE_DIR" && docker compose exec -T db mariadb -N -B -ucivicrm -pcivicrm civicrm -e "$1" 2>/dev/null)
+  fi
+}
+
 mail_count() { # mail_count <recipient> — mails addressed To: the recipient
   curl -s "$MAILDEV_URL/email" | python3 -c "
 import json, sys
