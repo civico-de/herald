@@ -345,7 +345,11 @@
             <button type="button" class="btn btn-secondary" ng-click="run()" ng-disabled="busy">
               <i class="crm-i fa-eye" aria-hidden="true"></i> {{:: labels.preview }}
             </button>
+            <button type="button" class="btn btn-secondary" ng-click="sendTest()" ng-disabled="busy">
+              <i class="crm-i fa-envelope" aria-hidden="true"></i> {{:: labels.test }}
+            </button>
             <p class="sr-only" aria-live="polite">{{ status }}</p>
+            <p ng-if="sentTo" class="alert alert-success">{{ sentTo }}</p>
             <ul ng-if="preview.problems.length" class="alert alert-warning">
               <li ng-repeat="problem in preview.problems">{{ problem }}</li>
             </ul>
@@ -357,6 +361,7 @@
         link: function (scope, element, attrs, afForm) {
           scope.labels = {
             preview: ts("Preview with today's data"),
+            test: ts("Send a test to me"),
             subject: ts("Subject:"),
             frame: ts("Digest preview"),
           };
@@ -370,16 +375,43 @@
               : ts("The preview is ready.");
             scope.busy = false;
           };
-          scope.run = () => {
+          const formValues = () => {
             const record = (afForm.getData(attrs.heraldDigestPreview) || [])[0] || {};
-            scope.busy = true;
-            scope.status = ts("Composing the preview.");
-            crmApi4("Herald", "previewDigest", {
+            return {
               digest: record.fields || {},
               sources: (record.joins || {}).HeraldDigestSource || [],
-            })
+            };
+          };
+          scope.run = () => {
+            scope.busy = true;
+            scope.sentTo = "";
+            scope.status = ts("Composing the preview.");
+            crmApi4("Herald", "previewDigest", formValues())
               .then((rows) => show(rows[0]))
               .catch((failure) => show({ subject: null, body: null, problems: failed(failure) }));
+          };
+          // Emails the digest as the form holds it to the logged-in user, without saving.
+          scope.sendTest = () => {
+            scope.busy = true;
+            scope.sentTo = "";
+            scope.status = ts("Sending the test.");
+            const showSent = ({ problems, sentTo }) => {
+              if (problems.length) {
+                scope.preview = { subject: null, body: null, problems: problems };
+                scope.shown = false;
+              }
+              scope.sentTo = sentTo;
+              scope.status = sentTo || ts("The digest cannot be composed.");
+              scope.busy = false;
+            };
+            crmApi4("Herald", "sendDigestTest", formValues())
+              .then(([sent]) =>
+                showSent({
+                  problems: sent.problems,
+                  sentTo: sent.sent ? ts("The test was sent to %1.", { 1: sent.to }) : "",
+                }),
+              )
+              .catch((failure) => showSent({ problems: failed(failure), sentTo: "" }));
           };
         },
       };

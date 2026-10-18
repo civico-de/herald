@@ -30,6 +30,7 @@ For news of every new contribution, no digest is needed: a rule sends each one a
 3. Below each source the form lists its placeholders and offers a snippet that uses them, with amounts and dates already formatted. Copy the snippet into the text and change it as you like. Write anything you like between them.
 4. Fill in the subject. Left empty, the digest's title is the subject.
 5. "Preview with today's data" composes the digest as the form holds it. It saves and sends nothing.
+6. "Send a test to me" emails that digest to your own primary address, without saving it, so you see it as it arrives. A digest that does not compose is not sent; the form lists its problems.
 
 The **name** is what rules and scripts use to pick the digest. It takes lowercase letters, digits and underscores, and no two digests share one. Source names start with a lowercase letter, followed by lowercase letters, digits and underscores. They must differ within a digest, and `smarty` is reserved.
 

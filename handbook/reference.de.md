@@ -113,6 +113,7 @@ Die Entität `Herald` bietet diese Aktionen. Die Aktionen erfordern die Berechti
 | reactivateParkedAlerts | ids, optional | Legt geparkte Meldungen zurück in den Puffer. Ohne ids alle. |
 | renderTemplate | workflow, vars | Rendert eine Vorlage, ohne sie zu senden. |
 | previewDigest | digest, sources | Setzt einen Report aus ungespeicherten Werten mit den heutigen Daten zusammen und sendet nichts. Die Vorschau des Report-Formulars ruft sie auf. |
+| sendDigestTest | digest, sources | Setzt wie previewDigest zusammen und schickt das Ergebnis nur an die primäre E-Mail-Adresse des angemeldeten Benutzers. Gibt `sent`, `to` und `problems` zurück; solange es Probleme gibt, wird nichts verschickt. |
 | getDigestPlaceholders | source, digest | Die Platzhalter und der Textbaustein einer Quelle, wie das Report-Formular sie zeigt. |
 | saveTopic | topic, route, previousName | Prüft eine Route und speichert sie in `herald_topics`; mit previousName wird dieses Topic an seinem Platz umbenannt. Die Seite „Topic-Routen“ verwendet diese Aktion. |
 | deleteTopic | topic | Entfernt eine Route aus `herald_topics`. |

@@ -2425,3 +2425,15 @@ msgstr "Feld %1 entfernt."
 #: ang/heraldAdmin/cleaning.js
 msgid "Cleaned fields saved."
 msgstr "Bereinigte Felder gespeichert."
+
+msgid "Send a test to me"
+msgstr "Test an mich senden"
+
+msgid "Sending the test."
+msgstr "Der Test wird verschickt."
+
+msgid "The test was sent to %1."
+msgstr "Der Test wurde an %1 geschickt."
+
+msgid "Your contact has no email address for the test."
+msgstr "Ihr Kontakt hat keine E-Mail-Adresse für den Test."

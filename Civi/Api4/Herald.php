@@ -21,8 +21,9 @@ namespace Civi\Api4;
  * Buffer dead letter — buffered alerts the flush job could not deliver:
  *   cv api4 Herald.getParkedAlerts / Herald.reactivateParkedAlerts
  *
- * The digest form — placeholders of a source, and a preview with today's data:
- *   cv api4 Herald.getDigestPlaceholders / Herald.previewDigest
+ * The digest form — placeholders of a source, a preview with today's data,
+ * and that preview emailed to the logged-in user:
+ *   cv api4 Herald.getDigestPlaceholders / Herald.previewDigest / Herald.sendDigestTest
  *
  * Admin screen saves, validated writes of the array settings (Setting.set
  * stays the unchecked bulk path):
@@ -70,6 +71,11 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
 
   public static function previewDigest(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\PreviewDigest {
     return (new \Civi\Herald\Api4\Action\PreviewDigest(__CLASS__, 'previewDigest'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function sendDigestTest(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\SendDigestTest {
+    return (new \Civi\Herald\Api4\Action\SendDigestTest(__CLASS__, 'sendDigestTest'))
       ->setCheckPermissions($checkPermissions);
   }
 

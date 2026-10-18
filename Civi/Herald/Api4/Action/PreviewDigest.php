@@ -36,13 +36,23 @@ class PreviewDigest extends AbstractAction {
   protected array $sources = [];
 
   public function _run(Result $result): void {
-    $sources = array_values($this->sources);
-    if (array_filter($sources, static fn (mixed $source): bool => !is_array($source)) !== []) {
-      throw new \CRM_Core_Exception('Herald.previewDigest: each source is an object of HeraldDigestSource values.');
-    }
-    $preview = (new Composer())->check(Definition::of($this->digest, $sources));
+    $preview = (new Composer())->check(Definition::of($this->digest, $this->checkedSources()));
     $body = $preview['body'];
     $result[] = ['body' => $body === NULL ? NULL : HtmlLineBreaks::apply($body)] + $preview;
+  }
+
+  /**
+   * @return list<array<string, mixed>>
+   */
+  protected function checkedSources(): array {
+    $sources = array_values($this->sources);
+    if (array_filter($sources, static fn (mixed $source): bool => !is_array($source)) !== []) {
+      throw new \CRM_Core_Exception(sprintf(
+        'Herald.%s: each source is an object of HeraldDigestSource values.',
+        $this->getActionName(),
+      ));
+    }
+    return $sources;
   }
 
 }

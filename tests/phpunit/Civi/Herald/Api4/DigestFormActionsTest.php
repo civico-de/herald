@@ -11,8 +11,8 @@ use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The digest form asks for the placeholders of each source and for a preview
- * of the digest as it holds it.
+ * The digest form asks for the placeholders of each source, for a preview
+ * of the digest as it holds it, and for that digest as a test email.
  *
  * @group headless
  */
@@ -27,6 +27,11 @@ class DigestFormActionsTest extends TestCase implements HeadlessInterface, HookI
 
   public function setUpHeadless() {
     return \Civi\Herald\HeadlessSite::standard()->apply();
+  }
+
+  protected function tearDown(): void {
+    \CRM_Core_Session::singleton()->set('userID', NULL);
+    parent::tearDown();
   }
 
   /**
@@ -125,12 +130,83 @@ class DigestFormActionsTest extends TestCase implements HeadlessInterface, HookI
     Herald::previewDigest(checkPermissions: FALSE)->setDigest(['name' => 'daily'])->setSources(['seats'])->execute();
   }
 
+  public function testTheTestGoesOnlyToTheLoggedInUser(): void {
+    self::logInWith('me@example.org');
+    $sent = Herald::sendDigestTest(checkPermissions: FALSE)
+      ->setDigest([
+        'name' => 'daily',
+        'title' => 'Daily',
+        'msg_subject' => 'Seats {$seats.booked}',
+        'msg_html' => 'Paid: {$seats.paid}',
+      ])
+      ->setSources([self::SEATS])
+      ->execute()
+      ->single();
+
+    self::assertSame(['sent' => TRUE, 'to' => 'me@example.org', 'problems' => []], $sent);
+    $spool = \CRM_Core_DAO::executeQuery(
+      'SELECT recipient_email, headers, body FROM civicrm_mailing_spool',
+    )->fetchAll();
+    self::assertCount(1, $spool);
+    self::assertSame('me@example.org', $spool[0]['recipient_email']);
+    self::assertStringContainsString('Subject: Seats 138', (string) $spool[0]['headers']);
+    self::assertStringContainsString('Paid: 120', (string) $spool[0]['body']);
+  }
+
+  public function testATestThatCannotBeComposedIsNotSent(): void {
+    self::logInWith('me@example.org');
+    $sent = Herald::sendDigestTest(checkPermissions: FALSE)
+      ->setDigest(['name' => 'daily', 'title' => 'Daily', 'msg_html' => '{$seats.bookd}'])
+      ->setSources([self::SEATS])
+      ->execute()
+      ->single();
+
+    self::assertSame(
+      ['sent' => FALSE, 'to' => NULL, 'problems' => ['{$seats.bookd} is not a placeholder of this digest.']],
+      $sent,
+    );
+    self::assertSame(0, (int) \CRM_Core_DAO::singleValueQuery('SELECT COUNT(*) FROM civicrm_mailing_spool'));
+  }
+
+  public function testAUserWithoutAnAddressGetsNoTest(): void {
+    self::logInWith(NULL);
+    $this->expectExceptionMessage('Your contact has no email address for the test.');
+    Herald::sendDigestTest(checkPermissions: FALSE)
+      ->setDigest(['name' => 'daily', 'title' => 'Daily', 'msg_html' => '{$seats.paid}'])
+      ->setSources([self::SEATS])
+      ->execute();
+  }
+
+  private static function logInWith(?string $email): void {
+    \Civi::settings()->set('mailing_backend', [
+      'outBound_option' => \CRM_Mailing_Config::OUTBOUND_OPTION_REDIRECT_TO_DB,
+    ]);
+    \Civi::settings()->set('herald_email_from', '"Herald" <herald@example.org>');
+    \CRM_Core_DAO::executeQuery('DELETE FROM civicrm_mailing_spool');
+    $contact = \Civi\Api4\Contact::create(checkPermissions: FALSE)->setValues([
+      'first_name' => 'Test',
+      'last_name' => 'Admin',
+    ]);
+    if ($email !== NULL) {
+      $contact->addChain('email', \Civi\Api4\Email::create(FALSE)->setValues([
+        'contact_id' => '$id',
+        'email' => $email,
+      ]));
+    }
+    \CRM_Core_Session::singleton()->set('userID', $contact->execute()->single()['id']);
+  }
+
   /**
-   * Both run searches past ACLs, as a digest does.
+   * All three run searches past ACLs, as a digest does.
    */
   public function testOnlyAdministratorsMayAsk(): void {
     \CRM_Core_Config::singleton()->userPermissionClass->permissions = ['access CiviCRM'];
-    foreach ([Herald::getDigestPlaceholders()->setSource(self::SEATS), Herald::previewDigest()] as $action) {
+    $actions = [
+      Herald::getDigestPlaceholders()->setSource(self::SEATS),
+      Herald::previewDigest(),
+      Herald::sendDigestTest(),
+    ];
+    foreach ($actions as $action) {
       try {
         $action->execute();
         self::fail($action->getActionName() . ' ran without administer CiviCRM.');

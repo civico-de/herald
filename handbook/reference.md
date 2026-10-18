@@ -113,6 +113,7 @@ The entity `Herald` offers these actions. The actions need the permission "admin
 | reactivateParkedAlerts | ids, optional | Puts parked alerts back into the buffer. Without ids, all of them. |
 | renderTemplate | workflow, vars | Renders a template without sending it. |
 | previewDigest | digest, sources | Composes a digest from unsaved values with today's data and sends nothing. The digest form's preview calls it. |
+| sendDigestTest | digest, sources | Composes like previewDigest and emails the result to the logged-in user's primary address only. Returns `sent`, `to` and `problems`; nothing is sent while there are problems. |
 | getDigestPlaceholders | source, digest | The placeholders and the snippet of one source, as the digest form shows them. |
 | saveTopic | topic, route, previousName | Validates one route and stores it in `herald_topics`; with previousName it renames that topic in place. The Topic routes screen uses this action. |
 | deleteTopic | topic | Removes one route from `herald_topics`. |

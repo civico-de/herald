@@ -30,6 +30,7 @@ Für eine Nachricht zu jedem neuen Beitrag braucht es keinen Report: Eine Regel 
 3. Unter jeder Quelle listet das Formular ihre Platzhalter und bietet einen Textbaustein an, der sie verwendet, mit bereits formatierten Beträgen und Daten. Kopieren Sie den Baustein in den Text und passen Sie ihn nach Belieben an. Dazwischen schreiben Sie, was Sie möchten.
 4. Füllen Sie den Betreff aus. Bleibt er leer, ist der Titel des Reports der Betreff.
 5. „Vorschau mit heutigen Daten“ setzt den Report so zusammen, wie das Formular ihn gerade enthält. Dabei wird nichts gespeichert und nichts verschickt.
+6. „Test an mich senden“ schickt diesen Report per E-Mail an Ihre eigene primäre Adresse, ohne ihn zu speichern. So sehen Sie ihn, wie er ankommt. Ein Report, der sich nicht zusammensetzen lässt, wird nicht verschickt; das Formular listet seine Probleme.
 
 Über den **Namen** wählen Regeln und Skripte den Report aus. Er besteht aus Kleinbuchstaben, Ziffern und Unterstrichen und muss eindeutig sein. Quellennamen beginnen mit einem Kleinbuchstaben, gefolgt von Kleinbuchstaben, Ziffern und Unterstrichen. Innerhalb eines Reports müssen sie verschieden sein, und `smarty` ist reserviert.
 
