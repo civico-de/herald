@@ -98,8 +98,12 @@ cv() { # cv <args...> — as the web user from the site root; stderr dropped, st
   fi
 }
 
-cv_scr() { # cv_scr <php file on the host> — runs it with cv scr
-  app "f=\$(mktemp --suffix=.php) && cat > \"\$f\" && cv scr \"\$f\"; rc=\$?; rm -f \"\$f\"; exit \$rc" < "$1"
+# cv_scr [--user=<name>] <php file on the host> — runs it with cv scr, as that
+# CiviCRM user when given; inline code: cv_scr /dev/stdin <<< "$code"
+cv_scr() {
+  local user=''
+  case "${1:-}" in --user=*) user=" $(printf '%q' "$1")"; shift ;; esac
+  app "f=\$(mktemp --suffix=.php) && cat > \"\$f\" && cv scr$user \"\$f\"; rc=\$?; rm -f \"\$f\"; exit \$rc" < "$1"
 }
 
 site_key() { cv ev 'echo CIVICRM_SITE_KEY;'; }
