@@ -68,13 +68,15 @@ function ck_forget_signature(): void {
  * schema references a dependency's table then fails its own table lookup.
  * Installing an installed extension is a no-op.
  *
+ * Each install replaces the extension system, so every call asks the current
+ * one: mixins see an extension as being installed only through its manager.
+ *
  * @param list<string> $keys
  */
 function ck_install_in_order(array $keys): void {
-  $manager = \CRM_Extension_System::singleton()->getManager();
   foreach ($keys as $key) {
-    foreach ($manager->findInstallRequirements([$key]) as $each) {
-      $manager->install([$each]);
+    foreach (\CRM_Extension_System::singleton()->getManager()->findInstallRequirements([$key]) as $each) {
+      \CRM_Extension_System::singleton()->getManager()->install([$each]);
     }
   }
 }
