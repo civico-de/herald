@@ -5,6 +5,7 @@ declare(strict_types = 1);
 use Civi\Api4\CiviRulesRule;
 use Civi\Api4\CiviRulesRuleAction;
 use Civi\Api4\CiviRulesRuleCondition;
+use Civi\Herald\Api4\Rows;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
@@ -56,6 +57,33 @@ final class CRM_Herald_CivirulesAdapter_DependentRules {
         ->execute();
     }
     return $ids;
+  }
+
+  /**
+   * Deletes every rule that runs on a herald trigger: CiviRules keeps a trigger
+   * while a rule points at it, and no such rule works once the trigger is gone.
+   *
+   * @return array<int, string> the deleted rules' names by ID
+   */
+  public static function deleteTriggered(): array {
+    if (!CRM_Herald_CivirulesAdapter_Availability::isInstalled()) {
+      return [];
+    }
+    $rules = CiviRulesRule::get(checkPermissions: FALSE)
+      ->addSelect('id', 'name')
+      ->addWhere('trigger_id.class_name', 'LIKE', 'CRM\_Herald\_%')
+      ->addOrderBy('id')
+      ->execute();
+    $names = [];
+    foreach (Rows::of($rules) as $rule) {
+      $names[Cast::toInt($rule['id'])] = Cast::toString($rule['name']);
+    }
+    if ($names !== []) {
+      CiviRulesRule::delete(checkPermissions: FALSE)
+        ->addWhere('id', 'IN', array_keys($names))
+        ->execute();
+    }
+    return $names;
   }
 
 }

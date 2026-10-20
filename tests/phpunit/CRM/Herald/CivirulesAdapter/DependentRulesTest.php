@@ -56,6 +56,34 @@ class CRM_Herald_CivirulesAdapter_DependentRulesTest extends TestCase implements
     self::assertSame([$rule => FALSE], $this->activeById([$rule]));
   }
 
+  public function testDeletesTheRulesOnAHeraldTriggerWithTheirActions(): void {
+    $scheduled = $this->rule($this->scheduleTrigger());
+    $this->addAction($scheduled, $this->foreignAction());
+    $foreign = $this->rule($this->trigger());
+    $this->addAction($foreign, $this->actionId('herald_send'));
+    $name = CiviRulesRule::get(checkPermissions: FALSE)->addWhere('id', '=', $scheduled)->execute()->single()['name'];
+
+    self::assertSame([$scheduled => $name], CRM_Herald_CivirulesAdapter_DependentRules::deleteTriggered());
+    self::assertSame([$foreign => TRUE], $this->activeById([$scheduled, $foreign]));
+    self::assertSame(
+      0,
+      CiviRulesRuleAction::get(checkPermissions: FALSE)->addWhere('rule_id', '=', $scheduled)->execute()->count(),
+    );
+  }
+
+  public function testTheScheduleTriggerCanBeDeletedOnceItsRulesAreGone(): void {
+    $trigger = $this->scheduleTrigger();
+    $this->rule($trigger);
+
+    CRM_Herald_CivirulesAdapter_DependentRules::deleteTriggered();
+    CiviRulesTrigger::delete(checkPermissions: FALSE)->addWhere('id', '=', $trigger)->execute();
+
+    self::assertSame(
+      0,
+      CiviRulesTrigger::get(checkPermissions: FALSE)->addWhere('id', '=', $trigger)->execute()->count(),
+    );
+  }
+
   /**
    * Core disables a module's managed entities on disable; the re-enable reconcile
    * must switch herald's handlers back on.
@@ -90,6 +118,13 @@ class CRM_Herald_CivirulesAdapter_DependentRulesTest extends TestCase implements
         'cron' => FALSE,
         'is_active' => TRUE,
       ])
+      ->execute()
+      ->single()['id'];
+  }
+
+  private function scheduleTrigger(): int {
+    return (int) CiviRulesTrigger::get(checkPermissions: FALSE)
+      ->addWhere('name', '=', 'herald_schedule')
       ->execute()
       ->single()['id'];
   }

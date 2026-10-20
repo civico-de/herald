@@ -20,6 +20,17 @@ class CRM_Herald_Upgrader extends CRM_Herald_Upgrader_Steps {
   }
 
   public function uninstall(): void {
+    $deleted = CRM_Herald_CivirulesAdapter_DependentRules::deleteTriggered();
+    if ($deleted !== []) {
+      Civi::log('herald')->warning(
+        'herald: deleted CiviRules rules that ran on its triggers: '
+          . implode(', ', array_map(
+            static fn (int $id, string $name): string => "{$id} ({$name})",
+            array_keys($deleted),
+            $deleted,
+          )),
+      );
+    }
     $ids = CRM_Herald_CivirulesAdapter_DependentRules::disable();
     if ($ids !== []) {
       Civi::log('herald')->warning(

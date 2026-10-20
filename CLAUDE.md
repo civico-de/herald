@@ -33,7 +33,8 @@ they cannot see:
   - Buffered alerts park after `herald_buffer_max_attempts` (`DeadLetter`).
     Only `Herald.reactivateParkedAlerts` revives them.
   - The flush lock (`AlertBuffer::LOCK_NAME`) prevents double claims.
-  - Uninstall dropping the `schema/` tables is the one sanctioned loss.
+  - Uninstall dropping the `schema/` tables and deleting the rules on a
+    herald trigger (CiviRules keeps a referenced trigger) are the sanctioned losses.
 - **Shipped MessageTemplates** fall back to `update => always`: changing one
   overwrites admin edits on reconcile. Shipped digest displays are
   `update => never`, because their headers are placeholder names.
