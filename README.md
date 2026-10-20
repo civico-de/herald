@@ -81,7 +81,7 @@ cv api4 Herald.publish topic=ops message='Import finished'
 ## Documentation
 
 - [Getting started](https://civico-de.github.io/herald/)
-- [Recipes](https://civico-de.github.io/herald/recipes/): donations, ticket sales, events, signups and scheduled digests
+- [Recipes](https://civico-de.github.io/herald/recipes/): donations, ticket sales, events and signups
 - [Channels](https://civico-de.github.io/herald/channels/): settings, options and limits of each channel
 - [Delivery](https://civico-de.github.io/herald/delivery/): recipients, subscriptions, topics, aggregation and parked alerts
 - [Digests](https://civico-de.github.io/herald/digests/): templates filled from SearchKit displays and extension sections

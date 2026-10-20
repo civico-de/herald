@@ -72,10 +72,10 @@ Beim Deinstallieren entfernt herald seine CiviRules-Bausteine, und CiviRules ent
 
 ## Wie es weitergeht
 
-- [Rezepte](recipes.md) zeigt vollständige Beispiele für Spenden, Ticketverkäufe, Events, Anmeldungen und geplante Reports.
+- [Rezepte](recipes.md) zeigt vollständige Beispiele für Spenden, Ticketverkäufe, Events und Anmeldungen.
 - [Kanäle](channels.md) beschreibt die Einstellungen, Optionen und Grenzen jedes Kanals.
 - [Zustellung](delivery.md) erklärt Empfänger:innen, Abonnements, Topics, das Sammeln von Meldungen und was passiert, wenn eine Zustellung fehlschlägt.
-- [Reports](digests.md) beschreibt Text, Quellen, Platzhalter und die mitgelieferten Suchen.
+- [Reports](digests.md) beschreibt Text, Quellen, Platzhalter, die mitgelieferten Suchen, bereinigte Felder und den zeitgesteuerten Versand.
 - [Check-Monitor](monitor.md) zeigt, wie Sie einen Health-Check beisteuern und die Meldungen feinjustieren.
 - [Referenz](reference.md) listet die CiviRules-Aktionen, -Trigger und -Bedingungen, die API, die geplanten Jobs, die Vorlagen, die Einstellungen und die Hooks auf.
 - [Deployment](deploy.md) erklärt, wie Sie herald aktualisieren, ohne die Schreibvorgänge zu stören, in denen seine Regeln laufen.

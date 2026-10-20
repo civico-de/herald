@@ -43,7 +43,7 @@ The action "Herald: Send digest" sends a digest each time the rule fires. In its
 
 ### Schedule
 
-The trigger "Herald: Schedule" fires once at the chosen hour on the chosen weekdays, in CiviCRM's timezone. It carries no contact. It is meant for actions such as "Herald: Send digest", see [Scheduled digests](recipes.md#scheduled-digests). Its form has two fields:
+The trigger "Herald: Schedule" fires once at the chosen hour on the chosen weekdays, in CiviCRM's timezone. It carries no contact. It is meant for actions such as "Herald: Send digest", see [Scheduled digests](digests.md#scheduled-digests). Its form has two fields:
 
 | Field | Meaning |
 |---|---|
@@ -152,7 +152,7 @@ if (class_exists(\Civi\Api4\Herald::class)) {
 |---|---|---|---|
 | Herald: Flush alert aggregation buffer | yes | Always | Sends the aggregated groups whose window has passed. |
 | Herald: Run check monitor | yes | Always | Runs the [Check monitor](monitor.md). |
-| Herald.notifyDigest | no, create it yourself | Hourly with sendHour, or Always with sendHour and daily | Sends a digest without a rule, see [Without a rule](recipes.md#without-a-rule). |
+| Herald.notifyDigest | no, create it yourself | Hourly with sendHour, or Always with sendHour and daily | Sends a digest without a rule, see [Without a rule](digests.md#without-a-rule). |
 
 Both shipped jobs take a lock, so a run that overlaps with another one does not send twice.
 
@@ -212,7 +212,7 @@ When a lookup fails, herald logs an error and leaves the variable out instead of
 
 | Variable | Content |
 |---|---|
-| contribution | The contribution's fields, such as total_amount, currency, receive_date and source. Cleaned fields show their cleaned value, see [Cleaned fields](recipes.md#cleaned-fields). |
+| contribution | The contribution's fields, such as total_amount, currency, receive_date and source. Cleaned fields show their cleaned value, see [Cleaned fields](digests.md#cleaned-fields). |
 | campaign.title, campaign.total, campaign.count | The contribution's campaign: its title and the total and number of its completed contributions. |
 | campaign.goal, campaign.percent | The campaign's revenue goal and the share reached, rounded to one decimal. Both are 0 when the campaign has no goal. |
 | from_status, to_status | The status names before and after the edit. from_status is empty when the status before the edit is unknown. |
@@ -242,7 +242,7 @@ Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value
 | `herald_topics` | empty | [Topic](delivery.md#topics) routes. |
 | `herald_buffer_max_attempts` | 5 | Failed deliveries before an aggregated group is parked. |
 | `herald_buffer_max_items` | 25 | Messages printed in one aggregated message. 0 prints all. |
-| `herald_cleaned_fields` | empty | Text fields whose values rules group under one name, see [Cleaned fields](recipes.md#cleaned-fields). |
+| `herald_cleaned_fields` | empty | Text fields whose values rules group under one name, see [Cleaned fields](digests.md#cleaned-fields). |
 | `herald_monitor_topic` | ops | The topic for monitor alerts. |
 | `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours`, `herald_monitor_snooze`, `herald_monitor_expected` | see [Tuning](monitor.md#tuning) | Monitor tuning. |
 | `herald_monitor_state` | empty | The monitor's own state. Do not edit it. |

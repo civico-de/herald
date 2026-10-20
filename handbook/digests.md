@@ -99,6 +99,36 @@ herald ships searches you can use as they are. The form offers them as ready-mad
 
 The contribution searches exist only while CiviContribute is enabled. The activity searches leave out herald's own notifications, which the activity channel files as activities. The periods are today, yesterday, this week, last week, last 7 days, this month, last month and this year. Apart from the last 7 days, which include today, they are calendar periods: last week is the previous full week, starting on the first day of the week set in CiviCRM's date settings, this week, this month and this year count up to the moment of sending, and today is the whole day, with activities scheduled for later today. herald replaces these searches on each upgrade, so for another period or a filter, copy one in SearchKit and change the copy. Their displays keep the headers they got at install, in the site's language, and the names follow the headers: a German site has `{$donations.summe}`. A later change of language does not rename them, so digests keep working. The form lists the names of each display.
 
+## Cleaned fields
+
+Free text is often written in many ways. A contribution source holds a payment processor's reference or the transaction prefix of a bank import, so a search grouped by it gives one row per spelling. A cleaned field gives such values one name per group. The setting `herald_cleaned_fields` holds them and is empty by default.
+
+The fields are under Administer » Herald » Cleaned fields. Each block names a record type and one of its text fields, then the rules: the text, how it is matched and the name to show. The arrow buttons change the order in which the rules are tried. "Name for other values" is optional and names every value no rule matches. Saving rejects a field that is not a text field of a record type, a field named twice, an incomplete rule and a regular expression that does not compile.
+
+Each field gets a twin named `herald_clean_<field>`, "(cleaned)" in the field lists, for example `herald_clean_source` on contributions. Searches can show, filter and group by it like any field, with the permission of the field itself. None of the shipped searches uses it. For donations per source, copy "Digest: contributions *period* by form" in SearchKit, group it by the cleaned source instead of the contribution page, and add the copy as a source with "Own search from SearchKit".
+
+The rules apply when a search runs, not when a record is saved. A changed rule therefore regroups past records too, and a digest over last month or this year shows the new groups for the whole period.
+
+Contribution notifications show the cleaned value in place of the raw one, in `{$contribution.source}` and every other cleaned contribution field. Other record types are cleaned in searches only.
+
+With cv:
+
+```bash
+cv api4 --in=json Herald.saveCleanedFields <<'JSON'
+{"fields": [{"entity": "Contribution", "field": "source", "fallback": "", "rules": [
+  {"match": "Bank TX", "type": "contains", "label": "Bank transfer"},
+  {"match": "Transfer", "type": "prefix", "label": "Bank transfer"},
+  {"match": "^pi_[A-Za-z0-9]+$", "type": "regex", "label": "Stripe"}
+]}]}
+JSON
+```
+
+- The rules are tried in order, and the first match wins.
+- The type is contains, prefix or regex. Matching ignores case.
+- A regex uses the database's syntax, without delimiters.
+- An empty value stays empty, also with a name for other values.
+- A malformed rule that reaches the setting through `Setting.set` is left out with a warning in the CiviCRM log, and the other rules still apply. A typo cannot break an alert or a search.
+
 ## Charts
 
 Two modifiers draw a column of a source's rows as a text chart. Put them inside `<pre>`, so the bars line up. The snippet beside a source with several rows already holds the fitting one: for a grouped search the bars alone, since they name every group, and for any other the list followed by a histogram. It charts the last amount column, else the last number.
@@ -144,11 +174,45 @@ The answer holds values, not text: the digest's text formats them, and herald es
 
 ## Sending a digest
 
-- A CiviRules rule with the trigger "Herald: Schedule" and the action "Herald: Send digest" sends a digest at a set hour. [Scheduled digests](recipes.md#scheduled-digests) shows the setup.
+- A CiviRules rule with the trigger "Herald: Schedule" and the action "Herald: Send digest" sends a digest at a set hour, see [Scheduled digests](#scheduled-digests).
 - The action "Herald: Send digest" works with any other trigger too, and sends the digest each time that trigger fires. The action picks the digest from a list and holds the delivery settings.
-- Scripts and the server's crontab can call the API action `Herald.notifyDigest` directly.
+- Scripts, the server's crontab and CiviCRM's scheduled jobs can call the API action `Herald.notifyDigest` directly, see [Without a rule](#without-a-rule).
 
 All three ways support every [delivery mode](delivery.md#delivery-modes). The subject is the digest's own, and a digest without a subject sends its title. Delivery settings therefore take no subject key such as `email_subject` or `activity_subject`.
+
+### Scheduled digests
+
+The trigger "Herald: Schedule" fires once at the chosen hour and carries no contact, so the rule sends one digest, not one per record.
+
+A weekly contribution digest every Monday at 8:00:
+
+1. [Set up a digest](#setting-up-a-digest) with the title "Weekly contributions" and the name `weekly_contributions`. Give it a source `donations` with the display "Digest: contributions last week", copy the snippet the form offers into the text, and check the preview.
+2. Create a CiviRules rule under Administer » CiviRules » Manage Rules and choose the trigger "Herald: Schedule".
+3. In the trigger's form, choose Monday under Weekdays and 08:00 under Time. Leave Weekdays empty to send every day. The time is in CiviCRM's timezone.
+4. Add the action "Herald: Send digest", pick the digest, and set the channel and, for Telegram, the chat ID.
+
+The rule list shows the schedule as "Every Monday at 08:00" and the action as `Sends the digest "Weekly contributions".` For a daily digest, leave Weekdays empty and use the display "Digest: contributions yesterday".
+
+CiviRules checks the trigger each time its scheduled job runs, so the digest goes out with the first cron run after the hour. Whether a slot has been sent is read from the rule's own log:
+
+- If cron misses the hour, the next run catches up. When cron runs every 15 minutes but skips everything between 7:45 and 9:00, the 8 o'clock digest goes out at 9:00.
+- After a longer outage, only the latest slot is sent. Three missed Mondays give one digest, not three.
+- A new rule, or one whose schedule was just saved, never sends for a slot from before that moment.
+- A run counts even when the send fails, for example because the channel is not configured. The error is logged, and the next digest goes out at the next slot.
+
+CiviCRM runs scheduled jobs, the CiviRules job included, only in the Production environment.
+
+### Without a rule
+
+The server's crontab can call `Herald.notifyDigest` at a fixed time. This call is not limited to the Production environment:
+
+```
+0 8 * * 1 cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "digest": "weekly_contributions", "actionParams": {"chat_id": "-1001234567890"}}'
+```
+
+A CiviCRM scheduled job of `Herald.notifyDigest`, set to Hourly with `"sendHour": 8` in its parameters, also works, but it cannot pick weekdays and it can skip a day. An hourly job runs again only once a full hour has passed since its last run. With cron every 15 minutes and a run at 7:45:05, the cron run at 8:45 comes a few seconds too early, the job next runs at 9:00, and the 8 o'clock hour gets no run that day.
+
+Add `"daily": true` and the job can run on every cron run instead: set it to Always with `"sendHour": 8, "daily": true` in its parameters, and the digest goes out with the first cron run at or after 8 o'clock, once a day. With `"skipEmpty": true` it stays unsent on a day its searches found nothing.
 
 `Herald.notifyDigest` takes:
 
@@ -160,51 +224,8 @@ All three ways support every [delivery mode](delivery.md#delivery-modes). The su
 | `daily` | Optional, with `sendHour`. The digest goes out on the first call at or after `sendHour`, once a day, so a scheduled job can call it on every cron run. Later calls that day return `skipped` with `sent_on`. Each set of delivery settings counts on its own. A call counts as the day's send before anything goes out, so a digest that fails or is empty is not tried again until the next day. `daily` without `sendHour` is an error. |
 | `skipEmpty` | Optional. When every source is a search display without rows, the call returns `skipped` with `empty` and sends nothing. A section from an extension always counts as something to report, and so does a digest without sources. A search that only totals, such as a count without grouping, always has one row and never counts as empty. |
 
-```bash
-cv api4 Herald.notifyDigest '{"checkPermissions": false, "digest": "weekly_report", "actionParams": {"chat_id": "-1001234567890"}}'
-```
-
 ### What a change breaks
 
 Rules and scripts pick a digest by its name. After you change a digest's name or delete it, they fail with the message `Digest "weekly_report" does not exist.` until they name another. The rule list shows the same message in place of the digest's title. The title can change freely.
 
 Deleting a source's display leaves the digest without it. It then fails when it is sent, with the message the form would show. Pick another display or remove the source.
-
-## Digests from older releases
-
-Older releases kept a digest inside the settings of its rule action or scheduled job, as a list of blocks. The upgrade turns each of them into a digest record and leaves only the delivery settings and the digest's name in the action. A rule action's digest is named `rule_action_<id>` and takes the rule's title, a job's digest is named `job_<id>` and takes the job's name. You can rename them afterwards. Then pick the digest again in each rule action that sent it, and update the jobs and scripts that name it.
-
-Each old digest gets a text with the header, the block titles and what the blocks printed before: totals, the breakdown, the pending amounts, the campaign progress and the histogram. The blocks become sources:
-
-- A contribution block uses the shipped searches. With a filter or another period than yesterday, it gets copies of them, labelled `Herald: <title>: …`. A campaign filter needs CiviCampaign enabled.
-- A search block gets a new table display of its search, with the search's columns, sort and limit and no pager.
-- A section block keeps its key. Its extension must answer with values by then, see [Sections from other extensions](#sections-from-other-extensions).
-- An email subject from the delivery settings becomes the digest's subject.
-
-The upgrade keeps what the digest counted before:
-
-- An unknown period counted as yesterday and still does. Today, the last 7 and the last 30 days become filters on the copies; the last days end at midnight before the run.
-- Histogram edges that are not ascending numbers are dropped with a warning in the upgrade log, and the histogram picks its own buckets. A negative bucket count becomes 1, and a count of 0 becomes the default 8, with a warning.
-- A status filter of Completed is dropped, because the searches count completed contributions.
-- A block broken down by line item keeps counting items: its totals, pending amounts and campaign progress come from searches on line items, the count is the quantity sold, and a financial type filter picks the items of that type, also out of a mixed cart.
-- A block that used a template of its own gets the default text instead, with a warning in the upgrade log. Copy your wording into the digest's text.
-
-The old templates "Herald: Daily contribution digest", "Weekly contribution digest", "Contribution digest block (composable)" and "Digest block from a search display" are removed.
-
-A digest that cannot be reproduced is left as it was. The upgrade log has the warning "digest left inline, it cannot run until fixed" with the reason, nothing is created for it, and the rule or job fails until it names a digest record. Most of these digests could never have run:
-
-- A block list that is not a JSON array of objects, or a block of unknown type.
-- A section block without a key, or one whose extension still answers with text or not at all.
-- A saved search that no longer exists, or whose entity is gone with its extension.
-- A campaign or financial type that no longer exists.
-
-The others ask for something digest records cannot do:
-
-- A saved search that skips its first rows. A display always starts at the first row.
-- A status filter other than Completed. This includes a Completed filter in a digest that showed the pending amounts without the line item breakdown, because there the filter also applied to the pending amounts.
-
-A delayed action that was already waiting in the CiviRules queue during the upgrade still carries the old settings and fails once. The next time the rule fires, it uses the new settings.
-
-A digest that took its subject and text from a message template gets both copied into the digest. The template stays under Mailings » Message Templates; delete it once nothing else uses it.
-
-The digest form is an Afform, so herald needs the extension Form Core (`org.civicrm.afform`). Enable it before you upgrade herald on a site that does not have it yet.

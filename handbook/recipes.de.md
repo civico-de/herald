@@ -22,7 +22,7 @@ Drei Regeln begleiten eine Spende: sofort bezahlt, als Überweisung angekündigt
 | Sofort bezahlt | Contribution is added | Contribution Status is (not) one of: Completed | Herald: Neuer abgeschlossener Beitrag |
 | Überweisung angekündigt | Contribution is added | Contribution Status is (not) one of: Pending, und Contribution is (not) of Financial Type(s): Donation | Herald: Neuer ausstehender Beitrag |
 | Überweisung eingegangen | Contribution is changed | Herald: Field transition, siehe unten, und Contribution Status is (not) one of: Completed | Herald: Beitragsstatus geändert |
-| Tägliche Zusammenfassung | Herald: Schedule, siehe [Geplante Reports](#geplante-reports) | | Ein Report mit der Anzeige „Report: Beiträge gestern“ |
+| Tägliche Zusammenfassung | Herald: Schedule, siehe [Geplante Reports](digests.md#geplante-reports) | | Ein Report mit der Anzeige „Report: Beiträge gestern“ |
 
 Die ersten drei verwenden die Aktion „Herald: Send notification (generic)“, die tägliche Zusammenfassung „Herald: Send digest“.
 
@@ -53,33 +53,7 @@ Ein Bankimport, der Beiträge im Status Completed anlegt, würde für jede gebuc
 | Operator | Does not contain string (case insensitive) |
 | Value (Wert) | Bank TX |
 
-Dieselbe Quelle kann mit dem umgekehrten Operator auch eine eigene Regel steuern.
-
-### Felder bereinigen
-
-Freitext wird oft unterschiedlich geschrieben. Eine Beitragsquelle enthält etwa die Referenz eines Zahlungsanbieters oder das Transaktionspräfix eines Bankimports, und eine Gruppierung danach ergibt eine Zeile je Schreibweise. Ein bereinigtes Feld gibt solchen Werten einen Namen je Gruppe. Die Einstellung `herald_cleaned_fields` enthält sie und ist standardmäßig leer.
-
-Die Felder finden Sie unter Administrieren » Herald » Bereinigte Felder. Jeder Block nennt einen Datensatztyp und eines seiner Textfelder, darunter die Regeln: den Text, die Art des Vergleichs und den anzuzeigenden Namen. Die Pfeil-Schaltflächen ändern die Reihenfolge, in der die Regeln geprüft werden. „Name für andere Werte“ ist optional und benennt jeden Wert, auf den keine Regel passt. Beim Speichern lehnt die Seite ein Feld ab, das kein Textfeld eines Datensatztyps ist oder zweimal vorkommt, außerdem unvollständige Regeln und reguläre Ausdrücke, die sich nicht kompilieren lassen.
-
-Jedes Feld erhält einen Zwilling namens `herald_clean_<feld>`, in den Feldlisten „(bereinigt)“, etwa `herald_clean_source` bei Beiträgen. Suchen können ihn wie jedes Feld anzeigen, filtern und gruppieren, sodass eine Report-Quelle Beiträge je bereinigter Quelle zählen kann. Beitragsbenachrichtigungen zeigen den bereinigten Wert in `{$contribution.source}` und in jedem anderen bereinigten Beitragsfeld.
-
-Mit cv:
-
-```bash
-cv api4 --in=json Herald.saveCleanedFields <<'JSON'
-{"fields": [{"entity": "Contribution", "field": "source", "fallback": "", "rules": [
-  {"match": "Bank TX", "type": "contains", "label": "Bank transfer"},
-  {"match": "Transfer", "type": "prefix", "label": "Bank transfer"},
-  {"match": "^pi_[A-Za-z0-9]+$", "type": "regex", "label": "Stripe"}
-]}]}
-JSON
-```
-
-- Die Regeln werden der Reihe nach geprüft, und der erste Treffer gewinnt.
-- Der Typ ist contains, prefix oder regex. Die Groß- und Kleinschreibung zählt nicht.
-- Ein regulärer Ausdruck verwendet die Syntax der Datenbank, ohne Begrenzungszeichen.
-- Ein leerer Wert bleibt leer, auch mit einem Namen für andere Werte.
-- Eine fehlerhafte Regel, die über `Setting.set` in die Einstellung gelangt, wird ignoriert, sodass ein Tippfehler weder eine Meldung noch eine Suche verhindern kann.
+Dieselbe Quelle kann mit dem umgekehrten Operator auch eine eigene Regel steuern. Um diese Beiträge in einem Report getrennt zu zählen, geben Sie der Quelle ein [bereinigtes Feld](digests.md#felder-bereinigen).
 
 ## Ticketverkauf
 
@@ -118,48 +92,6 @@ Beide verwenden „Herald: Send notification (generic)“.
 | Neue Mitgliedschaft | Membership is added | Optional der Mitgliedschaftstyp | Herald: Neue Mitgliedschaftsanmeldung |
 | Newsletter-Anmeldung | Contact is added to Group | Group is: die Newsletter-Gruppen | Herald: Neue Gruppen-/Newsletter-Anmeldung |
 
-Die Vorlagen für Registrierung, Stornierung, Mitgliedschaft und Newsletter zeigen den Kontakt mit maskiertem Namen, etwa „Ja** Do*“, die Newsletter-Vorlage zusätzlich mit maskierter E-Mail-Adresse. Das reicht, um in einem Gruppenchat eine Anmeldung zu erkennen oder Spam zu bemerken, ohne preiszugeben, um wen es sich handelt.
+Die Vorlagen für Registrierung, Stornierung, Mitgliedschaft und Newsletter zeigen den Kontakt mit maskiertem Namen, etwa „Ja** Do*“, die Newsletter-Vorlage zusätzlich mit maskierter E-Mail-Adresse, siehe [Triggervariablen](reference.md#triggervariablen). Das reicht, um in einem Gruppenchat eine Anmeldung zu erkennen oder Spam zu bemerken, ohne preiszugeben, um wen es sich handelt.
 
 Anmeldungen kommen nach einem Mailing oder einem Import gehäuft. Ein Sammelfenster von 5 bis 15 Minuten hält den Chat lesbar.
-
-## Geplante Reports
-
-Ein Report, der zu einer festen Zeit verschickt wird, ist eine CiviRules-Regel mit dem Trigger „Herald: Schedule“ und der Aktion „Herald: Send digest“. Der Trigger löst einmal zur gewählten Stunde aus und bezieht sich auf keinen Kontakt. Die Regel verschickt also einen Report und nicht einen pro Datensatz.
-
-Ein wöchentlicher Beitragsreport jeden Montag um 8:00 Uhr:
-
-1. Legen Sie unter Administrieren » Herald » Reports einen Report mit dem Titel „Wöchentliche Beiträge“ und dem Namen `weekly_contributions` an. Geben Sie ihm eine Quelle `spenden` mit der Anzeige „Report: Beiträge letzte Woche“, kopieren Sie den Textbaustein aus dem Formular in den Text und prüfen Sie die Vorschau.
-2. Legen Sie eine CiviRules-Regel an und wählen Sie den Trigger „Herald: Schedule“.
-3. Wählen Sie im Formular des Triggers unter „Wochentage“ den Montag und unter „Uhrzeit“ 08:00. Bleibt „Wochentage“ leer, wird der Report jeden Tag verschickt. Die Uhrzeit gilt in der Zeitzone von CiviCRM.
-4. Fügen Sie die Aktion „Herald: Send digest“ hinzu, wählen Sie den Report, und setzen Sie den Kanal und bei Telegram die Chat-ID.
-
-Die Regelliste zeigt den Zeitplan als „Jeden Montag um 08:00“ und die Aktion als `Verschickt den Report „Wöchentliche Beiträge“.` Für einen täglichen Report lassen Sie „Wochentage“ leer und verwenden die Anzeige „Report: Beiträge gestern“.
-
-CiviRules prüft den Trigger bei jedem Lauf seines geplanten Jobs. Der Report wird also mit dem ersten Cron-Lauf nach der vollen Stunde verschickt. Ob ein Termin schon verschickt wurde, steht im Protokoll der Regel selbst:
-
-- Verpasst Cron die Stunde, holt der nächste Lauf sie nach. Läuft Cron alle 15 Minuten, fällt aber zwischen 7:45 Uhr und 9:00 Uhr aus, wird der Report für 8 Uhr um 9:00 Uhr verschickt.
-- Nach einem längeren Ausfall wird nur der jüngste Termin verschickt. Drei verpasste Montage ergeben einen Report, nicht drei.
-- Eine neue Regel oder eine, deren Zeitplan gerade gespeichert wurde, verschickt nie einen Termin von vor diesem Zeitpunkt.
-- Ein Lauf zählt auch, wenn das Senden fehlschlägt, etwa weil der Kanal nicht eingerichtet ist. Der Fehler wird protokolliert, und der nächste Report wird zum nächsten Termin verschickt.
-
-CiviCRM führt geplante Jobs, auch den von CiviRules, nur in der Umgebung Production aus.
-
-Wie Sie einen Report und seine Quellen einrichten, beschreibt die Seite [Reports](digests.md).
-
-### Ohne Regel
-
-Skripte und die Crontab des Servers können `Herald.notifyDigest` direkt aufrufen, zu einer festen Uhrzeit:
-
-```
-0 8 * * 1 cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "digest": "weekly_contributions", "actionParams": {"chat_id": "-1001234567890"}}'
-```
-
-Dieser Aufruf ist nicht auf die Umgebung Production beschränkt.
-
-Ein geplanter Job von CiviCRM für `Herald.notifyDigest`, auf Hourly (stündlich) gestellt und mit `"sendHour": 8` in den Parametern, funktioniert ebenfalls. Er kann aber keine Wochentage wählen und kann einen Tag auslassen. Ein stündlicher Job läuft erst wieder, wenn seit seinem letzten Lauf eine volle Stunde vergangen ist. Läuft Cron alle 15 Minuten und lief der Job um 7:45:05 Uhr, kommt der Cron-Lauf um 8:45 Uhr ein paar Sekunden zu früh. Der Job läuft erst um 9:00 Uhr wieder, und die Stunde ab 8 Uhr bekommt an diesem Tag keinen Lauf.
-
-Mit `"daily": true` kann der Job stattdessen bei jedem Cron-Lauf laufen: Stellen Sie ihn auf Always und tragen Sie `"sendHour": 8, "daily": true` in die Parameter ein. Der Report wird dann mit dem ersten Cron-Lauf ab 8 Uhr verschickt, einmal am Tag. Mit `"skipEmpty": true` bleibt er an einem Tag aus, an dem seine Suchen nichts gefunden haben. Siehe [Einen Report verschicken](digests.md#einen-report-verschicken).
-
-## Benachrichtigungen pro Person
-
-Wenn mehrere Mitarbeitende unterschiedliche Benachrichtigungen über ihre eigenen Kanäle erhalten möchten, verwenden Sie den Abonnent:innen-Modus statt einer Regel pro Person. Jeder Kontakt wählt einen Kanal und die Arten von Benachrichtigungen, die er möchte, und eine einzige Regel erreicht alle Abonnent:innen. Die Einrichtung und das Profil zur Selbstverwaltung beschreibt der Abschnitt [Abonnements](delivery.md#abonnements).

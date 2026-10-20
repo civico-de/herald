@@ -72,10 +72,10 @@ Uninstalling herald removes its CiviRules building blocks, and CiviRules removes
 
 ## Where to go next
 
-- [Recipes](recipes.md) walks through complete setups for donations, ticket sales, events, signups and scheduled digests.
+- [Recipes](recipes.md) walks through complete setups for donations, ticket sales, events and signups.
 - [Channels](channels.md) covers each channel's settings, options and limits.
 - [Delivery](delivery.md) explains recipients, subscriptions, topics, aggregation and what happens when a delivery fails.
-- [Digests](digests.md) describes the text, sources, placeholders and the shipped searches.
+- [Digests](digests.md) describes the text, sources, placeholders, the shipped searches, cleaned fields and scheduled sending.
 - [Check monitor](monitor.md) shows how to contribute a health check and how to tune the alerts.
 - [Reference](reference.md) lists the CiviRules actions, triggers and conditions, the API, the scheduled jobs, the templates, the settings and the hooks.
 - [Deployment](deploy.md) explains how to update herald without breaking the writes its rules run in.

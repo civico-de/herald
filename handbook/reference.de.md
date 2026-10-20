@@ -43,7 +43,7 @@ Die Aktion „Herald: Send digest“ verschickt bei jedem Auslösen der Regel ei
 
 ### Zeitplan
 
-Der Trigger „Herald: Schedule“ löst an den gewählten Wochentagen einmal zur vollen Stunde aus, in der Zeitzone von CiviCRM, und bezieht sich auf keinen Kontakt. Er ist für Aktionen wie „Herald: Send digest“ gedacht, siehe [Geplante Reports](recipes.md#geplante-reports). Sein Formular hat zwei Felder:
+Der Trigger „Herald: Schedule“ löst an den gewählten Wochentagen einmal zur vollen Stunde aus, in der Zeitzone von CiviCRM, und bezieht sich auf keinen Kontakt. Er ist für Aktionen wie „Herald: Send digest“ gedacht, siehe [Geplante Reports](digests.md#geplante-reports). Sein Formular hat zwei Felder:
 
 | Feld | Bedeutung |
 |---|---|
@@ -152,7 +152,7 @@ if (class_exists(\Civi\Api4\Herald::class)) {
 |---|---|---|---|
 | Herald: Sammelpuffer für Meldungen leeren | ja | Always (bei jedem Cron-Lauf) | Sendet die gesammelten Gruppen, deren Fenster abgelaufen ist. |
 | Herald: Check-Monitor ausführen | ja | Always (bei jedem Cron-Lauf) | Führt den [Check-Monitor](monitor.md) aus. |
-| Herald.notifyDigest | nein, legen Sie ihn selbst an | Hourly mit sendHour, oder Always mit sendHour und daily | Verschickt einen Report ohne Regel, siehe [Ohne Regel](recipes.md#ohne-regel). |
+| Herald.notifyDigest | nein, legen Sie ihn selbst an | Hourly mit sendHour, oder Always mit sendHour und daily | Verschickt einen Report ohne Regel, siehe [Ohne Regel](digests.md#ohne-regel). |
 
 Beide mitgelieferten Jobs setzen eine Sperre. Ein Lauf, der sich mit einem anderen überschneidet, sendet daher nicht doppelt.
 
@@ -212,7 +212,7 @@ Schlägt eine Abfrage fehl, protokolliert herald einen Fehler und lässt die Var
 
 | Variable | Inhalt |
 |---|---|
-| contribution | Die Felder des Beitrags, etwa total_amount, currency, receive_date und source. Bereinigte Felder zeigen ihren bereinigten Wert, siehe [Felder bereinigen](recipes.md#felder-bereinigen). |
+| contribution | Die Felder des Beitrags, etwa total_amount, currency, receive_date und source. Bereinigte Felder zeigen ihren bereinigten Wert, siehe [Felder bereinigen](digests.md#felder-bereinigen). |
 | campaign.title, campaign.total, campaign.count | Die Kampagne des Beitrags: ihr Titel sowie Summe und Anzahl ihrer abgeschlossenen Beiträge. |
 | campaign.goal, campaign.percent | Das Umsatzziel der Kampagne und der erreichte Anteil, auf eine Nachkommastelle gerundet. Beide sind 0, wenn die Kampagne kein Ziel hat. |
 | from_status, to_status | Die Statusnamen vor und nach der Änderung. from_status ist leer, wenn der Status vor der Änderung unbekannt ist. |
@@ -242,7 +242,7 @@ Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'nam
 | `herald_topics` | leer | Die Routen der [Topics](delivery.md#topics). |
 | `herald_buffer_max_attempts` | 5 | Fehlgeschlagene Zustellungen, bevor eine gesammelte Gruppe geparkt wird. |
 | `herald_buffer_max_items` | 25 | Ausgegebene Nachrichten in einer Sammelnachricht. 0 gibt alle aus. |
-| `herald_cleaned_fields` | leer | Textfelder, deren Werte Regeln unter einem Namen gruppieren, siehe [Felder bereinigen](recipes.md#felder-bereinigen). |
+| `herald_cleaned_fields` | leer | Textfelder, deren Werte Regeln unter einem Namen gruppieren, siehe [Felder bereinigen](digests.md#felder-bereinigen). |
 | `herald_monitor_topic` | ops | Das Topic für Meldungen des Monitors. |
 | `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours`, `herald_monitor_snooze`, `herald_monitor_expected` | siehe [Feinabstimmung](monitor.md#feinabstimmung) | Feinabstimmung des Monitors. |
 | `herald_monitor_state` | leer | Der eigene Zustand des Monitors. Nicht bearbeiten. |
