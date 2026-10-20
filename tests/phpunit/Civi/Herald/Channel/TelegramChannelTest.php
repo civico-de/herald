@@ -184,6 +184,26 @@ class TelegramChannelTest extends TestCase implements HeadlessInterface, HookInt
     $channel->send('hi', ['chat_id' => '-1']);
   }
 
+  public function testAFailedRequestDoesNotNameTheToken(): void {
+    $mock = new MockHandler([
+      static fn (\Psr\Http\Message\RequestInterface $request): \GuzzleHttp\Exception\ConnectException => new \GuzzleHttp\Exception\ConnectException(
+        'cURL error 6: Could not resolve host for ' . $request->getUri(),
+        $request,
+      ),
+    ]);
+    $channel = new TelegramChannel(new Client(['handler' => HandlerStack::create($mock)]));
+
+    try {
+      $channel->send('hi', ['chat_id' => '-1']);
+      self::fail('expected the send to fail');
+    }
+    catch (\CRM_Core_Exception $e) {
+      $this->assertStringContainsString('Could not resolve host', $e->getMessage());
+      $this->assertStringNotContainsString('TEST-TOKEN', $e->getMessage());
+      $this->assertNull($e->getPrevious());
+    }
+  }
+
   public function testThrowsWhenChatIdMissing(): void {
     $channel = new TelegramChannel($this->makeMockedClient(new Response(200, [], '{"ok":true}')));
 

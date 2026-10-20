@@ -74,7 +74,9 @@ class TelegramChannel implements ChannelInterface {
       ]);
     }
     catch (\Throwable $e) {
-      throw new \CRM_Core_Exception('herald: Telegram request failed: ' . $e->getMessage(), 0, [], $e);
+      // Guzzle names the request URI in its message, and the URI carries the token.
+      $message = str_replace($token, '***', $e->getMessage());
+      throw new \CRM_Core_Exception('herald: Telegram request failed: ' . $message);
     }
 
     $status = $response->getStatusCode();
