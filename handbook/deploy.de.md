@@ -34,6 +34,10 @@ cv ext:upgrade-db \
 
 rules-reenable.php prüft nicht, ob der Preflight erfolgreich war. Führen Sie es also nie nach einem fehlgeschlagenen Preflight aus. Die Upgrades kommen vor dem Preflight, weil ein Upgrade Handler-Klassen umbenennen kann, die der Preflight anschließend lädt.
 
+Das Upgrade auf benannte Kanäle überführt die bisherigen Kanaleinstellungen, etwa das Telegram-Bot-Token, in Kanäle, die nach ihrem Typ benannt sind: `webhook`, `ntfy`, `email` und `activity`, dazu `telegram` und `pushover`, wo deren Token gesetzt war. Es richtet jede Regelaktion, jeden geplanten Job, jede Topic-Route und jede wartende Meldung, die sich auf eine Einstellung verlassen hat, auf diese Kanäle aus. Token und Header, die eine Regelaktion, ein Job, eine Route oder eine wartende Meldung mitgebracht hat, werden zu einem eigenen Webhook-Kanal, benannt mit `webhook_` und einem Suffix; Zustellungen mit gleichen teilen ihn sich. Andere Kanaleinstellungen in einer Zustellung, etwa `email_from`, wurden dort nie gelesen und entfallen. Prüfen Sie danach Administrieren » Herald » Kanäle. Ein Wert aus `civicrm.settings.php` hat Vorrang vor dem gespeicherten und geht ebenfalls in den Kanal; entfernen Sie diese Zeilen danach, denn herald liest sie nicht mehr. Auf einer Site mit mehreren Domains bekommt jede Domain Kanäle aus ihren eigenen Einstellungen, und die Webhook-Kanäle von Regelaktionen und wartenden Meldungen gibt es in jeder Domain, die eine URL zum Senden hatte: die eigene URL der Zustellung oder sonst die Default-URL der Domain. Den Kanal eines Jobs gibt es nur in der Domain des Jobs. Webhook-Header, die kein JSON-Objekt sind, ließen schon bisher jeden Versand scheitern; ihr Kanal entsteht ohne sie und ausgeschaltet, und das CiviCRM-Log nennt ihn. Setzen Sie die Header im Kanalformular und schalten Sie ihn ein.
+
+Am Tag des Upgrades kann ein Tagesreport, der schon verschickt wurde, ein zweites Mal kommen, und Meldungen, die vor dem Upgrade gepuffert wurden, kommen in einer eigenen Nachricht, getrennt von den danach gepufferten.
+
 ## Was die einzelnen Schritte tun
 
 ### Die Regeln abschalten

@@ -15,18 +15,18 @@ Every herald CiviRules action has a delivery mode. Topic routes take the same pa
 
 | Mode | Recipients | Required parameter |
 |---|---|---|
-| `direct` | The recipient set on the action, or the channel's default setting. This is the default. | none |
+| `direct` | The recipient set on the action, or the channel's default. This is the default. | `channel` |
 | `subscribers` | Every contact who subscribed to a notification type, each through their own channel | `subscription_type` |
 | `group` | Every contact in a CiviCRM group, each through their own channel | `group_id` |
-| `addresses` | A list of email addresses, without any contact records | `email_addresses` |
+| `addresses` | A list of email addresses, without any contact records, through an email channel | `channel`, `email_addresses` |
 
 Any other mode fails the send. The action form does not save a mode without its required parameter.
 
 In subscriber mode, a contact without a chosen channel, or without the recipient that channel needs, is skipped.
 
-In group mode, subscriptions and scopes do not matter. A group member without usable preferences gets an email at their own address instead. That includes a member who chose Telegram but left the chat ID empty.
+In group mode, subscriptions and scopes do not matter. A group member without usable preferences gets an email at their own address instead, through the channel named in the setting "Contact email channel". That includes a member who chose Telegram but left the chat ID empty.
 
-Address mode always sends email. Separate the addresses with commas, semicolons or line breaks. It suits operational recipients who are not contacts.
+Address mode always sends email, through the email channel named on the action. Separate the addresses with commas, semicolons or line breaks. It suits operational recipients who are not contacts.
 
 Deleted and deceased contacts never receive anything. Contacts marked "Do not email" never receive email, whatever the options below say.
 
@@ -37,7 +37,7 @@ Two options apply to the contact modes, subscribers and group:
 | `respect_suspension` | off | Also skip email recipients who opted out or whose address is on hold. |
 | `email_location_type` | primary | Send to the contact's email of this location type. Contacts without one get their primary address. |
 
-An info entry in the CiviCRM log counts the contacts left out, by reason: `suspended`, `scope_mismatch`, `no_channel` (no channel chosen) and `no_recipient` (no address, chat or topic for the channel).
+An info entry in the CiviCRM log counts the contacts left out, by reason: `suspended`, `scope_mismatch`, `no_channel` (no channel chosen, or the chosen channel is gone, inactive or no longer offered to contacts) and `no_recipient` (no address, chat or topic for the channel).
 
 A failed delivery to one recipient does not stop the others. herald logs a warning and moves on to the next contact. The delivery as a whole fails only when every recipient failed, or when there was nobody to send to: no subscriber, an empty group or an empty address list. Once at least one recipient got the message, the delivery counts as done, and herald does not retry the recipients it failed to reach.
 
@@ -47,8 +47,8 @@ Each contact can choose a channel and the notifications they want. herald adds t
 
 | Field | Meaning |
 |---|---|
-| Preferred channel | Telegram, webhook, ntfy, Pushover or email |
-| Telegram chat ID, Pushover user/group key, ntfy topic, Webhook URL | The recipient for the chosen channel. Email needs none and uses the contact's own address. |
+| Preferred channel | One of the channels offered to contacts, see [Configuring a channel](channels.md#configuring-a-channel) |
+| Telegram chat ID, Pushover user/group key, ntfy topic, Webhook URL | The recipient for the type of the chosen channel. Email needs none and uses the contact's own address. |
 | Subscriptions | The notification types the contact wants |
 | Scope: entity type, Scope: entity ID | Optional, see [Scoped subscriptions](#scoped-subscriptions) |
 
@@ -60,15 +60,15 @@ Admins can fill these in on the contact record. For self-service, herald install
 
 CiviCRM opens the profile for the logged-in contact, who can see and edit only their own record.
 
-To use the subscriptions, set an action's delivery mode to "Subscribers" and choose the subscription type. The action's own recipient is ignored in this mode. Only presentation options are passed from the rule to the subscribers' channels:
+To use the subscriptions, set an action's delivery mode to "Subscribers" and choose the subscription type. The action's own recipient is ignored in this mode. Each subscriber's message goes through the channel they chose, with that channel's account, such as its bot. Only presentation options are passed from the rule:
 
 - Telegram: `parse_mode`, `disable_notification`, `disable_web_page_preview`
-- webhook: `webhook_body_format`, `webhook_body_key`
+- webhook: `webhook_method`, `webhook_body_format`, `webhook_body_key`
 - ntfy: `ntfy_title`, `ntfy_priority`, `ntfy_tags`, `ntfy_click`, `ntfy_markdown`
 - Pushover: `pushover_title`, `pushover_priority`, `pushover_sound`, `pushover_url`, `pushover_url_title`, `pushover_html`, `pushover_retry`, `pushover_expire`
 - email: `email_subject`, `email_format`
 
-Recipients, tokens, headers, CC and BCC are never passed on. A contact's webhook URL therefore never receives the site's webhook token.
+Recipients, CC and BCC are never passed on. The headers and token of a webhook channel belong to its default URL, so a contact's own webhook URL never receives them.
 
 herald ships these subscription types:
 
@@ -94,18 +94,18 @@ A preference record without a scope receives everything it subscribed to. The sc
 
 ## Topics
 
-With topics, a publisher names a topic and the setting `herald_topics` decides the channel, the recipient and the aggregation. A script or another extension never needs to know a chat ID or a URL.
+With topics, a publisher names a topic and the setting `herald_topics` decides the channel, the recipient and the aggregation. A CiviRules action can name a topic too: set "Send" to "Through a topic". A script or another extension never needs to know a chat ID or a URL.
 
-The routes are under Administer » Herald » Topic routes. The list shows each topic with its channel, its delivery mode and its aggregation window. "Add topic" and "Edit" open a form with the delivery fields and the options that the topic's channel declares. Keys without a field, such as `channel_config`, go into "Other parameters" as a JSON object. Saving checks the route and stores nothing when it finds a problem: an unregistered channel, a value of the wrong type, a delivery mode without its required parameter or a topic name that is taken. Renaming a topic keeps its place in the list. "Delete" asks first; publishers of a deleted topic then use the default route.
+The routes are under Administer » Herald » Topic routes. The list shows each topic with its channel, its delivery mode and its aggregation window. "Add topic" and "Edit" open a form with the delivery fields and the options that the topic's channel declares. Keys without a field, such as options of another channel type, go into "Other parameters" as a JSON object. Saving checks the route and stores nothing when it finds a problem: a channel that is not configured, an account field such as `bot_token`, a value of the wrong type, a delivery mode without its required parameter or a topic name that is taken. Renaming a topic keeps its place in the list. The column "Used by" lists the rule actions, scheduled jobs and the monitor that name the topic. Such a topic cannot be deleted or renamed. "Delete" asks first; scripts that still publish to a deleted topic then use the default route.
 
 To set all routes at once with cv:
 
 ```bash
 cv api4 --in=json Setting.set <<'JSON'
 {"values": {"herald_topics": {
-  "default": {"channel": "telegram"},
-  "ops":     {"channel": "telegram", "chat_id": "-100…"},
-  "revenue": {"channel": "telegram", "chat_id": "-100…", "aggregate_minutes": 5}
+  "default": {"channel": "ops_bot"},
+  "ops":     {"channel": "ops_bot", "chat_id": "-100…"},
+  "revenue": {"channel": "ops_bot", "chat_id": "-100…", "aggregate_minutes": 5}
 }}}
 JSON
 ```
@@ -118,7 +118,7 @@ cv api4 Herald.publish topic=revenue template=herald_contribution_alert_complete
     vars='{"contribution":{"total_amount":50}}' amount=50
 ```
 
-A route entry takes the same parameters as an action, including `channel_config`, `delivery_mode` and `aggregate_minutes`. herald merges the topic's entry over the default entry. The channel defaults to Telegram. A topic without an entry and without a default entry fails with the error "no route for topic".
+A route entry takes the same parameters as an action, including `delivery_mode` and `aggregate_minutes`, but no account fields. herald merges the topic's entry over the default entry. A merged route without a channel fails with "the route of topic … names no channel". A topic without an entry and without a default entry fails with the error "no route for topic".
 
 `Herald.publish` takes either `message` or a `template` with `vars`, never both. A message is HTML, like a rendered template. With `format=text` the message is plain text: characters such as `<` and `&` appear as they are, also on channels that render HTML. The format applies to messages only. `amount` adds to the total in the header of an aggregated message.
 

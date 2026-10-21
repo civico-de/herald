@@ -9,7 +9,7 @@ These are complete setups for common alerts. They are built from CiviRules rules
 
 Rules live under Administer » CiviRules » Manage Rules. The trigger and condition names below come from CiviRules. The actions and conditions whose names start with "Herald:" come with herald. Each herald action has a form, and the templates are listed there by title.
 
-Each recipe sends to Telegram. Leave the chat ID empty to use the default chat from the settings. Every recipe works with any other channel too: choose it in the form and put its keys into "Channel-specific config", see [Channels](channels.md).
+Each recipe sends through a Telegram channel, see [Configuring a channel](channels.md#configuring-a-channel). Leave the chat ID empty to use the channel's default chat. Every recipe works with any other channel too: choose it in the form, and the form shows the fields of its type. To let a topic route decide channel and recipient, set "Send" to "Through a topic" instead.
 
 ## Donations
 

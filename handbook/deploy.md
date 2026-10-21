@@ -34,6 +34,10 @@ cv ext:upgrade-db \
 
 rules-reenable.php does not check whether the preflight passed, so never run it after a failed preflight. The upgrades come before the preflight because an upgrade can rename handler classes that the preflight then loads.
 
+The upgrade to named channels moves the former channel settings, such as the Telegram bot token, into channels named after their type: `webhook`, `ntfy`, `email` and `activity`, plus `telegram` and `pushover` where their token was set. It points every rule action, scheduled job, topic route and waiting alert that relied on a setting at those channels. Token and headers that a rule action, job, route or waiting alert carried become a webhook channel of their own, named `webhook_` and a suffix; deliveries with equal ones share it. Other channel settings in a delivery, such as `email_from`, were never read from there and are dropped. Check Administer » Herald » Channels afterwards. A value set in `civicrm.settings.php` beats the stored one and goes into the channel too; remove those lines afterwards, since herald no longer reads them. On a site with several domains, each domain gets channels from its own settings, and the webhook channels of rule actions and waiting alerts exist in every domain that had a URL to send to: the delivery's own URL or else that domain's default URL. A job's channel exists only in the job's domain. Webhook headers that are no JSON object failed every send before; their channel is created without them and switched off, and the CiviCRM log names it. Set the headers in the channel form and switch it on.
+
+On the day of the upgrade, a daily digest that already went out can go out a second time, and alerts buffered before the upgrade arrive in a message apart from those buffered after it.
+
 ## What each step does
 
 ### Switching the rules off

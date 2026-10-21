@@ -9,7 +9,7 @@ Diese Seite zeigt vollständige Beispiele für häufige Meldungen. Sie bestehen 
 
 Regeln verwalten Sie unter Administrieren » CiviRules » Regeln verwalten (englisch: Administer » CiviRules » Manage Rules). Die Namen der Trigger und Bedingungen unten stammen aus CiviRules und sind mit ihrer englischen Bezeichnung angegeben. Aktionen und Bedingungen, deren Name mit „Herald:“ beginnt, bringt herald mit. Jede herald-Aktion hat ein Formular, in dem die Vorlagen nach ihrem Titel aufgelistet sind.
 
-Alle Rezepte senden an Telegram. Lassen Sie die Chat-ID leer, dann gilt der Standard-Chat aus den Einstellungen. Jedes Rezept funktioniert auch mit jedem anderen Kanal: Wählen Sie ihn im Formular und tragen Sie seine Schlüssel in „Kanalspezifische Konfiguration“ ein, siehe [Kanäle](channels.md).
+Alle Rezepte senden über einen Telegram-Kanal, siehe [Einen Kanal konfigurieren](channels.md#einen-kanal-konfigurieren). Lassen Sie die Chat-ID leer, dann gilt der Standard-Chat des Kanals. Jedes Rezept funktioniert auch mit jedem anderen Kanal: Wählen Sie ihn im Formular, und das Formular zeigt die Felder seines Typs. Soll eine Topic-Route über Kanal und Ziel entscheiden, setzen Sie stattdessen „Senden“ auf „Über ein Topic“.
 
 Die Beitragsstatus heißen in CiviCRM unter anderem Completed (abgeschlossen), Pending (ausstehend) und Cancelled (storniert). Die Tabellen verwenden die englischen Bezeichnungen aus CiviRules.
 

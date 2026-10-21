@@ -23,7 +23,7 @@ With CiviRules installed, herald adds four building blocks to it:
 
 A notification can go to one recipient, to every contact who subscribed to that kind of notification, to the members of a group, or to a list of email addresses. Each contact can choose their own channel. Alerts that come in bursts can be collected and sent as one message per time window. See [Delivery](delivery.md).
 
-Scripts and other extensions can publish to a named topic such as ops. A setting decides which channel and recipient each topic reaches, so the publisher never needs to know a chat ID or a URL.
+Scripts and other extensions can publish to a named topic such as ops. A topic route decides which channel and recipient each topic reaches, so the publisher never needs to know a chat ID or a URL.
 
 A digest is a subject and a text filled from SearchKit displays, such as yesterday's contributions, and from numbers another extension provides. You set them up under Administer » Herald » Digests, and they usually go out daily or weekly, from a rule on the trigger "Herald: Schedule". See [Digests](digests.md).
 
@@ -45,26 +45,26 @@ A git checkout has no `vendor/` directory. Run `composer install --no-dev` in it
 
 ## First steps
 
-Create a Telegram bot with @BotFather, add it to a chat and note the chat ID. Then store both on Administer » Herald » Settings, or with cv:
+Create a Telegram bot with @BotFather, add it to a chat and note the chat ID. Then add a channel on Administer » Herald » Channels: type Telegram, name `telegram`, the bot token, and the chat ID as default chat. Or with cv:
 
 ```bash
-cv setting:set herald_telegram_bot_token=<bot-token>
-cv setting:set herald_telegram_default_chat_id=<chat-id>
+cv api4 Herald.saveChannel name=telegram isNew=1 \
+  'channel={"type":"telegram","label":"Telegram","config":{"bot_token":"<bot-token>","chat_id":"<chat-id>"}}'
 ```
 
 Send a test message from Administer » Herald » Test message: choose "A channel", then Telegram, and send. Or with cv:
 
 ```bash
-cv api4 Herald.testTelegram message='<b>herald works</b>'
+cv api4 Herald.send channel=telegram message='<b>herald works</b>'
 ```
 
 Now set up a rule that reports every completed contribution:
 
 1. Go to Administer » CiviRules » Manage Rules, add a rule and choose the trigger "Contribution is added".
 2. Add the condition "Contribution Status is (not) one of" with Completed.
-3. Add the action "Herald: Send notification (generic)". Choose the template "Herald: New completed contribution" and the channel Telegram. Leave the chat ID empty to use the default.
+3. Add the action "Herald: Send notification (generic)". Choose the template "Herald: New completed contribution" and the channel Telegram. Leave the chat ID empty to use the channel's default chat.
 
-The other channels are configured the same way. [Channels](channels.md) lists their settings.
+Channels of the other types are added the same way. [Channels](channels.md) lists their fields.
 
 ## Uninstall
 
@@ -73,7 +73,7 @@ Uninstalling herald removes its CiviRules building blocks, and CiviRules removes
 ## Where to go next
 
 - [Recipes](recipes.md) walks through complete setups for donations, ticket sales, events and signups.
-- [Channels](channels.md) covers each channel's settings, options and limits.
+- [Channels](channels.md) covers configuring channels and the fields, options and limits of each type.
 - [Delivery](delivery.md) explains recipients, subscriptions, topics, aggregation and what happens when a delivery fails.
 - [Digests](digests.md) describes the text, sources, placeholders, the shipped searches, cleaned fields and scheduled sending.
 - [Check monitor](monitor.md) shows how to contribute a health check and how to tune the alerts.

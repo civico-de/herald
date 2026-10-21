@@ -15,12 +15,12 @@ routes:
 
 herald adds two CiviRules actions. Their forms share these fields:
 
+- Send: "With a delivery of its own" or "Through a topic". A topic's route sets channel, recipients and aggregation, see [Topics](delivery.md#topics); the delivery fields below are then hidden.
 - Delivery mode, with the subscription type, the group, the email addresses, the suspension option and the email location type. See [Delivery modes](delivery.md#delivery-modes).
-- Channel, which applies in direct mode only. Subscribers use their own channel.
+- Channel, one of the active channels under Administer » Herald » Channels. Direct and address mode send through it. Subscribers and group members use their own channel.
 - Message template.
-- Telegram chat ID, parse mode, "Silent message" and "Disable link previews".
+- The delivery fields of the chosen channel's type, such as the Telegram chat ID. Empty fields keep the channel's defaults.
 - Aggregate window in minutes. 0 sends at once, see [Aggregation](delivery.md#aggregation).
-- Channel-specific config, a JSON object with any other channel keys. The form rejects anything that is not a JSON object.
 
 The forms need the permission "administer CiviCRM".
 
@@ -102,13 +102,16 @@ The entity `Herald` offers these actions. The actions need the permission "admin
 
 | Action | Parameters | What it does |
 |---|---|---|
-| send | channel, message, subject, format, config | Delivers a finished message through one channel. This is the entry point for other extensions. The result lists `unknown_config_keys`. |
+| send | channel, message, subject, format, config | Delivers a finished message through one configured channel, named in `channel`. This is the entry point for other extensions. The result lists `unknown_config_keys`. |
 | publish | topic, message or template with vars, format, amount | Delivers through the route in `herald_topics`, see [Topics](delivery.md#topics). |
 | notify | actionParams, triggerContext | What "Send notification" calls. |
 | notifyDigest | digest, actionParams, sendHour, daily, skipEmpty | What "Send digest" calls, and scripts, see [Sending a digest](digests.md#sending-a-digest). |
 | checkSchedule | ruleId, schedule | What "Herald: Schedule" calls. Returns `due`, `slot`, `last_run` and `not_before`. |
 | checkFieldTransition | entity, entityId, field, fromOperator, fromValue, toOperator, toValue, originalValue, hasOriginal | What "Field transition" calls. Returns `matched`. |
-| getChannels | channel, optional | Lists the channels and the keys they accept. |
+| getChannelTypes | type, optional | Lists the channel types and the keys they accept, with scope, secret and recipient flags. |
+| getChannels | withUsage, optional | Lists the configured channels. Secrets show only as set or not. withUsage adds who names each channel. |
+| saveChannel | name, channel, isNew | Validates one channel and stores it in `herald_channels`, its secrets encrypted. A secret left out or empty keeps its stored value, `null` clears it. |
+| deleteChannel | name | Removes a channel. Refuses while a route, rule action, job, buffered alert or setting names it. |
 | getParkedAlerts | ids, optional | Lists [Parked alerts](delivery.md#parked-alerts) without their bodies. |
 | reactivateParkedAlerts | ids, optional | Puts parked alerts back into the buffer. Without ids, all of them. |
 | renderTemplate | workflow, vars | Renders a template without sending it. |
@@ -116,12 +119,12 @@ The entity `Herald` offers these actions. The actions need the permission "admin
 | sendDigestTest | digest, sources | Composes like previewDigest and emails the result to the logged-in user's primary address only. Returns `sent`, `to` and `problems`; nothing is sent while there are problems. |
 | getDigestPlaceholders | source, digest | The placeholders and the snippet of one source, as the digest form shows them. |
 | saveTopic | topic, route, previousName | Validates one route and stores it in `herald_topics`; with previousName it renames that topic in place. The Topic routes screen uses this action. |
-| deleteTopic | topic | Removes one route from `herald_topics`. |
+| deleteTopic | topic | Removes one route from `herald_topics`. Refuses while a rule action, job or the monitor names it. |
+| getTopicUsage | none | Lists the rule actions, jobs and the monitor that name each topic. |
 | saveCleanedFields | fields | Validates and stores `herald_cleaned_fields`. Errors name the field and the rule. |
 | saveAllowedHosts | hosts | Validates and stores `herald_webhook_allowed_hosts`. Blank entries are skipped. |
 | getMonitorChecks | none | Lists every offered, expected, snoozed or tracked check with its stored state, without details and without running the checks. |
 | saveMonitorChecks | expected, snooze | Validates and stores `herald_monitor_expected` and `herald_monitor_snooze`. A snooze must end in the future unless it is unchanged. |
-| testTelegram | message, chatId, channel | Sends a test message. The channel defaults to telegram. |
 
 The save actions store exactly the shape `Setting.set` takes. `Setting.set` still works, but it does not validate. The save actions reject invalid input with a list of every problem and then store nothing.
 
@@ -223,22 +226,13 @@ Digests have no fixed variables; their sources name them, see [Placeholders](dig
 
 ## Settings
 
-Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value'`. Settings that hold a list or a map take JSON. The plain settings are also on the Herald settings screen, Administer » Herald » Settings (`civicrm/admin/setting/herald`). The list and map settings have their own screens on `civicrm/admin/herald`: Topic routes, Cleaned fields, Webhook allowed hosts and Monitor checks. The settings screen links to them. All of them need "administer CiviCRM".
+Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value'`. Settings that hold a list or a map take JSON. The plain settings are also on the Herald settings screen, Administer » Herald » Settings (`civicrm/admin/setting/herald`). The list and map settings have their own screens on `civicrm/admin/herald`: Channels, Topic routes, Cleaned fields, Webhook allowed hosts and Monitor checks. The settings screen links to them. All of them need "administer CiviCRM".
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `herald_telegram_bot_token` | empty | The Telegram bot token. |
-| `herald_telegram_default_chat_id` | empty | The default Telegram chat. |
-| `herald_webhook_default_url` | empty | The default webhook URL. |
-| `herald_webhook_default_auth_token` | empty | A bearer token, sent only to the default URL. |
+| `herald_channels` | one channel, `email`, created on install | The [channels](channels.md#configuring-a-channel), secrets encrypted. Edit them on the Channels screen or with `Herald.saveChannel`, not with `Setting.set`. |
+| `herald_contact_email_channel` | email | The email channel that reaches group members without a channel of their own. |
 | `herald_webhook_allowed_hosts` | empty | Webhook hosts that may be reached. Empty allows any public address and blocks private ones. |
-| `herald_ntfy_server` | https://ntfy.sh | The ntfy server. |
-| `herald_ntfy_default_topic` | empty | The default ntfy topic. |
-| `herald_ntfy_token` | empty | A bearer token for protected ntfy topics. |
-| `herald_pushover_app_token` | empty | The Pushover application token. |
-| `herald_pushover_default_user_key` | empty | The default Pushover user or group key. |
-| `herald_email_from` | empty | The From header. Empty uses the site's default. |
-| `herald_email_default_to` | empty | The default email recipient. |
 | `herald_topics` | empty | [Topic](delivery.md#topics) routes. |
 | `herald_buffer_max_attempts` | 5 | Failed deliveries before an aggregated group is parked. |
 | `herald_buffer_max_items` | 25 | Messages printed in one aggregated message. 0 prints all. |

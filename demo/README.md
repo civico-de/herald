@@ -6,8 +6,9 @@ profile (`.docker/profiles/dev`) runs both on first boot, after civikitchen's
 
 ## Topics: `seed.php`
 
-`seed.php` creates one synthetic coordinator and configures the logical
-`members`, `finance`, and `ops` topics to create assigned CiviCRM activities.
+`seed.php` creates one synthetic coordinator, an `activity` channel when the
+site has none, and configures the logical `members`, `finance`, and `ops`
+topics to create assigned CiviCRM activities.
 It is safe to run repeatedly: the contact is keyed by a stable external
 identifier and existing topic routes are preserved.
 

@@ -15,18 +15,18 @@ Jede CiviRules-Aktion von herald hat einen Zustellmodus. Auch Topic-Routen kenne
 
 | Modus | Empfänger:innen | Pflichtparameter |
 |---|---|---|
-| `direct` | Das an der Aktion eingetragene Ziel oder die Standardeinstellung des Kanals. Das ist der Standard. | keiner |
+| `direct` | Das an der Aktion eingetragene Ziel oder der Standardwert des Kanals. Das ist der Standard. | `channel` |
 | `subscribers` | Alle Kontakte, die einen Abo-Typ abonniert haben, jeweils über ihren eigenen Kanal | `subscription_type` |
 | `group` | Alle Kontakte einer CiviCRM-Gruppe, jeweils über ihren eigenen Kanal | `group_id` |
-| `addresses` | Eine Liste von E-Mail-Adressen, ganz ohne Kontaktdatensätze | `email_addresses` |
+| `addresses` | Eine Liste von E-Mail-Adressen, ganz ohne Kontaktdatensätze, über einen E-Mail-Kanal | `channel`, `email_addresses` |
 
 Jeder andere Modus lässt den Versand scheitern. Das Aktionsformular speichert keinen Modus ohne seinen Pflichtparameter.
 
 Im Abonnent:innen-Modus wird ein Kontakt ohne gewählten Kanal oder ohne das Ziel, das dieser Kanal braucht, übersprungen.
 
-Im Gruppenmodus spielen Abonnements und Bezüge keine Rolle. Ein Gruppenmitglied ohne verwendbare Einstellungen erhält stattdessen eine E-Mail an die eigene Adresse. Das gilt auch für ein Mitglied, das Telegram gewählt, die Chat-ID aber leer gelassen hat.
+Im Gruppenmodus spielen Abonnements und Bezüge keine Rolle. Ein Gruppenmitglied ohne verwendbare Einstellungen erhält stattdessen eine E-Mail an die eigene Adresse, über den Kanal aus der Einstellung „E-Mail-Kanal für Kontakte“. Das gilt auch für ein Mitglied, das Telegram gewählt, die Chat-ID aber leer gelassen hat.
 
-Der Adresslisten-Modus sendet immer E-Mail. Trennen Sie die Adressen durch Kommas, Semikolons oder Zeilenumbrüche. Er eignet sich für Funktionsadressen und Empfänger:innen, die keine Kontakte sind.
+Der Adresslisten-Modus sendet immer E-Mail, über den E-Mail-Kanal, den die Aktion nennt. Trennen Sie die Adressen durch Kommas, Semikolons oder Zeilenumbrüche. Er eignet sich für Funktionsadressen und Empfänger:innen, die keine Kontakte sind.
 
 Gelöschte und verstorbene Kontakte erhalten nie etwas. Kontakte mit dem Vermerk „Do not email“ (keine E-Mails) erhalten nie E-Mails, unabhängig von den folgenden Optionen.
 
@@ -37,7 +37,7 @@ Zwei Optionen gelten für die Kontaktmodi, also Abonnent:innen und Gruppe:
 | `respect_suspension` | aus | Auch E-Mail-Empfänger:innen überspringen, die sich abgemeldet haben oder deren Adresse gesperrt ist. |
 | `email_location_type` | primär | An die E-Mail-Adresse des Kontakts mit diesem Adresstyp senden. Kontakte ohne eine solche Adresse erhalten die Nachricht an ihre primäre Adresse. |
 
-Ein Info-Eintrag im CiviCRM-Protokoll zählt die ausgelassenen Kontakte nach Grund: `suspended` (gesperrt), `scope_mismatch` (Bezug passt nicht), `no_channel` (kein Kanal gewählt) und `no_recipient` (keine Adresse, kein Chat, kein Topic für den Kanal).
+Ein Info-Eintrag im CiviCRM-Protokoll zählt die ausgelassenen Kontakte nach Grund: `suspended` (gesperrt), `scope_mismatch` (Bezug passt nicht), `no_channel` (kein Kanal gewählt, oder der gewählte Kanal ist gelöscht, inaktiv oder wird Kontakten nicht mehr angeboten) und `no_recipient` (keine Adresse, kein Chat, kein Topic für den Kanal).
 
 Scheitert die Zustellung an einzelne Empfänger:innen, hält das die übrigen nicht auf. herald protokolliert eine Warnung und macht mit dem nächsten Kontakt weiter. Die Zustellung als Ganzes schlägt nur fehl, wenn sie bei allen Empfänger:innen fehlgeschlagen ist oder wenn es niemanden gab, an den herald senden konnte: keine Abonnent:innen, eine leere Gruppe oder eine leere Adressliste. Sobald mindestens eine Person die Nachricht erhalten hat, gilt die Zustellung als erledigt; für die gescheiterten Empfänger:innen unternimmt herald keinen weiteren Versuch.
 
@@ -47,8 +47,8 @@ Jeder Kontakt kann einen Kanal und die gewünschten Benachrichtigungen wählen. 
 
 | Feld | Bedeutung |
 |---|---|
-| Bevorzugter Kanal | Telegram, Webhook, ntfy, Pushover oder E-Mail |
-| Telegram-Chat-ID, Pushover-Benutzer-/Gruppenschlüssel, ntfy-Topic, Webhook-URL | Das Ziel für den gewählten Kanal. E-Mail braucht keines und verwendet die eigene Adresse des Kontakts. |
+| Bevorzugter Kanal | Einer der Kanäle, die Kontakten angeboten werden, siehe [Einen Kanal konfigurieren](channels.md#einen-kanal-konfigurieren) |
+| Telegram-Chat-ID, Pushover-Benutzer-/Gruppenschlüssel, ntfy-Topic, Webhook-URL | Das Ziel für den Typ des gewählten Kanals. E-Mail braucht keines und verwendet die eigene Adresse des Kontakts. |
 | Abonnements | Die Abo-Typen, die der Kontakt erhalten möchte |
 | Bezug: Objekttyp, Bezug: Objekt-ID | Optional, siehe [Abos mit Bezug](#abos-mit-bezug) |
 
@@ -60,15 +60,15 @@ Admins können diese Felder am Kontaktdatensatz ausfüllen. Zur Selbstverwaltung
 
 CiviCRM öffnet das Profil für den angemeldeten Kontakt, der nur seinen eigenen Datensatz sehen und bearbeiten kann.
 
-Um die Abonnements zu nutzen, setzen Sie den Zustellmodus einer Aktion auf „Abonnent:innen“ und wählen den Abo-Typ. Das an der Aktion eingetragene Ziel wird in diesem Modus ignoriert. Von der Regel an die Kanäle der Abonnent:innen gelangen nur Darstellungsoptionen:
+Um die Abonnements zu nutzen, setzen Sie den Zustellmodus einer Aktion auf „Abonnent:innen“ und wählen den Abo-Typ. Das an der Aktion eingetragene Ziel wird in diesem Modus ignoriert. Die Nachricht an jede:n Abonnent:in geht über den Kanal, den die Person gewählt hat, mit dem Konto dieses Kanals, etwa seinem Bot. Von der Regel gelangen nur Darstellungsoptionen dorthin:
 
 - Telegram: `parse_mode`, `disable_notification`, `disable_web_page_preview`
-- Webhook: `webhook_body_format`, `webhook_body_key`
+- Webhook: `webhook_method`, `webhook_body_format`, `webhook_body_key`
 - ntfy: `ntfy_title`, `ntfy_priority`, `ntfy_tags`, `ntfy_click`, `ntfy_markdown`
 - Pushover: `pushover_title`, `pushover_priority`, `pushover_sound`, `pushover_url`, `pushover_url_title`, `pushover_html`, `pushover_retry`, `pushover_expire`
 - E-Mail: `email_subject`, `email_format`
 
-Ziele, Tokens, Header, CC und BCC werden nie übernommen. Die Webhook-URL eines Kontakts erhält deshalb nie das Webhook-Token der Site.
+Ziele, CC und BCC werden nie übernommen. Header und Token eines Webhook-Kanals gehören zu seiner Standard-URL, die eigene Webhook-URL eines Kontakts erhält sie also nie.
 
 herald liefert diese Abo-Typen mit:
 
@@ -94,18 +94,18 @@ Ein Einstellungsdatensatz ohne Bezug erhält alles, was er abonniert hat. Der Be
 
 ## Topics
 
-Bei Topics nennt der Absender nur ein Topic, und die Einstellung `herald_topics` entscheidet über Kanal, Ziel und Sammeln. Ein Skript oder eine andere Extension muss also nie eine Chat-ID oder eine URL kennen.
+Bei Topics nennt der Absender nur ein Topic, und die Einstellung `herald_topics` entscheidet über Kanal, Ziel und Sammeln. Auch eine CiviRules-Aktion kann ein Topic nennen: Setzen Sie „Senden“ auf „Über ein Topic“. Ein Skript oder eine andere Extension muss also nie eine Chat-ID oder eine URL kennen.
 
-Die Routen finden Sie unter Administrieren » Herald » Topic-Routen. Die Liste zeigt jedes Topic mit seinem Kanal, seinem Zustellmodus und seinem Sammelfenster. „Topic hinzufügen“ und „Bearbeiten“ öffnen ein Formular mit den Zustellfeldern und den Optionen, die der Kanal des Topics deklariert. Schlüssel ohne eigenes Feld, etwa `channel_config`, gehören als JSON-Objekt in „Weitere Parameter“. Beim Speichern prüft herald die Route und speichert nichts, wenn es eines dieser Probleme findet: ein nicht registrierter Kanal, ein Wert vom falschen Typ, ein Zustellmodus ohne seinen Pflichtparameter oder ein bereits vergebener Topic-Name. Ein umbenanntes Topic behält seinen Platz in der Liste. „Löschen“ fragt vorher nach; Nachrichten an ein gelöschtes Topic laufen danach über die Route default.
+Die Routen finden Sie unter Administrieren » Herald » Topic-Routen. Die Liste zeigt jedes Topic mit seinem Kanal, seinem Zustellmodus und seinem Sammelfenster. „Topic hinzufügen“ und „Bearbeiten“ öffnen ein Formular mit den Zustellfeldern und den Optionen, die der Kanal des Topics deklariert. Schlüssel ohne eigenes Feld, etwa Optionen eines anderen Kanaltyps, gehören als JSON-Objekt in „Weitere Parameter“. Beim Speichern prüft herald die Route und speichert nichts, wenn es eines dieser Probleme findet: ein Kanal, der nicht konfiguriert ist, ein Kontofeld wie `bot_token`, ein Wert vom falschen Typ, ein Zustellmodus ohne seinen Pflichtparameter oder ein bereits vergebener Topic-Name. Ein umbenanntes Topic behält seinen Platz in der Liste. Die Spalte „Verwendet von“ listet die Regelaktionen, geplanten Jobs und den Monitor, die das Topic nennen. Ein solches Topic lässt sich weder löschen noch umbenennen. „Löschen“ fragt vorher nach; Skripte, die noch an ein gelöschtes Topic veröffentlichen, laufen danach über die Route default.
 
 So setzen Sie alle Routen auf einmal mit cv:
 
 ```bash
 cv api4 --in=json Setting.set <<'JSON'
 {"values": {"herald_topics": {
-  "default": {"channel": "telegram"},
-  "ops":     {"channel": "telegram", "chat_id": "-100…"},
-  "revenue": {"channel": "telegram", "chat_id": "-100…", "aggregate_minutes": 5}
+  "default": {"channel": "ops_bot"},
+  "ops":     {"channel": "ops_bot", "chat_id": "-100…"},
+  "revenue": {"channel": "ops_bot", "chat_id": "-100…", "aggregate_minutes": 5}
 }}}
 JSON
 ```
@@ -118,7 +118,7 @@ cv api4 Herald.publish topic=revenue template=herald_contribution_alert_complete
     vars='{"contribution":{"total_amount":50}}' amount=50
 ```
 
-Ein Routeneintrag nimmt dieselben Parameter auf wie eine Aktion, darunter `channel_config`, `delivery_mode` und `aggregate_minutes`. Die Werte im Eintrag des Topics überschreiben die des Eintrags default. Der Kanal ist standardmäßig Telegram. Ein Topic ohne eigenen Eintrag und ohne Eintrag default schlägt mit dem Fehler „no route for topic“ fehl.
+Ein Routeneintrag nimmt dieselben Parameter auf wie eine Aktion, darunter `delivery_mode` und `aggregate_minutes`, aber keine Kontofelder. Die Werte im Eintrag des Topics überschreiben die des Eintrags default. Eine zusammengeführte Route ohne Kanal schlägt mit „the route of topic … names no channel“ fehl. Ein Topic ohne eigenen Eintrag und ohne Eintrag default schlägt mit dem Fehler „no route for topic“ fehl.
 
 `Herald.publish` nimmt entweder `message` oder ein `template` mit `vars` entgegen, nie beides. Eine Nachricht ist HTML, genau wie eine gerenderte Vorlage. Mit `format=text` ist die Nachricht Klartext: Zeichen wie `<` und `&` erscheinen unverändert, auch in Kanälen, die HTML darstellen. Das Format gilt nur für Nachrichten. `amount` geht in die Summe in der Kopfzeile einer Sammelnachricht ein.
 

@@ -15,12 +15,12 @@ routes:
 
 herald ergänzt CiviRules um zwei Aktionen. Ihre Formulare haben diese Felder gemeinsam:
 
+- Senden: „Mit eigener Zustellung“ oder „Über ein Topic“. Die Route eines Topics legt Kanal, Empfänger:innen und Sammeln fest, siehe [Topics](delivery.md#topics); die folgenden Zustellfelder sind dann ausgeblendet.
 - Zustellmodus, mit dem Abo-Typ, der Gruppe, den E-Mail-Adressen, der Option „Kommunikationssperren beachten“ und dem Adresstyp der E-Mail. Siehe [Zustellmodi](delivery.md#zustellmodi).
-- Kanal, der nur im Direktmodus gilt. Abonnent:innen verwenden ihren eigenen Kanal.
+- Kanal, einer der aktiven Kanäle unter Administrieren » Herald » Kanäle. Direkt- und Adresslisten-Modus senden über ihn. Abonnent:innen und Gruppenmitglieder verwenden ihren eigenen Kanal.
 - Nachrichtenvorlage.
-- Telegram-Chat-ID, Telegram-Parse-Modus, „Stille Nachricht“ und „Link-Vorschauen deaktivieren“.
+- Die Zustellfelder des Typs des gewählten Kanals, etwa die Telegram-Chat-ID. Leere Felder behalten die Standardwerte des Kanals.
 - Sammelfenster in Minuten. 0 sendet sofort, siehe [Sammelnachrichten](delivery.md#sammelnachrichten).
-- Kanalspezifische Konfiguration, ein JSON-Objekt mit allen weiteren Schlüsseln des Kanals. Das Formular lehnt alles ab, was kein JSON-Objekt ist.
 
 Die Formulare erfordern die Berechtigung „administer CiviCRM“ (CiviCRM administrieren).
 
@@ -102,13 +102,16 @@ Die Entität `Herald` bietet diese Aktionen. Die Aktionen erfordern die Berechti
 
 | Aktion | Parameter | Was sie tut |
 |---|---|---|
-| send | channel, message, subject, format, config | Stellt eine fertige Nachricht über einen Kanal zu. Das ist der Einstiegspunkt für andere Extensions. Das Ergebnis listet `unknown_config_keys` auf. |
+| send | channel, message, subject, format, config | Stellt eine fertige Nachricht über einen konfigurierten Kanal zu, den `channel` nennt. Das ist der Einstiegspunkt für andere Extensions. Das Ergebnis listet `unknown_config_keys` auf. |
 | publish | topic, message oder template mit vars, format, amount | Stellt über die Route in `herald_topics` zu, siehe [Topics](delivery.md#topics). |
 | notify | actionParams, triggerContext | Wird von „Send notification“ aufgerufen. |
 | notifyDigest | digest, actionParams, sendHour, daily, skipEmpty | Wird von „Send digest“ und von Skripten aufgerufen, siehe [Einen Report verschicken](digests.md#einen-report-verschicken). |
 | checkSchedule | ruleId, schedule | Wird von „Herald: Schedule“ aufgerufen. Gibt `due`, `slot`, `last_run` und `not_before` zurück. |
 | checkFieldTransition | entity, entityId, field, fromOperator, fromValue, toOperator, toValue, originalValue, hasOriginal | Wird von „Field transition“ aufgerufen. Gibt `matched` zurück. |
-| getChannels | channel, optional | Listet die Kanäle und die Schlüssel auf, die sie akzeptieren. |
+| getChannelTypes | type, optional | Listet die Kanaltypen und die Schlüssel auf, die sie akzeptieren, mit den Angaben zu Geltungsbereich, Geheimnis und Ziel. |
+| getChannels | withUsage, optional | Listet die konfigurierten Kanäle auf. Geheimnisse erscheinen nur als gesetzt oder nicht gesetzt. withUsage ergänzt, wer jeden Kanal nennt. |
+| saveChannel | name, channel, isNew | Prüft einen Kanal und speichert ihn in `herald_channels`, seine Geheimnisse verschlüsselt. Ein ausgelassenes oder leeres Geheimnis behält seinen gespeicherten Wert, `null` löscht ihn. |
+| deleteChannel | name | Entfernt einen Kanal. Verweigert das, solange eine Route, eine Regelaktion, ein Job, eine gepufferte Meldung oder eine Einstellung ihn nennt. |
 | getParkedAlerts | ids, optional | Listet [geparkte Meldungen](delivery.md#geparkte-meldungen) ohne ihre Nachrichtentexte auf. |
 | reactivateParkedAlerts | ids, optional | Legt geparkte Meldungen zurück in den Puffer. Ohne ids alle. |
 | renderTemplate | workflow, vars | Rendert eine Vorlage, ohne sie zu senden. |
@@ -116,12 +119,12 @@ Die Entität `Herald` bietet diese Aktionen. Die Aktionen erfordern die Berechti
 | sendDigestTest | digest, sources | Setzt wie previewDigest zusammen und schickt das Ergebnis nur an die primäre E-Mail-Adresse des angemeldeten Benutzers. Gibt `sent`, `to` und `problems` zurück; solange es Probleme gibt, wird nichts verschickt. |
 | getDigestPlaceholders | source, digest | Die Platzhalter und der Textbaustein einer Quelle, wie das Report-Formular sie zeigt. |
 | saveTopic | topic, route, previousName | Prüft eine Route und speichert sie in `herald_topics`; mit previousName wird dieses Topic an seinem Platz umbenannt. Die Seite „Topic-Routen“ verwendet diese Aktion. |
-| deleteTopic | topic | Entfernt eine Route aus `herald_topics`. |
+| deleteTopic | topic | Entfernt eine Route aus `herald_topics`. Verweigert das, solange eine Regelaktion, ein Job oder der Monitor sie nennt. |
+| getTopicUsage | keine | Listet die Regelaktionen, Jobs und den Monitor auf, die jedes Topic nennen. |
 | saveCleanedFields | fields | Prüft und speichert `herald_cleaned_fields`. Fehler nennen das Feld und die Regel. |
 | saveAllowedHosts | hosts | Prüft und speichert `herald_webhook_allowed_hosts`. Leere Einträge werden übersprungen. |
 | getMonitorChecks | keine | Listet jeden angebotenen, erwarteten, stummgeschalteten oder verfolgten Check mit seinem gespeicherten Zustand, ohne Details und ohne die Checks auszuführen. |
 | saveMonitorChecks | expected, snooze | Prüft und speichert `herald_monitor_expected` und `herald_monitor_snooze`. Eine Stummschaltung muss in der Zukunft enden, sofern sie nicht unverändert ist. |
-| testTelegram | message, chatId, channel | Sendet eine Testnachricht. Der Kanal ist standardmäßig telegram. |
 
 Die Speicheraktionen speichern genau die Form, die `Setting.set` erwartet. `Setting.set` funktioniert weiterhin, prüft aber nichts. Ungültige Eingaben lehnen die Speicheraktionen mit einer Liste aller Probleme ab und speichern dann nichts.
 
@@ -223,22 +226,13 @@ Reports haben keine festen Variablen; ihre Quellen benennen sie, siehe [Platzhal
 
 ## Einstellungen
 
-Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'name=value'`. Einstellungen, die eine Liste oder eine Zuordnung enthalten, nehmen JSON auf. Die einfachen Einstellungen finden Sie auch auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen (`civicrm/admin/setting/herald`). Die Listen- und Zuordnungseinstellungen haben eigene Seiten unter `civicrm/admin/herald`: Topic-Routen, Bereinigte Felder, Erlaubte Webhook-Hosts und Monitor-Checks. Die Einstellungsseite verlinkt sie. Alle erfordern „administer CiviCRM“.
+Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'name=value'`. Einstellungen, die eine Liste oder eine Zuordnung enthalten, nehmen JSON auf. Die einfachen Einstellungen finden Sie auch auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen (`civicrm/admin/setting/herald`). Die Listen- und Zuordnungseinstellungen haben eigene Seiten unter `civicrm/admin/herald`: Kanäle, Topic-Routen, Bereinigte Felder, Erlaubte Webhook-Hosts und Monitor-Checks. Die Einstellungsseite verlinkt sie. Alle erfordern „administer CiviCRM“.
 
 | Einstellung | Standard | Bedeutung |
 |---|---|---|
-| `herald_telegram_bot_token` | leer | Das Token des Telegram-Bots. |
-| `herald_telegram_default_chat_id` | leer | Der Standard-Chat für Telegram. |
-| `herald_webhook_default_url` | leer | Die Standard-URL für Webhooks. |
-| `herald_webhook_default_auth_token` | leer | Ein Bearer-Token, das nur an die Standard-URL gesendet wird. |
+| `herald_channels` | ein Kanal `email`, bei der Installation angelegt | Die [Kanäle](channels.md#einen-kanal-konfigurieren), Geheimnisse verschlüsselt. Bearbeiten Sie sie auf der Seite „Kanäle“ oder mit `Herald.saveChannel`, nicht mit `Setting.set`. |
+| `herald_contact_email_channel` | email | Der E-Mail-Kanal, der Gruppenmitglieder ohne eigenen Kanal erreicht. |
 | `herald_webhook_allowed_hosts` | leer | Webhook-Hosts, die erreicht werden dürfen. Ist die Liste leer, ist jede öffentliche Adresse erlaubt und jede private gesperrt. |
-| `herald_ntfy_server` | https://ntfy.sh | Der ntfy-Server. |
-| `herald_ntfy_default_topic` | leer | Das Standard-Topic für ntfy. |
-| `herald_ntfy_token` | leer | Ein Bearer-Token für geschützte ntfy-Topics. |
-| `herald_pushover_app_token` | leer | Das Anwendungs-Token für Pushover. |
-| `herald_pushover_default_user_key` | leer | Der Standard-Benutzer- oder -Gruppenschlüssel für Pushover. |
-| `herald_email_from` | leer | Der From-Header. Ohne Angabe gilt der Standard der Site. |
-| `herald_email_default_to` | leer | Der Standardempfänger für E-Mails. |
 | `herald_topics` | leer | Die Routen der [Topics](delivery.md#topics). |
 | `herald_buffer_max_attempts` | 5 | Fehlgeschlagene Zustellungen, bevor eine gesammelte Gruppe geparkt wird. |
 | `herald_buffer_max_items` | 25 | Ausgegebene Nachrichten in einer Sammelnachricht. 0 gibt alle aus. |

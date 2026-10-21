@@ -207,7 +207,7 @@ CiviCRM runs scheduled jobs, the CiviRules job included, only in the Production 
 The server's crontab can call `Herald.notifyDigest` at a fixed time. This call is not limited to the Production environment:
 
 ```
-0 8 * * 1 cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "digest": "weekly_contributions", "actionParams": {"chat_id": "-1001234567890"}}'
+0 8 * * 1 cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "digest": "weekly_contributions", "actionParams": {"channel": "telegram", "chat_id": "-1001234567890"}}'
 ```
 
 A CiviCRM scheduled job of `Herald.notifyDigest`, set to Hourly with `"sendHour": 8` in its parameters, also works, but it cannot pick weekdays and it can skip a day. An hourly job runs again only once a full hour has passed since its last run. With cron every 15 minutes and a run at 7:45:05, the cron run at 8:45 comes a few seconds too early, the job next runs at 9:00, and the 8 o'clock hour gets no run that day.
@@ -219,7 +219,7 @@ Add `"daily": true` and the job can run on every cron run instead: set it to Alw
 | Parameter | Meaning |
 |---|---|
 | `digest` | The name of the digest. Required. |
-| `actionParams` | The delivery settings, such as `channel`, `chat_id` or `delivery_mode`. The channel defaults to `telegram`. |
+| `actionParams` | The delivery settings, such as `channel`, `chat_id` or `delivery_mode`, or a `topic` whose route delivers. A delivery of its own needs a `channel`. |
 | `sendHour` | Optional. The digest goes out only during this hour, from 0 to 23 in CiviCRM's timezone. In any other hour the call returns `skipped` and sends nothing, and a value outside 0 to 23 is an error. Leave it out when you send a digest by hand. |
 | `daily` | Optional, with `sendHour`. The digest goes out on the first call at or after `sendHour`, once a day, so a scheduled job can call it on every cron run. Later calls that day return `skipped` with `sent_on`. Each set of delivery settings counts on its own. A call counts as the day's send before anything goes out, so a digest that fails or is empty is not tried again until the next day. `daily` without `sendHour` is an error. |
 | `skipEmpty` | Optional. When every source is a search display without rows, the call returns `skipped` with `empty` and sends nothing. A section from an extension always counts as something to report, and so does a digest without sources. A search that only totals, such as a count without grouping, always has one row and never counts as empty. |

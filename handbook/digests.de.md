@@ -207,7 +207,7 @@ CiviCRM führt geplante Jobs, auch den von CiviRules, nur in der Umgebung Produc
 Die Crontab des Servers kann `Herald.notifyDigest` zu einer festen Uhrzeit aufrufen. Dieser Aufruf ist nicht auf die Umgebung Production beschränkt:
 
 ```
-0 8 * * 1 cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "digest": "weekly_contributions", "actionParams": {"chat_id": "-1001234567890"}}'
+0 8 * * 1 cd /var/www/example.org && cv api4 Herald.notifyDigest '{"checkPermissions": false, "digest": "weekly_contributions", "actionParams": {"channel": "telegram", "chat_id": "-1001234567890"}}'
 ```
 
 Ein geplanter Job von CiviCRM für `Herald.notifyDigest`, auf Hourly (stündlich) gestellt und mit `"sendHour": 8` in den Parametern, funktioniert ebenfalls. Er kann aber keine Wochentage wählen und kann einen Tag auslassen. Ein stündlicher Job läuft erst wieder, wenn seit seinem letzten Lauf eine volle Stunde vergangen ist. Läuft Cron alle 15 Minuten und lief der Job um 7:45:05 Uhr, kommt der Cron-Lauf um 8:45 Uhr ein paar Sekunden zu früh. Der Job läuft erst um 9:00 Uhr wieder, und die Stunde ab 8 Uhr bekommt an diesem Tag keinen Lauf.
@@ -219,7 +219,7 @@ Mit `"daily": true` kann der Job stattdessen bei jedem Cron-Lauf laufen: Stellen
 | Parameter | Bedeutung |
 |---|---|
 | `digest` | Der Name des Reports. Pflicht. |
-| `actionParams` | Die Zustelleinstellungen, etwa `channel`, `chat_id` oder `delivery_mode`. Ohne Angabe ist der Kanal `telegram`. |
+| `actionParams` | Die Zustelleinstellungen, etwa `channel`, `chat_id` oder `delivery_mode`, oder ein `topic`, dessen Route zustellt. Eine eigene Zustellung braucht einen `channel`. |
 | `sendHour` | Optional. Der Report wird nur in dieser Stunde verschickt, von 0 bis 23 in der Zeitzone von CiviCRM. In jeder anderen Stunde gibt der Aufruf `skipped` zurück und sendet nichts, und ein Wert außerhalb von 0 bis 23 ist ein Fehler. Lassen Sie den Parameter weg, wenn Sie einen Report von Hand auslösen. |
 | `daily` | Optional, zusammen mit `sendHour`. Der Report wird beim ersten Aufruf ab `sendHour` verschickt, einmal am Tag. So kann ein geplanter Job ihn bei jedem Cron-Lauf aufrufen. Spätere Aufrufe am selben Tag geben `skipped` mit `sent_on` zurück. Jede Zustelleinstellung zählt für sich. Ein Aufruf zählt als Versand des Tages, bevor etwas verschickt wird: Ein Report, der scheitert oder leer ist, wird erst am nächsten Tag wieder versucht. `daily` ohne `sendHour` ist ein Fehler. |
 | `skipEmpty` | Optional. Ist jede Quelle eine Suchanzeige ohne Zeilen, gibt der Aufruf `skipped` mit `empty` zurück und verschickt nichts. Ein Abschnitt aus einer Extension gilt immer als etwas zu berichten, ebenso ein Report ohne Quellen. Eine Suche, die nur zusammenfasst, etwa eine Anzahl ohne Gruppierung, hat immer eine Zeile und gilt nie als leer. |

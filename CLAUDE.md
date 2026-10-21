@@ -17,11 +17,12 @@ they cannot see:
   `getSemanticFields()` maps `subject`/`format` onto them. Never hardcode a
   per-channel key name: a rendered subject travels as `ChannelSubject::KEY`
   and `ChannelSubject::forChannel()` names it at send time. Admin screens
-  render channel fields from `Herald.getChannels`.
+  render channel fields from `Herald.getChannelTypes`.
 - **Recipients:** publishers name a topic, never a chat ID (`herald_topics`
-  decides). In subscriber mode, recipient and credential keys come only from
-  the contact's `herald_preferences`. One bad recipient must not stop the
-  fan-out.
+  decides). Every delivery names a configured channel (`herald_channels`,
+  secrets encrypted via `ChannelStore`); channel-scope keys never travel in a
+  delivery. In subscriber mode, recipient keys come only from the contact's
+  `herald_preferences`. One bad recipient must not stop the fan-out.
 - **HTML:** every body a channel gets is HTML. Vars are escaped into it, and a
   sink without HTML gets `PlainText::fromHtml()`, never raw markup.
 - **APIv4 encodes `<`/`>`** on write and decodes them on read for every field
@@ -79,4 +80,4 @@ docker compose exec -w /var/www/html/ext/herald app ck ci   # every CI gate
 ```
 
 Headless tests self-install into `civicrm_test`. Smoke-test real sends with
-`cv api4 Herald.testTelegram` / `Herald.renderTemplate` (see README).
+`cv api4 Herald.send` / `Herald.renderTemplate` (see README).

@@ -25,12 +25,12 @@ A git checkout has no `vendor/` directory. Run `composer install --no-dev` in it
 
 ## Example
 
-Store a Telegram bot token and a chat, then send a test message:
+Add a Telegram channel with a bot token and a chat, then send a test message through it. The screen Administer » Herald » Channels does the same:
 
 ```bash
-cv setting:set herald_telegram_bot_token=<bot-token>
-cv setting:set herald_telegram_default_chat_id=<chat-id>
-cv api4 Herald.testTelegram message='<b>herald works</b>'
+cv api4 Herald.saveChannel name=telegram isNew=1 \
+  'channel={"type":"telegram","label":"Telegram","subscribable":true,"config":{"bot_token":"<bot-token>","chat_id":"<chat-id>"}}'
+cv api4 Herald.send channel=telegram message='<b>herald works</b>'
 ```
 
 To get a message for every completed contribution, create a CiviRules rule:
@@ -82,7 +82,7 @@ cv api4 Herald.publish topic=ops message='Import finished'
 
 - [Getting started](https://civico-de.github.io/herald/)
 - [Recipes](https://civico-de.github.io/herald/recipes/): donations, ticket sales, events and signups
-- [Channels](https://civico-de.github.io/herald/channels/): settings, options and limits of each channel
+- [Channels](https://civico-de.github.io/herald/channels/): named channels, the options and limits of each type
 - [Delivery](https://civico-de.github.io/herald/delivery/): recipients, subscriptions, topics, aggregation and parked alerts
 - [Digests](https://civico-de.github.io/herald/digests/): templates filled from SearchKit displays and extension sections
 - [Check monitor](https://civico-de.github.io/herald/monitor/): contributing health checks and tuning the alerts

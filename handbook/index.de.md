@@ -23,7 +23,7 @@ Ist CiviRules installiert, ergänzt herald es um vier Bausteine:
 
 Eine Benachrichtigung kann an ein einzelnes Ziel gehen, an alle Kontakte, die diese Art von Benachrichtigung abonniert haben, an die Mitglieder einer Gruppe oder an eine Liste von E-Mail-Adressen. Jeder Kontakt kann seinen eigenen Kanal wählen. Meldungen, die gehäuft auftreten, lassen sich sammeln und als eine Nachricht pro Zeitfenster verschicken. Siehe [Zustellung](delivery.md).
 
-Skripte und andere Extensions können Nachrichten an ein benanntes Topic wie ops schicken. Eine Einstellung legt fest, welchen Kanal und welches Ziel jedes Topic erreicht. Wer eine Nachricht schickt, muss also nie eine Chat-ID oder eine URL kennen.
+Skripte und andere Extensions können Nachrichten an ein benanntes Topic wie ops schicken. Eine Topic-Route legt fest, welchen Kanal und welches Ziel jedes Topic erreicht. Wer eine Nachricht schickt, muss also nie eine Chat-ID oder eine URL kennen.
 
 Ein Report ist ein Betreff und ein Text, die aus SearchKit-Anzeigen gefüllt werden, etwa mit den Beiträgen von gestern, und aus Zahlen, die eine andere Extension liefert. Reports richten Sie unter Administrieren » Herald » Reports ein. Meist werden sie täglich oder wöchentlich verschickt, ausgelöst von einer Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
 
@@ -45,26 +45,26 @@ Ein Git-Checkout enthält kein Verzeichnis `vendor/`. Führen Sie darin `compose
 
 ## Erste Schritte
 
-Legen Sie mit @BotFather einen Telegram-Bot an, fügen Sie ihn einem Chat hinzu und notieren Sie die Chat-ID. Speichern Sie dann beides unter Administrieren » Herald » Einstellungen oder mit cv:
+Legen Sie mit @BotFather einen Telegram-Bot an, fügen Sie ihn einem Chat hinzu und notieren Sie die Chat-ID. Legen Sie dann unter Administrieren » Herald » Kanäle einen Kanal an: Typ Telegram, Name `telegram`, das Bot-Token und die Chat-ID als Standard-Chat. Oder mit cv:
 
 ```bash
-cv setting:set herald_telegram_bot_token=<bot-token>
-cv setting:set herald_telegram_default_chat_id=<chat-id>
+cv api4 Herald.saveChannel name=telegram isNew=1 \
+  'channel={"type":"telegram","label":"Telegram","config":{"bot_token":"<bot-token>","chat_id":"<chat-id>"}}'
 ```
 
 Senden Sie eine Testnachricht unter Administrieren » Herald » Testnachricht: Wählen Sie „Einen Kanal“, dann Telegram, und senden Sie. Oder mit cv:
 
 ```bash
-cv api4 Herald.testTelegram message='<b>herald works</b>'
+cv api4 Herald.send channel=telegram message='<b>herald works</b>'
 ```
 
 Richten Sie nun eine Regel ein, die jeden abgeschlossenen Beitrag meldet:
 
 1. Öffnen Sie Administrieren » CiviRules » Regeln verwalten (englisch: Administer » CiviRules » Manage Rules), legen Sie eine Regel an und wählen Sie den Trigger „Contribution is added“ (Beitrag wird angelegt).
 2. Fügen Sie die Bedingung „Contribution Status is (not) one of“ (Beitragsstatus ist (nicht) einer von) mit Completed hinzu.
-3. Fügen Sie die Aktion „Herald: Send notification (generic)“ hinzu. Wählen Sie die Vorlage „Herald: Neuer abgeschlossener Beitrag“ und den Kanal Telegram. Lassen Sie die Chat-ID leer, dann gilt der Standard-Chat.
+3. Fügen Sie die Aktion „Herald: Send notification (generic)“ hinzu. Wählen Sie die Vorlage „Herald: Neuer abgeschlossener Beitrag“ und den Kanal Telegram. Lassen Sie die Chat-ID leer, dann gilt der Standard-Chat des Kanals.
 
-Die übrigen Kanäle richten Sie genauso ein. Ihre Einstellungen finden Sie unter [Kanäle](channels.md).
+Kanäle der anderen Typen legen Sie genauso an. Ihre Felder finden Sie unter [Kanäle](channels.md).
 
 ## Deinstallation
 
@@ -73,7 +73,7 @@ Beim Deinstallieren entfernt herald seine CiviRules-Bausteine, und CiviRules ent
 ## Wie es weitergeht
 
 - [Rezepte](recipes.md) zeigt vollständige Beispiele für Spenden, Ticketverkäufe, Events und Anmeldungen.
-- [Kanäle](channels.md) beschreibt die Einstellungen, Optionen und Grenzen jedes Kanals.
+- [Kanäle](channels.md) beschreibt, wie Sie Kanäle konfigurieren, und die Felder, Optionen und Grenzen jedes Typs.
 - [Zustellung](delivery.md) erklärt Empfänger:innen, Abonnements, Topics, das Sammeln von Meldungen und was passiert, wenn eine Zustellung fehlschlägt.
 - [Reports](digests.md) beschreibt Text, Quellen, Platzhalter, die mitgelieferten Suchen, bereinigte Felder und den zeitgesteuerten Versand.
 - [Check-Monitor](monitor.md) zeigt, wie Sie einen Health-Check beisteuern und die Meldungen feinjustieren.
