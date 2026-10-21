@@ -21,11 +21,35 @@ final class CRM_Herald_Upgrader_NamedChannels {
       $channels += CRM_Herald_Upgrader_SettingChannels::create($domainId, $values);
       $domains[] = CRM_Herald_Upgrader_Domain::of($domainId, $values);
     }
-    $deliveries = CRM_Herald_Upgrader_StoredDeliveries::rewrite($domains);
+    $deliveries = CRM_Herald_Upgrader_StoredDeliveries::rewrite(
+      $domains,
+      self::ruleAction(...),
+      self::delivery(...),
+      CRM_Herald_Upgrader_StoredRoutes::rewrite(...),
+    );
     CRM_Herald_Upgrader_OldSettings::deleteOld();
-    CRM_Herald_Upgrader_PreferredChannelField::repoint();
-    PreferredChannelOptions::sync();
+    CRM_Herald_Upgrader_OptionField::move(
+      'preferred_channel',
+      PreferredChannelOptions::OPTION_GROUP,
+      'Herald: Preferred channel',
+      PreferredChannelOptions::sync(...),
+    );
     return ['channels' => $channels, 'deliveries' => $deliveries];
+  }
+
+  /**
+   * A rule action in the new shape. An older form saved unticked options as FALSE, which then meant "not set".
+   *
+   * @param array<array-key, mixed> $params
+   * @param list<CRM_Herald_Upgrader_Domain> $domains
+   * @return array<string, mixed>
+   */
+  public static function ruleAction(array $params, string $owner, array $domains): array {
+    $unset = array_filter(
+      array_intersect_key($params, array_flip(['disable_notification', 'disable_web_page_preview'])),
+      static fn (mixed $value): bool => $value === FALSE,
+    );
+    return self::delivery(array_diff_key($params, $unset), $owner, $domains);
   }
 
   /**

@@ -451,10 +451,12 @@ class CRM_Herald_Upgrader_NamedChannelsTest extends TestCase implements Headless
       ->execute()
       ->first()['id'];
 
-    CRM_Herald_Upgrader_StoredDeliveries::rewrite([
-      CRM_Herald_Upgrader_Domain::current(),
-      new CRM_Herald_Upgrader_Domain($other, ''),
-    ]);
+    CRM_Herald_Upgrader_StoredDeliveries::rewrite(
+      [CRM_Herald_Upgrader_Domain::current(), new CRM_Herald_Upgrader_Domain($other, '')],
+      CRM_Herald_Upgrader_NamedChannels::ruleAction(...),
+      CRM_Herald_Upgrader_NamedChannels::delivery(...),
+      CRM_Herald_Upgrader_StoredRoutes::rewrite(...),
+    );
 
     $this->assertArrayHasKey('webhook_job_' . $job, self::channels($other));
     $this->assertArrayNotHasKey('webhook_job_' . $job, self::channels());
@@ -554,7 +556,12 @@ class CRM_Herald_Upgrader_NamedChannelsTest extends TestCase implements Headless
       ->execute()
       ->first()['id'];
 
-    CRM_Herald_Upgrader_StoredDeliveries::rewrite([CRM_Herald_Upgrader_Domain::current()]);
+    CRM_Herald_Upgrader_StoredDeliveries::rewrite(
+      [CRM_Herald_Upgrader_Domain::current()],
+      CRM_Herald_Upgrader_NamedChannels::ruleAction(...),
+      CRM_Herald_Upgrader_NamedChannels::delivery(...),
+      CRM_Herald_Upgrader_StoredRoutes::rewrite(...),
+    );
 
     $parameters = json_decode(
       (string) \Civi\Api4\Job::get(checkPermissions: FALSE)
