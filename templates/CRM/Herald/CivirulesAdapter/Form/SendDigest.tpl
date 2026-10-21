@@ -16,6 +16,8 @@
   </table>
 </div>
 
+{include file="CRM/Herald/CivirulesAdapter/Form/SendFields.js.tpl"}
+
 <div class="crm-submit-buttons">
   {include file="CRM/common/formButtons.tpl" location="bottom"}
 </div>

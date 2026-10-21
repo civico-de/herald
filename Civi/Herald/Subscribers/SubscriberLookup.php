@@ -8,7 +8,8 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Resolves the contacts subscribed to a subscription type into recipients,
- * each on its own preferred channel.
+ * each through the channel their preference names. A preference naming no
+ * active subscribable channel counts as no_channel.
  */
 class SubscriberLookup {
 
@@ -46,10 +47,11 @@ class SubscriberLookup {
   /**
    * @param array<int, array<string, mixed>> $rows
    * @param array<string, mixed> $options
+   * @param array<string, string>|null $types Channel name => type; default ContactRows::subscribable().
    * @return array<int, array{contact_id: int, channel: string, config: array<string, mixed>}>
    */
-  public static function mapRows(array $rows, array $options = []): array {
-    return self::mapRowsDetailed($rows, $options)['recipients'];
+  public static function mapRows(array $rows, array $options = [], ?array $types = NULL): array {
+    return self::mapRowsDetailed($rows, $options, $types)['recipients'];
   }
 
   /**
@@ -58,12 +60,14 @@ class SubscriberLookup {
    *
    * @param array<int, array<string, mixed>> $rows
    * @param array<string, mixed> $options
+   * @param array<string, string>|null $types Channel name => type; default ContactRows::subscribable().
    * @return array{
    *   recipients: array<int, array{contact_id: int, channel: string, config: array<string, mixed>}>,
    *   skipped: array<string, int>,
    * }
    */
-  public static function mapRowsDetailed(array $rows, array $options = []): array {
+  public static function mapRowsDetailed(array $rows, array $options = [], ?array $types = NULL): array {
+    $types ??= ContactRows::subscribable();
     $scope = $options['scope'] ?? NULL;
     /** @var array{entity_type: string, entity_id: int}|null $scope */
     $scope = is_array($scope) ? $scope : NULL;
@@ -75,12 +79,12 @@ class SubscriberLookup {
       $channel = Cast::toString($row['herald_preferences.preferred_channel'] ?? '');
       $reason = match (TRUE) {
         !SubscriptionScope::rowMatches($row, $scope) => 'scope_mismatch',
-        $channel === '' => 'no_channel',
+        !isset($types[$channel]) => 'no_channel',
         default => NULL,
       };
       $config = NULL;
       if ($reason === NULL) {
-        [$config, $reason] = self::config($channel, $contactRows, $options);
+        [$config, $reason] = self::config($types[$channel], $contactRows, $options);
       }
       if ($config === NULL) {
         $skipped[$reason] = ($skipped[$reason] ?? 0) + 1;
@@ -97,9 +101,9 @@ class SubscriberLookup {
    * @return array{0: array<string, mixed>|null, 1: string}
    *   The config, or NULL and the reason it is missing.
    */
-  private static function config(string $channel, array $contactRows, array $options): array {
-    if ($channel !== 'email') {
-      return [ContactRows::channelConfig($channel, $contactRows[0]), 'no_recipient'];
+  private static function config(string $type, array $contactRows, array $options): array {
+    if ($type !== 'email') {
+      return [ContactRows::channelConfig($type, $contactRows[0]), 'no_recipient'];
     }
     $email = EmailRecipient::of($contactRows, $options);
     if ($email['address'] === '') {

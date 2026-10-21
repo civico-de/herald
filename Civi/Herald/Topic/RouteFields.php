@@ -9,7 +9,7 @@ use CRM_Herald_ExtensionUtil as E;
 
 /**
  * The typed keys a topic route can carry: the dispatcher's delivery
- * parameters plus every channel's getConfigSchema() keys.
+ * parameters plus the delivery keys of every channel type's getConfigSchema().
  */
 final class RouteFields {
 
@@ -24,7 +24,6 @@ final class RouteFields {
     'respect_suspension' => 'bool',
     'email_location_type' => 'int',
     'aggregate_minutes' => 'int',
-    'channel_config' => 'object',
   ];
 
   /**
@@ -42,6 +41,9 @@ final class RouteFields {
     }
     foreach ($registry->listKeys() as $channelKey) {
       foreach ($registry->get($channelKey)->getConfigSchema() as $key => $spec) {
+        if (($spec['scope'] ?? 'delivery') === 'channel') {
+          continue;
+        }
         $options = $spec['options'] ?? [];
         $fields[$key] ??= [
           'label' => $spec['label'],
@@ -66,7 +68,6 @@ final class RouteFields {
       'respect_suspension' => E::ts('Respect communication suspension'),
       'email_location_type' => E::ts('Email location type'),
       'aggregate_minutes' => E::ts('Aggregate window in minutes'),
-      'channel_config' => E::ts('Other parameters'),
     ];
   }
 

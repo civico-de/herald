@@ -36,7 +36,15 @@ class SettingsPageTest extends TestCase implements HeadlessInterface {
     }
   }
 
-  public function testTokenFieldsOptOutOfLoginAutofill(): void {
+  /**
+   * Secrets are entered on the channel screen; a browser must not fill them with a login.
+   */
+  public function testSecretFieldsOptOutOfLoginAutofill(): void {
+    $template = (string) file_get_contents(\CRM_Herald_ExtensionUtil::path('ang/heraldAdmin/fields.html'));
+    $this->assertMatchesRegularExpression(
+      '/ng-switch-when="secret">.*?type="password"\s+autocomplete="new-password"/s',
+      $template,
+    );
     $passwords = array_filter(
       \Civi\Core\SettingsMetadata::getMetadata(),
       static fn (array $spec): bool => (
@@ -44,10 +52,7 @@ class SettingsPageTest extends TestCase implements HeadlessInterface {
         && ($spec['html_type'] ?? '') === self::MASKED_INPUT
       ),
     );
-    $this->assertNotEmpty($passwords);
-    foreach ($passwords as $name => $spec) {
-      $this->assertSame('new-password', $spec['html_attributes']['autocomplete'] ?? NULL, $name);
-    }
+    $this->assertSame([], $passwords, 'secrets live in herald_channels, not in settings of their own');
   }
 
   public function testTheAdminRouteUsesTheGenericSettingsForm(): void {

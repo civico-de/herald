@@ -50,7 +50,7 @@ final class DigestRules {
   /**
    * Why delivery settings cannot send a digest, or NULL: its subject is its own.
    *
-   * @param array<string, mixed> $params Delivery settings, channel_config included
+   * @param array<string, mixed> $params Delivery settings
    */
   public static function deliveryProblem(array $params): ?string {
     $subjectKey = ChannelSubject::subjectKeyIn(ChannelConfig::of($params));

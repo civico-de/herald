@@ -83,7 +83,7 @@ class NotifyDigest extends AbstractScheduledJob {
     $dispatcher = new Dispatcher();
     $title = $this->digest;
     try {
-      $problem = DigestRules::deliveryProblem($this->actionParams);
+      $problem = DigestRules::deliveryProblem(Dispatcher::withTopic($this->actionParams));
       if ($problem !== NULL) {
         throw new DigestProblem([$problem]);
       }

@@ -36,11 +36,20 @@ class CRM_Herald_CivirulesAdapter_Trigger_ScheduleTriggerTest extends TestCase i
    */
   private array $contacts = [];
 
+  private mixed $channels = NULL;
+
   public function setUpHeadless(): \Civi\Test\CiviEnvBuilder {
     return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
+  protected function setUp(): void {
+    parent::setUp();
+    $this->channels = Civi::settings()->get('herald_channels');
+    \Civi\Herald\ChannelFixture::add('activity', 'activity');
+  }
+
   protected function tearDown(): void {
+    Civi::settings()->set('herald_channels', $this->channels);
     CRM_Utils_Time::resetTime();
     foreach ($this->contacts as $contact) {
       Activity::delete(checkPermissions: FALSE)->addWhere('assignee_contact_id', 'CONTAINS', $contact)->execute();

@@ -5,13 +5,20 @@ declare(strict_types = 1);
 namespace Civi\Herald\Dispatch;
 
 use Civi\Herald\Channel\ChannelRegistry;
+use Civi\Herald\HeadlessSite;
+use Civi\Test\HeadlessInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * How caller params become a channel config.
- * @group unit
+ * How caller params become a channel config. Headless: the channel schemas
+ * carry translated labels.
+ * @group headless
  */
-class ChannelConfigTest extends TestCase {
+class ChannelConfigTest extends TestCase implements HeadlessInterface {
+
+  public function setUpHeadless() {
+    return HeadlessSite::standard()->apply();
+  }
 
   public function testStripsRoutingKeys(): void {
     $config = ChannelConfig::of([
@@ -24,36 +31,79 @@ class ChannelConfigTest extends TestCase {
     $this->assertSame('-100', $config['chat_id']);
   }
 
-  public function testChannelConfigJsonMergedAndStripped(): void {
-    $config = ChannelConfig::of([
-      'channel' => 'webhook',
-      'template' => 'foo',
-      'channel_config' => '{"webhook_url": "https://example.com/x", "webhook_body_format": "slack"}',
-    ]);
-    $this->assertArrayNotHasKey('channel_config', $config);
-    $this->assertSame('https://example.com/x', $config['webhook_url']);
-    $this->assertSame('slack', $config['webhook_body_format']);
+  public function testStripsTheTopic(): void {
+    $this->assertSame(['ntfy_priority' => 4], ChannelConfig::of(['topic' => 'ops', 'ntfy_priority' => 4]));
   }
 
-  public function testChannelConfigArrayPassthrough(): void {
-    $config = ChannelConfig::of([
-      'channel' => 'ntfy',
-      'template' => 'foo',
-      'channel_config' => ['ntfy_topic' => 'donations', 'ntfy_priority' => 4],
-    ]);
-    $this->assertSame('donations', $config['ntfy_topic']);
-    $this->assertSame(4, $config['ntfy_priority']);
+  public function testDeliveryKeysOverrideTheStoredDefaults(): void {
+    $stored = bin2hex(random_bytes(8));
+    $config = ChannelConfig::merged(
+      ChannelRegistry::default()->get('telegram'),
+      ['bot_token' => $stored, 'chat_id' => '-100', 'parse_mode' => 'HTML'],
+      ['chat_id' => '-200'],
+    );
+    $this->assertSame(['bot_token' => $stored, 'chat_id' => '-200', 'parse_mode' => 'HTML'], $config);
   }
 
-  public function testChannelConfigOverridesTopLevel(): void {
-    // channel_config takes precedence — explicit per-channel overrides win.
-    $config = ChannelConfig::of([
-      'channel' => 'telegram',
-      'template' => 'foo',
-      'chat_id' => '-100',
-      'channel_config' => ['chat_id' => '-200'],
-    ]);
-    $this->assertSame('-200', $config['chat_id']);
+  public function testARenderedSubjectBeatsTheStoredDefaultSubject(): void {
+    $email = ChannelRegistry::default()->get('email');
+    $this->assertSame(
+      'Weekly digest',
+      ChannelConfig::merged(
+        $email,
+        ['email_subject' => 'CiviCRM alert'],
+        [ChannelSubject::KEY => 'Weekly digest'],
+      )['email_subject'],
+    );
+    $this->assertSame(
+      'CiviCRM alert',
+      ChannelConfig::merged($email, ['email_subject' => 'CiviCRM alert'], [])['email_subject'],
+    );
+  }
+
+  public function testBlankDeliveryValuesKeepTheStoredDefault(): void {
+    $config = ChannelConfig::merged(
+      ChannelRegistry::default()->get('ntfy'),
+      ['ntfy_topic' => 'ops'],
+      ['ntfy_topic' => '', 'ntfy_title' => NULL],
+    );
+    $this->assertSame(['ntfy_topic' => 'ops'], $config);
+  }
+
+  public function testAChannelKeyInADeliveryFails(): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessage('bot_token belong to the channel configuration');
+    ChannelConfig::merged(
+      ChannelRegistry::default()->get('telegram'),
+      [],
+      ['bot_token' => bin2hex(random_bytes(8)), 'chat_id' => '1'],
+    );
+  }
+
+  public function testOwnWebhookUrlDropsTheSecretsBoundToTheStoredOne(): void {
+    $stored = [
+      'webhook_url' => 'https://hooks.example.org/a',
+      'webhook_auth_token' => bin2hex(random_bytes(8)),
+      'webhook_headers' => ['X-Key' => 'k'],
+      'webhook_body_format' => 'slack',
+    ];
+    $channel = ChannelRegistry::default()->get('webhook');
+    $this->assertSame(
+      ['webhook_url' => 'https://other.example.org/b', 'webhook_body_format' => 'slack'],
+      ChannelConfig::merged($channel, $stored, ['webhook_url' => 'https://other.example.org/b']),
+    );
+    $this->assertSame($stored, ChannelConfig::merged($channel, $stored, [
+      'webhook_url' => 'https://hooks.example.org/a',
+    ]));
+  }
+
+  public function testTheSubjectIsNamedForTheChannel(): void {
+    $config = ChannelConfig::merged(
+      ChannelRegistry::default()->get('email'),
+      ['email_from' => 'a@example.org'],
+      ChannelSubject::withSubject([], 'Hello'),
+    );
+    $this->assertSame(['email_from' => 'a@example.org', 'email_subject' => 'Hello'], $config);
   }
 
   public function testFilterSubscriberSafeStripsRecipientAndCredentialKeys(): void {
@@ -132,28 +182,6 @@ class ChannelConfigTest extends TestCase {
   public function testNoTemplateSubjectLeavesParamsUntouched(): void {
     foreach ([NULL, ''] as $subject) {
       $this->assertSame(['channel' => 'email'], ChannelSubject::withSubject(['channel' => 'email'], $subject));
-    }
-  }
-
-  /**
-   * Ignoring a broken override would send to the top-level recipient instead
-   * of the one the override names.
-   */
-  public function testChannelConfigThatIsNoJsonObjectFails(): void {
-    foreach (['not-json', '"a string"', '42', 42, '[{"chat_id": "-200"}]', [['chat_id' => '-200']]] as $raw) {
-      try {
-        ChannelConfig::of(['chat_id' => '-100', 'channel_config' => $raw]);
-        $this->fail('channel_config ' . var_export($raw, TRUE) . ' must fail');
-      }
-      catch (\CRM_Core_Exception $e) {
-        $this->assertStringContainsString('channel_config must be a JSON object', $e->getMessage());
-      }
-    }
-  }
-
-  public function testAnEmptyChannelConfigAddsNothing(): void {
-    foreach ([NULL, '', '  ', [], '{}'] as $raw) {
-      $this->assertSame(['chat_id' => '-100'], ChannelConfig::of(['chat_id' => '-100', 'channel_config' => $raw]));
     }
   }
 

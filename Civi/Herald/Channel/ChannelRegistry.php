@@ -43,6 +43,24 @@ class ChannelRegistry {
   }
 
   /**
+   * The keys only a configured channel may set (tokens, servers, sender).
+   *
+   * @return list<string>
+   */
+  public function channelKeys(): array {
+    $keys = [];
+    foreach ($this->channels as $channel) {
+      foreach ($channel->getConfigSchema() as $key => $spec) {
+        if (($spec['scope'] ?? 'delivery') !== 'channel') {
+          continue;
+        }
+        $keys[] = $key;
+      }
+    }
+    return array_values(array_unique($keys));
+  }
+
+  /**
    * Human-readable channel name; a channel without one is shown by its key.
    */
   public static function label(string $key): string {

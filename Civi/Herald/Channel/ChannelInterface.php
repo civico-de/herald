@@ -12,8 +12,7 @@ interface ChannelInterface {
    * @param string $renderedBody
    *   The fully-rendered message as HTML; text sinks send PlainText::fromHtml() of it.
    * @param array<string, mixed> $config
-   *   Per-call configuration. Shape depends on the channel; see getConfigSchema().
-   *   For Telegram: ['chat_id' => string, 'parse_mode' => 'HTML'|'MarkdownV2'|null].
+   *   The configured channel's keys with the delivery's keys on top (Channels::send()).
    */
   public function send(string $renderedBody, array $config): void;
 
@@ -23,9 +22,13 @@ interface ChannelInterface {
   public function getKey(): string;
 
   /**
-   * Per-call config fields this channel accepts; the CiviRules action UI renders them.
+   * The keys of a channel of this type. Scope `channel` (account, server,
+   * sender) is set only on the channel, `delivery` (the default) also per
+   * action and route; `recipient` keys come from a subscriber's own
+   * preferences, `secret` ones are stored encrypted, and a `bound_to` key is
+   * dropped when a delivery replaces the key it belongs to.
    *
-   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string}>
+   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string, scope?: 'channel'|'delivery', secret?: bool, recipient?: bool, bound_to?: string}>
    */
   public function getConfigSchema(): array;
 

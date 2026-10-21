@@ -216,16 +216,15 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
   private function sendFields(): array {
     return [
       [
+        'send_via' => 'own',
         'delivery_mode' => 'addresses',
         'email_addresses' => 'ops@example.org',
         'respect_suspension' => '1',
         'channel' => 'email',
         'template' => self::FIRST_TEMPLATE,
-        'chat_id' => '-100',
-        'parse_mode' => 'MarkdownV2',
-        'disable_notification' => '1',
+        'email_cc' => 'board@example.org',
+        'email_format' => 'text',
         'aggregate_minutes' => '15',
-        'channel_config' => '{"email_subject": "Hi"}',
       ],
       [
         'delivery_mode' => 'addresses',
@@ -233,11 +232,9 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
         'respect_suspension' => TRUE,
         'channel' => 'email',
         'template' => self::FIRST_TEMPLATE,
-        'chat_id' => '-100',
-        'parse_mode' => 'MarkdownV2',
-        'disable_notification' => TRUE,
+        'email_cc' => 'board@example.org',
+        'email_format' => 'text',
         'aggregate_minutes' => 15,
-        'channel_config' => ['email_subject' => 'Hi'],
       ],
     ];
   }
@@ -258,14 +255,11 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
    */
   public static function unsavableValues(): array {
     return [
-      'channel_config that is no JSON' => [
-        ['channel_config' => '{"chat_id": '],
-        'channel_config must be a JSON object',
-      ],
-      'channel_config that is a list' => [
-        ['channel_config' => '[{"chat_id": "-1"}]'],
-        'channel_config must be a JSON object',
-      ],
+      'no channel' => [['channel' => ''], 'Choose a channel.'],
+      'unknown channel' => [['channel' => 'pigeon'], 'There is no channel "pigeon".'],
+      'address list through another type' => [['channel' => 'board'], '"board" is not one'],
+      'topic mode without a topic' => [['send_via' => 'topic'], 'Choose a topic.'],
+      'unknown topic' => [['send_via' => 'topic', 'topic' => 'nowhere'], 'There is no topic "nowhere"'],
       'vars that are a list' => [['vars' => '["ops"]'], 'vars must be a JSON object'],
       'negative window' => [['aggregate_minutes' => '-5'], 'must be at least 0'],
       'window that is no number' => [['aggregate_minutes' => 'soon'], 'must be a whole number'],
@@ -279,6 +273,7 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
    * @param array<string, string> $change
    */
   public function testTheFormNamesWhatItCannotSave(array $change, string $error): void {
+    \Civi\Herald\ChannelFixture::add('board', 'activity');
     $form = $this->sendForm();
     $form->_submitValues = array_replace($this->validSubmission($form), $change);
     $form->_flagSubmitted = TRUE;
@@ -315,12 +310,61 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     return ['template' => $this->firstOption($form, 'template'), 'vars' => '{"team": "ops"}'] + $submitted;
   }
 
+  /**
+   * Fields of another channel type are hidden on the form and not saved.
+   */
+  public function testAChosenZeroOrNoOverridesTheChannelAndBlankKeepsIt(): void {
+    \Civi\Herald\ChannelFixture::add('phones', 'pushover', ['pushover_app_token' => bin2hex(random_bytes(8))]);
+    $params = CRM_Herald_CivirulesAdapter_SendParams::of([
+      'send_via' => 'own',
+      'channel' => 'phones',
+      'pushover_priority' => '0',
+      'pushover_html' => '0',
+      'disable_notification' => '1',
+      'disable_web_page_preview' => '',
+      'pushover_retry' => '',
+    ]);
+    $this->assertSame(
+      ['channel' => 'phones', 'pushover_priority' => 0, 'pushover_html' => FALSE],
+      array_intersect_key($params, array_flip([
+        'channel',
+        'disable_notification',
+        'disable_web_page_preview',
+        'pushover_priority',
+        'pushover_html',
+        'pushover_retry',
+      ])),
+    );
+  }
+
+  public function testATopicSendSavesOnlyTheTopic(): void {
+    \Civi::settings()->set(\Civi\Herald\Topic\Router::SETTING, ['ops' => ['channel' => 'email']]);
+    [$submitted] = $this->sendFields();
+    $handlerId = (int) CRM_Core_DAO::singleValueQuery(
+      'SELECT id FROM civirule_action WHERE class_name = %1',
+      [1 => [CRM_Herald_CivirulesAdapter_Action_Notification::class, 'String']],
+    );
+    $id = $this->insert(self::ACTION, $handlerId, $this->rule('herald_test_topic'));
+    $url = (string) (new CRM_Herald_CivirulesAdapter_Action_Notification())->getExtraDataInputUrl($id);
+    $form = $this->open($url, CRM_Herald_CivirulesAdapter_Form_SendNotification::class);
+    $template = $this->firstOption($form, 'template');
+    $form->_submitValues = ['send_via' => 'topic', 'topic' => 'ops', 'template' => $template] + $submitted;
+    $form->_flagSubmitted = TRUE;
+    $this->assertTrue($form->validate(), json_encode($form->_errors, JSON_THROW_ON_ERROR));
+    $form->postProcess();
+
+    $this->assertSame(
+      ['topic' => 'ops', 'template' => $template, 'vars' => []],
+      unserialize($this->storedParams(self::ACTION, $id), ['allowed_classes' => FALSE]),
+    );
+    $defaults = $this->open($url, CRM_Herald_CivirulesAdapter_Form_SendNotification::class)->setDefaultValues();
+    $this->assertSame(['topic', 'ops'], [$defaults['send_via'], $defaults['topic']]);
+  }
+
   public function testDigestForm(): void {
     [$submitted, $expected] = $this->sendFields();
     // A digest brings its own template, subject included.
     unset($submitted['template'], $expected['template']);
-    $submitted['channel_config'] = '{"ntfy_tags": "chart"}';
-    $expected['channel_config'] = ['ntfy_tags' => 'chart'];
     DigestFixture::create('herald_test_round_trip', 'Round trip');
     $this->assertRoundTrip(
       self::ACTION,
@@ -331,8 +375,11 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     );
   }
 
-  public function testTheDigestFormRefusesASubjectOfItsOwn(): void {
+  public function testTheDigestFormRefusesATopicThatSetsASubject(): void {
     DigestFixture::create('herald_test_subject', 'Subject');
+    \Civi::settings()->set(\Civi\Herald\Topic\Router::SETTING, [
+      'mornings' => ['channel' => 'email', 'email_subject' => 'Hi'],
+    ]);
     $handlerId = (int) CRM_Core_DAO::singleValueQuery(
       'SELECT id FROM civirule_action WHERE class_name = %1',
       [1 => [CRM_Herald_CivirulesAdapter_Action_Digest::class, 'String']],
@@ -342,12 +389,9 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
       (string) (new CRM_Herald_CivirulesAdapter_Action_Digest())->getExtraDataInputUrl($id),
       CRM_Herald_CivirulesAdapter_Form_SendDigest::class,
     );
-    [$submitted] = $this->sendFields();
-    unset($submitted['template']);
-    $form->_submitValues = ['digest' => 'herald_test_subject'] + $submitted;
+    $form->_submitValues = ['digest' => 'herald_test_subject', 'send_via' => 'topic', 'topic' => 'mornings'];
     $form->_flagSubmitted = TRUE;
 
-    $this->assertSame('{"email_subject": "Hi"}', $submitted['channel_config']);
     $this->assertFalse($form->validate());
     $this->assertStringContainsString(
       'has its own subject',

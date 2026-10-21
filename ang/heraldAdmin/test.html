@@ -20,7 +20,7 @@
       </div>
       <fieldset ng-if="$ctrl.selected()">
         <legend>{{ $ctrl.ts('%1 options', {1: $ctrl.selected().label}) }}</legend>
-        <p class="description">{{:: $ctrl.ts('Empty fields fall back to the channel defaults on the settings form.') }}</p>
+        <p class="description">{{:: $ctrl.ts('Empty fields keep the values set on the channel.') }}</p>
         <herald-fields fields="$ctrl.selected().fields" inputs="$ctrl.inputs" prefix="herald-test-"></herald-fields>
       </fieldset>
       <div class="herald-admin-field">

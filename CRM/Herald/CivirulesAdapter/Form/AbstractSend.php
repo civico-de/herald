@@ -9,7 +9,8 @@ use CRM_Herald_ExtensionUtil as E;
 if (class_exists('CRM_CivirulesActions_Form_Form')) {
   /**
    * Shared form scaffolding for herald CiviRules actions: load existing
-   * action params, common fields (channel/template/chat_id), submit handler.
+   * action params, the delivery fields (a topic, or a channel and the keys of
+   * the channel types), submit handler.
    *
    * Subclasses add their action-specific fields in addExtraFields() and pull
    * extra values out via getExtraValues().
@@ -20,26 +21,6 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
 
     protected const JSON_FLAGS =
       JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR;
-
-    /**
-     * Stored params the form shows as they are.
-     */
-    private const SHOWN = [
-      'channel',
-      'template',
-      'chat_id',
-      'parse_mode',
-      'disable_notification',
-      'disable_web_page_preview',
-      'delivery_mode',
-      'subscription_type',
-      'group_id',
-      'email_addresses',
-      'respect_suspension',
-      'email_location_type',
-      'scope_entity',
-      'aggregate_minutes',
-    ];
 
     /**
      * Workflow templates this action supports; [] for an action without a template field.
@@ -66,10 +47,25 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
     public function buildQuickForm(): void {
       $this->add(
         'select',
+        'send_via',
+        E::ts('Send'),
+        [
+          'own' => E::ts('With a delivery of its own'),
+          'topic' => E::ts('Through a topic'),
+        ],
+        required: TRUE,
+      );
+      $this->add(
+        'select',
+        'topic',
+        E::ts('Topic (its route sets channel, recipients and aggregation)'),
+        ['' => E::ts('- select topic -')] + CRM_Herald_CivirulesAdapter_SendOptions::topics(),
+      );
+      $this->add(
+        'select',
         'delivery_mode',
         E::ts('Delivery mode'),
         CRM_Herald_CivirulesAdapter_SendOptions::deliveryModes(),
-        required: TRUE,
       );
       $this->add(
         'select',
@@ -118,25 +114,15 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
       $this->add(
         'select',
         'channel',
-        E::ts('Channel (direct mode only — subscribers use their own preferred channel)'),
-        CRM_Herald_CivirulesAdapter_SendOptions::channels(),
-        required: TRUE,
+        E::ts('Channel (direct and address-list mode — subscribers use their own preferred channel)'),
+        ['' => E::ts('- select channel -')] + CRM_Herald_CivirulesAdapter_SendOptions::channels(),
       );
       // A digest brings its own template.
       $templates = $this->getTemplateOptions();
       if ($templates !== []) {
         $this->add('select', 'template', E::ts('Message template'), $templates, required: TRUE);
       }
-      $this->add('text', 'chat_id', E::ts('Telegram chat ID (optional, falls back to default setting)'), [
-        'size' => 30,
-      ]);
-      $this->add('select', 'parse_mode', E::ts('Telegram parse mode'), [
-        'HTML' => 'HTML',
-        'MarkdownV2' => 'MarkdownV2',
-        '' => E::ts('Plain text'),
-      ]);
-      $this->add('checkbox', 'disable_notification', E::ts('Silent message (Telegram)'));
-      $this->add('checkbox', 'disable_web_page_preview', E::ts('Disable link previews (Telegram)'));
+      CRM_Herald_CivirulesAdapter_SendFormFields::addTo($this);
       $this->add(
         'text',
         'aggregate_minutes',
@@ -145,14 +131,14 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
         ),
         ['size' => 5],
       );
-      $this->add('textarea', 'channel_config', E::ts('Channel-specific config (JSON, optional)'), [
-        'rows' => 5,
-        'cols' => 60,
-        'placeholder' => '{"webhook_url": "https://hooks.slack.com/...", "webhook_body_format": "slack"}',
-      ]);
 
       $this->addExtraFields();
-      $this->addFormRule($this->errorsIn(...));
+      $this->addFormRule(
+        fn (array $values): array|bool => CRM_Herald_CivirulesAdapter_SendFormFields::errors(
+          Cast::namedOnly($values),
+          $this->getExtraValues(...),
+        ),
+      );
 
       $this->addButtons([
         ['type' => 'next', 'name' => E::ts('Save'), 'isDefault' => TRUE],
@@ -161,34 +147,24 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
     }
 
     /**
-     * @param array<string, mixed> $values
-     * @return array<string, string>|true
-     */
-    private function errorsIn(array $values): array|bool {
-      try {
-        $this->getExtraValues($values);
-        $errors = CRM_Herald_CivirulesAdapter_SendParams::errors($values);
-      }
-      catch (\CRM_Core_Exception $e) {
-        $errors = [$e->getMessage()];
-      }
-      return $errors === [] ? TRUE : ['_qf_default' => implode(' ', $errors)];
-    }
-
-    /**
      * @return array<string, mixed>
      */
     public function setDefaultValues() {
       /** @var array<string, mixed> $defaults */
       $defaults = parent::setDefaultValues();
-      $params = $this->getActionParameters();
-      $defaults = array_intersect_key($params, array_flip(self::SHOWN)) + $defaults + ['delivery_mode' => 'direct'];
-      $config = $params['channel_config'] ?? [];
-      if ($config !== [] && $config !== '') {
-        $defaults['channel_config'] = is_array($config)
-          ? json_encode($config, self::JSON_FLAGS)
-          : Cast::toString($config);
-      }
+      $params = array_filter(
+        Cast::namedOnly($this->getActionParameters()),
+        fn (mixed $value, int|string $key): bool => is_scalar($value) && $this->elementExists((string) $key),
+        ARRAY_FILTER_USE_BOTH,
+      );
+      $params = CRM_Herald_CivirulesAdapter_SendFormFields::defaults($params);
+      $defaults =
+        $params
+        + $defaults
+        + [
+          'send_via' => empty($params['topic']) ? 'own' : 'topic',
+          'delivery_mode' => 'direct',
+        ];
       return array_filter($defaults, static fn (mixed $value): bool => $value !== NULL) + $this->extraDefaults();
     }
 
@@ -197,7 +173,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
       $values = $this->exportValues();
       $params = CRM_Herald_CivirulesAdapter_SendParams::of($values);
       if (!$this->supportsScopeEntity()) {
-        $params['scope_entity'] = '';
+        unset($params['scope_entity']);
       }
       if ($this->elementExists('template')) {
         $params['template'] = trim(Cast::toString($values['template'] ?? ''));

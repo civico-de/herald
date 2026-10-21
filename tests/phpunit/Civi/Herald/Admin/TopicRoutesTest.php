@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Admin;
 
 use Civi\Api4\Herald;
+use Civi\Herald\ChannelFixture;
 use Civi\Herald\Topic\Router;
 
 /**
@@ -25,16 +26,22 @@ class TopicRoutesTest extends AdminTestCase {
       'disable_notification' => 1,
       'parse_mode' => NULL,
       'delivery_mode' => 'direct',
-      'channel_config' => ['custom' => 'x'],
       'future_option' => ['kept' => TRUE],
     ],
-    'hooks' => ['channel' => 'webhook', 'webhook_url' => 'https://hooks.example.org/x', 'webhook_headers' => []],
+    'hooks' => [
+      'channel' => 'webhook',
+      'webhook_url' => 'https://hooks.example.org/x',
+      'webhook_body_format' => 'slack',
+    ],
     'members' => ['delivery_mode' => 'group', 'group_id' => 4, 'respect_suspension' => FALSE],
   ];
 
   protected function setUp(): void {
     parent::setUp();
     \Civi::settings()->set(Router::SETTING, self::CLI_MAP);
+    ChannelFixture::add('telegram', 'telegram', ['bot_token' => bin2hex(random_bytes(8))]);
+    ChannelFixture::add('ntfy', 'ntfy');
+    ChannelFixture::add('webhook', 'webhook');
   }
 
   public function testValidRouteIsStoredAsGiven(): void {
@@ -54,18 +61,36 @@ class TopicRoutesTest extends AdminTestCase {
   }
 
   public function testRenameKeepsThePosition(): void {
-    self::call('saveTopic', ['topic' => 'operations', 'route' => self::CLI_MAP['ops'], 'previousName' => 'ops']);
+    self::call('saveTopic', ['topic' => 'webhooks', 'route' => self::CLI_MAP['hooks'], 'previousName' => 'hooks']);
     $map = \Civi::settings()->get(Router::SETTING);
     $this->assertIsArray($map);
-    $this->assertSame(['default', 'operations', 'hooks', 'members'], array_keys($map));
+    $this->assertSame(['default', 'ops', 'webhooks', 'members'], array_keys($map));
+  }
+
+  public function testATopicInUseIsNeitherRenamedNorDeleted(): void {
+    // The monitor publishes to "ops" by default.
+    $this->assertRejected(
+      'saveTopic',
+      ['topic' => 'operations', 'route' => self::CLI_MAP['ops'], 'previousName' => 'ops'],
+      ['The topic "ops" cannot be renamed while in use:', 'The monitor'],
+    );
+    $this->assertRejected('deleteTopic', ['topic' => 'ops'], ['The topic "ops" is still in use:', 'The monitor']);
+    $this->assertSame(self::CLI_MAP, \Civi::settings()->get(Router::SETTING));
+  }
+
+  public function testTheUsageListsWhoNamesEachTopic(): void {
+    $usage = array_column(self::call('getTopicUsage'), 'used_by', 'topic');
+    $this->assertSame(['The monitor'], $usage['ops']);
+    $this->assertSame([], $usage['hooks']);
   }
 
   public function testInvalidRoutesAreRejected(): void {
     $this->assertRejected(
       'saveTopic',
-      ['topic' => 'x', 'route' => ['channel' => 'carrier_pigeon']],
+      ['topic' => 'x', 'route' => ['channel' => 'carrier_pigeon', 'bot_token' => bin2hex(random_bytes(8))]],
       [
-        'The channel "carrier_pigeon" is not registered.',
+        'There is no channel "carrier_pigeon".',
+        'bot_token belong to the channel, not to a delivery; set them under Channels.',
       ],
     );
     $this->assertRejected(
@@ -78,7 +103,7 @@ class TopicRoutesTest extends AdminTestCase {
         'without leading or trailing spaces',
         '"Aggregate window in minutes" must be a whole number.',
         '"Silent message" must be yes or no.',
-        '"Parse Mode" must be one of: HTML, MarkdownV2, "".',
+        '"Parse Mode" must be one of: HTML, MarkdownV2, text.',
       ],
     );
     $this->assertRejected(
@@ -87,13 +112,13 @@ class TopicRoutesTest extends AdminTestCase {
         'topic' => 'x',
         'route' => [
           'delivery_mode' => 'group',
-          'webhook_headers' => ['a', 'b'],
+          'ntfy_priority' => 'loud',
           'email_to' => 5,
           'aggregate_minutes' => -1,
         ],
       ],
       [
-        '"Extra headers" must be a JSON object.',
+        '"Priority (1-5)" must be a whole number.',
         '"Recipient address" must be text.',
         '"Aggregate window in minutes" must be at least 0.',
         'The delivery mode "group" needs "Group".',
@@ -106,7 +131,7 @@ class TopicRoutesTest extends AdminTestCase {
     $this->assertRejected('saveTopic', ['topic' => 'ops', 'route' => []], ['A topic named "ops" already exists.']);
     $this->assertRejected(
       'saveTopic',
-      ['topic' => 'hooks', 'route' => [], 'previousName' => 'ops'],
+      ['topic' => 'hooks', 'route' => [], 'previousName' => 'members'],
       [
         'A topic named "hooks" already exists.',
       ],
@@ -133,8 +158,8 @@ class TopicRoutesTest extends AdminTestCase {
     $this->assertAdminOnly(static fn () => Herald::deleteTopic()->setTopic('ops')->execute());
   }
 
-  public function testChannelsCarryTheirLabel(): void {
-    $labels = array_column(self::call('getChannels'), 'label', 'key');
+  public function testChannelTypesCarryTheirLabel(): void {
+    $labels = array_column(self::call('getChannelTypes'), 'label', 'key');
     $this->assertSame('Telegram', $labels['telegram']);
     $this->assertSame('Email', $labels['email']);
     $this->assertSame('CiviCRM activity', $labels['activity']);

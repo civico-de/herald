@@ -42,8 +42,9 @@ class NotifyDigestTest extends TestCase implements HeadlessInterface, HookInterf
     \Civi::settings()->set('mailing_backend', [
       'outBound_option' => \CRM_Mailing_Config::OUTBOUND_OPTION_REDIRECT_TO_DB,
     ]);
-    \Civi::settings()->set('herald_email_from', '"Herald" <noreply@example.org>');
-    \Civi::settings()->set('herald_email_default_to', '');
+    \Civi\Herald\ChannelFixture::add('email', 'email', ['email_from' => '"Herald" <noreply@example.org>']);
+    \Civi\Herald\ChannelFixture::add('activity', 'activity');
+    \Civi::settings()->set('herald_topics', ['mornings' => self::DELIVERY + ['email_subject' => 'Morning numbers']]);
     \CRM_Core_DAO::executeQuery('DELETE FROM civicrm_mailing_spool');
     $this->digest = DigestFixture::create(
       self::DIGEST,
@@ -226,9 +227,7 @@ class NotifyDigestTest extends TestCase implements HeadlessInterface, HookInterf
     return [
       'email_subject' => [self::DELIVERY + ['email_subject' => 'Morning numbers']],
       'another channel\'s subject' => [self::DELIVERY + ['activity_subject' => 'Morning numbers']],
-      'in channel_config' => [
-        self::DELIVERY + ['channel_config' => json_encode(['email_subject' => 'Morning numbers'])],
-      ],
+      'in the topic route' => [['topic' => 'mornings']],
     ];
   }
 

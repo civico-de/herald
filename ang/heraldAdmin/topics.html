@@ -19,6 +19,7 @@
         <th scope="col">{{:: $ctrl.ts('Channel') }}</th>
         <th scope="col">{{:: $ctrl.ts('Delivery mode') }}</th>
         <th scope="col">{{:: $ctrl.ts('Aggregate window in minutes') }}</th>
+        <th scope="col">{{:: $ctrl.ts('Used by') }}</th>
         <th scope="col"><span class="sr-only">{{:: $ctrl.ts('Actions') }}</span></th>
       </tr>
     </thead>
@@ -28,6 +29,12 @@
         <td>{{ row.channel || row.fallback }}</td>
         <td>{{ row.mode || row.fallback }}</td>
         <td>{{ row.aggregate || row.fallback }}</td>
+        <td>
+          <ul class="herald-admin-plain" ng-if="row.usedBy.length">
+            <li ng-repeat="user in row.usedBy">{{ user }}</li>
+          </ul>
+          <span ng-if="!row.usedBy.length">{{:: $ctrl.ts('(nothing)') }}</span>
+        </td>
         <td>
           <a class="btn btn-xs btn-secondary" ng-href="{{ row.href }}">{{:: $ctrl.ts('Edit') }}<span class="sr-only"> {{ row.name }}</span></a>
           <button type="button" class="btn btn-xs btn-danger" ng-click="$ctrl.remove(row)">

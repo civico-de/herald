@@ -3,6 +3,8 @@
 declare(strict_types = 1);
 
 use Civi\Herald\Channel\ChannelRegistry;
+use Civi\Herald\Channel\ChannelStore;
+use Civi\Herald\Topic\Router;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
@@ -24,14 +26,39 @@ final class CRM_Herald_CivirulesAdapter_SendOptions {
   }
 
   /**
+   * Switched-off channels stay listed, so a rule naming one keeps it.
+   *
    * @return array<string, string>
    */
   public static function channels(): array {
     $options = [];
-    foreach (ChannelRegistry::default()->listKeys() as $key) {
-      $options[$key] = ChannelRegistry::label($key);
+    foreach ((new ChannelStore())->all() as $name => $record) {
+      $options[$name] =
+        $record['label']
+        . ' ('
+        . ChannelRegistry::label($record['type'])
+        . ')'
+        . ($record['active'] ? '' : ' ' . E::ts('(switched off)'));
     }
     return $options;
+  }
+
+  /**
+   * The configured channels by name and their type, for the form script.
+   *
+   * @return array<string, string>
+   */
+  public static function channelTypes(): array {
+    return array_map(static fn (array $record): string => $record['type'], (new ChannelStore())->all());
+  }
+
+  /**
+   * @return array<string, string>
+   */
+  public static function topics(): array {
+    $map = \Civi::settings()->get(Router::SETTING);
+    $names = array_map('strval', array_keys(is_array($map) ? $map : []));
+    return array_combine($names, $names);
   }
 
   /**

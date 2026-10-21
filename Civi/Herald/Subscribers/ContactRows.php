@@ -5,12 +5,55 @@ declare(strict_types = 1);
 namespace Civi\Herald\Subscribers;
 
 use Civi\Api4\Generic\DAOGetAction;
+use Civi\Herald\Channel\ChannelStore;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * The contact query and row mapping that subscriber and group fan-outs share.
  */
 final class ContactRows {
+
+  public const EMAIL_CHANNEL_SETTING = 'herald_contact_email_channel';
+
+  /**
+   * Channel type => the preference field holding a contact's recipient and
+   * the key it fills. Email reaches the contact's own address instead.
+   */
+  public const RECIPIENT_FIELDS = [
+    'telegram' => ['telegram_chat_id', 'chat_id'],
+    'pushover' => ['pushover_user_key', 'pushover_user_key'],
+    'ntfy' => ['ntfy_topic', 'ntfy_topic'],
+    'webhook' => ['webhook_url', 'webhook_url'],
+  ];
+
+  /**
+   * Whether a contact can receive through a channel of this type.
+   */
+  public static function reachable(string $type): bool {
+    return $type === 'email' || isset(self::RECIPIENT_FIELDS[$type]);
+  }
+
+  /**
+   * The channels a contact can choose as preferred channel: name => type.
+   *
+   * @return array<string, string>
+   */
+  public static function subscribable(?ChannelStore $store = NULL): array {
+    $records = array_filter(
+      ($store ?? new ChannelStore())->all(),
+      static fn (array $record): bool => $record['active'] && $record['subscribable'],
+    );
+    return array_map(static fn (array $record): string => $record['type'], $records);
+  }
+
+  /**
+   * The email channel a contact's own address is reached through when the
+   * contact has no usable preference.
+   */
+  public static function emailChannel(): string {
+    $name = \Civi::settings()->get(self::EMAIL_CHANNEL_SETTING);
+    return is_string($name) && $name !== '' ? $name : 'email';
+  }
 
   /**
    * Living contacts with the fields a recipient is resolved from. With a
@@ -71,20 +114,14 @@ final class ContactRows {
   }
 
   /**
-   * Config for a contact's non-email preferred channel, or NULL when the
-   * recipient field that channel needs is empty or the channel is unknown.
+   * Config for a contact's preferred channel of a non-email type, or NULL
+   * when the recipient field that type needs is empty or the type has none.
    *
    * @param array<string, mixed> $row
    * @return array<string, mixed>|null
    */
-  public static function channelConfig(string $channel, array $row): ?array {
-    [$field, $key] = match ($channel) {
-      'telegram' => ['telegram_chat_id', 'chat_id'],
-      'pushover' => ['pushover_user_key', 'pushover_user_key'],
-      'ntfy' => ['ntfy_topic', 'ntfy_topic'],
-      'webhook' => ['webhook_url', 'webhook_url'],
-      default => ['', ''],
-    };
+  public static function channelConfig(string $type, array $row): ?array {
+    [$field, $key] = self::RECIPIENT_FIELDS[$type] ?? ['', ''];
     $value = $field === '' ? NULL : $row['herald_preferences.' . $field] ?? NULL;
     return empty($value) ? NULL : [$key => $value];
   }

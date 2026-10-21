@@ -31,8 +31,6 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
   public function setUp(): void {
     parent::setUp();
     $this->capturedRequests = [];
-    \Civi::settings()->set('herald_webhook_default_url', '');
-    \Civi::settings()->set('herald_webhook_default_auth_token', '');
   }
 
   private function makeMockedClient(Response $response): Client {
@@ -104,28 +102,36 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     $this->assertSame("Bearer {$token}", $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
   }
 
-  public function testDefaultTokenPairsWithDefaultUrl(): void {
-    \Civi::settings()->set('herald_webhook_default_url', 'https://example.com/default');
-    \Civi::settings()->set('herald_webhook_default_auth_token', 'from-setting');
-    $channel = $this->makeChannel(new Response(200, [], ''));
-    $channel->send('x', []);
-    $this->assertSame('Bearer from-setting', $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
+  /**
+   * Sends through a configured channel "hook" holding a default URL and token.
+   *
+   * @return string the channel's token
+   */
+  private function sendThroughChannel(array $delivery): string {
+    $token = bin2hex(random_bytes(8));
+    \Civi\Herald\ChannelFixture::add('hook', 'webhook', [
+      'webhook_url' => 'https://example.com/default',
+      'webhook_auth_token' => $token,
+    ]);
+    $registry = new ChannelRegistry();
+    $registry->register($this->makeChannel(new Response(200, [], '')));
+    (new \Civi\Herald\Dispatch\ChannelSender($registry))->send('hook', 'x', $delivery);
+    return $token;
   }
 
-  public function testDefaultTokenNotSentToConfigSuppliedUrl(): void {
-    // The default token belongs to the default endpoint. A caller-supplied
-    // URL (e.g. a subscriber's personal webhook) must not receive it.
-    \Civi::settings()->set('herald_webhook_default_auth_token', 'from-setting');
-    $channel = $this->makeChannel(new Response(200, [], ''));
-    $channel->send('x', ['webhook_url' => 'https://attacker.example/collect']);
-    $this->assertSame('', $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
+  public function testTheChannelsTokenPairsWithItsUrl(): void {
+    $token = $this->sendThroughChannel(['webhook_url' => '']);
+    $request = $this->capturedRequests[0]['request'];
+    $this->assertSame('https://example.com/default', (string) $request->getUri());
+    $this->assertSame("Bearer {$token}", $request->getHeaderLine('Authorization'));
   }
 
-  public function testEmptyConfigUrlFallsBackToDefault(): void {
-    \Civi::settings()->set('herald_webhook_default_url', 'https://example.com/default');
-    $channel = $this->makeChannel(new Response(200, [], ''));
-    $channel->send('x', ['webhook_url' => '']);
-    $this->assertSame('https://example.com/default', (string) $this->capturedRequests[0]['request']->getUri());
+  public function testTheChannelsTokenIsNotSentToADeliveryUrl(): void {
+    // A caller-supplied URL (e.g. a subscriber's personal webhook) must not receive it.
+    $this->sendThroughChannel(['webhook_url' => 'https://attacker.example/collect']);
+    $request = $this->capturedRequests[0]['request'];
+    $this->assertSame('https://attacker.example/collect', (string) $request->getUri());
+    $this->assertSame('', $request->getHeaderLine('Authorization'));
   }
 
   public function testExplicitAuthorizationHeaderNotOverwritten(): void {
@@ -136,13 +142,6 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
       'webhook_headers' => ['Authorization' => 'Basic abc=='],
     ]);
     $this->assertSame('Basic abc==', $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
-  }
-
-  public function testFallsBackToDefaultUrl(): void {
-    \Civi::settings()->set('herald_webhook_default_url', 'https://example.com/default');
-    $channel = $this->makeChannel(new Response(200, [], ''));
-    $channel->send('x', []);
-    $this->assertSame('https://example.com/default', (string) $this->capturedRequests[0]['request']->getUri());
   }
 
   public function testThrowsWhenUrlMissing(): void {

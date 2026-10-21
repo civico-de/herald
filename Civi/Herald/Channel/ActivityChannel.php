@@ -77,7 +77,7 @@ class ActivityChannel implements ChannelInterface {
   }
 
   /**
-   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string}>
+   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string, scope?: 'channel'|'delivery', secret?: bool, recipient?: bool, bound_to?: string}>
    */
   public function getConfigSchema(): array {
     return [
@@ -85,6 +85,7 @@ class ActivityChannel implements ChannelInterface {
         'label' => E::ts('Assignee contact ID'),
         'required' => TRUE,
         'type' => 'int',
+        'recipient' => TRUE,
       ],
       'activity_source_contact_id' => [
         'label' => E::ts('Added-by contact ID'),
@@ -96,6 +97,7 @@ class ActivityChannel implements ChannelInterface {
         'label' => E::ts('Related contact ID'),
         'required' => FALSE,
         'type' => 'int',
+        'recipient' => TRUE,
       ],
       'activity_type' => [
         'label' => E::ts('Activity type name'),

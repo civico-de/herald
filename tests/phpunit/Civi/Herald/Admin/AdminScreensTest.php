@@ -45,6 +45,7 @@ class AdminScreensTest extends AdminTestCase {
     $this->assertSame(
       [
         'herald_settings',
+        'herald_channels',
         'herald_topics',
         'herald_cleaning',
         'herald_hosts',
@@ -77,6 +78,7 @@ class AdminScreensTest extends AdminTestCase {
     $this->assertSame(
       [
         'herald_settings',
+        'herald_channels',
         'herald_topics',
         'herald_cleaning',
         'herald_hosts',
@@ -88,8 +90,9 @@ class AdminScreensTest extends AdminTestCase {
       ],
       array_column($links, 'name'),
     );
-    $this->assertStringEndsWith('civicrm/admin/herald#/topics', $links[1]['url']);
-    $this->assertMatchesRegularExpression('#civicrm/admin/herald/digests[?&]reset=1$#', $links[7]['url']);
+    $this->assertStringEndsWith('civicrm/admin/herald#/channels', $links[1]['url']);
+    $this->assertStringEndsWith('civicrm/admin/herald#/topics', $links[2]['url']);
+    $this->assertMatchesRegularExpression('#civicrm/admin/herald/digests[?&]reset=1$#', $links[8]['url']);
     // Every screen but the settings form says what it is for.
     $this->assertNotContains('', array_column(array_slice($links, 1), 'description'));
   }

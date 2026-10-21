@@ -17,9 +17,17 @@
 
       const load = () =>
         $q
-          .all([heraldAdmin.setting("herald_topics"), heraldAdmin.channels()])
+          .all([
+            heraldAdmin.setting("herald_topics"),
+            heraldAdmin.channels(),
+            crmApi4("Herald", "getTopicUsage"),
+          ])
           .then((loaded) => {
             const map = heraldAdmin.asMap(loaded[0]);
+            const usage = {};
+            loaded[2].forEach((row) => {
+              usage[row.topic] = row.used_by;
+            });
             const channels = {};
             loaded[1].forEach((channel) => {
               channels[channel.key] = channel.label;
@@ -39,6 +47,7 @@
                 aggregate: heraldAdmin.isEmpty(route.aggregate_minutes)
                   ? ""
                   : String(route.aggregate_minutes),
+                usedBy: usage[name] || [],
               };
             });
             ctrl.hasDefault = heraldAdmin.has(map, "default");

@@ -10,10 +10,9 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  * Resolves the members of a CiviCRM group into dispatch instructions.
  *
  * Contacts with usable herald_preferences go out via their own preferred
- * channel (same mapping as subscriber mode). Contacts without get the email
- * fallback — their own resolved address — since that is the only channel with
- * a per-contact recipient that needs no preference record. Non-email default
- * channels have no per-contact recipient and are counted as skipped.
+ * channel (same mapping as subscriber mode). Contacts without get their own
+ * resolved address through the contact email channel
+ * (ContactRows::emailChannel()), the only recipient that needs no preference.
  */
 class GroupRecipients {
 
@@ -44,12 +43,20 @@ class GroupRecipients {
    *
    * @param array<int, array<string, mixed>> $rows
    * @param array<string, mixed> $options
+   * @param array<string, string>|null $types Channel name => type; default ContactRows::subscribable().
    * @return array{
    *   recipients: array<int, array{contact_id: int, channel: string, config: array<string, mixed>}>,
    *   skipped: array<string, int>,
    * }
    */
-  public static function mapGroupRows(array $rows, array $options = []): array {
+  public static function mapGroupRows(
+    array $rows,
+    array $options = [],
+    ?array $types = NULL,
+    ?string $emailChannel = NULL,
+  ): array {
+    $types ??= ContactRows::subscribable();
+    $emailChannel ??= ContactRows::emailChannel();
     $out = [];
     /** @var array<string, int> $skipped */
     $skipped = [];
@@ -64,11 +71,12 @@ class GroupRecipients {
       $row = $contactRows[0];
       $contactId = Cast::toInt($row['id'] ?? 0);
       $channel = Cast::toString($row['herald_preferences.preferred_channel'] ?? '');
-      $config = $channel !== 'email' ? ContactRows::channelConfig($channel, $row) : NULL;
+      $type = $types[$channel] ?? '';
+      $config = $type !== '' && $type !== 'email' ? ContactRows::channelConfig($type, $row) : NULL;
       if ($config === NULL) {
-        // Email path: preferred channel email, or the fallback for contacts
+        // Email path: an email channel preferred, or the fallback for contacts
         // without (usable) preferences — their own resolved address.
-        $channel = 'email';
+        $channel = $type === 'email' ? $channel : $emailChannel;
         $delivery = EmailRecipient::of($contactRows, $options);
         if ($delivery['suspended']) {
           $bump('suspended');

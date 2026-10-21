@@ -31,7 +31,7 @@ if (class_exists('CRM_Civirules_Action')) {
       $text = $title === NULL
         ? E::ts('Digest "%1" does not exist.', [1 => $name])
         : E::ts('Sends the digest "%1".', [1 => $title]);
-      return htmlspecialchars($text, ENT_QUOTES);
+      return htmlspecialchars($text . ' ' . $this->deliveryText(), ENT_QUOTES);
     }
 
     public function processAction(CRM_Civirules_TriggerData_TriggerData $triggerData): void {

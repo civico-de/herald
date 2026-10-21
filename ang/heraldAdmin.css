@@ -58,3 +58,8 @@
   border: 1px solid currentColor;
   background: #fff;
 }
+
+.herald-admin ul.herald-admin-plain {
+  margin: 0;
+  padding-left: 1.2em;
+}

@@ -28,7 +28,7 @@ $subscriptionTypes = [
 ];
 
 /**
- * @var array<int, array{name: string, label: string, data_type: string, html_type: string, weight: int, help_pre?: string, options?: array<string, string>, option_group_name?: string, serialize?: int}> $preferenceFields
+ * @var array<int, array{name: string, label: string, data_type: string, html_type: string, weight: int, help_pre?: string, option_group_name?: string, serialize?: int}> $preferenceFields
  */
 $preferenceFields = [
   [
@@ -36,15 +36,10 @@ $preferenceFields = [
     'label' => E::ts('Preferred channel'),
     'data_type' => 'String',
     'html_type' => 'Radio',
-    'options' => [
-      'telegram' => E::ts('Telegram'),
-      'webhook' => E::ts('Webhook (Slack/Discord/Mattermost/custom)'),
-      'ntfy' => E::ts('ntfy.sh'),
-      'pushover' => E::ts('Pushover'),
-      'email' => E::ts('Email (your primary address)'),
-    ],
+    // Values are the subscribable channels (PreferredChannelOptions::sync()).
+    'option_group_name' => 'herald_preferred_channel',
     'help_pre' => E::ts(
-      'Pick the channel where you want to receive notifications. Then fill in the recipient identifier for that channel below. Email needs no identifier — it goes to your primary address.',
+      'Pick the channel where you want to receive notifications. Then fill in the recipient identifier for that channel below. An email channel needs no identifier — it goes to your primary address.',
     ),
     'weight' => 10,
   ],
@@ -150,6 +145,27 @@ foreach ($subscriptionTypes as $st) {
 }
 
 $managed[] = [
+  'name' => 'OptionGroup_herald_preferred_channel',
+  'entity' => 'OptionGroup',
+  'cleanup' => 'unused',
+  'update' => 'unmodified',
+  'params' => [
+    'version' => 4,
+    // The upgrade to named channels creates it before the reconcile.
+    'match' => ['name'],
+    'values' => [
+      'name' => 'herald_preferred_channel',
+      'title' => E::ts('Herald: Preferred channel'),
+      'description' => E::ts(
+        'The channels a contact can receive notifications through; herald keeps them in step with its channels.',
+      ),
+      'is_active' => TRUE,
+      'is_reserved' => TRUE,
+    ],
+  ],
+];
+
+$managed[] = [
   'name' => 'CustomGroup_herald_preferences',
   'entity' => 'CustomGroup',
   'cleanup' => 'unused',
@@ -184,10 +200,6 @@ foreach ($preferenceFields as $f) {
   }
   if (!empty($f['option_group_name'])) {
     $values['option_group_id.name'] = $f['option_group_name'];
-  }
-  if (!empty($f['options']) && empty($f['option_group_name'])) {
-    // Inline option list — APIv4 accepts an assoc value=>label dict here.
-    $values['option_values'] = $f['options'];
   }
   if (!empty($f['serialize'])) {
     $values['serialize'] = (int) $f['serialize'];

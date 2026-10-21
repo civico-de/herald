@@ -196,7 +196,10 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
       'aggregate_minutes' => 15,
     ]);
     self::assertStringContainsString('id=7', (string) $action->getExtraDataInputUrl(7));
-    self::assertSame('Sends the digest &quot;Contract digest&quot;.', $action->userFriendlyConditionParams());
+    self::assertSame(
+      'Sends the digest &quot;Contract digest&quot;. Sends through the channel &quot;telegram&quot;.',
+      $action->userFriendlyConditionParams(),
+    );
 
     // Cron triggers carry no entity at all; the digest must not need one.
     $action->processAction(new CRM_Civirules_TriggerData_Cron(NULL, 'Contribution', []));

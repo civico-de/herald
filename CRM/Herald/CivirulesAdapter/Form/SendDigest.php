@@ -3,6 +3,8 @@
 declare(strict_types = 1);
 
 use Civi\Herald\Digest\DigestRules;
+use Civi\Herald\Dispatch\Dispatcher;
+use Civi\Herald\Topic\Router;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
@@ -38,7 +40,12 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
      * @return array<string, mixed>
      */
     protected function getExtraValues(array $submitted): array {
-      $problem = DigestRules::deliveryProblem($submitted);
+      // A topic's route counts too; an unknown topic is reported by SendParams::errors().
+      $params = CRM_Herald_CivirulesAdapter_SendParams::of($submitted);
+      $topic = Cast::toString($params['topic'] ?? '');
+      $problem = $topic === '' || Router::exists($topic)
+        ? DigestRules::deliveryProblem(Dispatcher::withTopic($params))
+        : NULL;
       if ($problem !== NULL) {
         throw new \CRM_Core_Exception($problem);
       }

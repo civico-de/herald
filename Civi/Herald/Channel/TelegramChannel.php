@@ -30,39 +30,16 @@ class TelegramChannel implements ChannelInterface {
    * @param array<string, mixed> $config
    */
   public function send(string $renderedBody, array $config): void {
-    $token = Cast::toString(\Civi::settings()->get('herald_telegram_bot_token'));
+    $token = Cast::toString($config['bot_token'] ?? '');
     if ($token === '') {
-      throw new \CRM_Core_Exception(
-        'herald: Telegram bot token is not configured. Set "herald_telegram_bot_token" in CRM settings.',
-      );
+      throw new \CRM_Core_Exception('herald: the Telegram channel has no bot_token.');
+    }
+    $chatId = $config['chat_id'] ?? '';
+    if (empty($chatId)) {
+      throw new \CRM_Core_Exception('herald: no chat_id, neither on the delivery nor on the channel.');
     }
 
-    // !empty, not ??: the action form always stores chat_id (possibly ''),
-    // and an empty value must still fall back to the default setting.
-    $chatId = !empty($config['chat_id'])
-      ? $config['chat_id']
-      : \Civi::settings()->get('herald_telegram_default_chat_id');
-    if (!$chatId) {
-      throw new \CRM_Core_Exception('herald: No chat_id supplied and no default chat ID is configured.');
-    }
-
-    // '' means "Plain text" — omit the key entirely rather than sending an
-    // empty parse_mode to the Bot API.
-    $parseMode = Cast::toString($config['parse_mode'] ?? 'HTML');
-    $payload = [
-      'chat_id' => Cast::toString($chatId),
-      'text' => TelegramText::fit(TelegramText::forParseMode($renderedBody, $parseMode), $parseMode),
-    ];
-    if ($parseMode !== '') {
-      $payload['parse_mode'] = $parseMode;
-    }
-    if (isset($config['disable_notification'])) {
-      $payload['disable_notification'] = !empty($config['disable_notification']);
-    }
-    if (isset($config['disable_web_page_preview'])) {
-      $payload['disable_web_page_preview'] = !empty($config['disable_web_page_preview']);
-    }
-
+    $payload = TelegramPayload::of($renderedBody, $chatId, $config);
     $url = sprintf('https://api.telegram.org/bot%s/sendMessage', $token);
     $client = $this->httpClient ?? new \GuzzleHttp\Client();
 
@@ -96,23 +73,30 @@ class TelegramChannel implements ChannelInterface {
   }
 
   /**
-   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string}>
+   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string, scope?: 'channel'|'delivery', secret?: bool, recipient?: bool, bound_to?: string}>
    */
   public function getConfigSchema(): array {
     return [
+      'bot_token' => [
+        'label' => E::ts('Bot token'),
+        'required' => TRUE,
+        'type' => 'string',
+        'scope' => 'channel',
+        'secret' => TRUE,
+        'help' => E::ts('From @BotFather.'),
+      ],
       'chat_id' => [
         'label' => E::ts('Chat ID'),
         'required' => FALSE,
         'type' => 'string',
-        'help' => E::ts(
-          'Telegram chat or group ID. Negative numbers are group chats. If empty, the default from settings is used.',
-        ),
+        'recipient' => TRUE,
+        'help' => E::ts('Telegram chat or group ID. Negative numbers are group chats.'),
       ],
       'parse_mode' => [
         'label' => E::ts('Parse Mode'),
         'required' => FALSE,
         'type' => 'enum',
-        'options' => ['HTML' => 'HTML', 'MarkdownV2' => 'MarkdownV2', '' => E::ts('Plain text')],
+        'options' => ['HTML' => 'HTML', 'MarkdownV2' => 'MarkdownV2', 'text' => E::ts('Plain text')],
         'default' => 'HTML',
       ],
       'disable_notification' => [
@@ -130,7 +114,7 @@ class TelegramChannel implements ChannelInterface {
 
   /**
    * Telegram messages have no subject line, and parse_mode is a Telegram
-   * vocabulary ('HTML'|'MarkdownV2'|'') rather than the semantic 'text'|'html'
+   * vocabulary ('HTML'|'MarkdownV2'|'text') rather than the semantic 'text'|'html'
    * — neither semantic maps cleanly, so neither is offered.
    *
    * @return array<string, string>

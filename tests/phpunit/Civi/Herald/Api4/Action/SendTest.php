@@ -31,8 +31,7 @@ class SendTest extends TestCase implements HeadlessInterface, HookInterface, Tra
     \Civi::settings()->set('mailing_backend', [
       'outBound_option' => \CRM_Mailing_Config::OUTBOUND_OPTION_REDIRECT_TO_DB,
     ]);
-    \Civi::settings()->set('herald_email_from', '"Herald" <noreply@example.org>');
-    \Civi::settings()->set('herald_email_default_to', '');
+    \Civi\Herald\ChannelFixture::add('email', 'email', ['email_from' => '"Herald" <noreply@example.org>']);
     \CRM_Core_DAO::executeQuery('DELETE FROM civicrm_mailing_spool');
   }
 
@@ -154,9 +153,32 @@ class SendTest extends TestCase implements HeadlessInterface, HookInterface, Tra
     $this->assertCount(1, $this->spooled());
   }
 
+  public function testEachEmailChannelSendsWithItsOwnSender(): void {
+    \Civi\Herald\ChannelFixture::add('board_mail', 'email', [
+      'email_from' => '"Board" <board@example.org>',
+      'email_to' => 'board@example.org',
+    ]);
+    civicrm_api4('Herald', 'send', ['checkPermissions' => FALSE, 'channel' => 'board_mail', 'message' => 'x']);
+
+    $spooled = $this->spooled();
+    $this->assertSame('board@example.org', $spooled[0]['recipient_email']);
+    $this->assertStringContainsString('board@example.org', $spooled[0]['headers']);
+    $this->assertStringNotContainsString('noreply@example.org', $spooled[0]['headers']);
+  }
+
+  public function testAnAccountKeyInTheConfigIsRefused(): void {
+    $this->expectExceptionMessage('herald: email_from belong to the channel configuration, not to a delivery.');
+    civicrm_api4('Herald', 'send', [
+      'checkPermissions' => FALSE,
+      'channel' => 'email',
+      'message' => 'x',
+      'config' => ['email_to' => 'ops@example.org', 'email_from' => 'spoof@example.org'],
+    ]);
+  }
+
   public function testUnknownChannelThrows(): void {
     $this->expectException(\CRM_Core_Exception::class);
-    $this->expectExceptionMessageMatches('/not registered/');
+    $this->expectExceptionMessage('herald: there is no channel "carrier-pigeon".');
     civicrm_api4('Herald', 'send', [
       'checkPermissions' => FALSE,
       'channel' => 'carrier-pigeon',

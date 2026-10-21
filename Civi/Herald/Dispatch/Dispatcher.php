@@ -5,8 +5,11 @@ declare(strict_types = 1);
 namespace Civi\Herald\Dispatch;
 
 use Civi\Herald\Buffer\AlertBuffer;
+use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Renderer\TemplateRenderer;
 use Civi\Herald\Subscribers\SubscriberLookup;
+use Civi\Herald\Topic\RouteFields;
+use Civi\Herald\Topic\Router;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
@@ -23,7 +26,9 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  * directly.
  *
  * Parameters (the flat "params" bag):
- *   channel             — channel key (default "telegram"); used for direct delivery
+ *   topic               — take the delivery from this topic's route, resolved
+ *                         at send time; no other delivery keys beside it
+ *   channel             — name of a configured channel; direct and address delivery
  *   template            — MessageTemplate workflow_name to render (required)
  *   delivery_mode       — "direct" (default), "subscribers", "group" or "addresses"
  *   subscription_type   — required when delivery_mode=subscribers; one of the
@@ -42,8 +47,8 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  *                         rendered body is parked in the alert buffer and
  *                         Job.herald_buffer_flush sends everything collected
  *                         within the window as ONE message.
- *   chat_id, parse_mode, disable_notification, … — channel-specific keys
- *                         (read by the channel implementations)
+ *   chat_id, parse_mode, disable_notification, … — delivery keys of the
+ *                         channel's type, over the channel's own
  */
 class Dispatcher {
 
@@ -88,6 +93,7 @@ class Dispatcher {
    * @return 'buffered'|'sent'
    */
   public function dispatchRendered(array $params, string $body, ?string $subject, ?float $amount): string {
+    $params = self::withTopic($params);
     // Must be computed before ChannelSubject::withSubject() mixes a per-event
     // rendered subject into $params — see groupHash().
     $groupHash = self::groupHash($params);
@@ -99,6 +105,22 @@ class Dispatcher {
     }
     Delivery::send($body, $params, $this->lookup);
     return 'sent';
+  }
+
+  /**
+   * A topic's route in place of the delivery keys; the rest of the params
+   * (template, scope, vars) stays.
+   *
+   * @param array<string, mixed> $params
+   * @return array<string, mixed>
+   */
+  public static function withTopic(array $params): array {
+    $topic = Cast::toString($params['topic'] ?? '');
+    if ($topic === '') {
+      return $params;
+    }
+    $own = array_diff_key($params, RouteFields::all(ChannelRegistry::default()), ['topic' => TRUE]);
+    return array_merge($own, (new Router())->resolve($topic));
   }
 
   /**

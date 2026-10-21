@@ -1,0 +1,47 @@
+<div class="herald-admin">
+  <h1 crm-page-title>{{:: $ctrl.ts('Channels') }}</h1>
+  <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
+  <p>
+    {{:: $ctrl.ts('A channel is one account of a channel type: a Telegram bot, a Pushover application, an email sender. Topic routes and rules name a channel; its token, server and sender stay here. A type can have several channels.') }}
+  </p>
+  <div ng-include="'~/heraldAdmin/messages.html'"></div>
+  <p>
+    <a class="btn btn-primary" href="#/channels/new"><i class="crm-i fa-plus" aria-hidden="true"></i> {{:: $ctrl.ts('Add channel') }}</a>
+  </p>
+  <table class="display" ng-if="$ctrl.loaded && $ctrl.rows.length">
+    <caption class="sr-only">{{:: $ctrl.ts('Channels') }}</caption>
+    <thead>
+      <tr>
+        <th scope="col">{{:: $ctrl.ts('Channel') }}</th>
+        <th scope="col">{{:: $ctrl.ts('Name') }}</th>
+        <th scope="col">{{:: $ctrl.ts('Type') }}</th>
+        <th scope="col">{{:: $ctrl.ts('Active') }}</th>
+        <th scope="col">{{:: $ctrl.ts('Contacts can choose it') }}</th>
+        <th scope="col">{{:: $ctrl.ts('Used by') }}</th>
+        <th scope="col"><span class="sr-only">{{:: $ctrl.ts('Actions') }}</span></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr ng-repeat="row in $ctrl.rows">
+        <th scope="row">{{ row.label }}</th>
+        <td><code>{{ row.name }}</code></td>
+        <td>{{ row.type }}</td>
+        <td>{{ row.active ? $ctrl.ts('Yes') : $ctrl.ts('No') }}</td>
+        <td>{{ row.subscribable ? $ctrl.ts('Yes') : $ctrl.ts('No') }}</td>
+        <td>
+          <ul class="herald-admin-plain" ng-if="row.usedBy.length">
+            <li ng-repeat="user in row.usedBy">{{ user }}</li>
+          </ul>
+          <span ng-if="!row.usedBy.length">{{:: $ctrl.ts('(nothing)') }}</span>
+        </td>
+        <td>
+          <a class="btn btn-xs btn-secondary" ng-href="{{ row.href }}">{{:: $ctrl.ts('Edit') }}<span class="sr-only"> {{ row.label }}</span></a>
+          <button type="button" class="btn btn-xs btn-danger" ng-click="$ctrl.remove(row)">
+            {{:: $ctrl.ts('Delete') }}<span class="sr-only"> {{ row.label }}</span>
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <p ng-if="$ctrl.loaded && !$ctrl.rows.length">{{:: $ctrl.ts('No channels yet.') }}</p>
+</div>

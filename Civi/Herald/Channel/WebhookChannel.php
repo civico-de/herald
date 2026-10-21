@@ -21,21 +21,16 @@ use GuzzleHttp\ClientInterface;
  *   body_format = 'discord' → {"content": "<text>"}                    (Discord webhooks)
  *   body_format = 'json'    + body_key='msg' → {"msg": "<rendered HTML>"} (custom key)
  *
- * Per-call config (`webhook_*` keys merged from action params /
- * channel_config JSON):
- *   webhook_url           string  Endpoint (required; falls back to default setting)
+ * Config:
+ *   webhook_url           string  Endpoint (required)
  *   webhook_method        string  HTTP method, default POST
  *   webhook_body_format   string  text|json|slack|discord (default text)
  *   webhook_body_key      string  JSON key when body_format=json (default 'text')
  *   webhook_headers       array   Extra request headers (assoc, name → value)
  *   webhook_auth_token    string  If set, sent as `Authorization: Bearer <token>`
  *
- * Settings:
- *   herald_webhook_default_url        — fallback URL when not in action
- *   herald_webhook_default_auth_token — fallback bearer token; only
- *     applied when the URL also came from the default setting. The default
- *     token belongs to the default endpoint — it must never be attached to a
- *     caller-supplied URL (e.g. a subscriber's personal webhook).
+ * The channel's token and headers belong to its URL: a delivery with its own
+ * URL (a subscriber's webhook) never gets them (bound_to).
  */
 class WebhookChannel implements ChannelInterface {
 
@@ -63,11 +58,10 @@ class WebhookChannel implements ChannelInterface {
    * @param array<string, mixed> $config
    */
   public function send(string $renderedBody, array $config): void {
-    [$effectiveUrl, $token] = self::endpoint($config);
+    $effectiveUrl = Cast::toString($config['webhook_url'] ?? '');
+    $token = Cast::toString($config['webhook_auth_token'] ?? '');
     if ($effectiveUrl === '') {
-      throw new \CRM_Core_Exception(
-        'herald: webhook channel requires webhook_url (action param or herald_webhook_default_url setting).',
-      );
+      throw new \CRM_Core_Exception('herald: no webhook_url, neither on the delivery nor on the channel.');
     }
     $allowedHosts = \Civi::settings()->get('herald_webhook_allowed_hosts');
     WebhookUrlGuard::assert($effectiveUrl, [
@@ -107,26 +101,6 @@ class WebhookChannel implements ChannelInterface {
   }
 
   /**
-   * The endpoint and its bearer token. The default token belongs to the default
-   * URL: a caller-supplied endpoint (a subscriber's own webhook) never gets it.
-   *
-   * @param array<string, mixed> $config
-   * @return array{string, string}
-   */
-  private static function endpoint(array $config): array {
-    $token = Cast::toString($config['webhook_auth_token'] ?? '');
-    // !empty, not ??: an empty webhook_url still falls back to the default.
-    if (!empty($config['webhook_url'])) {
-      return [Cast::toString($config['webhook_url']), $token];
-    }
-    $settings = \Civi::settings();
-    return [
-      Cast::toString($settings->get('herald_webhook_default_url')),
-      $token !== '' ? $token : Cast::toString($settings->get('herald_webhook_default_auth_token')),
-    ];
-  }
-
-  /**
    * Pure builder for the request body. Test-seam.
    *
    * @return array{type: 'json'|'raw', data: mixed}
@@ -146,11 +120,11 @@ class WebhookChannel implements ChannelInterface {
   }
 
   /**
-   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string}>
+   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string, scope?: 'channel'|'delivery', secret?: bool, recipient?: bool, bound_to?: string}>
    */
   public function getConfigSchema(): array {
     return [
-      'webhook_url' => ['label' => E::ts('URL'), 'required' => TRUE, 'type' => 'string'],
+      'webhook_url' => ['label' => E::ts('URL'), 'required' => TRUE, 'type' => 'string', 'recipient' => TRUE],
       'webhook_method' => [
         'label' => E::ts('Method'),
         'required' => FALSE,
@@ -170,11 +144,21 @@ class WebhookChannel implements ChannelInterface {
         'required' => FALSE,
         'type' => 'string',
       ],
-      'webhook_headers' => ['label' => E::ts('Extra headers'), 'required' => FALSE, 'type' => 'object'],
+      'webhook_headers' => [
+        'label' => E::ts('Extra headers'),
+        'required' => FALSE,
+        'type' => 'object',
+        'scope' => 'channel',
+        'secret' => TRUE,
+        'bound_to' => 'webhook_url',
+      ],
       'webhook_auth_token' => [
         'label' => E::ts('Bearer token (Authorization header)'),
         'required' => FALSE,
         'type' => 'string',
+        'scope' => 'channel',
+        'secret' => TRUE,
+        'bound_to' => 'webhook_url',
       ],
     ];
   }

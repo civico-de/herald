@@ -30,6 +30,7 @@ final class AdminScreens extends AutoService implements HookInterface {
    */
   public static function screens(): array {
     return [
+      'channels' => E::ts('Channels'),
       'topics' => E::ts('Topic routes'),
       'cleaning' => E::ts('Cleaned fields'),
       'hosts' => E::ts('Webhook allowed hosts'),
@@ -47,6 +48,7 @@ final class AdminScreens extends AutoService implements HookInterface {
    */
   public static function links(): array {
     $descriptions = [
+      'herald_channels' => E::ts('the bots, accounts and senders herald sends through.'),
       'herald_topics' => E::ts('where each topic is delivered.'),
       'herald_cleaning' => E::ts('rules that turn free text into clean groups for searches and notifications.'),
       'herald_hosts' => E::ts('which hosts the webhook channel may call.'),

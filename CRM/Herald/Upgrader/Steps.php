@@ -110,4 +110,17 @@ abstract class CRM_Herald_Upgrader_Steps extends \CRM_Extension_Upgrader_Base {
     return TRUE;
   }
 
+  /**
+   * The channel settings become named channels, and every rule action, job,
+   * route and buffered alert names one.
+   */
+  public function upgrade_1014(): bool {
+    $moved = CRM_Herald_Upgrader_NamedChannels::migrate();
+    CRM_Herald_Upgrader_Reconcile::run();
+    $this->ctx->log->info(
+      "herald: created {$moved['channels']} channel(s) and rewrote {$moved['deliveries']} delivery setting(s)",
+    );
+    return TRUE;
+  }
+
 }

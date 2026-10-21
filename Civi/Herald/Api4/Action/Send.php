@@ -7,12 +7,16 @@ namespace Civi\Herald\Api4\Action;
 use Civi\Api4\Generic\AbstractAction;
 use Civi\Api4\Generic\Result;
 use Civi\Herald\Channel\ChannelRegistry;
+use Civi\Herald\Channel\ChannelStore;
 use Civi\Herald\Channel\PlainText;
+use Civi\Herald\Dispatch\ChannelSender;
 use Civi\Herald\Dispatch\ChannelSubject;
 
 /**
- * Deliver an already-rendered message through one channel; the entry point
- * for other extensions (string-addressed, so the dependency stays optional).
+ * Deliver an already-rendered message through one configured channel; the
+ * entry point for other extensions (string-addressed, so the dependency stays
+ * optional). `config` carries delivery keys over the channel's own; a
+ * channel key (token, server, sender) there is an error.
  *
  * `subject`/`format` are mapped via getSemanticFields() and dropped by channels
  * without an equivalent. Unknown `config` keys are passed through and reported
@@ -27,7 +31,7 @@ use Civi\Herald\Dispatch\ChannelSubject;
 class Send extends AbstractAction {
 
   /**
-   * Channel key as registered in ChannelRegistry (see Herald.getChannels).
+   * Name of a configured channel (see Herald.getChannels).
    * @var string
    */
   protected string $channel = '';
@@ -39,7 +43,7 @@ class Send extends AbstractAction {
   protected string $message = '';
 
   /**
-   * Per-call channel config; keys per the channel's getConfigSchema().
+   * Delivery keys per the channel type's getConfigSchema().
    * Plain `@var array`: core parses this at runtime and rejects generics
    * with "Unknown parameter type".
    *
@@ -72,8 +76,8 @@ class Send extends AbstractAction {
       throw new \CRM_Core_Exception('Herald.send: "format" must be "text" or "html".');
     }
 
-    // Throws for an unregistered key: a config error, not a delivery outcome.
-    $channel = ChannelRegistry::default()->get($this->channel);
+    // Throws for an unknown channel: a config error, not a delivery outcome.
+    $channel = ChannelRegistry::default()->get((new ChannelStore())->typeOf($this->channel));
 
     $schema = $channel->getConfigSchema();
     $unknown = array_values(array_diff(array_keys($this->config), array_keys($schema)));
@@ -85,7 +89,11 @@ class Send extends AbstractAction {
       $this->format,
     );
 
-    $channel->send($this->format === 'text' ? PlainText::toHtml($this->message) : $this->message, $config);
+    (new ChannelSender())->send(
+      $this->channel,
+      $this->format === 'text' ? PlainText::toHtml($this->message) : $this->message,
+      $config,
+    );
 
     $result[] = [
       'channel' => $this->channel,

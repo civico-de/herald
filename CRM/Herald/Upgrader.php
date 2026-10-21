@@ -45,6 +45,7 @@ class CRM_Herald_Upgrader extends CRM_Herald_Upgrader_Steps {
     CRM_Herald_Upgrader_BufferTable::sync();
     CRM_Herald_Upgrader_Reconcile::run();
     CRM_Herald_Upgrader_PreferencesProfile::ensure();
+    CRM_Herald_Upgrader_SettingChannels::ensureEmail();
   }
 
 }

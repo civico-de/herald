@@ -16,6 +16,10 @@ if (class_exists('CRM_Civirules_Action')) {
       return 'civicrm/herald/form/civirulesaction/sendnotification';
     }
 
+    public function userFriendlyConditionParams(): string {
+      return htmlspecialchars($this->deliveryText(), ENT_QUOTES);
+    }
+
     public function processAction(CRM_Civirules_TriggerData_TriggerData $triggerData): void {
       // CiviRules evaluates rules in a system context (cron, post-commit
       // queue) — there is no acting user whose ACLs could apply.

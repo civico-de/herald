@@ -4,84 +4,77 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Dispatch;
 
+use Civi\Herald\Channel\ChannelInterface;
+use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * The config a channel gets from a caller's params: every key passed
- * through, `channel_config` merged on top, routing keys removed.
+ * The config one send gets: the configured channel's keys with the
+ * delivery's keys on top, as the channel types' schemas allow.
  */
 final class ChannelConfig {
 
   /**
-   * Presentation-only options forwarded to subscriber and group sends.
-   * Recipient and credential keys (chat_id, webhook_url, webhook_auth_token,
-   * webhook_headers, ntfy_topic, pushover_user_key, …) come from each
-   * contact's own preferences and are never sent to a contact's endpoint.
-   */
-  private const SUBSCRIBER_SAFE_KEYS = [
-    'parse_mode',
-    'disable_notification',
-    'disable_web_page_preview',
-    'webhook_body_format',
-    'webhook_body_key',
-    'ntfy_title',
-    'ntfy_priority',
-    'ntfy_tags',
-    'ntfy_click',
-    'ntfy_markdown',
-    'pushover_title',
-    'pushover_priority',
-    'pushover_sound',
-    'pushover_url',
-    'pushover_url_title',
-    'pushover_html',
-    'pushover_retry',
-    'pushover_expire',
-    'email_subject',
-    'email_format',
-    ChannelSubject::KEY,
-  ];
-
-  /**
-   * Channels read whichever keys they know (`chat_id`, `webhook_url`,
-   * `ntfy_topic`, …); a key in `channel_config` wins over the same key at
-   * the top level.
+   * The delivery keys of a caller's params: everything but the routing keys.
    *
    * @param array<string, mixed> $params
    * @return array<string, mixed>
    */
   public static function of(array $params): array {
-    $config = array_merge($params, self::decode($params['channel_config'] ?? NULL));
-    unset($config['channel_config'], $config['channel'], $config['template']);
-    return Cast::namedOnly($config);
+    unset($params['channel'], $params['template'], $params['topic']);
+    return Cast::namedOnly($params);
   }
 
   /**
-   * Reduce a channel config to the keys allowed in subscriber and group sends.
+   * Reduce a delivery to the presentation keys a subscriber's own channel may
+   * take: no recipient keys and no channel keys of any type.
    *
    * @param array<array-key, mixed> $config
    * @return array<string, mixed>
    */
-  public static function subscriberSafe(array $config): array {
-    return Cast::namedOnly(array_intersect_key($config, array_flip(self::SUBSCRIBER_SAFE_KEYS)));
+  public static function subscriberSafe(array $config, ?ChannelRegistry $registry = NULL): array {
+    $safe = [ChannelSubject::KEY => TRUE];
+    $registry ??= ChannelRegistry::default();
+    foreach ($registry->listKeys() as $type) {
+      foreach ($registry->get($type)->getConfigSchema() as $key => $spec) {
+        if (!empty($spec['recipient']) || ($spec['scope'] ?? 'delivery') !== 'delivery') {
+          continue;
+        }
+        $safe[$key] = TRUE;
+      }
+    }
+    return Cast::namedOnly(array_intersect_key($config, $safe));
   }
 
   /**
-   * A `channel_config` value as option names and values; blank is none.
+   * Merge a delivery over a channel's stored config. Empty delivery values
+   * leave the channel's default; a delivery to its own address drops the
+   * channel keys bound to the channel's address (bound_to), and a rendered
+   * subject beats the channel's default subject.
    *
-   * @return array<array-key, mixed>
+   * @param array<string, mixed> $stored
+   * @param array<string, mixed> $delivery
+   * @return array<string, mixed>
    */
-  public static function decode(mixed $raw): array {
-    if ($raw === NULL || is_string($raw) && trim($raw) === '') {
-      return [];
+  public static function merged(ChannelInterface $channel, array $stored, array $delivery): array {
+    $named = array_values(array_intersect(array_keys($delivery), ChannelRegistry::default()->channelKeys()));
+    if ($named !== []) {
+      throw new \CRM_Core_Exception(sprintf(
+        'herald: %s belong to the channel configuration, not to a delivery.',
+        implode(', ', $named),
+      ));
     }
-    $decoded = is_string($raw) ? json_decode($raw, TRUE) : $raw;
-    // A list would lose its entries to the name filter in of().
-    if (!is_array($decoded) || count(Cast::namedOnly($decoded)) !== count($decoded)) {
-      // The value may hold tokens, so the message does not quote it.
-      throw new \CRM_Core_Exception('herald: channel_config must be a JSON object of option names and values.');
+    $delivery = array_filter($delivery, static fn (mixed $value): bool => $value !== NULL && $value !== '');
+    foreach ($channel->getConfigSchema() as $key => $spec) {
+      $anchor = $spec['bound_to'] ?? NULL;
+      if ($anchor !== NULL && isset($delivery[$anchor]) && $delivery[$anchor] !== ($stored[$anchor] ?? NULL)) {
+        unset($stored[$key]);
+      }
     }
-    return $decoded;
+    if (!empty($delivery[ChannelSubject::KEY])) {
+      unset($stored[$channel->getSemanticFields()['subject'] ?? '']);
+    }
+    return ChannelSubject::forChannel($channel, array_merge($stored, $delivery));
   }
 
 }

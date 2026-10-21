@@ -9,9 +9,10 @@ namespace Civi\Api4;
  *
  * Service-style entity (no underlying DAO).
  *
- * The supported cross-extension entry point:
- *   cv api4 Herald.send        — deliver a rendered message via a channel
- *   cv api4 Herald.getChannels — the channels and the config keys they accept
+ * The supported cross-extension entry points:
+ *   cv api4 Herald.send        — deliver a rendered message through a channel
+ *   cv api4 Herald.publish     — deliver a message to a topic
+ *   cv api4 Herald.getChannelTypes — the channel types and the keys they accept
  *
  * The pipeline entry points the CiviRules adapters call — render a herald
  * template and deliver it, or answer a condition question:
@@ -27,12 +28,13 @@ namespace Civi\Api4;
  *
  * Admin screen saves, validated writes of the array settings (Setting.set
  * stays the unchecked bulk path):
+ *   cv api4 Herald.getChannels / saveChannel / deleteChannel
  *   cv api4 Herald.saveTopic / deleteTopic / saveCleanedFields / saveAllowedHosts
  *   cv api4 Herald.getMonitorChecks / saveMonitorChecks
  *
  * Diagnostics:
- *   cv api4 Herald.testTelegram   — send a test message via the channel
  *   cv api4 Herald.renderTemplate — render a workflow template with sample vars
+ *   cv api4 Herald.getTopicUsage  — the rules, jobs and monitor naming each topic
  *
  * Herald.send is string-addressed so other extensions can depend on herald optionally.
  *
@@ -108,8 +110,23 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
       ->setCheckPermissions($checkPermissions);
   }
 
-  public static function testTelegram(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\TestTelegram {
-    return (new \Civi\Herald\Api4\Action\TestTelegram(__CLASS__, 'testTelegram'))
+  public static function getChannelTypes(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\GetChannelTypes {
+    return (new \Civi\Herald\Api4\Action\GetChannelTypes(__CLASS__, 'getChannelTypes'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function saveChannel(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\SaveChannel {
+    return (new \Civi\Herald\Api4\Action\SaveChannel(__CLASS__, 'saveChannel'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function deleteChannel(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\DeleteChannel {
+    return (new \Civi\Herald\Api4\Action\DeleteChannel(__CLASS__, 'deleteChannel'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function getTopicUsage(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\GetTopicUsage {
+    return (new \Civi\Herald\Api4\Action\GetTopicUsage(__CLASS__, 'getTopicUsage'))
       ->setCheckPermissions($checkPermissions);
   }
 

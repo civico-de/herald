@@ -14,6 +14,9 @@
       });
       $routeProvider
         .when("/", page("index", "HeraldAdminIndexCtrl"))
+        .when("/channels", page("channels", "HeraldAdminChannelsCtrl"))
+        .when("/channels/new", page("channel", "HeraldAdminChannelCtrl"))
+        .when("/channels/edit/:name", page("channel", "HeraldAdminChannelCtrl"))
         .when("/topics", page("topics", "HeraldAdminTopicsCtrl"))
         .when("/topics/new", page("topic", "HeraldAdminTopicCtrl"))
         .when("/topics/edit/:name", page("topic", "HeraldAdminTopicCtrl"))
@@ -43,6 +46,12 @@
    * Input value for a stored parameter, by field type.
    */
   const toInput = (field, value) => {
+    if (field.tristate) {
+      if (value === true || value === 1 || value === "1") {
+        return "1";
+      }
+      return value === false || value === 0 || value === "0" ? "0" : "";
+    }
     if (field.type === "bool") {
       return value === true || value === 1 || value === "1";
     }
@@ -60,6 +69,12 @@
    * keeps the original value, so a round trip stores exactly what was there.
    */
   const fromInput = (field, input, original, hadKey) => {
+    if (field.tristate) {
+      if (hadKey && toInput(field, original) === input) {
+        return { set: true, value: original };
+      }
+      return input === "" ? { set: false } : { set: true, value: input === "1" };
+    }
     if (field.type === "bool") {
       if (hadKey && toInput(field, original) === input) {
         return { set: true, value: original };
@@ -86,8 +101,9 @@
   };
 
   module.factory("heraldAdmin", [
+    "$q",
     "crmApi4",
-    function (crmApi4) {
+    function ($q, crmApi4) {
       const svc = {
         ts: ts,
         asMap: asMap,
@@ -100,12 +116,14 @@
           String((failure && failure.error_message) || ts("The request failed."))
             .split("\n")
             .filter(Boolean),
-        channels: () =>
-          crmApi4("Herald", "getChannels").then((rows) =>
+        // The channel types with all their keys; scope "channel" keys are set only on a channel.
+        channelTypes: () =>
+          crmApi4("Herald", "getChannelTypes").then((rows) =>
             rows.map((row) => ({
               key: row.key,
               label: row.label,
               semantic: asMap(row.semantic_fields),
+              subscribable: Boolean(row.subscribable),
               fields: Object.keys(asMap(row.config_schema)).map((key) => {
                 const spec = row.config_schema[key];
                 return {
@@ -115,10 +133,42 @@
                   required: Boolean(spec.required),
                   help: spec.help || "",
                   options: optionList(spec.options),
+                  scope: spec.scope || "delivery",
+                  secret: Boolean(spec.secret),
+                  recipient: Boolean(spec.recipient),
                 };
               }),
             })),
           ),
+        // The configured channels, each with the delivery keys of its type: those a
+        // route, rule or test may set over the channel's own, so none is required
+        // and a yes/no field can also leave the channel's value.
+        channels: () =>
+          $q.all([crmApi4("Herald", "getChannels"), svc.channelTypes()]).then((loaded) => {
+            const types = {};
+            loaded[1].forEach((type) => {
+              types[type.key] = type;
+            });
+            return loaded[0].map((row) => {
+              const type = types[row.type] || { label: row.type, fields: [] };
+              return {
+                key: row.name,
+                label:
+                  row.label +
+                  " (" +
+                  type.label +
+                  ")" +
+                  (row.active ? "" : " " + ts("(switched off)")),
+                type: row.type,
+                active: Boolean(row.active),
+                fields: type.fields
+                  .filter((field) => field.scope === "delivery")
+                  .map((field) =>
+                    Object.assign({}, field, { required: false, tristate: field.type === "bool" }),
+                  ),
+              };
+            });
+          }),
         toInputs: (fields, source) => {
           const inputs = {};
           fields.forEach((field) => {
@@ -162,12 +212,12 @@
         has: has,
         isEmpty: isEmpty,
         modes: [
-          { value: "direct", label: ts("Direct: the recipient set on the route") },
+          { value: "direct", label: ts("Direct: the recipient set on the route or the channel") },
           { value: "subscribers", label: ts("Subscribers of a notification type") },
           { value: "group", label: ts("Members of a group") },
           { value: "addresses", label: ts("A list of email addresses") },
         ],
-        // Dispatcher parameters every route may carry; channel keys come from Herald.getChannels.
+        // Dispatcher parameters every route may carry; channel keys come from Herald.getChannelTypes.
         deliveryFields: () => [
           {
             key: "subscription_type",

@@ -2,6 +2,9 @@
 
 declare(strict_types = 1);
 
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+use CRM_Herald_ExtensionUtil as E;
+
 // ckconform-optional civirules -- herald works without CiviRules; this class exists only with it
 if (class_exists('CRM_Civirules_Action')) {
   /**
@@ -30,6 +33,24 @@ if (class_exists('CRM_Civirules_Action')) {
      * Civi route of the parameter form. Override in each concrete subclass.
      */
     abstract protected function getFormPath(): string;
+
+    /**
+     * Where the action sends to, for CiviRules' list of the rule's actions.
+     */
+    protected function deliveryText(): string {
+      $params = $this->getActionParameters();
+      $topic = Cast::toString($params['topic'] ?? '');
+      if ($topic !== '') {
+        return E::ts('Sends via topic "%1".', [1 => $topic]);
+      }
+      $channel = Cast::toString($params['channel'] ?? '');
+      $mode = Cast::toString($params['delivery_mode'] ?? 'direct');
+      return (
+        in_array($mode, ['subscribers', 'group'], TRUE)
+          ? E::ts('Sends to each contact on their own channel.')
+          : E::ts('Sends through the channel "%1".', [1 => $channel])
+      );
+    }
 
     /**
      * Action parameters as CiviRules hands them over.

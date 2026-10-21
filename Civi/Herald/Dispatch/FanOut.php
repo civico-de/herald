@@ -4,8 +4,6 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Dispatch;
 
-use Civi\Herald\Channel\ChannelInterface;
-use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
@@ -21,8 +19,9 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 final class FanOut {
 
   /**
-   * Contacts resolved by subscription or group, each on its own channel.
-   * Only presentation options travel from the params (ChannelConfig::subscriberSafe()).
+   * Contacts resolved by subscription or group, each through the channel
+   * their preference names. Only presentation options travel from the params
+   * (ChannelConfig::subscriberSafe()).
    *
    * @param array<string, mixed> $params
    * @param array<int, array{contact_id: int, channel: string, config: array<string, mixed>}> $recipients
@@ -31,7 +30,7 @@ final class FanOut {
     string $body,
     array $params,
     array $recipients,
-    ?ChannelRegistry $registry = NULL,
+    ?ChannelSender $sender = NULL,
   ): void {
     if ($recipients === []) {
       throw new NoRecipientsException(sprintf(
@@ -39,12 +38,12 @@ final class FanOut {
         Cast::toString($params['delivery_mode'] ?? 'direct'),
       ));
     }
-    $registry ??= ChannelRegistry::default();
+    $sender ??= new ChannelSender();
     $extras = ChannelConfig::subscriberSafe(ChannelConfig::of($params));
     self::sendEach('recipient', array_map(
       static fn (array $recipient): array => [
-        static fn () => self::sendTo(
-          $registry->get($recipient['channel']),
+        static fn () => $sender->sendToRecipient(
+          $recipient['channel'],
           $body,
           array_merge($extras, $recipient['config']),
         ),
@@ -55,21 +54,29 @@ final class FanOut {
   }
 
   /**
-   * A raw address list without contacts: one email per address.
+   * A raw address list without contacts: one email per address, through the
+   * delivery's channel, which must be an email channel.
    *
    * @param array<string, mixed> $params
    */
-  public static function toAddresses(string $body, array $params, ?ChannelRegistry $registry = NULL): void {
+  public static function toAddresses(string $body, array $params, ?ChannelSender $sender = NULL): void {
     $addresses = self::addressList($params['email_addresses'] ?? '');
     if ($addresses === []) {
       throw new NoRecipientsException('herald: address-list mode requires action parameter "email_addresses".');
     }
-    $channel = ($registry ?? ChannelRegistry::default())->get('email');
-    $config = ChannelSubject::forChannel($channel, ChannelConfig::of($params));
+    $sender ??= new ChannelSender();
+    $name = Delivery::channel($params);
+    if ($sender->typeOf($name) !== 'email') {
+      throw new \CRM_Core_Exception(sprintf(
+        'herald: address lists go through an email channel; "%s" is not one.',
+        $name,
+      ));
+    }
+    $config = ChannelConfig::of($params);
     unset($config['email_addresses']);
     self::sendEach('address', array_map(
       static fn (string $address): array => [
-        static fn () => $channel->send($body, ['email_to' => $address] + $config),
+        static fn () => $sender->sendToRecipient($name, $body, ['email_to' => $address] + $config),
         ['email_to' => $address],
       ],
       $addresses,
@@ -118,13 +125,6 @@ final class FanOut {
         $lastError,
       ));
     }
-  }
-
-  /**
-   * @param array<string, mixed> $config
-   */
-  private static function sendTo(ChannelInterface $channel, string $body, array $config): void {
-    $channel->send($body, ChannelSubject::forChannel($channel, $config));
   }
 
 }

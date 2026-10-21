@@ -6,10 +6,12 @@ namespace Civi\Herald\Api4\Action;
 
 use Civi\Api4\Generic\AbstractAction;
 use Civi\Api4\Generic\Result;
-use Civi\Herald\Channel\ChannelRegistry;
+use Civi\Herald\Admin\ParamsInUse;
+use Civi\Herald\Channel\ChannelStore;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * List the registered channels with the config keys each one accepts.
+ * List the configured channels. Secret keys show only as {"set": true}.
  *
  * Example:
  *   cv api4 Herald.getChannels
@@ -17,25 +19,17 @@ use Civi\Herald\Channel\ChannelRegistry;
 class GetChannels extends AbstractAction {
 
   /**
-   * Restrict the output to this channel key. Empty = all registered channels.
-   * @var string
+   * Also list who names each channel (`used_by`).
+   * @var bool
    */
-  protected string $channel = '';
+  protected bool $withUsage = FALSE;
 
   public function _run(Result $result): void {
-    $registry = ChannelRegistry::default();
-    $keys = $this->channel !== '' ? [$this->channel] : $registry->listKeys();
-
-    $rows = [];
-    foreach ($keys as $key) {
-      // Throws for an unknown key: an empty result would read as "no config".
-      $channel = $registry->get($key);
-      $rows[] = [
-        'key' => $channel->getKey(),
-        'label' => ChannelRegistry::label($channel->getKey()),
-        'config_schema' => $channel->getConfigSchema(),
-        'semantic_fields' => $channel->getSemanticFields(),
-      ];
+    $rows = (new ChannelStore())->masked();
+    if ($this->withUsage) {
+      foreach ($rows as &$row) {
+        $row['used_by'] = ParamsInUse::ofChannel(Cast::toString($row['name']));
+      }
     }
     $result->exchangeArray($rows);
   }

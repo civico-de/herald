@@ -12,6 +12,12 @@ use PHPUnit\Framework\TestCase;
  */
 class GroupRecipientsTest extends TestCase {
 
+  private const TYPES = ['telegram' => 'telegram', 'email' => 'email'];
+
+  private static function map(array $rows, array $options = []): array {
+    return GroupRecipients::mapGroupRows($rows, $options, self::TYPES, 'email');
+  }
+
   private function row(array $overrides): array {
     return $overrides
     + [
@@ -36,7 +42,7 @@ class GroupRecipientsTest extends TestCase {
         'herald_preferences.telegram_chat_id' => '111',
       ]),
     ];
-    $mapped = GroupRecipients::mapGroupRows($rows);
+    $mapped = self::map($rows);
     $this->assertSame(
       [['contact_id' => 1, 'channel' => 'telegram', 'config' => ['chat_id' => '111']]],
       $mapped['recipients'],
@@ -46,7 +52,7 @@ class GroupRecipientsTest extends TestCase {
 
   public function testMemberWithoutPreferenceFallsBackToOwnEmail(): void {
     $rows = [$this->row(['id' => 2, 'email_primary.email' => 'a@example.org'])];
-    $mapped = GroupRecipients::mapGroupRows($rows);
+    $mapped = self::map($rows);
     $this->assertSame(
       [['contact_id' => 2, 'channel' => 'email', 'config' => ['email_to' => 'a@example.org']]],
       $mapped['recipients'],
@@ -62,12 +68,12 @@ class GroupRecipientsTest extends TestCase {
         'email_primary.email' => 'b@example.org',
       ]),
     ];
-    $mapped = GroupRecipients::mapGroupRows($rows);
+    $mapped = self::map($rows);
     $this->assertSame('email', $mapped['recipients'][0]['channel']);
   }
 
   public function testMemberWithoutAnyRecipientCountedAsSkipped(): void {
-    $mapped = GroupRecipients::mapGroupRows([$this->row(['id' => 4])]);
+    $mapped = self::map([$this->row(['id' => 4])]);
     $this->assertSame([], $mapped['recipients']);
     $this->assertSame(['no_recipient' => 1], $mapped['skipped']);
   }
@@ -78,7 +84,7 @@ class GroupRecipientsTest extends TestCase {
       $this->row(['id' => 6, 'email_primary.email' => 'd@example.org', 'email_primary.on_hold' => 1]),
       $this->row(['id' => 7, 'email_primary.email' => 'e@example.org']),
     ];
-    $mapped = GroupRecipients::mapGroupRows($rows, ['respect_suspension' => TRUE]);
+    $mapped = self::map($rows, ['respect_suspension' => TRUE]);
     $this->assertSame([7], array_column($mapped['recipients'], 'contact_id'));
     $this->assertSame(['suspended' => 2], $mapped['skipped']);
   }
@@ -88,7 +94,7 @@ class GroupRecipientsTest extends TestCase {
       $this->row(['id' => 5, 'email_primary.email' => 'c@example.org', 'is_opt_out' => TRUE]),
       $this->row(['id' => 8, 'email_primary.email' => 'f@example.org', 'do_not_email' => TRUE]),
     ];
-    $mapped = GroupRecipients::mapGroupRows($rows);
+    $mapped = self::map($rows);
     $this->assertSame([5], array_column($mapped['recipients'], 'contact_id'));
     $this->assertSame(['suspended' => 1], $mapped['skipped']);
   }
@@ -104,7 +110,7 @@ class GroupRecipientsTest extends TestCase {
       // No address of the requested location type → primary fallback.
       $this->row(['id' => 10, 'email_primary.email' => 'only-primary@example.org']),
     ];
-    $mapped = GroupRecipients::mapGroupRows($rows, ['location_type_id' => 3]);
+    $mapped = self::map($rows, ['location_type_id' => 3]);
     $this->assertSame('work@example.org', $mapped['recipients'][0]['config']['email_to']);
     $this->assertSame('only-primary@example.org', $mapped['recipients'][1]['config']['email_to']);
   }
@@ -118,7 +124,7 @@ class GroupRecipientsTest extends TestCase {
         'herald_loc_email.on_hold' => 1,
       ]),
     ];
-    $mapped = GroupRecipients::mapGroupRows($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $mapped = self::map($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
     $this->assertSame('primary@example.org', $mapped['recipients'][0]['config']['email_to']);
     $this->assertSame([], $mapped['skipped']);
   }
@@ -133,7 +139,7 @@ class GroupRecipientsTest extends TestCase {
         'herald_loc_email.on_hold' => 1,
       ]),
     ];
-    $mapped = GroupRecipients::mapGroupRows($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $mapped = self::map($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
     $this->assertSame([], $mapped['recipients']);
     $this->assertSame(['suspended' => 1], $mapped['skipped']);
   }
@@ -152,7 +158,7 @@ class GroupRecipientsTest extends TestCase {
         'herald_loc_email.email' => 'work-b@example.org',
       ]),
     ];
-    $mapped = GroupRecipients::mapGroupRows($rows, ['location_type_id' => 3]);
+    $mapped = self::map($rows, ['location_type_id' => 3]);
     $this->assertCount(1, $mapped['recipients']);
     $this->assertSame('work-a@example.org', $mapped['recipients'][0]['config']['email_to']);
   }
@@ -172,12 +178,22 @@ class GroupRecipientsTest extends TestCase {
         'herald_loc_email.on_hold' => 0,
       ]),
     ];
-    $mapped = GroupRecipients::mapGroupRows($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $mapped = self::map($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
     $this->assertSame(
       [['contact_id' => 14, 'channel' => 'email', 'config' => ['email_to' => 'ok@example.org']]],
       $mapped['recipients'],
     );
     $this->assertSame([], $mapped['skipped']);
+  }
+
+  public function testFallbackGoesThroughTheContactEmailChannel(): void {
+    $mapped = GroupRecipients::mapGroupRows(
+      [$this->row(['id' => 9, 'email_primary.email' => 'ada@example.org'])],
+      [],
+      self::TYPES,
+      'staff_mail',
+    );
+    $this->assertSame('staff_mail', $mapped['recipients'][0]['channel']);
   }
 
 }

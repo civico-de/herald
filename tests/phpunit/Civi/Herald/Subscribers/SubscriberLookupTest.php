@@ -12,6 +12,22 @@ use PHPUnit\Framework\TestCase;
  */
 class SubscriberLookupTest extends TestCase {
 
+  private const TYPES = [
+    'telegram' => 'telegram',
+    'ntfy' => 'ntfy',
+    'pushover' => 'pushover',
+    'webhook' => 'webhook',
+    'email' => 'email',
+  ];
+
+  private static function map(array $rows, array $options = []): array {
+    return SubscriberLookup::mapRows($rows, $options, self::TYPES);
+  }
+
+  private static function detailed(array $rows, array $options = []): array {
+    return SubscriberLookup::mapRowsDetailed($rows, $options, self::TYPES);
+  }
+
   private function row(array $overrides): array {
     return $overrides
     + [
@@ -38,7 +54,7 @@ class SubscriberLookupTest extends TestCase {
       [
         ['contact_id' => 42, 'channel' => 'telegram', 'config' => ['chat_id' => '111']],
       ],
-      SubscriberLookup::mapRows($rows),
+      self::map($rows),
     );
   }
 
@@ -49,7 +65,7 @@ class SubscriberLookupTest extends TestCase {
       'herald_preferences.ntfy_topic' => 'mytopic',
     ]);
     $rows = [$row];
-    $mapped = SubscriberLookup::mapRows($rows);
+    $mapped = self::map($rows);
     $this->assertSame('ntfy', $mapped[0]['channel']);
     $this->assertSame(['ntfy_topic' => 'mytopic'], $mapped[0]['config']);
   }
@@ -61,7 +77,7 @@ class SubscriberLookupTest extends TestCase {
       'herald_preferences.pushover_user_key' => 'uvw',
     ]);
     $rows = [$row];
-    $mapped = SubscriberLookup::mapRows($rows);
+    $mapped = self::map($rows);
     $this->assertSame(['pushover_user_key' => 'uvw'], $mapped[0]['config']);
   }
 
@@ -72,7 +88,7 @@ class SubscriberLookupTest extends TestCase {
       'herald_preferences.webhook_url' => 'https://example.com/x',
     ]);
     $rows = [$row];
-    $this->assertSame(['webhook_url' => 'https://example.com/x'], SubscriberLookup::mapRows($rows)[0]['config']);
+    $this->assertSame(['webhook_url' => 'https://example.com/x'], self::map($rows)[0]['config']);
   }
 
   public function testEmailSubscriberMappedToPrimaryAddress(): void {
@@ -86,7 +102,7 @@ class SubscriberLookupTest extends TestCase {
       [
         ['contact_id' => 13, 'channel' => 'email', 'config' => ['email_to' => 'ada@example.org']],
       ],
-      SubscriberLookup::mapRows($rows),
+      self::map($rows),
     );
   }
 
@@ -98,7 +114,7 @@ class SubscriberLookupTest extends TestCase {
       'do_not_email' => TRUE,
     ]);
     $rows = [$row];
-    $this->assertSame([], SubscriberLookup::mapRows($rows));
+    $this->assertSame([], self::map($rows));
   }
 
   public function testEmailSubscriberWithoutAddressSkipped(): void {
@@ -107,7 +123,7 @@ class SubscriberLookupTest extends TestCase {
       'herald_preferences.preferred_channel' => 'email',
     ]);
     $rows = [$row];
-    $this->assertSame([], SubscriberLookup::mapRows($rows));
+    $this->assertSame([], self::map($rows));
   }
 
   public function testContactWithoutChannelSkipped(): void {
@@ -120,7 +136,7 @@ class SubscriberLookupTest extends TestCase {
         'herald_preferences.telegram_chat_id' => '999',
       ]),
     ];
-    $mapped = SubscriberLookup::mapRows($rows);
+    $mapped = self::map($rows);
     $this->assertCount(1, $mapped);
     $this->assertSame(2, $mapped[0]['contact_id']);
   }
@@ -132,7 +148,7 @@ class SubscriberLookupTest extends TestCase {
       // no telegram_chat_id
     ]);
     $rows = [$row];
-    $this->assertSame([], SubscriberLookup::mapRows($rows));
+    $this->assertSame([], self::map($rows));
   }
 
   public function testEveryLeftOutContactIsCountedByReason(): void {
@@ -149,8 +165,20 @@ class SubscriberLookupTest extends TestCase {
       ]),
     ];
     $this->assertSame(
-      ['recipients' => [], 'skipped' => ['no_channel' => 1, 'no_recipient' => 3, 'suspended' => 1]],
-      SubscriberLookup::mapRowsDetailed($rows),
+      ['recipients' => [], 'skipped' => ['no_channel' => 2, 'no_recipient' => 2, 'suspended' => 1]],
+      self::detailed($rows),
+    );
+  }
+
+  public function testChannelNameResolvesToItsType(): void {
+    $row = $this->row([
+      'id' => 5,
+      'herald_preferences.preferred_channel' => 'ops_bot',
+      'herald_preferences.telegram_chat_id' => '77',
+    ]);
+    $this->assertSame(
+      [['contact_id' => 5, 'channel' => 'ops_bot', 'config' => ['chat_id' => '77']]],
+      SubscriberLookup::mapRows([$row], [], ['ops_bot' => 'telegram']),
     );
   }
 
@@ -160,7 +188,7 @@ class SubscriberLookupTest extends TestCase {
       'herald_preferences.preferred_channel' => 'matrix',
     ]);
     $rows = [$row];
-    $this->assertSame([], SubscriberLookup::mapRows($rows));
+    $this->assertSame([], self::map($rows));
   }
 
   public function testSuspensionSkippedAndCountedWhenOptionSet(): void {
@@ -183,7 +211,7 @@ class SubscriberLookupTest extends TestCase {
         'email_primary.email' => 'fine@example.org',
       ]),
     ];
-    $mapped = SubscriberLookup::mapRowsDetailed($rows, ['respect_suspension' => TRUE]);
+    $mapped = self::detailed($rows, ['respect_suspension' => TRUE]);
     $this->assertSame([22], array_column($mapped['recipients'], 'contact_id'));
     $this->assertSame(['suspended' => 2], $mapped['skipped']);
   }
@@ -197,7 +225,7 @@ class SubscriberLookupTest extends TestCase {
         'is_opt_out' => TRUE,
       ]),
     ];
-    $this->assertCount(1, SubscriberLookup::mapRows($rows));
+    $this->assertCount(1, self::map($rows));
   }
 
   public function testSuspensionOnlyAppliesToEmailChannel(): void {
@@ -209,7 +237,7 @@ class SubscriberLookupTest extends TestCase {
         'is_opt_out' => TRUE,
       ]),
     ];
-    $this->assertCount(1, SubscriberLookup::mapRows($rows, ['respect_suspension' => TRUE]));
+    $this->assertCount(1, self::map($rows, ['respect_suspension' => TRUE]));
   }
 
   public function testLocationTypeAddressPreferredWithPrimaryFallback(): void {
@@ -224,7 +252,7 @@ class SubscriberLookupTest extends TestCase {
       'herald_preferences.preferred_channel' => 'email',
       'email_primary.email' => 'primary2@example.org',
     ]);
-    $mapped = SubscriberLookup::mapRows([$withLoc, $withoutLoc], ['location_type_id' => 3]);
+    $mapped = self::map([$withLoc, $withoutLoc], ['location_type_id' => 3]);
     $this->assertSame('work@example.org', $mapped[0]['config']['email_to']);
     $this->assertSame('primary2@example.org', $mapped[1]['config']['email_to']);
   }
@@ -239,7 +267,7 @@ class SubscriberLookupTest extends TestCase {
         'herald_loc_email.on_hold' => 1,
       ]),
     ];
-    $mapped = SubscriberLookup::mapRowsDetailed($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $mapped = self::detailed($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
     $this->assertSame('primary@example.org', $mapped['recipients'][0]['config']['email_to']);
     $this->assertSame([], $mapped['skipped']);
   }
@@ -255,7 +283,7 @@ class SubscriberLookupTest extends TestCase {
         'herald_loc_email.on_hold' => 1,
       ]),
     ];
-    $mapped = SubscriberLookup::mapRowsDetailed($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $mapped = self::detailed($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
     $this->assertSame([], $mapped['recipients']);
     $this->assertSame(['suspended' => 1], $mapped['skipped']);
   }
@@ -268,7 +296,7 @@ class SubscriberLookupTest extends TestCase {
       'herald_loc_email.email' => 'work-a@example.org',
     ]);
     $dup = ['herald_loc_email.email' => 'work-b@example.org'] + $row;
-    $mapped = SubscriberLookup::mapRowsDetailed([$row, $dup], ['location_type_id' => 3]);
+    $mapped = self::detailed([$row, $dup], ['location_type_id' => 3]);
     $this->assertCount(1, $mapped['recipients']);
     $this->assertSame('work-a@example.org', $mapped['recipients'][0]['config']['email_to']);
   }
@@ -288,14 +316,14 @@ class SubscriberLookupTest extends TestCase {
     ]);
 
     // Matching scope: both reached.
-    $match = SubscriberLookup::mapRowsDetailed(
+    $match = self::detailed(
       [$scoped, $global],
       ['scope' => ['entity_type' => 'Event', 'entity_id' => 5]],
     );
     $this->assertSame([30, 31], array_column($match['recipients'], 'contact_id'));
 
     // Different instance: only the global subscription.
-    $other = SubscriberLookup::mapRowsDetailed(
+    $other = self::detailed(
       [$scoped, $global],
       ['scope' => ['entity_type' => 'Event', 'entity_id' => 6]],
     );
@@ -303,7 +331,7 @@ class SubscriberLookupTest extends TestCase {
     $this->assertSame(['scope_mismatch' => 1], $other['skipped']);
 
     // Unscoped notification: scoped subscriptions stay silent.
-    $unscoped = SubscriberLookup::mapRowsDetailed([$scoped, $global], []);
+    $unscoped = self::detailed([$scoped, $global], []);
     $this->assertSame([31], array_column($unscoped['recipients'], 'contact_id'));
   }
 
@@ -318,7 +346,7 @@ class SubscriberLookupTest extends TestCase {
       // missing recipient → skip
       $this->row(['id' => 3, 'herald_preferences.preferred_channel' => 'pushover']),
     ];
-    $mapped = SubscriberLookup::mapRows($rows);
+    $mapped = self::map($rows);
     $this->assertCount(2, $mapped);
     $this->assertSame([1, 2], array_column($mapped, 'contact_id'));
   }
@@ -340,7 +368,7 @@ class SubscriberLookupTest extends TestCase {
         'herald_loc_email.on_hold' => 0,
       ]),
     ];
-    $mapped = SubscriberLookup::mapRowsDetailed($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $mapped = self::detailed($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
     $this->assertSame(
       [['contact_id' => 21, 'channel' => 'email', 'config' => ['email_to' => 'ok@example.org']]],
       $mapped['recipients'],
@@ -364,7 +392,7 @@ class SubscriberLookupTest extends TestCase {
         'herald_loc_email.email' => 'ok@example.org',
       ]),
     ];
-    $mapped = SubscriberLookup::mapRows($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $mapped = self::map($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
     $this->assertSame('ok@example.org', $mapped[0]['config']['email_to']);
   }
 
@@ -383,7 +411,7 @@ class SubscriberLookupTest extends TestCase {
         'herald_loc_email.on_hold' => 1,
       ]),
     ];
-    $mapped = SubscriberLookup::mapRowsDetailed($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
+    $mapped = self::detailed($rows, ['location_type_id' => 3, 'respect_suspension' => TRUE]);
     $this->assertSame([], $mapped['recipients']);
     $this->assertSame(['suspended' => 1], $mapped['skipped']);
   }

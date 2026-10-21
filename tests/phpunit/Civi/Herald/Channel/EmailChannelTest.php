@@ -25,8 +25,6 @@ class EmailChannelTest extends TestCase implements HeadlessInterface, HookInterf
   public function setUp(): void {
     parent::setUp();
     $this->sentMails = [];
-    \Civi::settings()->set('herald_email_from', '"Herald" <noreply@example.org>');
-    \Civi::settings()->set('herald_email_default_to', '');
   }
 
   private function makeChannel(bool $mailerResult = TRUE): EmailChannel {
@@ -40,6 +38,7 @@ class EmailChannelTest extends TestCase implements HeadlessInterface, HookInterf
     $channel = $this->makeChannel();
 
     $channel->send('<p>hello</p>', [
+      'email_from' => '"Herald" <noreply@example.org>',
       'email_to' => 'alerts@example.org',
       'email_subject' => 'Contribution completed',
     ]);
@@ -53,11 +52,12 @@ class EmailChannelTest extends TestCase implements HeadlessInterface, HookInterf
     $this->assertArrayNotHasKey('text', $mail);
   }
 
-  public function testEmptyToFallsBackToDefaultSetting(): void {
-    \Civi::settings()->set('herald_email_default_to', 'fallback@example.org');
-    $channel = $this->makeChannel();
+  public function testEmptyToFallsBackToTheChannelsDefault(): void {
+    \Civi\Herald\ChannelFixture::add('staff_mail', 'email', ['email_to' => 'fallback@example.org']);
+    $registry = new ChannelRegistry();
+    $registry->register($this->makeChannel());
 
-    $channel->send('hi', ['email_to' => '']);
+    (new \Civi\Herald\Dispatch\ChannelSender($registry))->send('staff_mail', 'hi', ['email_to' => '']);
 
     $this->assertSame('fallback@example.org', $this->sentMails[0]['toEmail']);
   }
@@ -70,8 +70,7 @@ class EmailChannelTest extends TestCase implements HeadlessInterface, HookInterf
     $channel->send('hi', []);
   }
 
-  public function testEmptyFromSettingFallsBackToSiteDefault(): void {
-    \Civi::settings()->set('herald_email_from', '');
+  public function testWithoutFromAddressTheSiteDefaultApplies(): void {
     $channel = $this->makeChannel();
 
     $channel->send('hi', ['email_to' => 'a@example.org']);

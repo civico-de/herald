@@ -6,6 +6,7 @@ namespace Civi\Herald\Dispatch;
 
 use Civi\Herald\Channel\ChannelInterface;
 use Civi\Herald\Channel\ChannelRegistry;
+use Civi\Herald\Channel\ChannelStore;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
@@ -27,10 +28,12 @@ class FanOutFailureTest extends TestCase implements HeadlessInterface, HookInter
   }
 
   /**
+   * A sender whose channel "chan" is of a recording stub type.
+   *
    * @param array<int, bool> $failByCall TRUE = this call throws.
    * @param array<int, array<string, mixed>> $sent
    */
-  private function registry(string $key, array $failByCall, array &$sent): ChannelRegistry {
+  private function sender(string $key, array $failByCall, array &$sent): ChannelSender {
     $registry = new ChannelRegistry();
     $channel = new class() implements ChannelInterface {
 
@@ -67,40 +70,42 @@ class FanOutFailureTest extends TestCase implements HeadlessInterface, HookInter
     $channel->failByCall = $failByCall;
     $channel->sent = &$sent;
     $registry->register($channel);
-    return $registry;
+    $store = new ChannelStore($registry);
+    $this->assertSame([], $store->create('chan', ['type' => $key, 'label' => 'Stub']));
+    return new ChannelSender($registry, $store);
   }
 
   public function testTotalRecipientFailureThrows(): void {
     $sent = [];
-    $registry = $this->registry('telegram', [TRUE, TRUE], $sent);
+    $sender = $this->sender('telegram', [TRUE, TRUE], $sent);
     $recipients = [
-      ['contact_id' => 1, 'channel' => 'telegram', 'config' => ['chat_id' => 'a']],
-      ['contact_id' => 2, 'channel' => 'telegram', 'config' => ['chat_id' => 'b']],
+      ['contact_id' => 1, 'channel' => 'chan', 'config' => ['chat_id' => 'a']],
+      ['contact_id' => 2, 'channel' => 'chan', 'config' => ['chat_id' => 'b']],
     ];
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/all 2 recipient sends failed/');
-    FanOut::toRecipients('body', [], $recipients, $registry);
+    FanOut::toRecipients('body', [], $recipients, $sender);
   }
 
   public function testPartialRecipientFailureDoesNotThrow(): void {
     $sent = [];
-    $registry = $this->registry('telegram', [TRUE, FALSE], $sent);
+    $sender = $this->sender('telegram', [TRUE, FALSE], $sent);
     $recipients = [
-      ['contact_id' => 1, 'channel' => 'telegram', 'config' => ['chat_id' => 'a']],
-      ['contact_id' => 2, 'channel' => 'telegram', 'config' => ['chat_id' => 'b']],
+      ['contact_id' => 1, 'channel' => 'chan', 'config' => ['chat_id' => 'a']],
+      ['contact_id' => 2, 'channel' => 'chan', 'config' => ['chat_id' => 'b']],
     ];
-    FanOut::toRecipients('body', [], $recipients, $registry);
+    FanOut::toRecipients('body', [], $recipients, $sender);
     $this->assertCount(2, $sent);
   }
 
   public function testARecipientOnAnUnknownChannelDoesNotStopTheOthers(): void {
     $sent = [];
-    $registry = $this->registry('telegram', [], $sent);
+    $sender = $this->sender('telegram', [], $sent);
     $recipients = [
       ['contact_id' => 1, 'channel' => 'herald_test_gone', 'config' => []],
-      ['contact_id' => 2, 'channel' => 'telegram', 'config' => ['chat_id' => 'b']],
+      ['contact_id' => 2, 'channel' => 'chan', 'config' => ['chat_id' => 'b']],
     ];
-    FanOut::toRecipients('body', [], $recipients, $registry);
+    FanOut::toRecipients('body', [], $recipients, $sender);
     $this->assertSame([['chat_id' => 'b']], $sent);
   }
 
@@ -111,9 +116,9 @@ class FanOutFailureTest extends TestCase implements HeadlessInterface, HookInter
    */
   public function testEmptyRecipientListThrows(): void {
     $sent = [];
-    $registry = $this->registry('telegram', [], $sent);
+    $sender = $this->sender('telegram', [], $sent);
     try {
-      FanOut::toRecipients('body', ['delivery_mode' => 'subscribers'], [], $registry);
+      FanOut::toRecipients('body', ['delivery_mode' => 'subscribers'], [], $sender);
       $this->fail('an empty recipient list must not count as a successful send');
     }
     catch (\CRM_Core_Exception $e) {
@@ -158,16 +163,23 @@ class FanOutFailureTest extends TestCase implements HeadlessInterface, HookInter
 
   public function testTotalAddressFailureThrows(): void {
     $sent = [];
-    $registry = $this->registry('email', [TRUE, TRUE], $sent);
+    $sender = $this->sender('email', [TRUE, TRUE], $sent);
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/all 2 address sends failed/');
-    FanOut::toAddresses('body', ['email_addresses' => 'a@x.org, b@x.org'], $registry);
+    FanOut::toAddresses('body', ['channel' => 'chan', 'email_addresses' => 'a@x.org, b@x.org'], $sender);
+  }
+
+  public function testAnAddressListThroughAChannelOfAnotherTypeFails(): void {
+    $sent = [];
+    $sender = $this->sender('telegram', [], $sent);
+    $this->expectExceptionMessage('herald: address lists go through an email channel; "chan" is not one.');
+    FanOut::toAddresses('body', ['channel' => 'chan', 'email_addresses' => 'a@x.org'], $sender);
   }
 
   public function testPartialAddressFailureDoesNotThrow(): void {
     $sent = [];
-    $registry = $this->registry('email', [FALSE, TRUE], $sent);
-    FanOut::toAddresses('body', ['email_addresses' => 'a@x.org, b@x.org'], $registry);
+    $sender = $this->sender('email', [FALSE, TRUE], $sent);
+    FanOut::toAddresses('body', ['channel' => 'chan', 'email_addresses' => 'a@x.org, b@x.org'], $sender);
     $this->assertCount(2, $sent);
   }
 

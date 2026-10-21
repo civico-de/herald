@@ -9,11 +9,12 @@ namespace Civi\Herald\Topic;
  * entries use the same parameter shape as the CiviRules actions.
  *
  *   cv api4 Setting.set +v 'herald_topics={
- *     "default": {"channel": "telegram"},
- *     "ops":     {"channel": "telegram", "chat_id": "-100…", "aggregate_minutes": 0}
+ *     "default": {"channel": "email"},
+ *     "ops":     {"channel": "ops_bot", "chat_id": "-100…", "aggregate_minutes": 0}
  *   }'
  *
- * The topic's entry is merged over "default"; neither present throws.
+ * The topic's entry is merged over "default"; neither present, or no
+ * channel named (a configured channel, see ChannelStore), throws.
  */
 class Router {
 
@@ -28,15 +29,22 @@ class Router {
   }
 
   /**
+   * Whether publishing to the topic finds a route.
+   */
+  public static function exists(string $topic): bool {
+    $map = \Civi::settings()->get(self::SETTING);
+    return is_array($map) && self::entries($map, $topic) !== [];
+  }
+
+  /**
    * Pure resolution against a given map.
    *
    * @param array<array-key, mixed> $map
    * @return array<string, mixed>
    */
   public static function resolveFrom(array $map, string $topic): array {
-    $default = is_array($map['default'] ?? NULL) ? $map['default'] : NULL;
-    $entry = is_array($map[$topic] ?? NULL) ? $map[$topic] : NULL;
-    if ($entry === NULL && $default === NULL) {
+    $entries = self::entries($map, $topic);
+    if ($entries === []) {
       throw new \CRM_Core_Exception(sprintf(
         'herald: no route for topic "%s" — add it (or a "default" entry) to the %s setting.',
         $topic,
@@ -45,9 +53,23 @@ class Router {
     }
     // Unknown keys are ignored by the consumer rather than rejected here.
     /** @var array<string, mixed> $params */
-    $params = array_merge($default ?? [], $entry ?? []);
-    $params += ['channel' => 'telegram'];
+    $params = array_merge(...$entries);
+    // A fan-out reaches each contact on their own channel.
+    $fanOut = in_array($params['delivery_mode'] ?? 'direct', ['subscribers', 'group'], TRUE);
+    if (empty($params['channel']) && !$fanOut) {
+      throw new \CRM_Core_Exception(sprintf('herald: the route of topic "%s" names no channel.', $topic));
+    }
     return $params;
+  }
+
+  /**
+   * The "default" entry and the topic's own, in merge order, where they are arrays.
+   *
+   * @param array<array-key, mixed> $map
+   * @return list<array<array-key, mixed>>
+   */
+  private static function entries(array $map, string $topic): array {
+    return array_values(array_filter([$map['default'] ?? NULL, $map[$topic] ?? NULL], 'is_array'));
   }
 
 }

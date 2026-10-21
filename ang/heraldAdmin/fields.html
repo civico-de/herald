@@ -1,4 +1,18 @@
-<div class="herald-admin-field" ng-repeat="field in fields" ng-if="isShown(field)" ng-switch="field.type">
+<div class="herald-admin-field" ng-repeat="field in fields" ng-if="isShown(field)" ng-switch="field.secret && field.type !== 'object' ? 'secret' : field.tristate ? 'tristate' : field.type">
+  <div ng-switch-when="secret">
+    <label for="{{:: prefix + field.key }}"
+      >{{:: field.label }}
+      <span ng-if=":: field.required" class="crm-marker">{{:: ts('(required)') }}</span></label
+    >
+    <input
+      type="password"
+      autocomplete="new-password"
+      id="{{:: prefix + field.key }}"
+      class="crm-form-text"
+      ng-model="inputs[field.key]"
+      ng-attr-aria-describedby="{{:: field.help ? prefix + field.key + '-help' : undefined }}"
+    />
+  </div>
   <div ng-switch-when="bool">
     <input
       type="checkbox"
@@ -7,6 +21,19 @@
       ng-attr-aria-describedby="{{:: field.help ? prefix + field.key + '-help' : undefined }}"
     />
     <label for="{{:: prefix + field.key }}">{{:: field.label }}</label>
+  </div>
+  <div ng-switch-when="tristate">
+    <label for="{{:: prefix + field.key }}">{{:: field.label }}</label>
+    <select
+      id="{{:: prefix + field.key }}"
+      class="crm-form-select"
+      ng-model="inputs[field.key]"
+      ng-attr-aria-describedby="{{:: field.help ? prefix + field.key + '-help' : undefined }}"
+    >
+      <option value="">{{:: ts('- channel default -') }}</option>
+      <option value="1">{{:: ts('Yes') }}</option>
+      <option value="0">{{:: ts('No') }}</option>
+    </select>
   </div>
   <div ng-switch-when="enum">
     <label for="{{:: prefix + field.key }}"

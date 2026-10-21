@@ -5,10 +5,11 @@ declare(strict_types = 1);
 namespace Civi\Herald\Api4\Action;
 
 use Civi\Api4\Generic\Result;
-use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Digest\Composer;
 use Civi\Herald\Digest\Definition;
+use Civi\Herald\Dispatch\ChannelSender;
 use Civi\Herald\Dispatch\ChannelSubject;
+use Civi\Herald\Subscribers\ContactRows;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
@@ -26,10 +27,10 @@ class SendDigestTest extends PreviewDigest {
       return;
     }
     $to = self::userEmail();
-    $channel = ChannelRegistry::default()->get('email');
-    $channel->send(
+    (new ChannelSender())->send(
+      ContactRows::emailChannel(),
       $preview['body'],
-      ChannelSubject::forChannel($channel, ChannelSubject::withSubject(['email_to' => $to], $preview['subject'])),
+      ChannelSubject::withSubject(['email_to' => $to], $preview['subject']),
     );
     $result[] = ['sent' => TRUE, 'to' => $to, 'problems' => []];
   }

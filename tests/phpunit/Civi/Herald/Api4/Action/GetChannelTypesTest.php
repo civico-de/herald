@@ -10,37 +10,45 @@ use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * Herald.getChannels — makes the per-channel config contract discoverable to
+ * Herald.getChannelTypes — makes the per-type config contract discoverable to
  * callers instead of copyable out of herald's source.
  *
  * @group headless
  */
-class GetChannelsTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
+class GetChannelTypesTest extends TestCase implements HeadlessInterface, HookInterface, TransactionalInterface {
 
   public function setUpHeadless() {
     return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
   public function testListsEveryShippedChannel(): void {
-    $keys = (array) civicrm_api4('Herald', 'getChannels', ['checkPermissions' => FALSE])->column('key');
+    $keys = (array) civicrm_api4('Herald', 'getChannelTypes', ['checkPermissions' => FALSE])->column('key');
     sort($keys);
     $this->assertSame(['activity', 'email', 'ntfy', 'pushover', 'telegram', 'webhook'], $keys);
   }
 
   public function testExposesTheConfigSchemaOfAChannel(): void {
-    $row = civicrm_api4('Herald', 'getChannels', [
+    $row = civicrm_api4('Herald', 'getChannelTypes', [
       'checkPermissions' => FALSE,
-      'channel' => 'email',
+      'type' => 'email',
     ])->single();
 
     $this->assertSame('email', $row['key']);
     $this->assertArrayHasKey('email_to', $row['config_schema']);
     $this->assertArrayHasKey('email_subject', $row['config_schema']);
     $this->assertTrue($row['config_schema']['email_to']['required']);
+    $this->assertTrue($row['config_schema']['email_to']['recipient']);
+    $this->assertSame('channel', $row['config_schema']['email_from']['scope']);
+    $this->assertTrue($row['subscribable']);
+  }
+
+  public function testActivitiesCannotBeOfferedToContacts(): void {
+    $rows = civicrm_api4('Herald', 'getChannelTypes', ['checkPermissions' => FALSE])->indexBy('key');
+    $this->assertFalse($rows['activity']['subscribable']);
   }
 
   public function testExposesTheSemanticFieldMapping(): void {
-    $rows = civicrm_api4('Herald', 'getChannels', ['checkPermissions' => FALSE])->indexBy('key');
+    $rows = civicrm_api4('Herald', 'getChannelTypes', ['checkPermissions' => FALSE])->indexBy('key');
 
     $this->assertSame(['subject' => 'email_subject', 'format' => 'email_format'], $rows['email']['semantic_fields']);
     $this->assertSame(['subject' => 'ntfy_title'], $rows['ntfy']['semantic_fields']);
@@ -56,7 +64,7 @@ class GetChannelsTest extends TestCase implements HeadlessInterface, HookInterfa
    * otherwise Herald.send would write config the channel silently ignores.
    */
   public function testEverySemanticFieldExistsInTheConfigSchema(): void {
-    foreach (civicrm_api4('Herald', 'getChannels', ['checkPermissions' => FALSE]) as $row) {
+    foreach (civicrm_api4('Herald', 'getChannelTypes', ['checkPermissions' => FALSE]) as $row) {
       foreach ($row['semantic_fields'] as $semantic => $key) {
         $this->assertArrayHasKey(
           $key,
@@ -69,7 +77,7 @@ class GetChannelsTest extends TestCase implements HeadlessInterface, HookInterfa
 
   public function testUnknownChannelThrows(): void {
     $this->expectException(\CRM_Core_Exception::class);
-    civicrm_api4('Herald', 'getChannels', ['checkPermissions' => FALSE, 'channel' => 'nope']);
+    civicrm_api4('Herald', 'getChannelTypes', ['checkPermissions' => FALSE, 'type' => 'nope']);
   }
 
 }

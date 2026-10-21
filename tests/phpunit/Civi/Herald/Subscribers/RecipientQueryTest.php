@@ -22,6 +22,11 @@ class RecipientQueryTest extends TestCase implements HeadlessInterface, HookInte
     return \Civi\Herald\HeadlessSite::standard()->apply();
   }
 
+  public function setUp(): void {
+    parent::setUp();
+    \Civi\Herald\ChannelFixture::add('telegram', 'telegram', ['bot_token' => bin2hex(random_bytes(8))], TRUE);
+  }
+
   /**
    * @param array<string, mixed> $values
    */

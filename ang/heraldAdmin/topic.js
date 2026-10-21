@@ -30,7 +30,7 @@
         return channel ? channel.fields : [];
       };
       const effectiveChannel = () =>
-        ctrl.channel || (ctrl.name !== "default" && fallback.channel) || "telegram";
+        ctrl.channel || (ctrl.name !== "default" && fallback.channel) || null;
       ctrl.effectiveMode = () =>
         ctrl.mode || (ctrl.name !== "default" && fallback.delivery_mode) || "direct";
       ctrl.isDefault = () => ctrl.name === "default";

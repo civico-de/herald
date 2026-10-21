@@ -2,7 +2,6 @@
 
 declare(strict_types = 1);
 
-use Civi\Herald\Dispatch\ChannelConfig;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
@@ -39,7 +38,12 @@ final class CRM_Herald_Upgrader_InlineDelivery {
    * @param list<array<string, mixed>> $sources
    */
   public static function subject(array $params, array $blocks, array $sources, string $title): string {
-    $subject = trim(Cast::toString(ChannelConfig::of($params)['email_subject'] ?? ''));
+    // channel_config was a JSON object whose keys won over the top-level ones.
+    $config = $params['channel_config'] ?? NULL;
+    $decoded = is_string($config) ? json_decode($config, TRUE) : $config;
+    $subject = trim(Cast::toString(
+      (is_array($decoded) ? $decoded : [])['email_subject'] ?? $params['email_subject'] ?? '',
+    ));
     if ($subject !== '') {
       return CRM_Herald_Upgrader_InlineTemplate::literal($subject);
     }

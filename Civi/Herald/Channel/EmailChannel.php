@@ -12,8 +12,9 @@ use CRM_Herald_ExtensionUtil as E;
  * outbound mailer (CRM_Utils_Mail::send), so SMTP settings, mail logging and
  * dev-environment redirection all apply.
  *
- * Per-call config (from action params / channel_config JSON):
- *   email_to       string  Recipient address (required; falls back to setting)
+ * Config:
+ *   email_from     string  From header ("Name <email>"); empty → site default
+ *   email_to       string  Recipient address (required)
  *   email_to_name  string  Recipient display name
  *   email_subject  string  Explicit subject. When unset, AbstractSend defaults
  *                          it to the template's rendered msg_subject; final
@@ -23,10 +24,6 @@ use CRM_Herald_ExtensionUtil as E;
  *                          'html' with its line breaks as <br> (HtmlLineBreaks)
  *   email_cc       string  Comma-separated CC addresses
  *   email_bcc      string  Comma-separated BCC addresses
- *
- * Settings:
- *   herald_email_default_to — fallback recipient when the action sets none
- *   herald_email_from       — From header ("Name <email>"); empty → site default
  */
 class EmailChannel implements ChannelInterface {
 
@@ -52,17 +49,12 @@ class EmailChannel implements ChannelInterface {
    * @param array<string, mixed> $config
    */
   public function send(string $renderedBody, array $config): void {
-    // !empty, not ??: an empty email_to must still fall back to the setting.
-    $to = !empty($config['email_to'])
-      ? $config['email_to']
-      : \Civi::settings()->get('herald_email_default_to');
-    if (!$to) {
-      throw new \CRM_Core_Exception(
-        'herald: email channel requires email_to (action param or herald_email_default_to setting).',
-      );
+    $to = $config['email_to'] ?? '';
+    if (empty($to)) {
+      throw new \CRM_Core_Exception('herald: no email_to, neither on the delivery nor on the channel.');
     }
 
-    $from = Cast::toString(\Civi::settings()->get('herald_email_from'));
+    $from = Cast::toString($config['email_from'] ?? '');
     if ($from === '') {
       $from = \CRM_Core_BAO_Domain::getFromEmail();
     }
@@ -102,12 +94,29 @@ class EmailChannel implements ChannelInterface {
   }
 
   /**
-   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string}>
+   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string, scope?: 'channel'|'delivery', secret?: bool, recipient?: bool, bound_to?: string}>
    */
   public function getConfigSchema(): array {
     return [
-      'email_to' => ['label' => E::ts('Recipient address'), 'required' => TRUE, 'type' => 'string'],
-      'email_to_name' => ['label' => E::ts('Recipient name'), 'required' => FALSE, 'type' => 'string'],
+      'email_from' => [
+        'label' => E::ts('Sender ("Name <email>")'),
+        'required' => FALSE,
+        'type' => 'string',
+        'scope' => 'channel',
+        'help' => E::ts("If empty, the site's default sender is used."),
+      ],
+      'email_to' => [
+        'label' => E::ts('Recipient address'),
+        'required' => TRUE,
+        'type' => 'string',
+        'recipient' => TRUE,
+      ],
+      'email_to_name' => [
+        'label' => E::ts('Recipient name'),
+        'required' => FALSE,
+        'type' => 'string',
+        'recipient' => TRUE,
+      ],
       'email_subject' => ['label' => E::ts('Subject'), 'required' => FALSE, 'type' => 'string'],
       'email_format' => [
         'label' => E::ts('Body format'),
@@ -115,8 +124,18 @@ class EmailChannel implements ChannelInterface {
         'type' => 'enum',
         'options' => ['html', 'text'],
       ],
-      'email_cc' => ['label' => E::ts('CC (comma-separated)'), 'required' => FALSE, 'type' => 'string'],
-      'email_bcc' => ['label' => E::ts('BCC (comma-separated)'), 'required' => FALSE, 'type' => 'string'],
+      'email_cc' => [
+        'label' => E::ts('CC (comma-separated)'),
+        'required' => FALSE,
+        'type' => 'string',
+        'recipient' => TRUE,
+      ],
+      'email_bcc' => [
+        'label' => E::ts('BCC (comma-separated)'),
+        'required' => FALSE,
+        'type' => 'string',
+        'recipient' => TRUE,
+      ],
     ];
   }
 

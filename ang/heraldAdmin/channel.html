@@ -1,0 +1,50 @@
+<div class="herald-admin">
+  <h1 crm-page-title>{{:: $ctrl.isNew ? $ctrl.ts('Add channel') : $ctrl.ts('Edit channel') }}</h1>
+  <p><a href="#/channels">{{:: $ctrl.ts('Channels') }}</a></p>
+  <div ng-include="'~/heraldAdmin/messages.html'"></div>
+  <form name="channelForm" ng-if="$ctrl.loaded" ng-submit="$ctrl.save()" novalidate>
+    <div class="herald-admin-field">
+      <label for="herald-channel-type">{{:: $ctrl.ts('Type') }} <span class="crm-marker">{{:: $ctrl.ts('(required)') }}</span></label>
+      <select id="herald-channel-type" class="crm-form-select" ng-model="$ctrl.type" ng-change="$ctrl.typeChanged()" ng-options="t.key as t.label for t in $ctrl.types" ng-disabled="!$ctrl.isNew" required aria-describedby="herald-channel-type-help">
+        <option value="">{{:: $ctrl.ts('- select -') }}</option>
+      </select>
+      <p class="description" id="herald-channel-type-help">{{:: $ctrl.ts('The type cannot change later; add a new channel instead.') }}</p>
+    </div>
+    <div class="herald-admin-field">
+      <label for="herald-channel-name">{{:: $ctrl.ts('Name') }} <span class="crm-marker">{{:: $ctrl.ts('(required)') }}</span></label>
+      <input type="text" id="herald-channel-name" class="crm-form-text" ng-model="$ctrl.name" ng-disabled="!$ctrl.isNew" required aria-describedby="herald-channel-name-help" />
+      <p class="description" id="herald-channel-name-help">{{:: $ctrl.ts('What routes and rules store, for example ops_bot: lowercase letters, digits and _, starting with a letter. It cannot change later.') }}</p>
+    </div>
+    <div class="herald-admin-field">
+      <label for="herald-channel-label">{{:: $ctrl.ts('Title') }}</label>
+      <input type="text" id="herald-channel-label" class="crm-form-text" ng-model="$ctrl.label" aria-describedby="herald-channel-label-help" />
+      <p class="description" id="herald-channel-label-help">{{:: $ctrl.ts('Shown in lists and to contacts choosing their channel. Empty uses the name.') }}</p>
+    </div>
+    <div class="herald-admin-field">
+      <input type="checkbox" id="herald-channel-active" ng-model="$ctrl.active" aria-describedby="herald-channel-active-help" />
+      <label for="herald-channel-active">{{:: $ctrl.ts('Active') }}</label>
+      <p class="description" id="herald-channel-active-help">{{:: $ctrl.ts('A channel that is switched off sends nothing; deliveries through it fail.') }}</p>
+    </div>
+    <div class="herald-admin-field" ng-if="$ctrl.typeOf().subscribable">
+      <input type="checkbox" id="herald-channel-subscribable" ng-model="$ctrl.subscribable" aria-describedby="herald-channel-subscribable-help" />
+      <label for="herald-channel-subscribable">{{:: $ctrl.ts('Contacts can choose it') }}</label>
+      <p class="description" id="herald-channel-subscribable-help">{{:: $ctrl.ts('Offers the channel as preferred channel in the notification preferences of contacts.') }}</p>
+    </div>
+    <fieldset ng-if="$ctrl.typeOf()">
+      <legend>{{:: $ctrl.ts('Account') }}</legend>
+      <herald-fields fields="$ctrl.channelFields" inputs="$ctrl.inputs" prefix="herald-channel-"></herald-fields>
+      <p ng-if="!$ctrl.channelFields.length">{{:: $ctrl.ts('This type needs no account settings.') }}</p>
+      <div class="herald-admin-field" ng-repeat="field in $ctrl.storedSecrets">
+        <input type="checkbox" id="herald-channel-clear-{{:: field.key }}" ng-model="$ctrl.clear[field.key]" />
+        <label for="herald-channel-clear-{{:: field.key }}">{{ $ctrl.ts('Remove the stored value of "%1"', {1: field.label}) }}</label>
+      </div>
+    </fieldset>
+    <fieldset ng-if="$ctrl.typeOf()">
+      <legend>{{:: $ctrl.ts('Defaults') }}</legend>
+      <p class="description">{{:: $ctrl.ts('Used when a route or rule leaves the field empty, for example the recipient of direct deliveries.') }}</p>
+      <herald-fields fields="$ctrl.defaultFields" inputs="$ctrl.inputs" prefix="herald-channel-"></herald-fields>
+    </fieldset>
+    <button type="submit" class="btn btn-primary" ng-disabled="$ctrl.saving">{{:: $ctrl.ts('Save') }}</button>
+    <a class="btn btn-secondary" href="#/channels">{{:: $ctrl.ts('Cancel') }}</a>
+  </form>
+</div>

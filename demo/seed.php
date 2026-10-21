@@ -15,6 +15,8 @@ declare(strict_types = 1);
  */
 
 use Civi\Api4\Contact;
+use Civi\Api4\Herald;
+use Civi\Herald\Channel\ChannelStore;
 
 $externalIdentifier = 'civico-showroom-coordinator';
 /** @var array{id: int}|null $coordinator */
@@ -35,6 +37,14 @@ if ($coordinator === NULL) {
     ->single();
 }
 $coordinatorId = $coordinator['id'];
+
+if (!isset((new ChannelStore())->all()['activity'])) {
+  Herald::saveChannel(FALSE)
+    ->setName('activity')
+    ->setIsNew(TRUE)
+    ->setChannel(['type' => 'activity', 'label' => 'CiviCRM activity'])
+    ->execute();
+}
 
 $activityRoute = [
   'channel' => 'activity',

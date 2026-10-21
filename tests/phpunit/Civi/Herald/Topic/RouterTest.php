@@ -23,9 +23,22 @@ class RouterTest extends TestCase {
   }
 
   public function testUnknownTopicFallsBackToDefault(): void {
-    $params = Router::resolveFrom(['default' => ['chat_id' => '-1']], 'anything');
+    $params = Router::resolveFrom(['default' => ['channel' => 'ops_bot', 'chat_id' => '-1']], 'anything');
     $this->assertSame('-1', $params['chat_id']);
-    $this->assertSame('telegram', $params['channel']);
+    $this->assertSame('ops_bot', $params['channel']);
+  }
+
+  public function testARouteWithoutAChannelThrows(): void {
+    $this->expectExceptionMessage('herald: the route of topic "anything" names no channel.');
+    Router::resolveFrom(['default' => ['chat_id' => '-1']], 'anything');
+  }
+
+  public function testAFanOutRouteNeedsNoChannel(): void {
+    $params = Router::resolveFrom(['members' => [
+      'delivery_mode' => 'subscribers',
+      'subscription_type' => 'news',
+    ]], 'members');
+    $this->assertSame('subscribers', $params['delivery_mode']);
   }
 
   public function testUnroutedTopicThrows(): void {

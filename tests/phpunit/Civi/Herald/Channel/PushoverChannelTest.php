@@ -22,6 +22,8 @@ class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInt
    * @var \GuzzleHttp\Psr7\Request[] */
   private array $capturedRequests = [];
 
+  private string $appToken;
+
   public function setUpHeadless() {
     return \Civi\Herald\HeadlessSite::standard()->apply();
   }
@@ -29,8 +31,14 @@ class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInt
   public function setUp(): void {
     parent::setUp();
     $this->capturedRequests = [];
-    \Civi::settings()->set('herald_pushover_app_token', 'apptoken');
-    \Civi::settings()->set('herald_pushover_default_user_key', '');
+    $this->appToken = bin2hex(random_bytes(8));
+  }
+
+  /**
+   * Send with the app token a configured channel adds to every delivery.
+   */
+  private function send(PushoverChannel $channel, string $body, array $config): void {
+    $channel->send($body, $config + ['pushover_app_token' => $this->appToken]);
   }
 
   private function makeMockedClient(Response $response): Client {
@@ -47,29 +55,33 @@ class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInt
 
   public function testHappyPathSendsRequiredFormFields(): void {
     $channel = new PushoverChannel($this->makeMockedClient(new Response(200, [], '{"status":1}')));
-    $channel->send('hello', ['pushover_user_key' => 'userkey']);
+    $this->send($channel, 'hello', ['pushover_user_key' => 'userkey']);
 
     $req = $this->capturedRequests[0]['request'];
     $this->assertSame('POST', $req->getMethod());
     $this->assertSame('https://api.pushover.net/1/messages.json', (string) $req->getUri());
 
     $form = $this->parseFormBody((string) $req->getBody());
-    $this->assertSame('apptoken', $form['token']);
+    $this->assertSame($this->appToken, $form['token']);
     $this->assertSame('userkey', $form['user']);
     $this->assertSame('hello', $form['message']);
   }
 
-  public function testFallsBackToDefaultUserKey(): void {
-    \Civi::settings()->set('herald_pushover_default_user_key', 'default-user');
-    $channel = new PushoverChannel($this->makeMockedClient(new Response(200, [], '{"status":1}')));
-    $channel->send('x', []);
+  public function testFallsBackToTheChannelsDefaultUserKey(): void {
+    \Civi\Herald\ChannelFixture::add('phones', 'pushover', [
+      'pushover_app_token' => $this->appToken,
+      'pushover_user_key' => 'default-user',
+    ]);
+    $registry = new ChannelRegistry();
+    $registry->register(new PushoverChannel($this->makeMockedClient(new Response(200, [], '{"status":1}'))));
+    (new \Civi\Herald\Dispatch\ChannelSender($registry))->send('phones', 'x', []);
     $form = $this->parseFormBody((string) $this->capturedRequests[0]['request']->getBody());
     $this->assertSame('default-user', $form['user']);
   }
 
   public function testOptionalFieldsForwarded(): void {
     $channel = new PushoverChannel($this->makeMockedClient(new Response(200, [], '{"status":1}')));
-    $channel->send('body', [
+    $this->send($channel, 'body', [
       'pushover_user_key' => 'u',
       'pushover_title' => 'Donation',
       'pushover_priority' => 1,
@@ -88,10 +100,9 @@ class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInt
   }
 
   public function testThrowsWhenAppTokenMissing(): void {
-    \Civi::settings()->set('herald_pushover_app_token', '');
     $channel = new PushoverChannel($this->makeMockedClient(new Response(200, [], '{"status":1}')));
     $this->expectException(\CRM_Core_Exception::class);
-    $this->expectExceptionMessageMatches('/app token/');
+    $this->expectExceptionMessageMatches('/no pushover_app_token/');
     $channel->send('x', ['pushover_user_key' => 'u']);
   }
 
@@ -99,14 +110,14 @@ class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInt
     $channel = new PushoverChannel($this->makeMockedClient(new Response(200, [], '{"status":1}')));
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/user.*key/i');
-    $channel->send('x', []);
+    $this->send($channel, 'x', []);
   }
 
   public function testThrowsOnHttpError(): void {
     $channel = new PushoverChannel($this->makeMockedClient(new Response(429, [], '{"status":0}')));
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/HTTP 429/');
-    $channel->send('x', ['pushover_user_key' => 'u']);
+    $this->send($channel, 'x', ['pushover_user_key' => 'u']);
   }
 
   public function testThrowsWhenStatusNotOne(): void {
@@ -115,7 +126,7 @@ class PushoverChannelTest extends TestCase implements HeadlessInterface, HookInt
     ));
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/status != 1/');
-    $channel->send('x', ['pushover_user_key' => 'u']);
+    $this->send($channel, 'x', ['pushover_user_key' => 'u']);
   }
 
   public function testBuildFormPure(): void {

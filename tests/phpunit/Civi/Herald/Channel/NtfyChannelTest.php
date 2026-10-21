@@ -29,9 +29,13 @@ class NtfyChannelTest extends TestCase implements HeadlessInterface, HookInterfa
   public function setUp(): void {
     parent::setUp();
     $this->capturedRequests = [];
-    \Civi::settings()->set('herald_ntfy_server', 'https://ntfy.example.com');
-    \Civi::settings()->set('herald_ntfy_default_topic', '');
-    \Civi::settings()->set('herald_ntfy_token', '');
+  }
+
+  /**
+   * Send with the server a configured channel adds to every delivery.
+   */
+  private static function send(NtfyChannel $channel, string $body, array $config): void {
+    $channel->send($body, $config + ['ntfy_server' => 'https://ntfy.example.com']);
   }
 
   private function makeMockedClient(Response $response): Client {
@@ -43,7 +47,7 @@ class NtfyChannelTest extends TestCase implements HeadlessInterface, HookInterfa
 
   public function testSendsToTopicWithBody(): void {
     $channel = new NtfyChannel($this->makeMockedClient(new Response(200, [], '')));
-    $channel->send('alarm!', ['ntfy_topic' => 'donations']);
+    self::send($channel, 'alarm!', ['ntfy_topic' => 'donations']);
 
     $req = $this->capturedRequests[0]['request'];
     $this->assertSame('POST', $req->getMethod());
@@ -53,15 +57,19 @@ class NtfyChannelTest extends TestCase implements HeadlessInterface, HookInterfa
 
   public function testBodyIsTheVisibleTextOfTheHtmlBody(): void {
     $channel = new NtfyChannel($this->makeMockedClient(new Response(200, [], '')));
-    $channel->send("<b>Tom &amp; Jerry &lt;x&gt;</b>\nline 2", ['ntfy_topic' => 'donations']);
+    self::send($channel, "<b>Tom &amp; Jerry &lt;x&gt;</b>\nline 2", ['ntfy_topic' => 'donations']);
 
     $this->assertSame("Tom & Jerry <x>\nline 2", (string) $this->capturedRequests[0]['request']->getBody());
   }
 
-  public function testFallsBackToDefaultTopic(): void {
-    \Civi::settings()->set('herald_ntfy_default_topic', 'fallback-topic');
-    $channel = new NtfyChannel($this->makeMockedClient(new Response(200, [], '')));
-    $channel->send('hi', []);
+  public function testFallsBackToTheChannelsDefaultTopic(): void {
+    \Civi\Herald\ChannelFixture::add('alerts', 'ntfy', [
+      'ntfy_server' => 'https://ntfy.example.com',
+      'ntfy_topic' => 'fallback-topic',
+    ]);
+    $registry = new ChannelRegistry();
+    $registry->register(new NtfyChannel($this->makeMockedClient(new Response(200, [], ''))));
+    (new \Civi\Herald\Dispatch\ChannelSender($registry))->send('alerts', 'hi', ['ntfy_topic' => '']);
     $this->assertSame(
       'https://ntfy.example.com/fallback-topic',
       (string) $this->capturedRequests[0]['request']->getUri(),
@@ -69,7 +77,6 @@ class NtfyChannelTest extends TestCase implements HeadlessInterface, HookInterfa
   }
 
   public function testFallsBackToPublicNtfyShWhenServerUnset(): void {
-    \Civi::settings()->set('herald_ntfy_server', '');
     $channel = new NtfyChannel($this->makeMockedClient(new Response(200, [], '')));
     $channel->send('hi', ['ntfy_topic' => 'x']);
     $this->assertSame('https://ntfy.sh/x', (string) $this->capturedRequests[0]['request']->getUri());
@@ -77,7 +84,7 @@ class NtfyChannelTest extends TestCase implements HeadlessInterface, HookInterfa
 
   public function testHeadersForwardMetadata(): void {
     $channel = new NtfyChannel($this->makeMockedClient(new Response(200, [], '')));
-    $channel->send('body', [
+    self::send($channel, 'body', [
       'ntfy_topic' => 't',
       'ntfy_title' => 'Donation alert',
       'ntfy_priority' => 4,
@@ -93,25 +100,25 @@ class NtfyChannelTest extends TestCase implements HeadlessInterface, HookInterfa
     $this->assertSame('yes', $req->getHeaderLine('X-Markdown'));
   }
 
-  public function testBearerTokenFromSetting(): void {
-    \Civi::settings()->set('herald_ntfy_token', 'tk_abc');
+  public function testBearerTokenFromTheChannel(): void {
     $channel = new NtfyChannel($this->makeMockedClient(new Response(200, [], '')));
-    $channel->send('x', ['ntfy_topic' => 't']);
-    $this->assertSame('Bearer tk_abc', $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
+    $token = bin2hex(random_bytes(8));
+    self::send($channel, 'x', ['ntfy_topic' => 't', 'ntfy_token' => $token]);
+    $this->assertSame("Bearer {$token}", $this->capturedRequests[0]['request']->getHeaderLine('Authorization'));
   }
 
   public function testThrowsWhenTopicMissing(): void {
     $channel = new NtfyChannel($this->makeMockedClient(new Response(200, [], '')));
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/ntfy_topic/');
-    $channel->send('x', []);
+    self::send($channel, 'x', []);
   }
 
   public function testThrowsOnHttpError(): void {
     $channel = new NtfyChannel($this->makeMockedClient(new Response(403, [], 'forbidden')));
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/HTTP 403/');
-    $channel->send('x', ['ntfy_topic' => 't']);
+    self::send($channel, 'x', ['ntfy_topic' => 't']);
   }
 
   public function testBuildHeadersPure(): void {

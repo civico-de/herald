@@ -7,6 +7,7 @@ namespace Civi\Herald\Api4\Action;
 use Civi\Api4\Generic\AbstractAction;
 use Civi\Api4\Generic\Result;
 use Civi\Herald\Admin\InvalidInput;
+use Civi\Herald\Admin\ParamsInUse;
 use Civi\Herald\Topic\Router;
 use Civi\Herald\Topic\RouteValidator;
 use CRM_Herald_ExtensionUtil as E;
@@ -55,6 +56,13 @@ class SaveTopic extends AbstractAction {
     }
     if (($renaming || $this->previousName === '') && array_key_exists($this->topic, $map)) {
       $errors[] = E::ts('A topic named "%1" already exists.', [1 => $this->topic]);
+    }
+    if ($renaming) {
+      $users = ParamsInUse::ofTopic($this->previousName);
+      if ($users !== []) {
+        $errors[] = E::ts('The topic "%1" cannot be renamed while in use:', [1 => $this->previousName]);
+        $errors = array_merge($errors, $users);
+      }
     }
     InvalidInput::throwIfAny($errors);
 

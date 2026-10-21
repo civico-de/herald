@@ -406,7 +406,7 @@ foreach ($digests as $name => [$title, $weekdays, $sources]) {
         'digest' => $name,
         'delivery_mode' => 'direct',
         'channel' => 'activity',
-        'channel_config' => ['activity_assignee_contact_id' => $coordinator],
+        'activity_assignee_contact_id' => $coordinator,
       ],
       'is_active' => TRUE,
     ])

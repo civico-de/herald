@@ -15,18 +15,15 @@ use GuzzleHttp\ClientInterface;
  * the POST is the rendered message as plain text (PlainText); metadata (title, priority, tags, click,
  * markdown) is passed via `X-*` headers so the body stays human-readable.
  *
- * Per-call config (from action params / channel_config JSON):
- *   ntfy_topic     string  Topic to publish to (required; falls back to setting)
+ * Config:
+ *   ntfy_server    string  Base URL (default https://ntfy.sh)
+ *   ntfy_token     string  Bearer token for protected topics
+ *   ntfy_topic     string  Topic to publish to (required)
  *   ntfy_title     string  X-Title header
  *   ntfy_priority  int|str X-Priority (1=min … 5=max, or string aliases)
  *   ntfy_tags      string  X-Tags (comma-separated)
  *   ntfy_click     string  X-Click URL opened when notification is tapped
  *   ntfy_markdown  bool    X-Markdown: yes when truthy
- *
- * Settings:
- *   herald_ntfy_server         — base URL (default https://ntfy.sh)
- *   herald_ntfy_default_topic  — fallback topic
- *   herald_ntfy_token          — Bearer token for protected topics
  */
 class NtfyChannel implements ChannelInterface {
 
@@ -44,22 +41,17 @@ class NtfyChannel implements ChannelInterface {
    * @param array<string, mixed> $config
    */
   public function send(string $renderedBody, array $config): void {
-    // !empty, not ??: an empty ntfy_topic must still fall back to the setting.
-    $topic = !empty($config['ntfy_topic'])
-      ? $config['ntfy_topic']
-      : \Civi::settings()->get('herald_ntfy_default_topic');
-    if (!$topic) {
-      throw new \CRM_Core_Exception(
-        'herald: ntfy channel requires ntfy_topic (action param or herald_ntfy_default_topic setting).',
-      );
+    $topic = $config['ntfy_topic'] ?? '';
+    if (empty($topic)) {
+      throw new \CRM_Core_Exception('herald: no ntfy_topic, neither on the delivery nor on the channel.');
     }
 
-    $server = Cast::toString(\Civi::settings()->get('herald_ntfy_server') ?: 'https://ntfy.sh');
+    $server = Cast::toString($config['ntfy_server'] ?? '' ?: 'https://ntfy.sh');
     $url = rtrim($server, '/') . '/' . ltrim(Cast::toString($topic), '/');
 
     $headers = self::buildHeaders($config);
-    $token = Cast::toString(\Civi::settings()->get('herald_ntfy_token'));
-    if ($token !== '' && !isset($headers['Authorization'])) {
+    $token = Cast::toString($config['ntfy_token'] ?? '');
+    if ($token !== '') {
       $headers['Authorization'] = 'Bearer ' . $token;
     }
 
@@ -93,31 +85,30 @@ class NtfyChannel implements ChannelInterface {
    * @return array<string, string>
    */
   public static function buildHeaders(array $config): array {
-    $h = ['Content-Type' => 'text/plain; charset=utf-8'];
-    if (!empty($config['ntfy_title'])) {
-      $h['X-Title'] = Cast::toString($config['ntfy_title']);
-    }
-    if (isset($config['ntfy_priority']) && $config['ntfy_priority'] !== '') {
-      $h['X-Priority'] = Cast::toString($config['ntfy_priority']);
-    }
-    if (!empty($config['ntfy_tags'])) {
-      $h['X-Tags'] = Cast::toString($config['ntfy_tags']);
-    }
-    if (!empty($config['ntfy_click'])) {
-      $h['X-Click'] = Cast::toString($config['ntfy_click']);
-    }
-    if (!empty($config['ntfy_markdown'])) {
-      $h['X-Markdown'] = 'yes';
-    }
-    return $h;
+    return NtfyHeaders::of($config);
   }
 
   /**
-   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string}>
+   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string, scope?: 'channel'|'delivery', secret?: bool, recipient?: bool, bound_to?: string}>
    */
   public function getConfigSchema(): array {
     return [
-      'ntfy_topic' => ['label' => E::ts('Topic'), 'required' => TRUE, 'type' => 'string'],
+      'ntfy_server' => [
+        'label' => E::ts('Server'),
+        'required' => FALSE,
+        'type' => 'string',
+        'scope' => 'channel',
+        'default' => 'https://ntfy.sh',
+      ],
+      'ntfy_token' => [
+        'label' => E::ts('Access token'),
+        'required' => FALSE,
+        'type' => 'string',
+        'scope' => 'channel',
+        'secret' => TRUE,
+        'help' => E::ts('Only needed for protected topics.'),
+      ],
+      'ntfy_topic' => ['label' => E::ts('Topic'), 'required' => TRUE, 'type' => 'string', 'recipient' => TRUE],
       'ntfy_title' => ['label' => E::ts('Title'), 'required' => FALSE, 'type' => 'string'],
       'ntfy_priority' => ['label' => E::ts('Priority (1-5)'), 'required' => FALSE, 'type' => 'int'],
       'ntfy_tags' => ['label' => E::ts('Tags (comma-separated)'), 'required' => FALSE, 'type' => 'string'],

@@ -4,31 +4,37 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Dispatch;
 
-use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Subscribers\GroupRecipients;
 use Civi\Herald\Subscribers\SubscriberLookup;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * Sends a rendered body the way `delivery_mode` says: to the configured
- * recipient, to a subscription type's or a group's contacts, or to an
- * address list.
+ * Sends a rendered body the way `delivery_mode` says: through the named
+ * channel to its recipient, to a subscription type's or a group's contacts,
+ * or through the named email channel to an address list.
  */
 final class Delivery {
 
   /**
    * @param array<string, mixed> $params
    */
-  public static function send(string $body, array $params, ?SubscriberLookup $lookup = NULL): void {
+  public static function send(
+    string $body,
+    array $params,
+    ?SubscriberLookup $lookup = NULL,
+    ?ChannelSender $sender = NULL,
+  ): void {
+    $sender ??= new ChannelSender();
     match ($params['delivery_mode'] ?? 'direct') {
       'subscribers' => FanOut::toRecipients(
         $body,
         $params,
         self::subscribers($params, $lookup ?? new SubscriberLookup()),
+        $sender,
       ),
-      'group' => FanOut::toRecipients($body, $params, self::group($params)),
-      'addresses' => FanOut::toAddresses($body, $params),
-      'direct' => self::direct($body, $params),
+      'group' => FanOut::toRecipients($body, $params, self::group($params), $sender),
+      'addresses' => FanOut::toAddresses($body, $params, $sender),
+      'direct' => $sender->send(self::channel($params), $body, ChannelConfig::of($params)),
       default => throw new \CRM_Core_Exception(sprintf(
         'herald: unknown delivery_mode "%s"; use direct, subscribers, group or addresses.',
         Cast::toString($params['delivery_mode']),
@@ -37,11 +43,16 @@ final class Delivery {
   }
 
   /**
+   * The channel a direct or address delivery goes through.
+   *
    * @param array<string, mixed> $params
    */
-  private static function direct(string $body, array $params): void {
-    $channel = ChannelRegistry::default()->get(Cast::toString($params['channel'] ?? 'telegram'));
-    $channel->send($body, ChannelSubject::forChannel($channel, ChannelConfig::of($params)));
+  public static function channel(array $params): string {
+    $name = Cast::toString($params['channel'] ?? '');
+    if ($name === '') {
+      throw new \CRM_Core_Exception('herald: the delivery names no channel.');
+    }
+    return $name;
   }
 
   /**

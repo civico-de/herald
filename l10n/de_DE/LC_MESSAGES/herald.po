@@ -34,40 +34,16 @@ msgid "Subscription type (only used in subscriber mode)"
 msgstr "Abo-Typ (nur im Abonnent:innen-Modus verwendet)"
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Channel (direct mode only — subscribers use their own preferred channel)"
-msgstr "Kanal (nur im Direktmodus — Abonnent:innen nutzen ihren eigenen bevorzugten Kanal)"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "Message template"
 msgstr "Nachrichtenvorlage"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Telegram chat ID (optional, falls back to default setting)"
-msgstr "Telegram-Chat-ID (optional, sonst greift die Standardeinstellung)"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Telegram parse mode"
-msgstr "Telegram-Parse-Modus"
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, Civi/Herald/Channel/TelegramChannel.php, ang/heraldAdmin/test.html
 msgid "Plain text"
 msgstr "Klartext"
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Silent message (Telegram)"
-msgstr "Stille Nachricht (Telegram)"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Disable link previews (Telegram)"
-msgstr "Link-Vorschauen deaktivieren (Telegram)"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "Aggregate window in minutes (0 = send immediately; > 0 collects alerts and sends one combined message per window to prevent spam)"
 msgstr "Sammelfenster in Minuten (0 = sofort senden; > 0 sammelt Meldungen und sendet pro Fenster eine kombinierte Nachricht, um Spam zu vermeiden)"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Channel-specific config (JSON, optional)"
-msgstr "Kanalspezifische Konfiguration (JSON, optional)"
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/Form/Schedule.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, Civi/Api4/Herald.php, Civi/Herald/Api4/Action/SaveAllowedHosts.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Api4/Action/SaveTopic.php, Civi/Herald/Digest/Composer.php, ang/afformHeraldDigest.aff.html, ang/heraldAdmin/hosts.html, ang/heraldAdmin/monitor.html, ang/heraldAdmin/cleaning.html, ang/heraldAdmin/topic.html, managed/Digests.mgd.php, managed/ParkedAlerts.mgd.php
 msgid "Save"
@@ -82,28 +58,12 @@ msgid "herald action saved."
 msgstr "herald-Aktion gespeichert."
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "— none configured —"
-msgstr "— keine konfiguriert —"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "— none —"
 msgstr "— keine —"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Channel-specific config must be a JSON object: %1"
-msgstr "Die kanalspezifische Konfiguration muss ein JSON-Objekt sein: %1"
-
-#: Civi/Herald/Admin/AdminScreens.php, ang/heraldAdmin/index.html, ang/heraldAdmin/cleaning.html, managed/Navigation.mgd.php
-msgid "Contribution source"
-msgstr "Beitragsquelle"
 
 #: CRM/Herald/CivirulesAdapter/Form/SendNotification.php
 msgid "Variables (JSON object passed to the template)"
 msgstr "Variablen (JSON-Objekt, das an die Vorlage übergeben wird)"
-
-#: CRM/Herald/CivirulesAdapter/Form/SendNotification.php
-msgid "Variables JSON is invalid: %1"
-msgstr "Das Variablen-JSON ist ungültig: %1"
 
 #: CRM/Herald/CivirulesAdapter/Form/FieldTransition.php
 msgid "herald condition saved."
@@ -112,10 +72,6 @@ msgstr "herald-Bedingung gespeichert."
 #: Civi/Herald/Channel/TelegramChannel.php, settings/herald.setting.php
 msgid "Chat ID"
 msgstr "Chat-ID"
-
-#: Civi/Herald/Channel/TelegramChannel.php
-msgid "Telegram chat or group ID. Negative numbers are group chats. If empty, the default from settings is used."
-msgstr "Telegram-Chat- oder -Gruppen-ID. Negative Zahlen sind Gruppenchats. Bleibt das Feld leer, gilt der Standard aus den Einstellungen."
 
 #: Civi/Herald/Channel/TelegramChannel.php
 msgid "Parse Mode"
@@ -361,10 +317,6 @@ msgstr "Bevorzugter Kanal"
 msgid "Telegram"
 msgstr "Telegram"
 
-#: managed/SubscriberPreferences.mgd.php
-msgid "Webhook (Slack/Discord/Mattermost/custom)"
-msgstr "Webhook (Slack/Discord/Mattermost/eigener)"
-
 #: Civi/Herald/Channel/ChannelRegistry.php, Civi/Herald/Channel/NtfyChannel.php, managed/SubscriberPreferences.mgd.php, settings/herald.setting.php
 msgid "ntfy.sh"
 msgstr "ntfy.sh"
@@ -372,14 +324,6 @@ msgstr "ntfy.sh"
 #: CRM/Herald/Upgrader/PreferencesProfile.php, Civi/Herald/Channel/ChannelRegistry.php, Civi/Herald/Channel/PushoverChannel.php, managed/SubscriberPreferences.mgd.php, settings/herald.setting.php
 msgid "Pushover"
 msgstr "Pushover"
-
-#: managed/SubscriberPreferences.mgd.php
-msgid "Email (your primary address)"
-msgstr "E-Mail (primäre Adresse)"
-
-#: managed/SubscriberPreferences.mgd.php
-msgid "Pick the channel where you want to receive notifications. Then fill in the recipient identifier for that channel below. Email needs no identifier — it goes to your primary address."
-msgstr "Kanal auswählen, über den Benachrichtigungen ankommen sollen. Danach unten die passende Empfängerkennung für diesen Kanal eintragen. E-Mail braucht keine Kennung — sie geht an die primäre Adresse."
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/Upgrader/PreferencesProfile.php, managed/SubscriberPreferences.mgd.php
 msgid "Telegram chat ID"
@@ -428,98 +372,6 @@ msgstr "Benachrichtigungseinstellungen"
 #: managed/SubscriberPreferences.mgd.php
 msgid "How and when this contact wants to receive herald alerts and digests."
 msgstr "Wie und wann dieser Kontakt herald-Meldungen und -Reports erhalten möchte."
-
-#: settings/herald.setting.php
-msgid "Telegram Bot API token (from @BotFather)."
-msgstr "Telegram-Bot-API-Token (von @BotFather)."
-
-#: settings/herald.setting.php
-msgid "Stored encrypted at rest if Civi key is configured."
-msgstr "Wird verschlüsselt gespeichert, sofern ein Civi-Key konfiguriert ist."
-
-#: settings/herald.setting.php
-msgid "Telegram Bot Token"
-msgstr "Telegram-Bot-Token"
-
-#: settings/herald.setting.php
-msgid "Fallback chat/group ID used when an action does not specify one. Negative numbers are group chats."
-msgstr "Ersatz-Chat-/Gruppen-ID, wenn eine Aktion keine angibt. Negative Zahlen sind Gruppenchats."
-
-#: settings/herald.setting.php
-msgid "Default Telegram Chat ID"
-msgstr "Standard-Telegram-Chat-ID"
-
-#: settings/herald.setting.php
-msgid "Fallback URL for the generic Webhook channel when no webhook_url is set on the action."
-msgstr "Ersatz-URL für den generischen Webhook-Kanal, wenn an der Aktion kein webhook_url gesetzt ist."
-
-#: settings/herald.setting.php
-msgid "Default Webhook URL"
-msgstr "Standard-Webhook-URL"
-
-#: settings/herald.setting.php
-msgid "Bearer token sent as Authorization header. Skip if your webhook uses a different auth scheme — pass it via the action's webhook_headers instead."
-msgstr "Bearer-Token, das als Authorization-Header gesendet wird. Entfällt, wenn der Webhook ein anderes Auth-Schema nutzt — dann stattdessen über webhook_headers der Aktion übergeben."
-
-#: settings/herald.setting.php
-msgid "Default Webhook Bearer Token"
-msgstr "Standard-Webhook-Bearer-Token"
-
-#: settings/herald.setting.php
-msgid "ntfy server base URL. Defaults to the public ntfy.sh; set to your self-hosted instance if applicable."
-msgstr "Basis-URL des ntfy-Servers. Standard ist das öffentliche ntfy.sh; bei Bedarf auf die selbst gehostete Instanz setzen."
-
-#: settings/herald.setting.php
-msgid "ntfy Server"
-msgstr "ntfy-Server"
-
-#: settings/herald.setting.php
-msgid "Fallback ntfy topic when an action does not set its own."
-msgstr "Ersatz-ntfy-Topic, wenn eine Aktion kein eigenes setzt."
-
-#: settings/herald.setting.php
-msgid "Default ntfy Topic"
-msgstr "Standard-ntfy-Topic"
-
-#: settings/herald.setting.php
-msgid "Bearer token for protected ntfy topics (Authorization header). Leave empty for public ntfy.sh topics."
-msgstr "Bearer-Token für geschützte ntfy-Topics (Authorization-Header). Für öffentliche ntfy.sh-Topics leer lassen."
-
-#: settings/herald.setting.php
-msgid "ntfy Token"
-msgstr "ntfy-Token"
-
-#: settings/herald.setting.php
-msgid "Pushover application/API token (create one at pushover.net/apps)."
-msgstr "Pushover-Anwendungs-/API-Token (unter pushover.net/apps anlegen)."
-
-#: settings/herald.setting.php
-msgid "Pushover App Token"
-msgstr "Pushover-App-Token"
-
-#: settings/herald.setting.php
-msgid "Default Pushover user or group key. Override per action via pushover_user_key."
-msgstr "Standard-Benutzer- oder -Gruppenschlüssel für Pushover. Pro Aktion über pushover_user_key überschreibbar."
-
-#: settings/herald.setting.php
-msgid "Default Pushover User/Group Key"
-msgstr "Standard-Pushover-Benutzer-/Gruppenschlüssel"
-
-#: settings/herald.setting.php
-msgid "From header for the email channel, e.g. \"Herald\" <noreply@example.org>. Leave empty to use the site default from address."
-msgstr "From-Header für den E-Mail-Kanal, z. B. \"Herald\" <noreply@example.org>. Leer lassen, um die Standard-Absenderadresse der Site zu verwenden."
-
-#: settings/herald.setting.php
-msgid "Email From Address"
-msgstr "E-Mail-Absenderadresse"
-
-#: settings/herald.setting.php
-msgid "Fallback recipient for the email channel when an action does not set email_to."
-msgstr "Ersatzempfänger für den E-Mail-Kanal, wenn eine Aktion kein email_to setzt."
-
-#: settings/herald.setting.php
-msgid "Default Email Recipient"
-msgstr "Standard-E-Mail-Empfänger"
 
 #: settings/herald.setting.php
 msgid "Topic routing for Herald.publish: map of topic name to delivery params (channel, chat_id, aggregate_minutes, …). A \"default\" entry backs all topics."
@@ -1093,10 +945,6 @@ msgid "Render body as Markdown"
 msgstr "Inhalt als Markdown darstellen"
 
 #: Civi/Herald/Channel/PushoverChannel.php
-msgid "User/group key (override default)"
-msgstr "Benutzer-/Gruppenschlüssel (ersetzt den Standard)"
-
-#: Civi/Herald/Channel/PushoverChannel.php
 msgid "Priority (-2…2)"
 msgstr "Priorität (-2…2)"
 
@@ -1183,10 +1031,6 @@ msgstr "Der Zustellmodus „%1“ braucht „%2“."
 #: Civi/Herald/Topic/RouteValidator.php
 msgid "Enter a topic name without leading or trailing spaces."
 msgstr "Einen Topic-Namen ohne Leerzeichen am Anfang oder Ende eingeben."
-
-#: Civi/Herald/Topic/RouteValidator.php
-msgid "The channel \"%1\" is not registered."
-msgstr "Der Kanal „%1“ ist nicht registriert."
 
 #: Civi/Herald/Topic/ValueType.php
 msgid "\"%1\" must be a whole number."
@@ -1517,10 +1361,6 @@ msgid "%1 options"
 msgstr "Optionen für %1"
 
 #: ang/heraldAdmin/test.html
-msgid "Empty fields fall back to the channel defaults on the settings form."
-msgstr "Leere Felder übernehmen die Kanal-Standardwerte aus dem Einstellungsformular."
-
-#: ang/heraldAdmin/test.html
 msgid "Used by channels with a subject or title; a subject field above takes precedence."
 msgstr "Für Kanäle mit Betreff oder Titel; ein Betreff-Feld oben hat Vorrang."
 
@@ -1585,16 +1425,8 @@ msgid "Delivery"
 msgstr "Zustellung"
 
 #: ang/heraldAdmin/topic.html
-msgid "(not set: Telegram)"
-msgstr "(nicht gesetzt: Telegram)"
-
-#: ang/heraldAdmin/topic.html
 msgid "(from the default route)"
 msgstr "(aus der Route default)"
-
-#: ang/heraldAdmin/topic.html
-msgid "The fields below follow the channel this topic ends up using."
-msgstr "Die Felder unten richten sich nach dem Kanal, den dieses Topic am Ende nutzt."
 
 #: ang/heraldAdmin/topic.html
 msgid "(not set: direct)"
@@ -1605,20 +1437,12 @@ msgid "Channel options"
 msgstr "Kanaloptionen"
 
 #: ang/heraldAdmin/topic.html
-msgid "In the subscriber and group modes, recipients and credentials come from the preferences of each contact; only presentation options are used from here."
-msgstr "Im Abonnent:innen- und im Gruppenmodus kommen Empfänger und Zugangsdaten aus den Einstellungen jedes Kontakts; von hier werden nur Darstellungsoptionen übernommen."
-
-#: ang/heraldAdmin/topic.html
 msgid "This channel has no options."
 msgstr "Dieser Kanal hat keine Optionen."
 
 #: ang/heraldAdmin/topic.html
 msgid "Other parameters (JSON)"
 msgstr "Weitere Parameter (JSON)"
-
-#: ang/heraldAdmin/topic.html
-msgid "Parameters without a field above, such as channel_config or options of another channel, as a JSON object."
-msgstr "Parameter ohne eigenes Feld oben, etwa channel_config oder Optionen eines anderen Kanals, als JSON-Objekt."
 
 #: ang/heraldAdmin/preview.js, ang/heraldAdmin/topic.js
 msgid "enter a JSON object"
@@ -1685,8 +1509,8 @@ msgid "The request failed."
 msgstr "Die Anfrage ist fehlgeschlagen."
 
 #: ang/heraldAdmin.js
-msgid "Direct: the recipient set on the route"
-msgstr "Direkt: der in der Route gesetzte Empfänger"
+msgid "Direct: the recipient set on the route or the channel"
+msgstr "Direkt: der in der Route oder im Kanal gesetzte Empfänger"
 
 #: ang/heraldAdmin.js
 msgid "Subscribers of a notification type"
@@ -2437,3 +2261,335 @@ msgstr "Der Test wurde an %1 geschickt."
 
 msgid "Your contact has no email address for the test."
 msgstr "Ihr Kontakt hat keine E-Mail-Adresse für den Test."
+
+#: Civi/Herald/Channel/ChannelStore.php
+msgid "\"%1\" is required."
+msgstr "„%1“ ist erforderlich."
+
+#: Civi/Herald/Topic/RouteValidator.php
+msgid "%1 belong to the channel, not to a delivery; set them under Channels."
+msgstr "%1 gehören zum Kanal, nicht zu einer Zustellung; tragen Sie sie unter Kanäle ein."
+
+#: ang/heraldAdmin/channels.html, ang/heraldAdmin/topics.html
+msgid "(nothing)"
+msgstr "(nichts)"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "- channel default -"
+msgstr "- Vorgabe des Kanals -"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "- select channel -"
+msgstr "- Kanal wählen -"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "- select topic -"
+msgstr "- Topic wählen -"
+
+#: ang/heraldAdmin/channels.html
+msgid "A channel is one account of a channel type: a Telegram bot, a Pushover application, an email sender. Topic routes and rules name a channel; its token, server and sender stay here. A type can have several channels."
+msgstr "Ein Kanal ist ein Konto eines Kanaltyps: ein Telegram-Bot, eine Pushover-Anwendung, ein E-Mail-Absender. Topic-Routen und Regeln nennen einen Kanal; Token, Server und Absender bleiben hier. Ein Typ kann mehrere Kanäle haben."
+
+#: Civi/Herald/Channel/ChannelStore.php
+msgid "A channel name starts with a lowercase letter and holds only a-z, 0-9 and _."
+msgstr "Ein Kanalname beginnt mit einem Kleinbuchstaben und enthält nur a-z, 0-9 und _."
+
+#: Civi/Herald/Channel/ChannelStore.php
+msgid "A channel named \"%1\" already exists."
+msgstr "Es gibt bereits einen Kanal „%1“."
+
+#: ang/heraldAdmin/channel.html
+msgid "A channel that is switched off sends nothing; deliveries through it fail."
+msgstr "Ein ausgeschalteter Kanal sendet nichts; Zustellungen über ihn schlagen fehl."
+
+#: Civi/Herald/Topic/RouteValidator.php
+msgid "A send through a topic takes its delivery from the topic; remove %1."
+msgstr "Ein Versand über ein Topic übernimmt die Zustellung vom Topic; entfernen Sie %1."
+
+#: Civi/Herald/Channel/NtfyChannel.php
+msgid "Access token"
+msgstr "Zugriffstoken"
+
+#: ang/heraldAdmin/channel.html
+msgid "Account"
+msgstr "Konto"
+
+#: ang/heraldAdmin/channel.html, ang/heraldAdmin/channels.html
+msgid "Active"
+msgstr "Aktiv"
+
+#: ang/heraldAdmin/channel.html, ang/heraldAdmin/channels.html
+msgid "Add channel"
+msgstr "Kanal hinzufügen"
+
+#: Civi/Herald/Topic/RouteValidator.php
+msgid "An address list goes through an email channel; \"%1\" is not one."
+msgstr "Eine Adressliste geht über einen E-Mail-Kanal; „%1“ ist keiner."
+
+#: Civi/Herald/Channel/PushoverChannel.php
+msgid "Application token"
+msgstr "Anwendungstoken"
+
+#: Civi/Herald/Channel/TelegramChannel.php
+msgid "Bot token"
+msgstr "Bot-Token"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Channel (direct and address-list mode — subscribers use their own preferred channel)"
+msgstr "Kanal (Direkt- und Adresslisten-Modus — Abonnent:innen nutzen ihren eigenen bevorzugten Kanal)"
+
+#: Civi/Herald/Admin/AdminScreens.php, ang/heraldAdmin/channel.html, ang/heraldAdmin/channels.html, managed/Navigation.mgd.php
+msgid "Channels"
+msgstr "Kanäle"
+
+#: ang/heraldAdmin/channel.html, ang/heraldAdmin/channels.html
+msgid "Contacts can choose it"
+msgstr "Kontakte können ihn wählen"
+
+#: Civi/Herald/Channel/ChannelStore.php
+msgid "Contacts cannot receive through a channel of type \"%1\"."
+msgstr "Kontakte können über einen Kanal vom Typ „%1“ nichts empfangen."
+
+#: ang/heraldAdmin/channel.html
+msgid "Defaults"
+msgstr "Vorgaben"
+
+#: ang/heraldAdmin/channels.js
+msgid "Delete channel \"%1\""
+msgstr "Kanal „%1“ löschen"
+
+#: ang/heraldAdmin/channels.js
+msgid "Deleted the channel \"%1\"."
+msgstr "Kanal „%1“ gelöscht."
+
+#: ang/heraldAdmin/channel.html
+msgid "Edit channel"
+msgstr "Kanal bearbeiten"
+
+#: ang/heraldAdmin/test.html
+msgid "Empty fields keep the values set on the channel."
+msgstr "Leere Felder behalten die Werte des Kanals."
+
+#: Civi/Herald/Channel/TelegramChannel.php
+msgid "From @BotFather."
+msgstr "Von @BotFather."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Herald: Preferred channel"
+msgstr "Herald: Bevorzugter Kanal"
+
+#: ang/heraldAdmin/topic.html
+msgid "In the subscriber and group modes, recipients come from the preferences of each contact; only presentation options are used from here."
+msgstr "Im Abonnent:innen- und Gruppenmodus kommen die Empfänger aus den Einstellungen jedes Kontakts; von hier werden nur Darstellungsoptionen verwendet."
+
+#: ang/heraldAdmin/channels.html
+msgid "No"
+msgstr "Nein"
+
+#: ang/heraldAdmin/channels.html
+msgid "No channels yet."
+msgstr "Noch keine Kanäle."
+
+#: ang/heraldAdmin/channel.html
+msgid "Offers the channel as preferred channel in the notification preferences of contacts."
+msgstr "Bietet den Kanal in den Benachrichtigungseinstellungen der Kontakte als bevorzugten Kanal an."
+
+#: ang/heraldAdmin/topic.html
+msgid "One of the channels set up under Channels. The fields below follow the channel this topic ends up using; empty ones keep the channel's own values."
+msgstr "Einer der unter Kanäle eingerichteten Kanäle. Die Felder darunter richten sich nach dem Kanal, den dieses Topic am Ende nutzt; leere Felder behalten die Werte des Kanals."
+
+#: Civi/Herald/Channel/NtfyChannel.php
+msgid "Only needed for protected topics."
+msgstr "Nur für geschützte Topics nötig."
+
+#: ang/heraldAdmin/topic.html
+msgid "Parameters without a field above, such as options of another channel type, as a JSON object."
+msgstr "Parameter ohne eigenes Feld oben, etwa Optionen eines anderen Kanaltyps, als JSON-Objekt."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Pick the channel where you want to receive notifications. Then fill in the recipient identifier for that channel below. An email channel needs no identifier — it goes to your primary address."
+msgstr "Wählen Sie den Kanal, über den Sie Benachrichtigungen erhalten möchten. Tragen Sie dann unten die Empfängerkennung für diesen Kanal ein. Ein E-Mail-Kanal braucht keine Kennung — er geht an Ihre primäre Adresse."
+
+#: ang/heraldAdmin/channel.html
+msgid "Remove the stored value of \"%1\""
+msgstr "Gespeicherten Wert von „%1“ entfernen"
+
+#: Civi/Herald/Admin/ParamsInUse.php
+msgid "Rule \"%1\""
+msgstr "Regel „%1“"
+
+#: Civi/Herald/Admin/ParamsInUse.php
+msgid "Scheduled job \"%1\""
+msgstr "Geplanter Auftrag „%1“"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Send"
+msgstr "Senden"
+
+#: Civi/Herald/Channel/EmailChannel.php
+msgid "Sender (\"Name <email>\")"
+msgstr "Absender („Name <E-Mail>“)"
+
+#: CRM/Herald/CivirulesAdapter/Action/AbstractSend.php
+msgid "Sends through the channel \"%1\"."
+msgstr "Sendet über den Kanal „%1“."
+
+#: CRM/Herald/CivirulesAdapter/Action/AbstractSend.php
+msgid "Sends to each contact on their own channel."
+msgstr "Sendet jedem Kontakt über seinen eigenen Kanal."
+
+#: CRM/Herald/CivirulesAdapter/Action/AbstractSend.php
+msgid "Sends via topic \"%1\"."
+msgstr "Sendet über das Topic „%1“."
+
+#: Civi/Herald/Channel/NtfyChannel.php
+msgid "Server"
+msgstr "Server"
+
+#: ang/heraldAdmin/channel.html
+msgid "Shown in lists and to contacts choosing their channel. Empty uses the name."
+msgstr "Erscheint in Listen und bei Kontakten, die ihren Kanal wählen. Leer bedeutet: der Name."
+
+#: Civi/Herald/Channel/TelegramChannel.php
+msgid "Telegram chat or group ID. Negative numbers are group chats."
+msgstr "Telegram-Chat- oder Gruppen-ID. Negative Zahlen sind Gruppenchats."
+
+#: Civi/Herald/Api4/Action/DeleteChannel.php, ang/heraldAdmin/channel.js
+msgid "The channel \"%1\" does not exist."
+msgstr "Der Kanal „%1“ existiert nicht."
+
+#: Civi/Herald/Api4/Action/DeleteChannel.php
+msgid "The channel \"%1\" is still in use:"
+msgstr "Der Kanal „%1“ wird noch verwendet:"
+
+#: Civi/Herald/Channel/ChannelStore.php
+msgid "The channel \"%1\" no longer exists. Reload the page."
+msgstr "Den Kanal „%1“ gibt es nicht mehr. Laden Sie die Seite neu."
+
+#: Civi/Herald/Channel/ChannelStore.php
+msgid "The channel type \"%1\" has no key \"%2\"."
+msgstr "Der Kanaltyp „%1“ hat keinen Schlüssel „%2“."
+
+#: Civi/Herald/Channel/ChannelStore.php
+msgid "The channel type \"%1\" is not registered."
+msgstr "Der Kanaltyp „%1“ ist nicht registriert."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "The channels a contact can receive notifications through; herald keeps them in step with its channels."
+msgstr "Die Kanäle, über die ein Kontakt Benachrichtigungen erhalten kann; herald hält sie mit seinen Kanälen abgeglichen."
+
+#: Civi/Herald/Admin/ParamsInUse.php
+msgid "The contact email channel setting"
+msgstr "Die Einstellung E-Mail-Kanal für Kontakte"
+
+#: Civi/Herald/Admin/ParamsInUse.php
+msgid "The monitor"
+msgstr "Der Monitor"
+
+#: Civi/Herald/Admin/BufferedDeliveries.php
+msgid "%1 buffered or parked alerts"
+msgstr "%1 gepufferte oder geparkte Meldungen"
+
+#: Civi/Herald/Api4/Action/SaveTopic.php
+msgid "The topic \"%1\" cannot be renamed while in use:"
+msgstr "Das Topic „%1“ kann nicht umbenannt werden, solange es verwendet wird:"
+
+#: Civi/Herald/Api4/Action/DeleteTopic.php
+msgid "The topic \"%1\" is still in use:"
+msgstr "Das Topic „%1“ wird noch verwendet:"
+
+#: ang/heraldAdmin/channel.html
+msgid "The type cannot change later; add a new channel instead."
+msgstr "Der Typ lässt sich später nicht ändern; legen Sie stattdessen einen neuen Kanal an."
+
+#: Civi/Herald/Channel/ChannelStore.php
+msgid "The type of a channel cannot change; add a new channel instead."
+msgstr "Der Typ eines Kanals lässt sich nicht ändern; legen Sie stattdessen einen neuen Kanal an."
+
+#: Civi/Herald/Topic/RouteValidator.php
+msgid "There is no channel \"%1\"."
+msgstr "Es gibt keinen Kanal „%1“."
+
+#: Civi/Herald/Topic/RouteValidator.php
+msgid "There is no topic \"%1\" and no \"default\" route."
+msgstr "Es gibt kein Topic „%1“ und keine Route „default“."
+
+#: ang/heraldAdmin/channel.html
+msgid "This type needs no account settings."
+msgstr "Dieser Typ braucht keine Kontoeinstellungen."
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Through a topic"
+msgstr "Über ein Topic"
+
+#: Civi/Herald/Admin/ParamsInUse.php
+msgid "Topic \"%1\""
+msgstr "Topic „%1“"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Topic (its route sets channel, recipients and aggregation)"
+msgstr "Topic (seine Route legt Kanal, Empfänger und Bündelung fest)"
+
+#: ang/heraldAdmin/channels.html, ang/heraldAdmin/topics.html
+msgid "Used by"
+msgstr "Verwendet von"
+
+#: ang/heraldAdmin/channel.html
+msgid "Used when a route or rule leaves the field empty, for example the recipient of direct deliveries."
+msgstr "Gilt, wenn eine Route oder Regel das Feld leer lässt, etwa für den Empfänger direkter Zustellungen."
+
+#: Civi/Herald/Channel/PushoverChannel.php
+msgid "User/group key"
+msgstr "Benutzer-/Gruppenschlüssel"
+
+#: ang/heraldAdmin/channel.html
+msgid "What routes and rules store, for example ops_bot: lowercase letters, digits and _, starting with a letter. It cannot change later."
+msgstr "Was Routen und Regeln speichern, etwa ops_bot: Kleinbuchstaben, Ziffern und _, beginnend mit einem Buchstaben. Er lässt sich später nicht ändern."
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "With a delivery of its own"
+msgstr "Mit eigener Zustellung"
+
+#: ang/heraldAdmin/channels.html
+msgid "Yes"
+msgstr "Ja"
+
+#: Civi/Herald/Admin/AdminScreens.php
+msgid "the bots, accounts and senders herald sends through."
+msgstr "die Bots, Konten und Absender, über die herald sendet."
+
+#: settings/herald.setting.php
+msgid "Configured channels: map of channel name to type, label, active, subscribable and config. Write through Herald.saveChannel, which encrypts the secrets."
+msgstr "Eingerichtete Kanäle: Zuordnung von Kanalname zu Typ, Bezeichnung, aktiv, wählbar und Konfiguration. Schreiben über Herald.saveChannel, das die Geheimnisse verschlüsselt."
+
+#: settings/herald.setting.php
+msgid "Contact Email Channel"
+msgstr "E-Mail-Kanal für Kontakte"
+
+#: settings/herald.setting.php
+msgid "Email channel that group members without a usable preference are reached through."
+msgstr "E-Mail-Kanal, über den Gruppenmitglieder ohne verwendbare Einstellung erreicht werden."
+
+#: Civi/Herald/Channel/EmailChannel.php
+msgid "If empty, the site's default sender is used."
+msgstr "Leer bedeutet: der Standardabsender der Website."
+
+#: CRM/Herald/CivirulesAdapter/SendOptions.php, ang/heraldAdmin.js
+msgid "(switched off)"
+msgstr "(ausgeschaltet)"
+
+#: ang/heraldAdmin/channel.js
+msgid "A value is stored. Leave the field empty to keep it."
+msgstr "Ein Wert ist gespeichert. Lassen Sie das Feld leer, um ihn zu behalten."
+
+#: ang/heraldAdmin/channel.js
+msgid "Channel saved."
+msgstr "Kanal gespeichert."
+
+#: ang/heraldAdmin/channels.js
+msgid "Contacts who chose it as their channel: %1. Until they choose another, subscriber deliveries skip them and group deliveries send them email."
+msgstr "Kontakte, die ihn als ihren Kanal gewählt haben: %1. Bis sie einen anderen wählen, überspringen Zustellungen an Abonnenten sie, und Zustellungen an Gruppen schicken ihnen E-Mail."
+
+#: Civi/Herald/Channel/StoredConfig.php
+msgid "\"%1\" is sent only to the channel's \"%2\"; set \"%2\" as well."
+msgstr "„%1“ wird nur an „%2“ des Kanals gesendet; tragen Sie auch „%2“ ein."

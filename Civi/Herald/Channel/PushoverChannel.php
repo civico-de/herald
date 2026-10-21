@@ -12,11 +12,11 @@ use GuzzleHttp\ClientInterface;
  * Pushover channel — POSTs to https://api.pushover.net/1/messages.json.
  *
  * Pushover uses URL-encoded form data (not JSON). The `token` (app token) and
- * `user` (user/group key) are required by the API; both come from settings
- * unless overridden per-call.
+ * `user` (user/group key) are required by the API.
  *
- * Per-call config (from action params / channel_config JSON):
- *   pushover_user_key   string Override the default user/group key
+ * Config:
+ *   pushover_app_token  string Application token (required)
+ *   pushover_user_key   string User/group key (required)
  *   pushover_title      string Notification title
  *   pushover_priority   int    -2 (silent) … 2 (emergency)
  *   pushover_sound      string Sound name (see Pushover docs)
@@ -25,10 +25,6 @@ use GuzzleHttp\ClientInterface;
  *   pushover_html       bool   1 = send the HTML body (Pushover subset); else PlainText
  *   pushover_retry      int    Emergency only: seconds between re-alerts (min 30, default 60)
  *   pushover_expire     int    Emergency only: seconds until re-alerting stops (max 10800, default 3600)
- *
- * Settings:
- *   herald_pushover_app_token        — Pushover application token (required)
- *   herald_pushover_default_user_key — fallback user/group key
  */
 class PushoverChannel implements ChannelInterface {
 
@@ -48,18 +44,13 @@ class PushoverChannel implements ChannelInterface {
    * @param array<string, mixed> $config
    */
   public function send(string $renderedBody, array $config): void {
-    $appToken = Cast::toString(\Civi::settings()->get('herald_pushover_app_token'));
+    $appToken = Cast::toString($config['pushover_app_token'] ?? '');
     if ($appToken === '') {
-      throw new \CRM_Core_Exception('herald: Pushover app token not configured (herald_pushover_app_token).');
+      throw new \CRM_Core_Exception('herald: the Pushover channel has no pushover_app_token.');
     }
-    // !empty, not ??: an empty pushover_user_key must still fall back to the setting.
-    $userKey = !empty($config['pushover_user_key'])
-      ? $config['pushover_user_key']
-      : \Civi::settings()->get('herald_pushover_default_user_key');
-    if (!$userKey) {
-      throw new \CRM_Core_Exception(
-        'herald: Pushover user/group key required (pushover_user_key action param or herald_pushover_default_user_key setting).',
-      );
+    $userKey = $config['pushover_user_key'] ?? '';
+    if (empty($userKey)) {
+      throw new \CRM_Core_Exception('herald: no pushover_user_key, neither on the delivery nor on the channel.');
     }
 
     $form = PushoverForm::of($appToken, Cast::toString($userKey), $renderedBody, $config);
@@ -92,14 +83,22 @@ class PushoverChannel implements ChannelInterface {
   }
 
   /**
-   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string}>
+   * @return array<string, array{label: string, required: bool, type: string, options?: array<int|string, string>, default?: string, help?: string, scope?: 'channel'|'delivery', secret?: bool, recipient?: bool, bound_to?: string}>
    */
   public function getConfigSchema(): array {
     return [
-      'pushover_user_key' => [
-        'label' => E::ts('User/group key (override default)'),
-        'required' => FALSE,
+      'pushover_app_token' => [
+        'label' => E::ts('Application token'),
+        'required' => TRUE,
         'type' => 'string',
+        'scope' => 'channel',
+        'secret' => TRUE,
+      ],
+      'pushover_user_key' => [
+        'label' => E::ts('User/group key'),
+        'required' => TRUE,
+        'type' => 'string',
+        'recipient' => TRUE,
       ],
       'pushover_title' => ['label' => E::ts('Title'), 'required' => FALSE, 'type' => 'string'],
       'pushover_priority' => ['label' => E::ts('Priority (-2…2)'), 'required' => FALSE, 'type' => 'int'],
