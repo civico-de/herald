@@ -1,4 +1,4 @@
-<div class="herald-admin">
+<div id="bootstrap-theme" class="herald-admin">
   <h1 crm-page-title>{{:: $ctrl.ts('Monitor checks') }}</h1>
   <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
   <p>
@@ -33,7 +33,7 @@
           </td>
           <td>
             <label class="sr-only" for="herald-snooze-{{ $index }}">{{ $ctrl.ts('Snooze %1 until', {1: row.name}) }}</label>
-            <input type="datetime-local" class="crm-form-text" id="herald-snooze-{{ $index }}" name="snooze{{ $index }}" ng-model="row.snoozeInput" />
+            <input type="datetime-local" class="form-control" id="herald-snooze-{{ $index }}" name="snooze{{ $index }}" ng-model="row.snoozeInput" />
             <button type="button" class="btn btn-xs btn-secondary" ng-if="row.snoozeInput" ng-click="$ctrl.clearSnooze(row, $index)">
               {{:: $ctrl.ts('Clear') }}<span class="sr-only"> {{ $ctrl.ts('snooze of %1', {1: row.name}) }}</span>
             </button>
@@ -42,13 +42,15 @@
       </tbody>
     </table>
     <p ng-if="!$ctrl.rows.length">{{:: $ctrl.ts('No extension offers a check, and none is expected.') }}</p>
-    <div class="herald-admin-field">
-      <label for="herald-expected-new">{{:: $ctrl.ts('Expect another check by name') }}</label>
-      <input type="text" class="crm-form-text" id="herald-expected-new" ng-model="$ctrl.newName" aria-describedby="herald-expected-new-help" />
-      <button type="button" class="btn btn-secondary" ng-click="$ctrl.addExpected()">{{:: $ctrl.ts('Add') }}</button>
-      <p class="description" id="herald-expected-new-help">{{:: $ctrl.ts('For a check whose extension is not enabled yet.') }}</p>
+    <div class="form-group">
+      <label class="crm-af-field-label" for="herald-expected-new">{{:: $ctrl.ts('Expect another check by name') }}</label>
+      <div class="crm-af-field input-group">
+        <input type="text" class="form-control" id="herald-expected-new" ng-model="$ctrl.newName" aria-describedby="herald-expected-new-help" />
+        <span class="input-group-btn"><button type="button" class="btn btn-secondary" ng-click="$ctrl.addExpected()">{{:: $ctrl.ts('Add') }}</button></span>
+      </div>
+      <p class="crm-af-field-help-post" id="herald-expected-new-help">{{:: $ctrl.ts('For a check whose extension is not enabled yet.') }}</p>
     </div>
-    <p class="description">{{:: $ctrl.ts('Times are shown and entered in the time zone of this browser.') }}</p>
+    <p class="crm-af-field-help-post">{{:: $ctrl.ts('Times are shown and entered in the time zone of this browser.') }}</p>
     <button type="submit" class="btn btn-primary" ng-disabled="$ctrl.saving">{{:: $ctrl.ts('Save') }}</button>
   </form>
 </div>

@@ -1,6 +1,6 @@
 # Upstream bugs and pitfalls
 
-This file lists behaviour in CiviCRM core and CiviRules that herald has to work around. Some of it is a bug and some of it works as designed but catches you out. Each entry says what happens, what herald does about it and where the code and test for it live. Versions refer to CiviCRM 6.19.
+This file lists behaviour in CiviCRM core, its Riverlea theme and CiviRules that herald has to work around. Some of it is a bug and some of it works as designed but catches you out. Each entry says what happens, what herald does about it and where the code and test for it live. Versions refer to CiviCRM 6.19.
 
 ## CiviCRM core
 
@@ -77,6 +77,26 @@ CKEditor 4 stores `>` as `&gt;` and `&&` as `&amp;&amp;` in a message template, 
 ### Standalone tests can reach the main database
 
 On Standalone, `SettingsManager::bootSettings()` builds `CIVICRM_DSN` from the `CIVICRM_DB_*` environment variables before `settings.php` applies `TEST_DB_DSN`. The headless tests would then run against the main database. `tests/phpunit/bootstrap.php` sets `CIVICRM_DB_NAME=civicrm_test` for the whole test process. Status: not reported.
+
+## Riverlea
+
+herald's admin screens use the markup of Afform fields inside `#bootstrap-theme` (`form-group`, `crm-af-field-label`, `crm-af-field`, `crm-af-field-help-post`, `form-control`), so the theme styles them. The entries below fail WCAG AA in the Minetta stream. herald keeps the theme's markup and colours and does not patch them; they are to be fixed upstream. The numbers were measured with axe-core in light and dark mode.
+
+### Dark buttons are too pale
+
+In dark mode Minetta sets `--crm-primary-color` to `--crm-c-gray-500` (`#919297`) and the button text to white: 3.1:1, below 4.5:1. This hits `.btn-primary`, `.btn-secondary` and `.btn-default`. Setting `--crm-primary-color: #55565b` gives 7.3:1. Status: not reported.
+
+### Required markers are too faint
+
+`.crm-marker` uses `--crm-notify-danger-color`, which comes to 4.34:1 on white and 2.79:1 on the dark background. `#a4161a` (7.75:1) and `#ff8a80` (5.29:1) would pass. Status: not reported.
+
+### Links in text are told apart by colour only
+
+`--crm-link-decoration` is `none`, and the link colour differs from the body text by 1.94:1 in light mode and 1.34:1 in dark mode. WCAG 1.4.1 asks for 3:1 or a non-colour cue. Underlining links inside running text would fix it. Status: not reported.
+
+### Hover buttons with an icon take the link colour
+
+`.crm-container .crm-hover-button:has(.crm-i)` sets `color: var(--crm-link-color) !important`. On the form background (`#f4f4ed`) that is 4.45:1 in light mode, just below 4.5:1. This hits the channel-type toggles on herald's CiviRules send forms. Status: not reported.
 
 ## CiviRules
 

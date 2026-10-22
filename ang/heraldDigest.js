@@ -149,20 +149,24 @@
         </fieldset>
         <div class="herald-digest-ready-made-pick" ng-if="state.kind === 'ready'">
           <div class="af-field">
-            <label for="{{:: id }}-figure">{{:: text.figure }} <span class="crm-marker" aria-hidden="true">*</span></label>
-            <select id="{{:: id }}-figure" class="form-control crm-form-select" required
-              ng-model="state.figure" ng-change="pick()"
-              ng-options="key as label for (key, label) in figures">
-              <option value="">{{:: text.choose }}</option>
-            </select>
+            <label class="crm-af-field-label" for="{{:: id }}-figure">{{:: text.figure }} <span class="crm-marker" aria-hidden="true">*</span></label>
+            <div class="crm-af-field">
+              <select id="{{:: id }}-figure" class="form-control crm-form-select" required
+                ng-model="state.figure" ng-change="pick()"
+                ng-options="key as label for (key, label) in figures">
+                <option value="">{{:: text.choose }}</option>
+              </select>
+            </div>
           </div>
           <div class="af-field" ng-if="periods().length">
-            <label for="{{:: id }}-period">{{:: text.period }} <span class="crm-marker" aria-hidden="true">*</span></label>
-            <select id="{{:: id }}-period" class="form-control crm-form-select" required
-              ng-model="state.period" ng-change="pick()"
-              ng-options="period as settings.periods[period] for period in periods()">
-              <option value="">{{:: text.choose }}</option>
-            </select>
+            <label class="crm-af-field-label" for="{{:: id }}-period">{{:: text.period }} <span class="crm-marker" aria-hidden="true">*</span></label>
+            <div class="crm-af-field">
+              <select id="{{:: id }}-period" class="form-control crm-form-select" required
+                ng-model="state.period" ng-change="pick()"
+                ng-options="period as settings.periods[period] for period in periods()">
+                <option value="">{{:: text.choose }}</option>
+              </select>
+            </div>
           </div>
         </div>`,
       link: function (scope, element, attrs, repeatItem) {
@@ -251,7 +255,7 @@
               </ul>
             </div>
             <div ng-if="guide.snippet">
-              <label for="{{:: id }}">{{:: labels.snippet }}</label>
+              <label class="crm-af-field-label" for="{{:: id }}">{{:: labels.snippet }}</label>
               <textarea id="{{:: id }}" class="crm-form-textarea herald-digest-snippet" readonly rows="{{ rows() }}" ng-model="guide.snippet"></textarea>
               <button type="button" class="btn btn-secondary" ng-click="copy()">
                 <i class="crm-i fa-clipboard" aria-hidden="true"></i> {{:: labels.copy }}

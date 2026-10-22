@@ -46,19 +46,6 @@ af-field[name="msg_html"] textarea {
   background: #fff;
 }
 
-/* The theme's dark buttons put white on #919297 (3.1:1); it reads the colours from these variables. */
-@media (prefers-color-scheme: dark) {
-  afform-herald-digest .btn:not(.btn-danger) {
-    --crm-primary-color: #55565b;
-    --crm-primary-text-color: #fff;
-  }
-
-  afform-herald-digest .btn:not(.btn-danger):hover,
-  afform-herald-digest .btn:not(.btn-danger):focus {
-    --crm-primary-color: #67686d;
-  }
-}
-
 #bootstrap-theme .herald-digest-ready-made af-field[name="search_display_id"] {
   display: none;
 }

@@ -1,4 +1,4 @@
-<div class="herald-admin">
+<div id="bootstrap-theme" class="herald-admin">
   <h1 crm-page-title>{{:: $ctrl.ts('Cleaned fields') }}</h1>
   <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
   <p>
@@ -9,16 +9,22 @@
     <p ng-if="!$ctrl.fields.length">{{:: $ctrl.ts('No cleaned fields: searches and notifications show every value as written.') }}</p>
     <fieldset class="herald-cleaned-field" ng-repeat="entry in $ctrl.fields track by $index" ng-init="b = $index">
       <legend>{{ $ctrl.legend(entry, b) }}</legend>
-      <p>
-        <label for="herald-clean-{{ b }}-entity">{{:: $ctrl.ts('Record type') }}</label>
-        <select class="crm-form-select" id="herald-clean-{{ b }}-entity" ng-model="entry.entity" ng-change="$ctrl.entityChanged(entry)" ng-options="e.name as e.title for e in $ctrl.entities">
-          <option value="">{{:: $ctrl.ts('- select -') }}</option>
-        </select>
-        <label for="herald-clean-{{ b }}-field">{{:: $ctrl.ts('Field') }}</label>
-        <select class="crm-form-select" id="herald-clean-{{ b }}-field" ng-model="entry.field" ng-disabled="!entry.entity" ng-options="f.name as f.title for f in $ctrl.fieldsOf(entry.entity)">
-          <option value="">{{:: $ctrl.ts('- select -') }}</option>
-        </select>
-      </p>
+      <div class="form-group">
+        <label class="crm-af-field-label" for="herald-clean-{{ b }}-entity">{{:: $ctrl.ts('Record type') }}</label>
+        <div class="crm-af-field">
+          <select class="form-control" id="herald-clean-{{ b }}-entity" ng-model="entry.entity" ng-change="$ctrl.entityChanged(entry)" ng-options="e.name as e.title for e in $ctrl.entities">
+            <option value="">{{:: $ctrl.ts('- select -') }}</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="crm-af-field-label" for="herald-clean-{{ b }}-field">{{:: $ctrl.ts('Field') }}</label>
+        <div class="crm-af-field">
+          <select class="form-control" id="herald-clean-{{ b }}-field" ng-model="entry.field" ng-disabled="!entry.entity" ng-options="f.name as f.title for f in $ctrl.fieldsOf(entry.entity)">
+            <option value="">{{:: $ctrl.ts('- select -') }}</option>
+          </select>
+        </div>
+      </div>
       <table class="display" ng-if="entry.rules.length">
         <caption class="sr-only">{{ $ctrl.ts('Rules of %1, in the order they are tried', {1: $ctrl.legend(entry, b)}) }}</caption>
         <thead>
@@ -35,15 +41,15 @@
             <td>{{ $index + 1 }}</td>
             <td>
               <label class="sr-only" for="herald-clean-{{ b }}-match-{{ $index }}">{{ $ctrl.ts('Text of rule %1', {1: $index + 1}) }}</label>
-              <input type="text" class="crm-form-text" id="herald-clean-{{ b }}-match-{{ $index }}" ng-model="rule.match" />
+              <input type="text" class="form-control" id="herald-clean-{{ b }}-match-{{ $index }}" ng-model="rule.match" />
             </td>
             <td>
               <label class="sr-only" for="herald-clean-{{ b }}-type-{{ $index }}">{{ $ctrl.ts('Match of rule %1', {1: $index + 1}) }}</label>
-              <select class="crm-form-select" id="herald-clean-{{ b }}-type-{{ $index }}" ng-model="rule.type" ng-options="t.value as t.label for t in $ctrl.types"></select>
+              <select class="form-control" id="herald-clean-{{ b }}-type-{{ $index }}" ng-model="rule.type" ng-options="t.value as t.label for t in $ctrl.types"></select>
             </td>
             <td>
               <label class="sr-only" for="herald-clean-{{ b }}-label-{{ $index }}">{{ $ctrl.ts('Name to show for rule %1', {1: $index + 1}) }}</label>
-              <input type="text" class="crm-form-text" id="herald-clean-{{ b }}-label-{{ $index }}" ng-model="rule.label" />
+              <input type="text" class="form-control" id="herald-clean-{{ b }}-label-{{ $index }}" ng-model="rule.label" />
             </td>
             <td>
               <button type="button" class="btn btn-xs btn-secondary" id="herald-clean-{{ b }}-up-{{ $index }}" ng-if="!$first" ng-click="$ctrl.move(b, $index, -1)">
@@ -59,11 +65,13 @@
           </tr>
         </tbody>
       </table>
-      <p>
-        <label for="herald-clean-{{ b }}-fallback">{{:: $ctrl.ts('Name for other values') }}</label>
-        <input type="text" class="crm-form-text" id="herald-clean-{{ b }}-fallback" ng-model="entry.fallback" aria-describedby="herald-clean-{{ b }}-fallback-help" />
-        <span class="description" id="herald-clean-{{ b }}-fallback-help">{{:: $ctrl.ts('Optional. Empty keeps a value no rule matches as written; empty values stay empty.') }}</span>
-      </p>
+      <div class="form-group">
+        <label class="crm-af-field-label" for="herald-clean-{{ b }}-fallback">{{:: $ctrl.ts('Name for other values') }}</label>
+        <div class="crm-af-field">
+          <input type="text" class="form-control" id="herald-clean-{{ b }}-fallback" ng-model="entry.fallback" aria-describedby="herald-clean-{{ b }}-fallback-help" />
+        </div>
+        <p class="crm-af-field-help-post" id="herald-clean-{{ b }}-fallback-help">{{:: $ctrl.ts('Optional. Empty keeps a value no rule matches as written; empty values stay empty.') }}</p>
+      </div>
       <p>
         <button type="button" class="btn btn-secondary" id="herald-clean-{{ b }}-add" ng-click="$ctrl.addRule(b)"><i class="crm-i fa-plus" aria-hidden="true"></i> {{:: $ctrl.ts('Add rule') }}</button>
         <button type="button" class="btn btn-danger" ng-click="$ctrl.removeField(b)">
@@ -71,7 +79,7 @@
         </button>
       </p>
     </fieldset>
-    <p class="description">
+    <p class="crm-af-field-help-post">
       {{:: $ctrl.ts('Matching ignores case. A regular expression uses the database syntax without delimiters, for example ^SEPA. It is checked when you save.') }}
     </p>
     <p>

@@ -1,54 +1,65 @@
-<div class="herald-admin">
+<div id="bootstrap-theme" class="herald-admin">
   <h1 crm-page-title>{{:: $ctrl.isNew ? $ctrl.ts('Add topic route') : $ctrl.ts('Edit topic route') }}</h1>
   <p><a href="#/topics">{{:: $ctrl.ts('Topic routes') }}</a></p>
   <div ng-include="'~/heraldAdmin/messages.html'"></div>
   <form name="topicForm" ng-if="$ctrl.loaded" ng-submit="$ctrl.save()" novalidate>
-    <div class="herald-admin-field">
-      <label for="herald-topic-name">{{:: $ctrl.ts('Topic') }} <span class="crm-marker">{{:: $ctrl.ts('(required)') }}</span></label>
-      <input type="text" id="herald-topic-name" class="crm-form-text" ng-model="$ctrl.name" required aria-describedby="herald-topic-name-help" ng-change="$ctrl.channelChanged()" />
-      <p class="description" id="herald-topic-name-help">{{:: $ctrl.ts('The name publishers use, for example ops. The topic named default backs every other topic.') }}</p>
+    <div class="form-group">
+      <label class="crm-af-field-label" for="herald-topic-name">{{:: $ctrl.ts('Topic') }} <span class="crm-marker" title="{{:: $ctrl.ts('Required') }}" aria-hidden="true">*</span></label>
+      <div class="crm-af-field">
+        <input type="text" id="herald-topic-name" class="form-control" ng-model="$ctrl.name" required aria-describedby="herald-topic-name-help" ng-change="$ctrl.channelChanged()" />
+      </div>
+      <p class="crm-af-field-help-post" id="herald-topic-name-help">{{:: $ctrl.ts('The name publishers use, for example ops. The topic named default backs every other topic.') }}</p>
     </div>
-    <div class="herald-admin-field">
-      <label for="herald-topic-label">{{:: $ctrl.ts('Label') }}</label>
-      <input type="text" id="herald-topic-label" class="crm-form-text" ng-model="$ctrl.label" aria-describedby="herald-topic-label-help" />
-      <p class="description" id="herald-topic-label-help">{{:: $ctrl.ts('Shown to contacts and on these screens; empty shows the topic name.') }}</p>
+    <div class="form-group">
+      <label class="crm-af-field-label" for="herald-topic-label">{{:: $ctrl.ts('Label') }}</label>
+      <div class="crm-af-field">
+        <input type="text" id="herald-topic-label" class="form-control" ng-model="$ctrl.label" aria-describedby="herald-topic-label-help" />
+      </div>
+      <p class="crm-af-field-help-post" id="herald-topic-label-help">{{:: $ctrl.ts('Shown to contacts and on these screens; empty shows the topic name.') }}</p>
     </div>
-    <div class="herald-admin-field" ng-if="!$ctrl.isDefault()">
-      <input type="checkbox" id="herald-topic-subscribable" ng-model="$ctrl.subscribable" aria-describedby="herald-topic-subscribable-help" />
-      <label for="herald-topic-subscribable">{{:: $ctrl.ts('Contacts can subscribe to this topic') }}</label>
-      <p class="description" id="herald-topic-subscribable-help">{{:: $ctrl.ts('Offers the topic in the notification preferences of contacts. The delivery mode "Contacts who subscribed to this topic" reaches them.') }}</p>
+    <div class="form-group" ng-if="!$ctrl.isDefault()">
+      <label class="crm-af-field-label"><input type="checkbox" id="herald-topic-subscribable" ng-model="$ctrl.subscribable" aria-describedby="herald-topic-subscribable-help" /> {{:: $ctrl.ts('Contacts can subscribe to this topic') }}</label>
+      <p class="crm-af-field-help-post" id="herald-topic-subscribable-help">{{:: $ctrl.ts('Offers the topic in the notification preferences of contacts. The delivery mode "Contacts who subscribed to this topic" reaches them.') }}</p>
     </div>
     <fieldset>
       <legend>{{:: $ctrl.ts('Delivery') }}</legend>
-      <div class="herald-admin-field">
-        <label for="herald-topic-channel">{{:: $ctrl.ts('Channel') }}</label>
-        <select id="herald-topic-channel" class="crm-form-select" ng-model="$ctrl.channel" ng-change="$ctrl.channelChanged()" ng-options="c.key as c.label for c in $ctrl.channels" aria-describedby="herald-topic-channel-help">
-          <option value="">{{ $ctrl.isDefault() ? $ctrl.ts('(not set)') : $ctrl.ts('(from the default route)') }}</option>
-        </select>
-        <p class="description" id="herald-topic-channel-help">{{:: $ctrl.ts('One of the channels set up under Channels. The fields below follow the channel this topic ends up using; empty ones keep the channel\'s own values.') }}</p>
+      <div class="form-group">
+        <label class="crm-af-field-label" for="herald-topic-channel">{{:: $ctrl.ts('Channel') }}</label>
+        <div class="crm-af-field">
+          <select id="herald-topic-channel" class="form-control" ng-model="$ctrl.channel" ng-change="$ctrl.channelChanged()" ng-options="c.key as c.label for c in $ctrl.channels" aria-describedby="herald-topic-channel-help">
+            <option value="">{{ $ctrl.isDefault() ? $ctrl.ts('(not set)') : $ctrl.ts('(from the default route)') }}</option>
+          </select>
+        </div>
+        <p class="crm-af-field-help-post" id="herald-topic-channel-help">{{:: $ctrl.ts('One of the channels set up under Channels. The fields below follow the channel this topic ends up using; empty ones keep the channel\'s own values.') }}</p>
       </div>
-      <div class="herald-admin-field">
-        <label for="herald-topic-mode">{{:: $ctrl.ts('Delivery mode') }}</label>
-        <select id="herald-topic-mode" class="crm-form-select" ng-model="$ctrl.mode" ng-options="m.value as m.label for m in $ctrl.modes">
-          <option value="">{{ $ctrl.isDefault() ? $ctrl.ts('(not set: direct)') : $ctrl.ts('(from the default route)') }}</option>
-        </select>
+      <div class="form-group">
+        <label class="crm-af-field-label" for="herald-topic-mode">{{:: $ctrl.ts('Delivery mode') }}</label>
+        <div class="crm-af-field">
+          <select id="herald-topic-mode" class="form-control" ng-model="$ctrl.mode" ng-options="m.value as m.label for m in $ctrl.modes">
+            <option value="">{{ $ctrl.isDefault() ? $ctrl.ts('(not set: direct)') : $ctrl.ts('(from the default route)') }}</option>
+          </select>
+        </div>
       </div>
       <herald-fields fields="$ctrl.deliveryFields" inputs="$ctrl.inputs" prefix="herald-topic-" shown="$ctrl.deliveryShown(field)"></herald-fields>
     </fieldset>
     <fieldset>
       <legend>{{ $ctrl.ts('Channel options') }}</legend>
-      <p class="description" ng-if="$ctrl.effectiveMode() !== 'direct'">
+      <p class="crm-af-field-help-post" ng-if="$ctrl.effectiveMode() !== 'direct'">
         {{:: $ctrl.ts('In the subscriber and group modes, recipients come from the preferences of each contact; only presentation options are used from here.') }}
       </p>
       <herald-fields fields="$ctrl.channelFields" inputs="$ctrl.inputs" prefix="herald-topic-"></herald-fields>
       <p ng-if="!$ctrl.channelFields.length">{{ $ctrl.effective ? $ctrl.ts('This channel has no options.') : $ctrl.ts('Choose a channel.') }}</p>
     </fieldset>
-    <div class="herald-admin-field">
-      <label for="herald-topic-other">{{:: $ctrl.ts('Other parameters (JSON)') }}</label>
-      <textarea id="herald-topic-other" class="crm-form-textarea herald-admin-code" rows="4" ng-model="$ctrl.other" aria-describedby="herald-topic-other-help"></textarea>
-      <p class="description" id="herald-topic-other-help">{{:: $ctrl.ts('Parameters without a field above, such as options of another channel type, as a JSON object.') }}</p>
+    <div class="form-group">
+      <label class="crm-af-field-label" for="herald-topic-other">{{:: $ctrl.ts('Other parameters (JSON)') }}</label>
+      <div class="crm-af-field">
+        <textarea id="herald-topic-other" class="crm-form-textarea herald-admin-code" rows="4" ng-model="$ctrl.other" aria-describedby="herald-topic-other-help"></textarea>
+      </div>
+      <p class="crm-af-field-help-post" id="herald-topic-other-help">{{:: $ctrl.ts('Parameters without a field above, such as options of another channel type, as a JSON object.') }}</p>
     </div>
-    <button type="submit" class="btn btn-primary" ng-disabled="$ctrl.saving">{{:: $ctrl.ts('Save') }}</button>
-    <a class="btn btn-secondary" href="#/topics">{{:: $ctrl.ts('Cancel') }}</a>
+    <div class="crm-submit-buttons">
+      <button type="submit" class="btn btn-primary" ng-disabled="$ctrl.saving">{{:: $ctrl.ts('Save') }}</button>
+      <a class="btn btn-secondary" href="#/topics">{{:: $ctrl.ts('Cancel') }}</a>
+    </div>
   </form>
 </div>
