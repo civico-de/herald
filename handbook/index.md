@@ -21,7 +21,7 @@ With CiviRules installed, herald adds four building blocks to it:
 - the trigger "Herald: Schedule", which fires once at a set hour on chosen weekdays
 - the condition "Herald: Field transition", which compares a field's value before and after an edit, such as a contribution moving from Pending to Completed
 
-A notification can go to one recipient, to every contact who subscribed to that kind of notification, to the members of a group, or to a list of email addresses. Each contact can choose their own channel. Alerts that come in bursts can be collected and sent as one message per time window. See [Delivery](delivery.md).
+A notification can go to one recipient, to every contact who subscribed to its topic, to the members of a group, or to a list of email addresses. Each contact can choose their own channel. Alerts that come in bursts can be collected and sent as one message per time window. See [Delivery](delivery.md).
 
 Scripts and other extensions can publish to a named topic such as ops. A topic route decides which channel and recipient each topic reaches, so the publisher never needs to know a chat ID or a URL.
 

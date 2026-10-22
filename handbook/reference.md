@@ -16,7 +16,7 @@ routes:
 herald adds two CiviRules actions. Their forms share these fields:
 
 - Send: "With a delivery of its own" or "Through a topic". A topic's route sets channel, recipients and aggregation, see [Topics](delivery.md#topics); the delivery fields below are then hidden.
-- Delivery mode, with the subscription type, the group, the email addresses, the suspension option and the email location type. See [Delivery modes](delivery.md#delivery-modes).
+- Delivery mode, with the topic whose subscribers to reach, the group, the email addresses, the suspension option and the email location type. See [Delivery modes](delivery.md#delivery-modes).
 - Channel, one of the active channels under Administer » Herald » Channels. Direct and address mode send through it. Subscribers and group members use their own channel.
 - Message template.
 - The delivery fields of the chosen channel's type, such as the Telegram chat ID. Empty fields keep the channel's defaults.

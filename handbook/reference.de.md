@@ -16,7 +16,7 @@ routes:
 herald ergänzt CiviRules um zwei Aktionen. Ihre Formulare haben diese Felder gemeinsam:
 
 - Senden: „Mit eigener Zustellung“ oder „Über ein Topic“. Die Route eines Topics legt Kanal, Empfänger:innen und Sammeln fest, siehe [Topics](delivery.md#topics); die folgenden Zustellfelder sind dann ausgeblendet.
-- Zustellmodus, mit dem Abo-Typ, der Gruppe, den E-Mail-Adressen, der Option „Kommunikationssperren beachten“ und dem Adresstyp der E-Mail. Siehe [Zustellmodi](delivery.md#zustellmodi).
+- Zustellmodus, mit dem Topic, dessen Abonnent:innen erreicht werden, der Gruppe, den E-Mail-Adressen, der Option „Kommunikationssperren beachten“ und dem Adresstyp der E-Mail. Siehe [Zustellmodi](delivery.md#zustellmodi).
 - Kanal, einer der aktiven Kanäle unter Administrieren » Herald » Kanäle. Direkt- und Adresslisten-Modus senden über ihn. Abonnent:innen und Gruppenmitglieder verwenden ihren eigenen Kanal.
 - Nachrichtenvorlage.
 - Die Zustellfelder des Typs des gewählten Kanals, etwa die Telegram-Chat-ID. Leere Felder behalten die Standardwerte des Kanals.

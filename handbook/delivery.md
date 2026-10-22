@@ -16,7 +16,7 @@ Every herald CiviRules action has a delivery mode. Topic routes take the same pa
 | Mode | Recipients | Required parameter |
 |---|---|---|
 | `direct` | The recipient set on the action, or the channel's default. This is the default. | `channel` |
-| `subscribers` | Every contact who subscribed to a notification type, each through their own channel | `subscription_type` |
+| `subscribers` | Every contact who subscribed to a topic, each through their own channel | `subscribers_of`, the topic. A topic route reaches its own topic's subscribers without it. |
 | `group` | Every contact in a CiviCRM group, each through their own channel | `group_id` |
 | `addresses` | A list of email addresses, without any contact records, through an email channel | `channel`, `email_addresses` |
 
@@ -49,7 +49,7 @@ Each contact can choose a channel and the notifications they want. herald adds t
 |---|---|
 | Preferred channel | One of the channels offered to contacts, see [Configuring a channel](channels.md#configuring-a-channel) |
 | Telegram chat ID, Pushover user/group key, ntfy topic, Webhook URL | The recipient for the type of the chosen channel. Email needs none and uses the contact's own address. |
-| Subscriptions | The notification types the contact wants |
+| Subscriptions | The topics the contact subscribed to |
 | Scope: entity type, Scope: entity ID | Optional, see [Scoped subscriptions](#scoped-subscriptions) |
 
 Admins can fill these in on the contact record. For self-service, herald installs the profile "My notification preferences". Look up its ID under Administer » Customize Data and Screens » Profiles, and send staff this link:
@@ -60,7 +60,7 @@ Admins can fill these in on the contact record. For self-service, herald install
 
 CiviCRM opens the profile for the logged-in contact, who can see and edit only their own record.
 
-To use the subscriptions, set an action's delivery mode to "Subscribers" and choose the subscription type. The action's own recipient is ignored in this mode. Each subscriber's message goes through the channel they chose, with that channel's account, such as its bot. Only presentation options are passed from the rule:
+To use the subscriptions, set an action's delivery mode to "Subscribers" and choose the topic under "Subscribers of topic". The action's own recipient is ignored in this mode. Each subscriber's message goes through the channel they chose, with that channel's account, such as its bot. Only presentation options are passed from the rule:
 
 - Telegram: `parse_mode`, `disable_notification`, `disable_web_page_preview`
 - webhook: `webhook_method`, `webhook_body_format`, `webhook_body_key`
@@ -70,19 +70,9 @@ To use the subscriptions, set an action's delivery mode to "Subscribers" and cho
 
 Recipients, CC and BCC are never passed on. The headers and token of a webhook channel belong to its default URL, so a contact's own webhook URL never receives them.
 
-herald ships these subscription types:
+Contacts subscribe to [topics](#topics). A fresh install offers none. To offer one, tick "Contacts can subscribe to this topic" on the topic's form, or save it with `cv api4 Herald.saveTopic topic=news label=News subscribable=1 'route={"delivery_mode":"subscribers"}'`. The topic then appears in the field "Subscriptions" under its label. herald keeps the option group `herald_subscribable_topic` in step with the topics of every domain, so do not edit its values by hand.
 
-| Name | Label |
-|---|---|
-| `completed_alert` | Every completed contribution |
-| `pending_alert` | Every pending contribution |
-| `status_changed_alert` | Pending → Completed transitions |
-| `daily_digest` | Daily digest |
-| `weekly_digest` | Weekly digest |
-
-The types are the values of the option group `herald_subscription_type`. Add your own under Administer » Customize Data and Screens » Option Groups, or with `cv api4 OptionValue.create`. A new value shows up in the action's list of subscription types. Disabling a value only removes it from that list. Actions that already use it keep delivering to its subscribers.
-
-The two digest types are for digests sent in subscriber mode, from the CiviRules action or from a scheduled job.
+A topic that a route, a rule action, a job or a waiting alert names in `subscribers_of` cannot stop offering itself. Neither can a topic whose route would then reach the subscribers that `default` names; to keep that, name them in the route's `subscribers_of`. Otherwise, when a topic stops offering itself, the subscriptions stay stored, but no delivery reaches them any more. A delivery to the subscribers of such a topic fails with "contacts cannot subscribe to the topic".
 
 ### Scoped subscriptions
 
@@ -96,7 +86,9 @@ A preference record without a scope receives everything it subscribed to. The sc
 
 With topics, a publisher names a topic and the setting `herald_topics` decides the channel, the recipient and the aggregation. A CiviRules action can name a topic too: set "Send" to "Through a topic". A script or another extension never needs to know a chat ID or a URL.
 
-The routes are under Administer » Herald » Topic routes. The list shows each topic with its channel, its delivery mode and its aggregation window. "Add topic" and "Edit" open a form with the delivery fields and the options that the topic's channel declares. Keys without a field, such as options of another channel type, go into "Other parameters" as a JSON object. Saving checks the route and stores nothing when it finds a problem: a channel that is not configured, an account field such as `bot_token`, a value of the wrong type, a delivery mode without its required parameter or a topic name that is taken. Renaming a topic keeps its place in the list. The column "Used by" lists the rule actions, scheduled jobs and the monitor that name the topic. Such a topic cannot be deleted or renamed. "Delete" asks first; scripts that still publish to a deleted topic then use the default route.
+The routes are under Administer » Herald » Topic routes. The list shows each topic with its channel, its delivery mode and its aggregation window. "Add topic" and "Edit" open a form with the delivery fields and the options that the topic's channel declares. Keys without a field, such as options of another channel type, go into "Other parameters" as a JSON object. Saving checks the route and stores nothing when it finds a problem: a channel that is not configured, an account field such as `bot_token`, a value of the wrong type, a delivery mode without its required parameter or a topic name that is taken. Renaming a topic keeps its place in the list. The column "Used by" lists the rule actions, scheduled jobs, topic routes and the monitor that name the topic, as publisher or through "Subscribers of topic", and waiting alerts to its subscribers. Such a topic cannot be deleted or renamed. "Delete" asks first and says how many contacts subscribed, if any; scripts that still publish to a deleted topic then use the default route.
+
+A topic also has a label and can be offered for subscription. The label is the topic's name for contacts and on these screens; empty shows the topic name. The checkbox "Contacts can subscribe to this topic" offers it, see [Subscribers](#subscribers). The columns "Subscribable" and "Subscribers" show both. A topic with subscribers cannot be renamed, because their subscriptions name it. A route in subscriber mode reaches the subscribers of its own topic, which must then be offered, unless it names another topic in `subscribers_of`. An offered topic does not take `subscribers_of` from `default`, so its route reaches its own subscribers unless its own entry names others. `default` cannot be offered, and saving it checks every topic that uses it.
 
 To set all routes at once with cv:
 

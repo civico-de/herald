@@ -16,7 +16,7 @@ Jede CiviRules-Aktion von herald hat einen Zustellmodus. Auch Topic-Routen kenne
 | Modus | Empfänger:innen | Pflichtparameter |
 |---|---|---|
 | `direct` | Das an der Aktion eingetragene Ziel oder der Standardwert des Kanals. Das ist der Standard. | `channel` |
-| `subscribers` | Alle Kontakte, die einen Abo-Typ abonniert haben, jeweils über ihren eigenen Kanal | `subscription_type` |
+| `subscribers` | Alle Kontakte, die ein Topic abonniert haben, jeweils über ihren eigenen Kanal | `subscribers_of`, das Topic. Eine Topic-Route erreicht ohne ihn die Abonnent:innen ihres eigenen Topics. |
 | `group` | Alle Kontakte einer CiviCRM-Gruppe, jeweils über ihren eigenen Kanal | `group_id` |
 | `addresses` | Eine Liste von E-Mail-Adressen, ganz ohne Kontaktdatensätze, über einen E-Mail-Kanal | `channel`, `email_addresses` |
 
@@ -49,7 +49,7 @@ Jeder Kontakt kann einen Kanal und die gewünschten Benachrichtigungen wählen. 
 |---|---|
 | Bevorzugter Kanal | Einer der Kanäle, die Kontakten angeboten werden, siehe [Einen Kanal konfigurieren](channels.md#einen-kanal-konfigurieren) |
 | Telegram-Chat-ID, Pushover-Benutzer-/Gruppenschlüssel, ntfy-Topic, Webhook-URL | Das Ziel für den Typ des gewählten Kanals. E-Mail braucht keines und verwendet die eigene Adresse des Kontakts. |
-| Abonnements | Die Abo-Typen, die der Kontakt erhalten möchte |
+| Abonnements | Die Topics, die der Kontakt abonniert hat |
 | Bezug: Objekttyp, Bezug: Objekt-ID | Optional, siehe [Abos mit Bezug](#abos-mit-bezug) |
 
 Admins können diese Felder am Kontaktdatensatz ausfüllen. Zur Selbstverwaltung installiert herald das Profil „My notification preferences“ (meine Benachrichtigungseinstellungen). Schlagen Sie seine ID unter Administrieren » Daten und Masken anpassen » Profile (englisch: Administer » Customize Data and Screens » Profiles) nach und schicken Sie den Mitarbeitenden diesen Link:
@@ -60,7 +60,7 @@ Admins können diese Felder am Kontaktdatensatz ausfüllen. Zur Selbstverwaltung
 
 CiviCRM öffnet das Profil für den angemeldeten Kontakt, der nur seinen eigenen Datensatz sehen und bearbeiten kann.
 
-Um die Abonnements zu nutzen, setzen Sie den Zustellmodus einer Aktion auf „Abonnent:innen“ und wählen den Abo-Typ. Das an der Aktion eingetragene Ziel wird in diesem Modus ignoriert. Die Nachricht an jede:n Abonnent:in geht über den Kanal, den die Person gewählt hat, mit dem Konto dieses Kanals, etwa seinem Bot. Von der Regel gelangen nur Darstellungsoptionen dorthin:
+Um die Abonnements zu nutzen, setzen Sie den Zustellmodus einer Aktion auf „Abonnent:innen“ und wählen das Topic unter „Abonnent:innen des Topics“. Das an der Aktion eingetragene Ziel wird in diesem Modus ignoriert. Die Nachricht an jede:n Abonnent:in geht über den Kanal, den die Person gewählt hat, mit dem Konto dieses Kanals, etwa seinem Bot. Von der Regel gelangen nur Darstellungsoptionen dorthin:
 
 - Telegram: `parse_mode`, `disable_notification`, `disable_web_page_preview`
 - Webhook: `webhook_method`, `webhook_body_format`, `webhook_body_key`
@@ -70,19 +70,9 @@ Um die Abonnements zu nutzen, setzen Sie den Zustellmodus einer Aktion auf „Ab
 
 Ziele, CC und BCC werden nie übernommen. Header und Token eines Webhook-Kanals gehören zu seiner Standard-URL, die eigene Webhook-URL eines Kontakts erhält sie also nie.
 
-herald liefert diese Abo-Typen mit:
+Kontakte abonnieren [Topics](#topics). Eine neue Installation bietet keines an. Um eines anzubieten, setzen Sie im Formular des Topics den Haken „Kontakte dürfen dieses Topic abonnieren“, oder speichern Sie es mit `cv api4 Herald.saveTopic topic=news label=News subscribable=1 'route={"delivery_mode":"subscribers"}'`. Das Topic erscheint dann unter seiner Bezeichnung im Feld „Abonnements“. herald hält die Optionsgruppe `herald_subscribable_topic` mit den Topics aller Domains im Einklang; bearbeiten Sie ihre Werte also nicht von Hand.
 
-| Name | Bezeichnung |
-|---|---|
-| `completed_alert` | Jeder abgeschlossene Beitrag |
-| `pending_alert` | Jeder ausstehende Beitrag |
-| `status_changed_alert` | Übergänge Ausstehend → Abgeschlossen |
-| `daily_digest` | Täglicher Report |
-| `weekly_digest` | Wöchentlicher Report |
-
-Die Typen sind die Werte der Optionsgruppe `herald_subscription_type`. Eigene ergänzen Sie unter Administrieren » Daten und Masken anpassen » Optionsgruppen (englisch: Administer » Customize Data and Screens » Option Groups) oder mit `cv api4 OptionValue.create`. Ein neuer Wert erscheint in der Liste der Abo-Typen der Aktion. Wenn Sie einen Wert deaktivieren, verschwindet er nur aus dieser Liste. Aktionen, die ihn bereits verwenden, stellen weiter an seine Abonnent:innen zu.
-
-Die beiden Report-Typen sind für Reports gedacht, die im Abonnent:innen-Modus verschickt werden, über die CiviRules-Aktion oder über einen geplanten Job.
+Ein Topic, das eine Route, eine Regelaktion, ein Job oder eine wartende Meldung in `subscribers_of` nennt, lässt sich nicht zurückziehen. Ebenso wenig ein Topic, dessen Route danach die Abonnent:innen erreichen würde, die `default` nennt; soll sie das, nennen Sie diese in `subscribers_of` der Route. Sonst gilt: Bietet sich ein Topic nicht mehr an, bleiben die Abonnements gespeichert, aber keine Zustellung erreicht sie mehr. Eine Zustellung an die Abonnent:innen eines solchen Topics scheitert mit „contacts cannot subscribe to the topic“.
 
 ### Abos mit Bezug
 
@@ -96,7 +86,9 @@ Ein Einstellungsdatensatz ohne Bezug erhält alles, was er abonniert hat. Der Be
 
 Bei Topics nennt der Absender nur ein Topic, und die Einstellung `herald_topics` entscheidet über Kanal, Ziel und Sammeln. Auch eine CiviRules-Aktion kann ein Topic nennen: Setzen Sie „Senden“ auf „Über ein Topic“. Ein Skript oder eine andere Extension muss also nie eine Chat-ID oder eine URL kennen.
 
-Die Routen finden Sie unter Administrieren » Herald » Topic-Routen. Die Liste zeigt jedes Topic mit seinem Kanal, seinem Zustellmodus und seinem Sammelfenster. „Topic hinzufügen“ und „Bearbeiten“ öffnen ein Formular mit den Zustellfeldern und den Optionen, die der Kanal des Topics deklariert. Schlüssel ohne eigenes Feld, etwa Optionen eines anderen Kanaltyps, gehören als JSON-Objekt in „Weitere Parameter“. Beim Speichern prüft herald die Route und speichert nichts, wenn es eines dieser Probleme findet: ein Kanal, der nicht konfiguriert ist, ein Kontofeld wie `bot_token`, ein Wert vom falschen Typ, ein Zustellmodus ohne seinen Pflichtparameter oder ein bereits vergebener Topic-Name. Ein umbenanntes Topic behält seinen Platz in der Liste. Die Spalte „Verwendet von“ listet die Regelaktionen, geplanten Jobs und den Monitor, die das Topic nennen. Ein solches Topic lässt sich weder löschen noch umbenennen. „Löschen“ fragt vorher nach; Skripte, die noch an ein gelöschtes Topic veröffentlichen, laufen danach über die Route default.
+Die Routen finden Sie unter Administrieren » Herald » Topic-Routen. Die Liste zeigt jedes Topic mit seinem Kanal, seinem Zustellmodus und seinem Sammelfenster. „Topic hinzufügen“ und „Bearbeiten“ öffnen ein Formular mit den Zustellfeldern und den Optionen, die der Kanal des Topics deklariert. Schlüssel ohne eigenes Feld, etwa Optionen eines anderen Kanaltyps, gehören als JSON-Objekt in „Weitere Parameter“. Beim Speichern prüft herald die Route und speichert nichts, wenn es eines dieser Probleme findet: ein Kanal, der nicht konfiguriert ist, ein Kontofeld wie `bot_token`, ein Wert vom falschen Typ, ein Zustellmodus ohne seinen Pflichtparameter oder ein bereits vergebener Topic-Name. Ein umbenanntes Topic behält seinen Platz in der Liste. Die Spalte „Verwendet von“ listet die Regelaktionen, geplanten Jobs, Topic-Routen und den Monitor, die das Topic nennen, als Absender oder über „Abonnent:innen des Topics“, dazu wartende Meldungen an seine Abonnent:innen. Ein solches Topic lässt sich weder löschen noch umbenennen. „Löschen“ fragt vorher nach und nennt die Zahl der Abonnent:innen, falls es welche gibt; Skripte, die noch an ein gelöschtes Topic veröffentlichen, laufen danach über die Route default.
+
+Ein Topic hat außerdem eine Bezeichnung und kann zum Abonnieren angeboten werden. Die Bezeichnung ist der Name des Topics für Kontakte und auf diesen Seiten; leer zeigt sie den Topic-Namen. Der Haken „Kontakte dürfen dieses Topic abonnieren“ bietet es an, siehe [Abonnements](#abonnements). Die Spalten „Abonnierbar“ und „Abonnent:innen“ zeigen beides. Ein Topic mit Abonnent:innen lässt sich nicht umbenennen, denn ihre Abonnements nennen es. Eine Route im Abonnent:innen-Modus erreicht die Abonnent:innen ihres eigenen Topics, das dann angeboten sein muss, es sei denn, sie nennt in `subscribers_of` ein anderes Topic. Ein angebotenes Topic übernimmt `subscribers_of` nicht von `default`; seine Route erreicht also die eigenen Abonnent:innen, solange sein eigener Eintrag keine anderen nennt. `default` lässt sich nicht anbieten, und beim Speichern prüft herald jedes Topic, das es verwendet.
 
 So setzen Sie alle Routen auf einmal mit cv:
 

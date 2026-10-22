@@ -21,7 +21,7 @@ Ist CiviRules installiert, ergänzt herald es um vier Bausteine:
 - den Trigger „Herald: Schedule“, der an gewählten Wochentagen einmal zu einer festen Stunde auslöst
 - die Bedingung „Herald: Field transition“, die den Wert eines Feldes vor und nach einer Änderung vergleicht, etwa wenn ein Beitrag von Pending (ausstehend) zu Completed (abgeschlossen) wechselt
 
-Eine Benachrichtigung kann an ein einzelnes Ziel gehen, an alle Kontakte, die diese Art von Benachrichtigung abonniert haben, an die Mitglieder einer Gruppe oder an eine Liste von E-Mail-Adressen. Jeder Kontakt kann seinen eigenen Kanal wählen. Meldungen, die gehäuft auftreten, lassen sich sammeln und als eine Nachricht pro Zeitfenster verschicken. Siehe [Zustellung](delivery.md).
+Eine Benachrichtigung kann an ein einzelnes Ziel gehen, an alle Kontakte, die ihr Topic abonniert haben, an die Mitglieder einer Gruppe oder an eine Liste von E-Mail-Adressen. Jeder Kontakt kann seinen eigenen Kanal wählen. Meldungen, die gehäuft auftreten, lassen sich sammeln und als eine Nachricht pro Zeitfenster verschicken. Siehe [Zustellung](delivery.md).
 
 Skripte und andere Extensions können Nachrichten an ein benanntes Topic wie ops schicken. Eine Topic-Route legt fest, welchen Kanal und welches Ziel jedes Topic erreicht. Wer eine Nachricht schickt, muss also nie eine Chat-ID oder eine URL kennen.
 
