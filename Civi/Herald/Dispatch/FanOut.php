@@ -13,8 +13,8 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  * as delivered, since a retry would send twice to those who got it. When
  * every send fails, or the list is empty, the delivery throws, so a buffered
  * flush keeps its rows. An empty list throws NoRecipientsException, which the
- * flush parks at once: nobody to notify is a configuration fault (deactivated
- * subscription type, emptied group), not something a retry fixes.
+ * flush parks at once: nobody to notify is a configuration fault (a
+ * topic nobody can subscribe to, emptied group), not something a retry fixes.
  */
 final class FanOut {
 

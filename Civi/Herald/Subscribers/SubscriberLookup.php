@@ -7,21 +7,19 @@ namespace Civi\Herald\Subscribers;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * Resolves the contacts subscribed to a subscription type into recipients,
+ * Resolves the contacts subscribed to a topic into recipients,
  * each through the channel their preference names. A preference naming no
  * active subscribable channel counts as no_channel.
  */
 class SubscriberLookup {
 
   /**
-   * @param string $subscriptionType A value of the `herald_subscription_type`
-   *   option group, e.g. "completed_alert".
    * @param array<string, mixed> $options respect_suspension (bool),
    *   location_type_id (int, 0 = primary), scope (see SubscriptionScope).
    * @return array<int, array{contact_id: int, channel: string, config: array<string, mixed>}>
    */
-  public function findBySubscriptionType(string $subscriptionType, array $options = []): array {
-    if ($subscriptionType === '') {
+  public function findByTopic(string $topic, array $options = []): array {
+    if ($topic === '') {
       return [];
     }
     /** @var array<int, array<string, mixed>> $rows */
@@ -31,13 +29,13 @@ class SubscriberLookup {
         'herald_preferences.source_entity_type',
         'herald_preferences.source_entity_id',
       )
-      ->addWhere('herald_preferences.subscriptions', 'CONTAINS', $subscriptionType)
+      ->addWhere('herald_preferences.subscriptions', 'CONTAINS', SubscribableTopics::pattern($topic))
       ->execute()
       ->getArrayCopy();
     $mapped = self::mapRowsDetailed($rows, $options);
     if ($mapped['skipped'] !== []) {
       \Civi::log()->info('herald: subscriber fan-out skipped recipients', [
-        'subscription_type' => $subscriptionType,
+        'topic' => $topic,
         'skipped' => $mapped['skipped'],
       ]);
     }

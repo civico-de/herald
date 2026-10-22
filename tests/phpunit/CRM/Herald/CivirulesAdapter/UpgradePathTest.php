@@ -94,12 +94,12 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
     );
     \CRM_Core_DAO::executeQuery(
       "DELETE FROM civicrm_managed WHERE module = 'herald'
-       AND name = 'OptionValue_herald_subscription_type_weekly_digest'",
+       AND name = 'OptionValue__activity_type__herald_notification'",
     );
     \CRM_Core_DAO::executeQuery(
       "DELETE ov FROM civicrm_option_value ov
        JOIN civicrm_option_group og ON og.id = ov.option_group_id
-       WHERE og.name = 'herald_subscription_type' AND ov.name = 'weekly_digest'",
+       WHERE og.name = 'activity_type' AND ov.name = 'herald_notification'",
     );
 
     CRM_Herald_Upgrader_Reconcile::run();
@@ -116,7 +116,7 @@ class CRM_Herald_CivirulesAdapter_UpgradePathTest extends TestCase implements
       (int) \CRM_Core_DAO::singleValueQuery(
         "SELECT COUNT(*) FROM civicrm_option_value ov
          JOIN civicrm_option_group og ON og.id = ov.option_group_id
-         WHERE og.name = 'herald_subscription_type' AND ov.name = 'weekly_digest'",
+         WHERE og.name = 'activity_type' AND ov.name = 'herald_notification'",
       ),
       'upgrade reconcile did not restore the managed option value',
     );

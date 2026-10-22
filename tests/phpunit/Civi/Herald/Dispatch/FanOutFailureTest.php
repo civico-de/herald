@@ -111,7 +111,7 @@ class FanOutFailureTest extends TestCase implements HeadlessInterface, HookInter
 
   /**
    * Nobody was notified, so nothing may be recorded as delivered: a fan-out
-   * that resolves to no recipient (deactivated subscription type, emptied
+   * that resolves to no recipient (a topic nobody subscribes to, emptied
    * group) is a config fault, and a buffered flush must keep its rows for it.
    */
   public function testEmptyRecipientListThrows(): void {
@@ -139,7 +139,7 @@ class FanOutFailureTest extends TestCase implements HeadlessInterface, HookInter
       'grp-no-subscribers',
       1,
       'body',
-      ['delivery_mode' => 'subscribers', 'subscription_type' => 'herald_test_unused_type'],
+      ['delivery_mode' => 'subscribers', 'subscribers_of' => 'herald_test_unused_type'],
       NULL,
     );
     \CRM_Core_DAO::executeQuery(

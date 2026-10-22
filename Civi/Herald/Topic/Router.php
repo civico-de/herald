@@ -14,7 +14,9 @@ namespace Civi\Herald\Topic;
  *   }'
  *
  * The topic's entry is merged over "default"; neither present, or no
- * channel named (a configured channel, see ChannelStore), throws.
+ * channel named (a configured channel, see ChannelStore), throws. A route
+ * to subscribers reaches the topic's own unless it names subscribers_of; a
+ * topic contacts subscribe to ignores the subscribers_of of "default".
  */
 class Router {
 
@@ -54,10 +56,13 @@ class Router {
     // Unknown keys are ignored by the consumer rather than rejected here.
     /** @var array<string, mixed> $params */
     $params = array_merge(...$entries);
+    $mode = $params['delivery_mode'] ?? 'direct';
     // A fan-out reaches each contact on their own channel.
-    $fanOut = in_array($params['delivery_mode'] ?? 'direct', ['subscribers', 'group'], TRUE);
-    if (empty($params['channel']) && !$fanOut) {
+    if (empty($params['channel']) && !in_array($mode, ['subscribers', 'group'], TRUE)) {
       throw new \CRM_Core_Exception(sprintf('herald: the route of topic "%s" names no channel.', $topic));
+    }
+    if ($mode === 'subscribers') {
+      $params['subscribers_of'] = TopicMeta::subscribersOf($topic, $map[$topic] ?? NULL, $params);
     }
     return $params;
   }
@@ -69,7 +74,8 @@ class Router {
    * @return list<array<array-key, mixed>>
    */
   private static function entries(array $map, string $topic): array {
-    return array_values(array_filter([$map['default'] ?? NULL, $map[$topic] ?? NULL], 'is_array'));
+    $entries = array_filter([$map['default'] ?? NULL, $map[$topic] ?? NULL], 'is_array');
+    return array_values(array_map(TopicMeta::route(...), $entries));
   }
 
 }

@@ -69,9 +69,9 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
       );
       $this->add(
         'select',
-        'subscription_type',
-        E::ts('Subscription type (only used in subscriber mode)'),
-        CRM_Herald_CivirulesAdapter_SendOptions::subscriptionTypes(),
+        'subscribers_of',
+        E::ts('Subscribers of topic (only used in subscriber mode)'),
+        CRM_Herald_CivirulesAdapter_SendOptions::subscribableTopics(),
       );
       $this->add(
         'select',

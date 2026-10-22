@@ -45,7 +45,7 @@ final class CRM_Herald_CivirulesAdapter_SendParams {
     $params += [
       'channel' => $text('channel'),
       'delivery_mode' => $text('delivery_mode'),
-      'subscription_type' => $text('subscription_type'),
+      'subscribers_of' => self::subscribersOf($values),
       'group_id' => $int('group_id'),
       'email_addresses' => $text('email_addresses'),
       'respect_suspension' => !empty($values['respect_suspension']),
@@ -79,6 +79,17 @@ final class CRM_Herald_CivirulesAdapter_SendParams {
    */
   public static function channelFields(): array {
     return CRM_Herald_CivirulesAdapter_ChannelFieldSpecs::all();
+  }
+
+  /**
+   * Only a delivery to subscribers reaches a topic's subscribers.
+   *
+   * @param array<string, mixed> $values
+   */
+  private static function subscribersOf(array $values): string {
+    return trim(Cast::toString($values['delivery_mode'] ?? '')) === 'subscribers'
+      ? trim(Cast::toString($values['subscribers_of'] ?? ''))
+      : '';
   }
 
 }

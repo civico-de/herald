@@ -18,7 +18,7 @@ final class RouteFields {
   private const DELIVERY_TYPES = [
     'channel' => 'string',
     'delivery_mode' => 'enum',
-    'subscription_type' => 'string',
+    'subscribers_of' => 'string',
     'group_id' => 'int',
     'email_addresses' => 'string',
     'respect_suspension' => 'bool',
@@ -62,7 +62,7 @@ final class RouteFields {
     return [
       'channel' => E::ts('Channel'),
       'delivery_mode' => E::ts('Delivery mode'),
-      'subscription_type' => E::ts('Subscription type'),
+      'subscribers_of' => E::ts('Subscribers of topic'),
       'group_id' => E::ts('Group'),
       'email_addresses' => E::ts('Email addresses'),
       'respect_suspension' => E::ts('Respect communication suspension'),

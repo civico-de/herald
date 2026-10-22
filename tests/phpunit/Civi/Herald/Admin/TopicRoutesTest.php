@@ -6,6 +6,7 @@ namespace Civi\Herald\Admin;
 
 use Civi\Api4\Herald;
 use Civi\Herald\ChannelFixture;
+use Civi\Herald\Subscribers\SubscribableTopics;
 use Civi\Herald\Topic\Router;
 
 /**
@@ -48,7 +49,7 @@ class TopicRoutesTest extends AdminTestCase {
     $route = ['channel' => 'ntfy', 'ntfy_topic' => 'alerts', 'ntfy_priority' => 4, 'aggregate_minutes' => 15];
     $rows = self::call('saveTopic', ['topic' => 'new', 'route' => $route]);
 
-    $this->assertSame([['topic' => 'new', 'route' => $route]], $rows);
+    $this->assertSame([['topic' => 'new', 'route' => $route, 'label' => '', 'subscribable' => FALSE]], $rows);
     $this->assertSame(self::CLI_MAP + ['new' => $route], \Civi::settings()->get(Router::SETTING));
     $this->assertSame('ntfy', Router::resolveFrom(self::CLI_MAP + ['new' => $route], 'new')['channel']);
   }
@@ -151,6 +152,207 @@ class TopicRoutesTest extends AdminTestCase {
     unset($expected['hooks']);
     $this->assertSame($expected, \Civi::settings()->get(Router::SETTING));
     $this->assertRejected('deleteTopic', ['topic' => 'hooks'], ['The topic "hooks" does not exist.']);
+  }
+
+  public function testContactsSubscribeToATopicTheAdminOffers(): void {
+    self::call('saveTopic', [
+      'topic' => 'news',
+      'label' => ' News ',
+      'subscribable' => TRUE,
+      'route' => ['delivery_mode' => 'subscribers'],
+    ]);
+    $this->assertSame(
+      ['delivery_mode' => 'subscribers', 'label' => 'News', 'subscribable' => TRUE],
+      \Civi::settings()->get(Router::SETTING)['news'],
+    );
+    $this->assertSame(['news' => 'News'], self::options());
+
+    \Civi\Api4\Contact::create(FALSE)
+      ->addValue('contact_type', 'Individual')
+      ->addValue('herald_preferences.subscriptions', ['news'])
+      ->execute();
+    $usage = array_column(self::call('getTopicUsage'), 'subscribers', 'topic');
+    $this->assertSame(1, $usage['news']);
+    $this->assertSame(0, $usage['ops']);
+    $this->assertRejected(
+      'saveTopic',
+      ['topic' => 'headlines', 'route' => [], 'subscribable' => TRUE, 'previousName' => 'news'],
+      ['The topic "news" cannot be renamed while 1 contacts subscribe to it.'],
+    );
+
+    self::call('saveTopic', ['topic' => 'news', 'route' => [], 'previousName' => 'news']);
+    $this->assertSame([], self::options());
+  }
+
+  public function testTheKeysOfATopicFollowItsRules(): void {
+    $this->assertRejected(
+      'saveTopic',
+      ['topic' => 'news', 'route' => ['delivery_mode' => 'subscribers', 'label' => 'News']],
+      [
+        'label belong to the topic, not to its route.',
+        'A route to subscribers reaches the contacts who subscribed to this topic',
+      ],
+    );
+    $this->assertRejected(
+      'saveTopic',
+      ['topic' => 'default', 'route' => self::CLI_MAP['default'], 'subscribable' => TRUE, 'previousName' => 'default'],
+      ['Contacts cannot subscribe to "default"'],
+    );
+    $this->assertRejected(
+      'saveTopic',
+      ['topic' => 'digest', 'route' => ['delivery_mode' => 'subscribers', 'subscribers_of' => 'ops']],
+      ['Contacts cannot subscribe to the topic "ops".'],
+    );
+    $this->assertRejected(
+      'saveTopic',
+      [
+        'topic' => 'default',
+        'route' => ['delivery_mode' => 'subscribers', 'subscribers_of' => 'default'],
+        'previousName' => 'default',
+      ],
+      ['Contacts cannot subscribe to the topic "default".'],
+    );
+    $this->assertSame(self::CLI_MAP, \Civi::settings()->get(Router::SETTING));
+  }
+
+  public function testARouteToTheSubscribersOfAnotherTopicUsesIt(): void {
+    self::call('saveTopic', ['topic' => 'news', 'route' => [], 'subscribable' => TRUE]);
+    self::call('saveTopic', [
+      'topic' => 'digest',
+      'route' => ['delivery_mode' => 'subscribers', 'subscribers_of' => 'news'],
+    ]);
+    $this->assertRejected('deleteTopic', ['topic' => 'news'], ['The topic "news" is still in use:', 'Topic "digest"']);
+
+    $this->assertRejected(
+      'saveTopic',
+      ['topic' => 'news', 'route' => [], 'previousName' => 'news'],
+      ['Contacts must be able to subscribe to "news" while it is in use:', 'Topic "digest"'],
+    );
+
+    self::call('deleteTopic', ['topic' => 'digest']);
+    self::call('deleteTopic', ['topic' => 'news']);
+    $this->assertSame([], self::options());
+  }
+
+  public function testTheRouteToSubscribersIsJudgedWithItsDefault(): void {
+    self::call('saveTopic', ['topic' => 'news', 'route' => [], 'subscribable' => TRUE]);
+    $map = \Civi::settings()->get(Router::SETTING);
+    $map['default'] = ['delivery_mode' => 'subscribers', 'subscribers_of' => 'news'];
+    \Civi::settings()->set(Router::SETTING, $map);
+    self::call('saveTopic', ['topic' => 'digest', 'route' => ['delivery_mode' => 'subscribers']]);
+
+    $map = \Civi::settings()->get(Router::SETTING);
+    $map['default'] = ['delivery_mode' => 'subscribers'];
+    \Civi::settings()->set(Router::SETTING, $map);
+    $this->assertRejected(
+      'saveTopic',
+      ['topic' => 'alerts', 'route' => []],
+      ['A route to subscribers reaches the contacts who subscribed to this topic'],
+    );
+  }
+
+  public function testAChangeToDefaultIsJudgedForTheTopicsItBacks(): void {
+    $this->assertRejected(
+      'saveTopic',
+      ['topic' => 'default', 'route' => ['delivery_mode' => 'subscribers'], 'previousName' => 'default'],
+      ['Topic "hooks": A route to subscribers reaches the contacts who subscribed to this topic'],
+    );
+
+    self::call('saveTopic', ['topic' => 'news', 'route' => [], 'subscribable' => TRUE]);
+    self::call('saveTopic', [
+      'topic' => 'default',
+      'route' => ['delivery_mode' => 'subscribers', 'subscribers_of' => 'news'],
+      'previousName' => 'default',
+    ]);
+    self::call('saveTopic', ['topic' => 'board', 'route' => [], 'subscribable' => TRUE]);
+
+    $map = \Civi::settings()->get(Router::SETTING);
+    $this->assertSame('news', Router::resolveFrom($map, 'hooks')['subscribers_of']);
+    $this->assertSame('board', Router::resolveFrom($map, 'board')['subscribers_of']);
+
+    $this->assertRejected(
+      'saveTopic',
+      ['topic' => 'board', 'route' => [], 'previousName' => 'board'],
+      ['Without subscriptions, "board" would reach the subscribers of "news"'],
+    );
+    self::call('saveTopic', ['topic' => 'board', 'route' => ['subscribers_of' => 'news'], 'previousName' => 'board']);
+  }
+
+  public function testARouteNamingItsOwnSubscribersFollowsARename(): void {
+    $route = ['delivery_mode' => 'subscribers', 'subscribers_of' => 'news'];
+    self::call('saveTopic', ['topic' => 'news', 'route' => $route, 'subscribable' => TRUE]);
+    self::call('saveTopic', [
+      'topic' => 'headlines',
+      'route' => $route,
+      'subscribable' => TRUE,
+      'previousName' => 'news',
+    ]);
+    $this->assertSame(
+      ['delivery_mode' => 'subscribers', 'subscribers_of' => 'headlines', 'subscribable' => TRUE],
+      \Civi::settings()->get(Router::SETTING)['headlines'],
+    );
+    $this->assertSame(['headlines' => 'headlines'], self::options());
+  }
+
+  public function testABufferedAlertToItsSubscribersKeepsATopic(): void {
+    self::call('saveTopic', ['topic' => 'news', 'route' => [], 'subscribable' => TRUE]);
+    (new \Civi\Herald\Buffer\AlertBuffer())->add(
+      'grp-news',
+      5,
+      'body',
+      ['delivery_mode' => 'subscribers', 'subscribers_of' => 'news'],
+      NULL,
+    );
+    $this->assertRejected(
+      'deleteTopic',
+      ['topic' => 'news'],
+      ['The topic "news" is still in use:', '1 buffered or parked alerts'],
+    );
+  }
+
+  public function testTheBulkSettingOffersItsTopicsToo(): void {
+    \Civi\Api4\Setting::set(FALSE)
+      ->addValue(Router::SETTING, self::CLI_MAP + ['news' => ['subscribable' => TRUE, 'label' => 'News']])
+      ->execute();
+    $this->assertSame(['news' => 'News'], self::options());
+
+    \Civi\Api4\Setting::set(FALSE)->addValue(Router::SETTING, self::CLI_MAP)->execute();
+    $this->assertSame([], self::options());
+  }
+
+  public function testTopicsOfEveryDomainBecomeOptions(): void {
+    $other = array_values(array_diff(
+      \Civi\Api4\Domain::get(FALSE)->addSelect('id')->execute()->column('id'),
+      [\CRM_Core_Config::domainID()],
+    ));
+    if ($other === []) {
+      self::markTestSkipped('The test database has a single domain.');
+    }
+    $there = \Civi::settings((int) $other[0]);
+    $saved = $there->get(Router::SETTING);
+    $there->set(Router::SETTING, [
+      'team' => ['subscribable' => TRUE, 'label' => 'Team'],
+      'news' => ['subscribable' => TRUE, 'label' => 'Their news'],
+    ]);
+    try {
+      self::call('saveTopic', ['topic' => 'news', 'route' => [], 'label' => 'News', 'subscribable' => TRUE]);
+      $this->assertSame(['news' => 'News', 'team' => 'Team'], self::options());
+    }
+    finally {
+      $there->set(Router::SETTING, $saved);
+    }
+  }
+
+  /**
+   * @return array<string, string>
+   */
+  private static function options(): array {
+    $options = \Civi\Api4\OptionValue::get(FALSE)
+      ->addWhere('option_group_id:name', '=', SubscribableTopics::OPTION_GROUP)
+      ->execute()
+      ->column('label', 'value');
+    ksort($options);
+    return $options;
   }
 
   public function testOnlyAdministratorsMayWrite(): void {

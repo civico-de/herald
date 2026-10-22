@@ -118,7 +118,7 @@ class ChannelConfigTest extends TestCase implements HeadlessInterface {
       'email_cc' => 'cc@example.org',
       'email_bcc' => 'bcc@example.org',
       'delivery_mode' => 'subscribers',
-      'subscription_type' => 'completed_alert',
+      'subscribers_of' => 'completed_alert',
       'parse_mode' => 'HTML',
       'disable_notification' => TRUE,
       'ntfy_title' => 'Donation',

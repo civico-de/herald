@@ -8,9 +8,8 @@ use CRM_Herald_ExtensionUtil as E;
  * Per-contact notification preferences shipped via mgd-php@1.
  *
  * Defines:
- *   - Option group `herald_subscription_type` listing the supported
- *     subscription kinds (completed alerts, daily digests, …) so they're
- *     queryable, translatable, and admin-extensible.
+ *   - Option groups `herald_preferred_channel` and `herald_subscribable_topic`,
+ *     which herald fills from its channels and topics.
  *   - Custom group `herald_preferences` on Contact with the per-user
  *     channel pick + channel-specific recipient identifiers + the multi-value
  *     `subscriptions` field.
@@ -18,14 +17,6 @@ use CRM_Herald_ExtensionUtil as E;
  * The self-service profile is not shipped here: its UFFields name custom
  * fields by id (CRM_Herald_Upgrader_PreferencesProfile).
  */
-
-$subscriptionTypes = [
-  ['name' => 'completed_alert', 'label' => E::ts('Every completed contribution'), 'weight' => 10],
-  ['name' => 'pending_alert', 'label' => E::ts('Every pending contribution'), 'weight' => 20],
-  ['name' => 'status_changed_alert', 'label' => E::ts('Pending → Completed transitions'), 'weight' => 30],
-  ['name' => 'daily_digest', 'label' => E::ts('Daily digest'), 'weight' => 40],
-  ['name' => 'weekly_digest', 'label' => E::ts('Weekly digest'), 'weight' => 50],
-];
 
 /**
  * @var array<int, array{name: string, label: string, data_type: string, html_type: string, weight: int, help_pre?: string, option_group_name?: string, serialize?: int}> $preferenceFields
@@ -80,10 +71,11 @@ $preferenceFields = [
     'label' => E::ts('Subscriptions'),
     'data_type' => 'String',
     'html_type' => 'CheckBox',
-    'option_group_name' => 'herald_subscription_type',
+    // Values are the subscribable topics (SubscribableTopics::sync()).
+    'option_group_name' => CRM_Herald_Upgrader_SubscriptionTypes::fieldGroup(),
     'serialize' => 1,
     'weight' => 60,
-    'help_pre' => E::ts('Tick the kinds of notifications you want to receive on your preferred channel.'),
+    'help_pre' => E::ts('Tick the topics you want to receive notifications about on your preferred channel.'),
   ],
   [
     'name' => 'source_entity_type',
@@ -107,42 +99,31 @@ $preferenceFields = [
 
 $managed = [];
 
+// Until upgrade_1015 has read the subscription types, they stay as shipped.
+if (CRM_Herald_Upgrader_SubscriptionTypes::fieldGroup() !== 'herald_subscribable_topic') {
+  $managed = CRM_Herald_Upgrader_SubscriptionTypes::declarations();
+}
+
 $managed[] = [
-  'name' => 'OptionGroup_herald_subscription_type',
+  'name' => 'OptionGroup_herald_subscribable_topic',
   'entity' => 'OptionGroup',
   'cleanup' => 'unused',
   'update' => 'unmodified',
   'params' => [
     'version' => 4,
+    // The upgrade to subscriptions on topics creates it before it repoints the field.
+    'match' => ['name'],
     'values' => [
-      'name' => 'herald_subscription_type',
-      'title' => E::ts('Herald: Subscription type'),
-      'description' => E::ts('Kinds of notification a contact can opt into. Used by herald subscriber-mode actions.'),
+      'name' => 'herald_subscribable_topic',
+      'title' => E::ts('Herald: Subscribable topic'),
+      'description' => E::ts(
+        'The topics a contact can subscribe to; herald keeps them in step with its topics.',
+      ),
       'is_active' => TRUE,
-      'is_reserved' => FALSE,
+      'is_reserved' => TRUE,
     ],
   ],
 ];
-
-foreach ($subscriptionTypes as $st) {
-  $managed[] = [
-    'name' => 'OptionValue_herald_subscription_type_' . $st['name'],
-    'entity' => 'OptionValue',
-    'cleanup' => 'unused',
-    'update' => 'unmodified',
-    'params' => [
-      'version' => 4,
-      'values' => [
-        'option_group_id.name' => 'herald_subscription_type',
-        'name' => $st['name'],
-        'value' => $st['name'],
-        'label' => $st['label'],
-        'weight' => $st['weight'],
-        'is_active' => TRUE,
-      ],
-    ],
-  ];
-}
 
 $managed[] = [
   'name' => 'OptionGroup_herald_preferred_channel',

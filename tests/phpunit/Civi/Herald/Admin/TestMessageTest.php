@@ -46,6 +46,27 @@ class TestMessageTest extends AdminTestCase {
     $this->assertSpooled('routes@example.org', NULL, 'Routed test');
   }
 
+  public function testATopicToItsSubscribersReachesThemOnTheirChannel(): void {
+    \Civi::settings()->set('herald_topics', ['default' => ['channel' => 'email']]);
+    self::call('saveTopic', [
+      'topic' => 'news',
+      'route' => ['delivery_mode' => 'subscribers'],
+      'subscribable' => TRUE,
+    ]);
+    \Civi\Api4\Contact::create(checkPermissions: FALSE)
+      ->addValue('contact_type', 'Individual')
+      ->addValue('first_name', 'Subscriber')
+      ->addValue('herald_preferences.preferred_channel', 'email')
+      ->addValue('herald_preferences.subscriptions', ['news'])
+      ->addChain('email', \Civi\Api4\Email::create(checkPermissions: FALSE)
+        ->addValue('contact_id', '$id')
+        ->addValue('email', 'subscriber@example.org'))
+      ->execute();
+    $rows = self::call('publish', ['topic' => 'news', 'message' => 'Fanned out', 'format' => 'text']);
+    $this->assertSame([['topic' => 'news', 'buffered' => FALSE, 'channel' => NULL]], $rows);
+    $this->assertSpooled('subscriber@example.org', NULL, 'Fanned out');
+  }
+
   private function assertSpooled(string $to, ?string $subject, string $body): void {
     $spool = \CRM_Core_DAO::executeQuery(
       'SELECT recipient_email, headers, body FROM civicrm_mailing_spool',

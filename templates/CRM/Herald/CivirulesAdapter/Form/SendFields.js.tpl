@@ -3,7 +3,7 @@
 <script type="text/javascript">
   CRM.$(function ($) {
     var vars = CRM.vars.heraldSendForm;
-    var own = ['delivery_mode', 'subscription_type', 'group_id', 'email_addresses', 'respect_suspension',
+    var own = ['delivery_mode', 'subscribers_of', 'group_id', 'email_addresses', 'respect_suspension',
       'email_location_type', 'channel', 'aggregate_minutes'];
     function row(name) {
       return $('.crm-herald-form-block-' + name);
@@ -16,6 +16,7 @@
       own.forEach(function (name) {
         row(name).toggle(!viaTopic);
       });
+      row('subscribers_of').toggle(!viaTopic && $('#delivery_mode').val() === 'subscribers');
       $.each(vars.fields, function (name, field) {
         // A fan-out reaches each contact on their own channel: every type's presentation keys apply.
         var applies = fanOut ? !field.recipient : field.types.indexOf(type) !== -1;

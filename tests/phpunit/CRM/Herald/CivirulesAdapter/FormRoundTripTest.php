@@ -337,6 +337,18 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     );
   }
 
+  public function testADeliveryOutsideSubscriberModeKeepsNoTopicOfSubscribers(): void {
+    $values = ['send_via' => 'own', 'channel' => 'email', 'subscribers_of' => 'news'];
+    $this->assertArrayNotHasKey(
+      'subscribers_of',
+      CRM_Herald_CivirulesAdapter_SendParams::of($values + ['delivery_mode' => 'direct']),
+    );
+    $this->assertSame(
+      'news',
+      CRM_Herald_CivirulesAdapter_SendParams::of($values + ['delivery_mode' => 'subscribers'])['subscribers_of'],
+    );
+  }
+
   public function testATopicSendSavesOnlyTheTopic(): void {
     \Civi::settings()->set(\Civi\Herald\Topic\Router::SETTING, ['ops' => ['channel' => 'email']]);
     [$submitted] = $this->sendFields();

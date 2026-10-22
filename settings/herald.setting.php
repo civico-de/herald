@@ -83,6 +83,8 @@ return [
       'Topic routing for Herald.publish: map of topic name to delivery params (channel, chat_id, aggregate_minutes, …). A "default" entry backs all topics.',
     ),
     'title' => E::ts('Topic Routes'),
+    // Every write path keeps the subscription options in step.
+    'post_change' => ['Civi\\Herald\\Subscribers\\SubscribableTopics::sync'],
   ],
   'herald_monitor_topic' => [
     'group_name' => 'Herald Settings',

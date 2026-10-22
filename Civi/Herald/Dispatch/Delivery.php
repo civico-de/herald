@@ -5,12 +5,13 @@ declare(strict_types = 1);
 namespace Civi\Herald\Dispatch;
 
 use Civi\Herald\Subscribers\GroupRecipients;
+use Civi\Herald\Subscribers\SubscribableTopics;
 use Civi\Herald\Subscribers\SubscriberLookup;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
  * Sends a rendered body the way `delivery_mode` says: through the named
- * channel to its recipient, to a subscription type's or a group's contacts,
+ * channel to its recipient, to a topic's subscribers or a group's contacts,
  * or through the named email channel to an address list.
  */
 final class Delivery {
@@ -75,15 +76,22 @@ final class Delivery {
   }
 
   /**
+   * Contacts can no longer unsubscribe from a topic that stopped offering itself.
+   *
    * @param array<string, mixed> $params
    * @return array<int, array{contact_id: int, channel: string, config: array<string, mixed>}>
    */
   private static function subscribers(array $params, SubscriberLookup $lookup): array {
-    $subscriptionType = Cast::toString($params['subscription_type'] ?? '');
-    if ($subscriptionType === '') {
-      throw new NoRecipientsException('herald: subscriber-mode requires action parameter "subscription_type".');
+    $topic = Cast::toString($params['subscribers_of'] ?? '');
+    if ($topic === '') {
+      throw new NoRecipientsException(
+        'herald: subscriber mode needs the topic whose subscribers to reach (subscribers_of).',
+      );
     }
-    return $lookup->findBySubscriptionType($subscriptionType, self::options($params));
+    if (!SubscribableTopics::offers($topic)) {
+      throw new NoRecipientsException(sprintf('herald: contacts cannot subscribe to the topic "%s".', $topic));
+    }
+    return $lookup->findByTopic($topic, self::options($params));
   }
 
   /**

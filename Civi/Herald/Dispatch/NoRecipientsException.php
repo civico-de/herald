@@ -5,7 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Dispatch;
 
 /**
- * A fan-out resolved to nobody: deactivated subscription type, emptied group,
+ * A fan-out resolved to nobody: a topic nobody can subscribe to, emptied group,
  * blank address list.
  *
  * Its own class because this is a PERMANENT fault — retrying re-resolves the

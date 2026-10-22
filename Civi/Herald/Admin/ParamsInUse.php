@@ -10,8 +10,8 @@ use CRM_Herald_ExtensionUtil as E;
 
 /**
  * Who names a channel or a topic: herald rule actions, Herald scheduled jobs,
- * topic routes, settings and, for channels, buffered alerts. Deletes refuse
- * while anything does.
+ * topic routes, settings and buffered alerts. A topic is also named as the
+ * one whose subscribers a delivery reaches. Deletes refuse while anything does.
  */
 final class ParamsInUse {
 
@@ -29,7 +29,7 @@ final class ParamsInUse {
     $users = array_merge(
       $users,
       DeliveryParams::labelsWhere('channel', static fn (mixed $named): bool => $named === $name),
-      BufferedDeliveries::naming($name),
+      BufferedDeliveries::naming('channel', $name),
     );
     if (\Civi::settings()->get(ContactRows::EMAIL_CHANNEL_SETTING) === $name) {
       $users[] = E::ts('The contact email channel setting');
@@ -53,7 +53,27 @@ final class ParamsInUse {
     if ($uses(\Civi::settings()->get('herald_monitor_topic'))) {
       $users[] = E::ts('The monitor');
     }
-    return $users;
+    return array_merge($users, self::ofSubscribers($topic));
+  }
+
+  /**
+   * Who reaches the subscribers of a topic, besides its own route.
+   *
+   * @return list<string>
+   */
+  public static function ofSubscribers(string $topic): array {
+    $users = [];
+    foreach (self::routes() as $name => $route) {
+      if (!is_array($route) || ($route['subscribers_of'] ?? NULL) !== $topic || (string) $name === $topic) {
+        continue;
+      }
+      $users[] = E::ts('Topic "%1"', [1 => (string) $name]);
+    }
+    return array_merge(
+      $users,
+      DeliveryParams::labelsWhere('subscribers_of', static fn (mixed $named): bool => $named === $topic),
+      BufferedDeliveries::naming('subscribers_of', $topic),
+    );
   }
 
   /**

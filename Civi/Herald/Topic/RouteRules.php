@@ -12,10 +12,9 @@ use CRM_Herald_ExtensionUtil as E;
 final class RouteRules {
 
   /**
-   * What each delivery mode cannot do without.
+   * What each delivery mode cannot do without; a route to subscribers reaches its topic's.
    */
   private const MODE_NEEDS = [
-    'subscribers' => 'subscription_type',
     'group' => 'group_id',
     'addresses' => 'email_addresses',
   ];

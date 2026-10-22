@@ -19,7 +19,7 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  * workflow template, render it, then either park the result in the alert
  * buffer (aggregation window) or deliver it — directly to the recipient
  * configured on the caller's params, or fanned out to all contacts subscribed
- * to a subscription type.
+ * to a topic.
  *
  * Callers: the Herald.notify* APIv4 actions (the CiviRules adapters go through
  * those). Job.herald_buffer_flush and Herald.publish go to Delivery::send()
@@ -31,8 +31,8 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  *   channel             — name of a configured channel; direct and address delivery
  *   template            — MessageTemplate workflow_name to render (required)
  *   delivery_mode       — "direct" (default), "subscribers", "group" or "addresses"
- *   subscription_type   — required when delivery_mode=subscribers; one of the
- *                         herald_subscription_type option-group values
+ *   subscribers_of      — the topic whose subscribers delivery_mode=subscribers
+ *                         reaches; a topic's route defaults it to that topic
  *   group_id            — required when delivery_mode=group; recipients are the
  *                         group's contacts (own preferred channel, email fallback)
  *   email_addresses     — required when delivery_mode=addresses; raw address

@@ -5,6 +5,7 @@ declare(strict_types = 1);
 use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Channel\ChannelStore;
 use Civi\Herald\Topic\Router;
+use Civi\Herald\Topic\TopicMeta;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
@@ -19,7 +20,7 @@ final class CRM_Herald_CivirulesAdapter_SendOptions {
   public static function deliveryModes(): array {
     return [
       'direct' => E::ts('Direct — send to one recipient configured below'),
-      'subscribers' => E::ts('Subscribers — fan out to all contacts opted into a subscription type'),
+      'subscribers' => E::ts('Subscribers — fan out to all contacts subscribed to a topic'),
       'group' => E::ts('Group — fan out to all contacts of a CiviCRM group'),
       'addresses' => E::ts('Address list — send to raw email addresses (no contact linkage)'),
     ];
@@ -62,19 +63,13 @@ final class CRM_Herald_CivirulesAdapter_SendOptions {
   }
 
   /**
-   * Active values of the herald_subscription_type option group.
+   * The topics contacts may subscribe to.
    *
    * @return array<string, string>
    */
-  public static function subscriptionTypes(): array {
-    $rows = \Civi\Api4\OptionValue::get(checkPermissions: FALSE)
-      ->addSelect('value', 'label')
-      ->addWhere('option_group_id:name', '=', 'herald_subscription_type')
-      ->addWhere('is_active', '=', value: TRUE)
-      ->addOrderBy('weight', 'ASC')
-      ->execute()
-      ->getArrayCopy();
-    return ['' => E::ts('— none —')] + self::labels($rows, 'value', 'label');
+  public static function subscribableTopics(): array {
+    $map = \Civi::settings()->get(Router::SETTING);
+    return ['' => E::ts('— none —')] + TopicMeta::subscribable(is_array($map) ? $map : []);
   }
 
   /**

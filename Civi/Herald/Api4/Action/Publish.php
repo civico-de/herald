@@ -120,7 +120,9 @@ class Publish extends AbstractAction {
     }
 
     Delivery::send($body, $params);
-    $result[] = ['topic' => $this->topic, 'buffered' => FALSE, 'channel' => $params['channel']];
+    // A fan-out reaches each recipient on their own channel.
+    $fanOut = in_array($params['delivery_mode'] ?? 'direct', ['subscribers', 'group'], TRUE);
+    $result[] = ['topic' => $this->topic, 'buffered' => FALSE, 'channel' => $fanOut ? NULL : $params['channel']];
   }
 
 }

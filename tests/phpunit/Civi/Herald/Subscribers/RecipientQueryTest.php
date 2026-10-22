@@ -4,6 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Subscribers;
 
+use Civi\Herald\Topic\Router;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\HookInterface;
 use Civi\Test\TransactionalInterface;
@@ -119,31 +120,33 @@ class RecipientQueryTest extends TestCase implements HeadlessInterface, HookInte
   }
 
   public function testScopedSubscriberLookupFiltersByEntityInstance(): void {
+    \Civi::settings()->set(Router::SETTING, ['news' => ['subscribable' => TRUE]]);
+    SubscribableTopics::sync();
     $scoped = $this->createContact([
       'herald_preferences.preferred_channel' => 'telegram',
       'herald_preferences.telegram_chat_id' => 'scoped',
-      'herald_preferences.subscriptions' => ['completed_alert'],
+      'herald_preferences.subscriptions' => ['news'],
       'herald_preferences.source_entity_type' => 'Event',
       'herald_preferences.source_entity_id' => 12_345,
     ]);
     $global = $this->createContact([
       'herald_preferences.preferred_channel' => 'telegram',
       'herald_preferences.telegram_chat_id' => 'global',
-      'herald_preferences.subscriptions' => ['completed_alert'],
+      'herald_preferences.subscriptions' => ['news'],
     ]);
 
     $lookup = new SubscriberLookup();
-    $matching = $lookup->findBySubscriptionType('completed_alert', [
+    $matching = $lookup->findByTopic('news', [
       'scope' => ['entity_type' => 'Event', 'entity_id' => 12_345],
     ]);
     $this->assertSame([$scoped, $global], array_column($matching, 'contact_id'));
 
-    $other = $lookup->findBySubscriptionType('completed_alert', [
+    $other = $lookup->findByTopic('news', [
       'scope' => ['entity_type' => 'Event', 'entity_id' => 99_999],
     ]);
     $this->assertSame([$global], array_column($other, 'contact_id'));
 
-    $unscoped = $lookup->findBySubscriptionType('completed_alert');
+    $unscoped = $lookup->findByTopic('news');
     $this->assertSame([$global], array_column($unscoped, 'contact_id'));
   }
 

@@ -55,4 +55,16 @@ abstract class CRM_Herald_Upgrader_Steps extends CRM_Herald_Upgrader_EarlySteps 
     return TRUE;
   }
 
+  /**
+   * Subscription types become subscribable topics, and deliveries to
+   * subscribers name the topic.
+   */
+  public function upgrade_1015(): bool {
+    $moved = CRM_Herald_Upgrader_TopicSubscriptions::migrate();
+    $this->ctx->log->info(
+      "herald: created {$moved['topics']} topic(s) from subscription types and rewrote {$moved['deliveries']} delivery setting(s)",
+    );
+    return TRUE;
+  }
+
 }

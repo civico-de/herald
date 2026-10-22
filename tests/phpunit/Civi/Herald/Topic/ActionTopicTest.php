@@ -56,9 +56,15 @@ class ActionTopicTest extends TestCase implements HeadlessInterface, Transaction
     $validator = new RouteValidator();
     $this->assertSame(['Choose a channel.'], $validator->actionErrors(['chat_id' => '-1']));
     $this->assertSame(
-      [],
-      $validator->actionErrors(['delivery_mode' => 'subscribers', 'subscription_type' => 'completed_alert']),
+      ['Choose the topic whose subscribers to reach.'],
+      $validator->actionErrors(['delivery_mode' => 'subscribers']),
     );
+    $this->assertSame(
+      ['Contacts cannot subscribe to the topic "ops".'],
+      $validator->actionErrors(['delivery_mode' => 'subscribers', 'subscribers_of' => 'ops']),
+    );
+    \Civi::settings()->set(Router::SETTING, ['ops' => ['channel' => 'ops_bot', 'subscribable' => TRUE]]);
+    $this->assertSame([], $validator->actionErrors(['delivery_mode' => 'subscribers', 'subscribers_of' => 'ops']));
     $this->assertSame(
       ['An address list goes through an email channel; "ops_bot" is not one.'],
       $validator->actionErrors([

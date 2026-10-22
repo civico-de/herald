@@ -36,7 +36,11 @@ final class RouteValidator {
   public function actionErrors(array $params): array {
     $topic = $params['topic'] ?? '';
     if ($topic === '') {
-      return array_merge($this->paramErrors($params), $this->actionChecks->channelErrors($params));
+      return array_merge(
+        $this->paramErrors($params),
+        $this->actionChecks->channelErrors($params),
+        SubscriberRules::ownDeliveryErrors($params),
+      );
     }
     return $this->actionChecks->topicErrors($topic, $params);
   }
@@ -50,7 +54,12 @@ final class RouteValidator {
       $topic === '' || trim($topic) !== $topic
         ? [E::ts('Enter a topic name without leading or trailing spaces.')]
         : [];
-    return array_merge($errors, $this->paramErrors($route));
+    // Whether a topic offers itself is TopicRules' check, against the form.
+    $own =
+      $topic !== 'default' && ($route['subscribers_of'] ?? NULL) === $topic
+        ? array_diff_key($route, ['subscribers_of' => TRUE])
+        : $route;
+    return array_merge($errors, $this->paramErrors($own));
   }
 
   /**
@@ -76,7 +85,11 @@ final class RouteValidator {
     foreach (array_intersect_key($params, $fields) as $key => $value) {
       $errors[] = ValueType::error($fields[$key], $value);
     }
-    return array_values(array_filter(array_merge($errors, RouteRules::errors($params, $fields))));
+    return array_values(array_filter(array_merge(
+      $errors,
+      SubscriberRules::errors($params),
+      RouteRules::errors($params, $fields),
+    )));
   }
 
 }
