@@ -49,3 +49,29 @@ cv scr /var/www/html/ext/herald/demo/digests.php
 A rerun deletes every contribution and activity of the six donors and
 creates them anew; anything else entered for those donors is lost too.
 Digests and rules are only created when missing, so edits to them stay.
+
+## Feature tour: `tour/`
+
+`tour/run.sh` walks through herald's screens in a browser. It records an
+English video with on-screen captions and writes the handbook screenshots:
+English ones to `handbook/images/`, German ones to `handbook/images/de/`.
+
+It needs the dev stack running (`cd .docker && docker compose up -d`),
+`ffmpeg` on the host, and the pinned Playwright:
+
+```bash
+bun install
+npx playwright install chromium
+bun run tour
+```
+
+The video lands in `demo/tour/out/herald-tour.mp4`, which is ignored by git.
+The screenshots are committed; rerun the tour after a screen changes.
+
+Before the browser starts, the script runs `digests.php` and
+`tour/prepare.php` on the site. `prepare.php` adds a topic `news` with three
+synthetic subscribers, an `email` channel, the rule `herald_tour_donation`
+and a parked alert. It also removes the channel `team_mail` and the topic
+`donations`, which the tour creates on screen. For the German pass the
+script sets the site language to `de_DE` and switches it back to `en_US`
+when it exits.

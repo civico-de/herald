@@ -74,6 +74,8 @@ These four are on the Herald settings screen, Administer » Herald » Settings. 
 
 That screen lists every check an enabled extension offers, every expected or snoozed check and every check the monitor has a state for. Each row shows the last reported status in words, the failing and healthy runs in a row, when a failure was last reported and whether an enabled extension still offers the check. The screen does not run the checks and does not show their details.
 
+![The monitor checks](images/monitor.png)
+
 ### Snoozing a check
 
 To silence a check during planned work, snooze it until a date and time. On the Monitor checks screen, enter the end in the check's "Snoozed until" field and save. Times are shown and entered in the browser's time zone and stored with their offset. "Clear" removes a snooze. An end that is not in the future is rejected.

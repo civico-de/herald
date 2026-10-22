@@ -24,6 +24,8 @@ herald adds two CiviRules actions. Their forms share these fields:
 
 The forms need the permission "administer CiviCRM".
 
+![A rule with a field transition and a notification](images/rule.png)
+
 ### Send notification
 
 The action "Herald: Send notification (generic)" renders a template with the data the trigger carries, see [Trigger variables](#trigger-variables). Its form lists every template whose workflow name starts with herald_. It has two fields of its own:
@@ -34,6 +36,8 @@ The action "Herald: Send notification (generic)" renders a template with the dat
 | Subscription scope entity | Event, Membership or Participant: the record the notification is about, for [Scoped subscriptions](delivery.md#scoped-subscriptions). |
 
 On a contribution trigger, the variables also include the contribution, its campaign's progress and the status change, see [Contribution variables](#contribution-variables).
+
+![The action Herald: Send notification](images/action.png)
 
 ### Send digest
 
@@ -95,6 +99,8 @@ Examples:
 | A contribution leaves Pending | Contribution | contribution_status_id:name | = Pending | any value |
 | A contribution was Pending before the edit, changed or not | Contribution | contribution_status_id:name | = Pending | not_empty |
 | An event is deactivated | Event | is_active | = 1 | = 0 |
+
+![The condition Herald: Field transition](images/condition.png)
 
 ## APIv4
 
@@ -240,6 +246,8 @@ Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value
 | `herald_monitor_topic` | ops | The topic for monitor alerts. |
 | `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours`, `herald_monitor_snooze`, `herald_monitor_expected` | see [Tuning](monitor.md#tuning) | Monitor tuning. |
 | `herald_monitor_state` | empty | The monitor's own state. Do not edit it. |
+
+![The Herald settings](images/settings.png)
 
 ## Hooks
 

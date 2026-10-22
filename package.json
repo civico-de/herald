@@ -1,0 +1,12 @@
+{
+  "name": "herald",
+  "private": true,
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "tour": "demo/tour/run.sh"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.61.1"
+  }
+}

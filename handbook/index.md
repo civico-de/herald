@@ -66,6 +66,8 @@ Now set up a rule that reports every completed contribution:
 
 Channels of the other types are added the same way. [Channels](channels.md) lists their fields.
 
+![The Herald administration page](images/admin.png)
+
 ## Uninstall
 
 Uninstalling herald removes its CiviRules building blocks, and CiviRules removes them from every rule that uses them. A rule that lost a herald condition would then fire more often than before, so herald first switches off every active rule that uses one of its conditions or actions. A rule that runs on a herald trigger, such as a digest schedule, cannot work without it, so herald deletes that rule. The CiviCRM log lists the IDs of the rules switched off and the IDs and names of the rules deleted. Uninstalling also drops herald's tables, and with them the digests and every alert still waiting in the buffer, parked ones included.

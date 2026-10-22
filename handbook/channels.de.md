@@ -46,6 +46,10 @@ cv api4 Herald.deleteChannel name=ops_bot
 
 Ein Kanal, den eine Topic-Route, eine Regelaktion, ein geplanter Job, eine wartende oder geparkte Meldung oder die Einstellung „E-Mail-Kanal für Kontakte“ noch nennt, lässt sich nicht löschen. Die Fehlermeldung listet sie auf. Kontakte, die einen gelöschten Kanal als ihren gewählt haben, werden bei Zustellungen an Abonnenten übersprungen und erhalten bei Zustellungen an Gruppen E-Mail, bis sie einen anderen wählen; die Rückfrage nennt ihre Zahl.
 
+![Die Liste der Kanäle](images/de/channels.png)
+
+![Einen E-Mail-Kanal anlegen](images/de/channel-form.png)
+
 ### Kontofelder und Zustellfelder
 
 Jeder Typ hat zwei Arten von Schlüsseln. Kontofelder wie `bot_token` oder `ntfy_server` gehören nur zum Kanal. Eine Zustellung, die eines setzt, schlägt fehl: Eine Route oder Regelaktion wird nicht gespeichert („… gehören zum Kanal, nicht zu einer Zustellung; tragen Sie sie unter Kanäle ein.“), ein Aufruf scheitert mit „… belong to the channel configuration, not to a delivery“. Zustellfelder wie `chat_id` oder `ntfy_priority` lassen sich am Kanal als Standard und an jeder Zustellung setzen. Wo eine Zustellung sie setzt, hängt vom Aufrufer ab:
@@ -146,6 +150,8 @@ herald prüft jede URL vor dem Senden:
 
 Um die Zustellung auf bekannte Dienste zu beschränken, tragen Sie deren Hostnamen unter Administrieren » Herald » Erlaubte Webhook-Hosts ein, einen pro Zeile. Beim Speichern werden ungültige Hostnamen und alle Einträge mit `https://`, einem Pfad oder einem Port abgelehnt. Mit cv setzen Sie `herald_webhook_allowed_hosts`, zum Beispiel `["hooks.slack.com"]`. Subdomains eines eingetragenen Hosts sind ebenfalls erlaubt. Sobald die Liste Einträge enthält, erreicht herald nur noch diese Hosts, und sie dürfen auch auf interne Adressen auflösen.
 
+![Die erlaubten Hosts für Webhooks](images/de/hosts.png)
+
 ## ntfy
 
 Der Server ist ein Kontofeld und standardmäßig `https://ntfy.sh`. Das Token ist nur für geschützte Topics nötig und wird als Bearer-Token gesendet. herald prüft den Server nicht gegen die Liste der Webhook-Hosts: Ihn setzt ein Admin, und ein selbst betriebenes ntfy läuft oft unter einer internen Adresse.
@@ -231,6 +237,10 @@ cv api4 Herald.publish topic=ops message='herald works'
 ```
 
 Die Seite Administrieren » Herald » Vorlagenvorschau rendert eine herald-Vorlage mit Beispielwerten als JSON-Objekt und sendet nichts, wie `Herald.renderTemplate`.
+
+![Eine Testnachricht an die Abonnent:innen eines Topics](images/de/test.png)
+
+![Eine Vorlage mit Beispielwerten](images/de/preview.png)
 
 ## Fehler
 

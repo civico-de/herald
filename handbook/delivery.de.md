@@ -74,6 +74,10 @@ Kontakte abonnieren [Topics](#topics). Eine neue Installation bietet keines an. 
 
 Ein Topic, das eine Route, eine Regelaktion, ein Job oder eine wartende Meldung in `subscribers_of` nennt, lässt sich nicht zurückziehen. Ebenso wenig ein Topic, dessen Route danach die Abonnent:innen erreichen würde, die `default` nennt; soll sie das, nennen Sie diese in `subscribers_of` der Route. Sonst gilt: Bietet sich ein Topic nicht mehr an, bleiben die Abonnements gespeichert, aber keine Zustellung erreicht sie mehr. Eine Zustellung an die Abonnent:innen eines solchen Topics scheitert mit „contacts cannot subscribe to the topic“.
 
+![Benachrichtigungseinstellungen an einem Kontakt](images/de/contact-preferences.png)
+
+![Das Profil zum Selbsteintragen](images/de/profile.png)
+
 ### Abos mit Bezug
 
 Ein Einstellungsdatensatz lässt sich auf einen einzelnen Datensatz beschränken, etwa auf das Event mit der ID 42. Setzen Sie dazu „Bezug: Objekttyp“ auf Event und „Bezug: Objekt-ID“ auf 42. Dieser Kontakt erhält dann nur noch Benachrichtigungen zu diesem Event.
@@ -116,6 +120,10 @@ Ein Routeneintrag nimmt dieselben Parameter auf wie eine Aktion, darunter `deliv
 
 Der Check-Monitor veröffentlicht in das Topic, das in `herald_monitor_topic` steht, standardmäßig ops.
 
+![Eine Topic-Route mit Sammelfenster](images/de/topic-form.png)
+
+![Die Liste der Topic-Routen](images/de/topics.png)
+
 ## Sammelnachrichten
 
 Meldungen, die gehäuft auftreten, lassen sich sammeln und als eine Nachricht verschicken. Setzen Sie dazu `aggregate_minutes` an einer Aktion oder einer Topic-Route; im Aktionsformular heißt das Feld „Sammelfenster in Minuten“. Der Standard 0 sendet sofort.
@@ -153,3 +161,5 @@ Der Check-Monitor meldet geparkte Meldungen und einen hängenden Puffer, siehe [
 Wenn Sie herald deinstallieren, wird die Puffertabelle samt geparkter Meldungen gelöscht. Beim Deaktivieren von herald bleibt sie erhalten.
 
 Zustellungen ohne Sammeln werden nie gepuffert. Schlagen sie fehl, geht der Fehler an den Aufrufer zurück, also an das API-Ergebnis oder das CiviRules-Protokoll, und es gibt keinen weiteren Versuch.
+
+![Eine geparkte Meldung](images/de/parked.png)

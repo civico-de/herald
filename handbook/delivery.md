@@ -74,6 +74,10 @@ Contacts subscribe to [topics](#topics). A fresh install offers none. To offer o
 
 A topic that a route, a rule action, a job or a waiting alert names in `subscribers_of` cannot stop offering itself. Neither can a topic whose route would then reach the subscribers that `default` names; to keep that, name them in the route's `subscribers_of`. Otherwise, when a topic stops offering itself, the subscriptions stay stored, but no delivery reaches them any more. A delivery to the subscribers of such a topic fails with "contacts cannot subscribe to the topic".
 
+![Notification preferences on a contact](images/contact-preferences.png)
+
+![The self-service profile](images/profile.png)
+
 ### Scoped subscriptions
 
 A preference record can be limited to one record, such as the event with ID 42. Set "Scope: entity type" to Event and "Scope: entity ID" to 42. That contact then receives only notifications about that event.
@@ -116,6 +120,10 @@ A route entry takes the same parameters as an action, including `delivery_mode` 
 
 The check monitor publishes to the topic named in `herald_monitor_topic`, which is ops by default.
 
+![A topic route with an aggregation window](images/topic-form.png)
+
+![The list of topic routes](images/topics.png)
+
 ## Aggregation
 
 Alerts that come in bursts can be collected and sent as one message. Set `aggregate_minutes` on an action or a topic route; in the action form it is the field "Aggregate window in minutes". The default 0 sends at once.
@@ -153,3 +161,5 @@ The check monitor reports parked alerts and a stuck buffer, see [Built in checks
 Uninstalling herald drops the buffer table, parked alerts included. Disabling herald keeps it.
 
 Deliveries without aggregation are never buffered. When they fail, the error goes back to the caller, which is the API result or the CiviRules log, and there is no retry.
+
+![A parked alert](images/parked.png)

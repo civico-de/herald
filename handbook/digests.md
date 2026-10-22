@@ -54,6 +54,10 @@ cv api4 --in=json HeraldDigest.create <<'JSON'
 JSON
 ```
 
+![The list of digests](images/digests.png)
+
+![A digest with its sources, text and preview](images/digest.png)
+
 ## Placeholders
 
 A search source hands every value column of its display to the text, named after the column header. The name is the header in lowercase, with umlauts spelled out and every other character turned into `_`: "Plätze gesamt" becomes `{$source.plaetze_gesamt}`. The form refuses a header that would give the name `rows`, starts with a digit, or gives two columns the same name. Rename the header in SearchKit.
@@ -129,6 +133,8 @@ JSON
 - An empty value stays empty, also with a name for other values.
 - A malformed rule that reaches the setting through `Setting.set` is left out with a warning in the CiviCRM log, and the other rules still apply. A typo cannot break an alert or a search.
 
+![Rules for a cleaned field](images/cleaning.png)
+
 ## Charts
 
 Two modifiers draw a column of a source's rows as a text chart. Put them inside `<pre>`, so the bars line up. The snippet beside a source with several rows already holds the fitting one: for a grouped search the bars alone, since they name every group, and for any other the list followed by a histogram. It charts the last amount column, else the last number.
@@ -201,6 +207,10 @@ CiviRules checks the trigger each time its scheduled job runs, so the digest goe
 - A run counts even when the send fails, for example because the channel is not configured. The error is logged, and the next digest goes out at the next slot.
 
 CiviCRM runs scheduled jobs, the CiviRules job included, only in the Production environment.
+
+![The trigger Herald: Schedule](images/schedule.png)
+
+![The action Herald: Send digest](images/digest-action.png)
 
 ### Without a rule
 

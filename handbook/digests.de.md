@@ -54,6 +54,10 @@ cv api4 --in=json HeraldDigest.create <<'JSON'
 JSON
 ```
 
+![Die Liste der Digests](images/de/digests.png)
+
+![Ein Digest mit Quellen, Text und Vorschau](images/de/digest.png)
+
 ## Platzhalter
 
 Eine Suchquelle gibt jede Wertspalte ihrer Anzeige an den Text weiter, benannt nach der Spaltenüberschrift. Der Name ist die Überschrift in Kleinbuchstaben, mit ausgeschriebenen Umlauten und `_` für jedes andere Zeichen: Aus „Plätze gesamt“ wird `{$quelle.plaetze_gesamt}`. Das Formular lehnt eine Überschrift ab, die den Namen `rows` ergibt, mit einer Ziffer beginnt oder zwei Spalten denselben Namen gibt. Benennen Sie die Überschrift dann in SearchKit um.
@@ -129,6 +133,8 @@ JSON
 - Ein leerer Wert bleibt leer, auch mit einem Namen für andere Werte.
 - Eine fehlerhafte Regel, die über `Setting.set` in die Einstellung gelangt, wird mit einer Warnung im CiviCRM-Log ausgelassen, und die übrigen Regeln gelten weiter. Ein Tippfehler kann weder eine Meldung noch eine Suche verhindern.
 
+![Regeln für ein bereinigtes Feld](images/de/cleaning.png)
+
 ## Diagramme
 
 Zwei Modifikatoren zeichnen eine Spalte der Zeilen einer Quelle als Textdiagramm. Setzen Sie sie in `<pre>`, damit die Balken bündig stehen. Der Baustein neben einer Quelle mit mehreren Zeilen enthält schon den passenden: für eine gruppierte Suche nur die Balken, weil sie jede Gruppe benennen, für jede andere die Liste und darunter ein Histogramm. Er nimmt die letzte Betragsspalte, sonst die letzte Zahl.
@@ -201,6 +207,10 @@ CiviRules prüft den Trigger bei jedem Lauf seines geplanten Jobs. Der Report wi
 - Ein Lauf zählt auch, wenn das Senden fehlschlägt, etwa weil der Kanal nicht eingerichtet ist. Der Fehler wird protokolliert, und der nächste Report wird zum nächsten Termin verschickt.
 
 CiviCRM führt geplante Jobs, auch den von CiviRules, nur in der Umgebung Production aus.
+
+![Der Trigger Herald: Schedule](images/de/schedule.png)
+
+![Die Aktion Herald: Send digest](images/de/digest-action.png)
 
 ### Ohne Regel
 

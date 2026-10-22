@@ -25,3 +25,6 @@ Thumbs.db
 # TypeScript's incremental build cache (named after the tsconfig it belongs
 # to, so a bare '.tsbuildinfo' pattern misses it)
 *.tsbuildinfo
+
+# Tour recordings, login state and test results; screenshots go to handbook/images
+/demo/tour/out/

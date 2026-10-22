@@ -24,6 +24,8 @@ herald ergänzt CiviRules um zwei Aktionen. Ihre Formulare haben diese Felder ge
 
 Die Formulare erfordern die Berechtigung „administer CiviCRM“ (CiviCRM administrieren).
 
+![Eine Regel mit Feldwechsel und Benachrichtigung](images/de/rule.png)
+
 ### Benachrichtigung senden
 
 Die Aktion „Herald: Send notification (generic)“ rendert eine Vorlage mit den Daten, die der Trigger mitbringt, siehe [Triggervariablen](#triggervariablen). Ihr Formular listet jede Vorlage auf, deren Workflow-Name mit herald_ beginnt. Es hat zwei eigene Felder:
@@ -34,6 +36,8 @@ Die Aktion „Herald: Send notification (generic)“ rendert eine Vorlage mit de
 | Abo-Bezug | Event, Mitgliedschaft oder Teilnehmer:in: der Datensatz, um den es in der Benachrichtigung geht, für [Abos mit Bezug](delivery.md#abos-mit-bezug). |
 
 Bei einem Beitrags-Trigger enthalten die Variablen außerdem den Beitrag, den Fortschritt seiner Kampagne und den Statuswechsel, siehe [Beitragsvariablen](#beitragsvariablen).
+
+![Die Aktion Herald: Send notification](images/de/action.png)
 
 ### Report senden
 
@@ -95,6 +99,8 @@ Beispiele:
 | Ein Beitrag verlässt Pending | Contribution | contribution_status_id:name | = Pending | beliebiger Wert |
 | Ein Beitrag war vor der Änderung Pending, geändert oder nicht | Contribution | contribution_status_id:name | = Pending | not_empty |
 | Ein Event wird deaktiviert | Event | is_active | = 1 | = 0 |
+
+![Die Bedingung Herald: Field transition](images/de/condition.png)
 
 ## APIv4
 
@@ -240,6 +246,8 @@ Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'nam
 | `herald_monitor_topic` | ops | Das Topic für Meldungen des Monitors. |
 | `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours`, `herald_monitor_snooze`, `herald_monitor_expected` | siehe [Feinabstimmung](monitor.md#feinabstimmung) | Feinabstimmung des Monitors. |
 | `herald_monitor_state` | leer | Der eigene Zustand des Monitors. Nicht bearbeiten. |
+
+![Die Herald-Einstellungen](images/de/settings.png)
 
 ## Hooks
 

@@ -66,6 +66,8 @@ Richten Sie nun eine Regel ein, die jeden abgeschlossenen Beitrag meldet:
 
 Kanäle der anderen Typen legen Sie genauso an. Ihre Felder finden Sie unter [Kanäle](channels.md).
 
+![Die Herald-Administrationsseite](images/de/admin.png)
+
 ## Deinstallation
 
 Beim Deinstallieren entfernt herald seine CiviRules-Bausteine, und CiviRules entfernt sie aus jeder Regel, die sie nutzt. Eine Regel ohne ihre herald-Bedingung würde danach öfter auslösen als vorher. Deshalb schaltet herald zuerst jede aktive Regel ab, die eine seiner Bedingungen oder Aktionen nutzt. Eine Regel, die auf einem herald-Trigger läuft, etwa dem Zeitplan eines Reports, funktioniert ohne ihn nicht. herald löscht sie deshalb. Das CiviCRM-Protokoll nennt die IDs der abgeschalteten Regeln und IDs und Namen der gelöschten. Beim Deinstallieren löscht herald außerdem seine Tabellen und damit die Reports und jede Meldung, die noch im Puffer wartet, auch die geparkten.

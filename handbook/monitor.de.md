@@ -74,6 +74,8 @@ Diese vier finden Sie auf der Einstellungsseite von herald, Administrieren » He
 
 Diese Seite listet jeden Check, den eine aktivierte Extension anbietet, jeden erwarteten oder stummgeschalteten Check und jeden Check, für den der Monitor einen Zustand gespeichert hat. Jede Zeile zeigt den zuletzt gemeldeten Status in Worten, die fehlgeschlagenen und gesunden Läufe in Folge, wann zuletzt ein Fehler gemeldet wurde und ob eine aktivierte Extension den Check noch anbietet. Die Seite führt die Checks nicht aus und zeigt ihre Details nicht.
 
+![Die Monitor-Checks](images/de/monitor.png)
+
 ### Einen Check stummschalten
 
 Um einen Check während geplanter Arbeiten ruhigzustellen, schalten Sie ihn bis zu einem Datum und einer Uhrzeit stumm. Tragen Sie auf der Seite „Monitor-Checks“ das Ende im Feld „Stumm bis“ des Checks ein und speichern Sie. Zeiten werden in der Zeitzone des Browsers angezeigt und eingegeben und mit Zeitzonenangabe gespeichert. „Leeren“ entfernt eine Stummschaltung. Ein Ende, das nicht in der Zukunft liegt, wird abgelehnt.

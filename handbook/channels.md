@@ -46,6 +46,10 @@ cv api4 Herald.deleteChannel name=ops_bot
 
 A channel that a topic route, a rule action, a scheduled job, a waiting or parked alert or the contact email setting still names cannot be deleted. The error lists them. Contacts who chose a deleted channel as theirs are skipped by subscriber deliveries and get email in group deliveries until they choose another; the confirmation shows how many there are.
 
+![The list of channels](images/channels.png)
+
+![Adding an email channel](images/channel-form.png)
+
 ### Account fields and delivery fields
 
 Each type has two kinds of keys. Account fields, such as `bot_token` or `ntfy_server`, belong to the channel only. A delivery that sets one fails: a route or rule action is not saved ("… belong to the channel, not to a delivery; set them under Channels."), and a call fails with "… belong to the channel configuration, not to a delivery". Delivery fields, such as `chat_id` or `ntfy_priority`, can be set on the channel as defaults and on each delivery. Where a delivery sets them depends on the caller:
@@ -146,6 +150,8 @@ herald checks every URL before it sends:
 
 To lock delivery to known services, list their host names under Administer » Herald » Webhook allowed hosts, one per line. Saving rejects an invalid host name and any entry with `https://`, a path or a port. With cv, set `herald_webhook_allowed_hosts`, for example `["hooks.slack.com"]`. Subdomains of a listed host are allowed too. Once the list has entries, herald reaches only those hosts, and they may resolve to internal addresses.
 
+![The allowed hosts for webhooks](images/hosts.png)
+
 ## ntfy
 
 The server is an account field and defaults to `https://ntfy.sh`. The token is only needed for protected topics and is sent as a bearer token. herald does not check the server against the webhook host list: it is set by an administrator, and a self-hosted ntfy often runs on an internal address.
@@ -231,6 +237,10 @@ cv api4 Herald.publish topic=ops message='herald works'
 ```
 
 Administer » Herald » Template preview renders a herald template with sample values given as a JSON object and sends nothing, like `Herald.renderTemplate`.
+
+![A test message to the subscribers of a topic](images/test.png)
+
+![A template rendered with sample values](images/preview.png)
 
 ## Errors
 
