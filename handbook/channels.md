@@ -27,7 +27,7 @@ Administer » Herald » Channels lists the channels, their type and who uses the
 - the name that actions, routes and calls use: lowercase letters, digits and `_`, starting with a letter. It cannot change later either;
 - a title for lists and forms;
 - whether the channel is active. Sends through an inactive channel fail;
-- whether contacts may choose it as their own channel. Only telegram, webhook, ntfy, pushover and email channels can be offered to contacts, see [Subscriptions](delivery.md#subscriptions);
+- whether contacts may choose it as their own channel. Only telegram, webhook, ntfy, pushover and email channels can be offered to contacts, see [Subscribers](delivery.md#subscribers);
 - the account fields of the type, such as the bot token;
 - defaults for the delivery fields, such as a chat ID or an email subject. A subject rendered from a template or digest replaces the default subject. A delivery that leaves a field empty uses the channel's default. Default recipients, such as a chat ID or a cc address, apply to direct deliveries only; subscribers, group members and each address of an address list get a message of their own.
 
