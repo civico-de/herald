@@ -12,9 +12,10 @@ const RECORDING = LOCALE === "en";
 const IMAGES = LOCALE === "en" ? "handbook/images" : `handbook/images/${LOCALE}`;
 const MAILDEV = process.env.TOUR_MAILDEV_URL ?? "http://localhost:1080";
 const LOAD = { timeout: 30_000 };
-// Subtitle pace: about 14 characters a second, never under four seconds.
-const MS_PER_CHAR = 70;
-const MIN_READ = 4_000;
+// Subtitle pace: about 12 characters a second, never under five seconds, as the
+// viewer also looks at the framed element.
+const MS_PER_CHAR = 85;
+const MIN_READ = 5_000;
 
 interface State {
   rule: number;
@@ -180,7 +181,7 @@ test.afterEach(async ({ page }, info) => {
 
 test("herald-1-channels-and-topics", async ({ page }) => {
   await intro(page, 1, "Channels and topics", "Where messages go");
-  await go(page, `${ADMIN}#/`, ".herald-admin li");
+  await go(page, `${ADMIN}#/`, ".herald-admin .admin-section-items dl");
   await say(
     page,
     "herald sends notifications and digests from CiviCRM to chats, phones, inboxes and CiviCRM activities.",
@@ -405,9 +406,15 @@ test("herald-4-alerts-with-civirules", async ({ page }) => {
       "Instead of subscribers, it can also go to one recipient, a group, or a list of email addresses.",
       page.locator("#delivery_mode"),
     );
-    for (const mode of ["direct", "group", "addresses", "subscribers"]) {
+    const modes: [string, string][] = [
+      ["direct", "Direct: one channel and the recipient it names, such as one chat."],
+      ["group", "Group: every contact of a CiviCRM group, each on their own channel."],
+      ["addresses", "Address list: fixed email addresses, sent through one channel."],
+      ["subscribers", "Subscribers: everyone subscribed to the topic, each on their own channel."],
+    ];
+    for (const [mode, line] of modes) {
       await page.locator("#delivery_mode").selectOption(mode);
-      await pause(2_000);
+      await say(page, line, page.locator("#delivery_mode"));
     }
   }
 });
@@ -499,7 +506,7 @@ test("herald-5-digests", async ({ page }) => {
   for (const guide of [firstGuide, secondGuide]) {
     const snippet = await guide.locator(".herald-digest-snippet").inputValue();
     await page.keyboard.insertText(`${snippet}\n`);
-    await pause(1_000);
+    await pause(2_000);
   }
   await say(
     page,
