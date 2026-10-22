@@ -17,8 +17,12 @@ final class CRM_Herald_CivirulesAdapter_SendFormFields {
    */
   public static function addTo(\CRM_Core_Form $form): void {
     $fields = CRM_Herald_CivirulesAdapter_SendParams::channelFields();
+    $typeOf = [];
     foreach ($fields as $key => $field) {
-      $label = $field['label'] . ' (' . implode(', ', array_map(ChannelRegistry::label(...), $field['types'])) . ')';
+      // The template sets each field under a heading of its first channel type.
+      $typeOf[$key] = $field['types'][0];
+      $others = array_map(ChannelRegistry::label(...), array_slice($field['types'], 1));
+      $label = $field['label'] . ($others === [] ? '' : ' (' . implode(', ', $others) . ')');
       $options = $field['options'] ?? [];
       // A yes/no field offers the channel's default too, so "no" can override a channel's "yes".
       $options = $field['type'] === 'bool' ? ['1' => E::ts('Yes'), '0' => E::ts('No')] : $options;
@@ -28,6 +32,8 @@ final class CRM_Herald_CivirulesAdapter_SendFormFields {
         default => $form->add('text', $key, $label, ['size' => 40]),
       };
     }
+    $form->assign('heraldFieldTypes', $typeOf);
+    $form->assign('heraldTypeLabels', array_map(ChannelRegistry::label(...), array_combine($typeOf, $typeOf)));
     \Civi::resources()->addVars('heraldSendForm', [
       'fields' => array_map(
         static fn (array $field): array => ['types' => $field['types'], 'recipient' => $field['recipient']],

@@ -24,7 +24,8 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
     }
 
     protected function addExtraFields(): void {
-      $this->add('textarea', 'vars', E::ts('Variables (JSON object passed to the template)'), [
+      $this->descriptions['vars'] = E::ts('A JSON object passed to the template.');
+      $this->add('textarea', 'vars', E::ts('Variables'), [
         'rows' => 6,
         'cols' => 60,
         'placeholder' => '{"contact": {"display_name": "Foo Bar"}}',

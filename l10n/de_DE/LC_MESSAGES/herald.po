@@ -33,10 +33,6 @@ msgstr "Nachrichtenvorlage"
 msgid "Plain text"
 msgstr "Klartext"
 
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Aggregate window in minutes (0 = send immediately; > 0 collects alerts and sends one combined message per window to prevent spam)"
-msgstr "Sammelfenster in Minuten (0 = sofort senden; > 0 sammelt Meldungen und sendet pro Fenster eine kombinierte Nachricht, um Spam zu vermeiden)"
-
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/Form/Schedule.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, Civi/Api4/Herald.php, Civi/Herald/Api4/Action/SaveAllowedHosts.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Api4/Action/SaveTopic.php, Civi/Herald/Digest/Composer.php, ang/afformHeraldDigest.aff.html, ang/heraldAdmin/hosts.html, ang/heraldAdmin/monitor.html, ang/heraldAdmin/cleaning.html, ang/heraldAdmin/topic.html, managed/Digests.mgd.php, managed/ParkedAlerts.mgd.php
 msgid "Save"
 msgstr "Speichern"
@@ -52,10 +48,6 @@ msgstr "herald-Aktion gespeichert."
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "— none —"
 msgstr "— keine —"
-
-#: CRM/Herald/CivirulesAdapter/Form/SendNotification.php
-msgid "Variables (JSON object passed to the template)"
-msgstr "Variablen (JSON-Objekt, das an die Vorlage übergeben wird)"
 
 #: CRM/Herald/CivirulesAdapter/Form/FieldTransition.php
 msgid "herald condition saved."
@@ -518,32 +510,12 @@ msgid "Address list — send to raw email addresses (no contact linkage)"
 msgstr "Adressliste — an einzelne E-Mail-Adressen senden (ohne Kontaktbezug)"
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Group (only used in group mode)"
-msgstr "Gruppe (nur im Gruppenmodus verwendet)"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "- select group -"
 msgstr "- Gruppe wählen -"
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Email addresses (address-list mode; comma or newline separated)"
-msgstr "E-Mail-Adressen (Adresslisten-Modus; durch Komma oder Zeilenumbruch getrennt)"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Respect communication suspension (skip opted-out / on-hold email recipients in fan-outs)"
-msgstr "Kommunikationssperren beachten (abgemeldete oder gesperrte E-Mail-Empfänger:innen beim Verteilen überspringen)"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Preferred location type for email recipients (fallback: primary address)"
-msgstr "Bevorzugter Adresstyp für E-Mail-Empfänger:innen (sonst die primäre Adresse)"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "- primary -"
 msgstr "- primär -"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Subscription scope entity (subscriber mode: only reach subscriptions scoped to the trigger's entity instance, plus unscoped ones)"
-msgstr "Abo-Bezug (Abonnent:innen-Modus: nur Abos erreichen, die auf das auslösende Objekt beschränkt sind, plus Abos ohne Bezug)"
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "- none (all subscriptions) -"
@@ -1028,9 +1000,13 @@ msgstr "„%1“ muss ein JSON-Objekt sein."
 msgid "\"%1\" must be text."
 msgstr "„%1“ muss Text sein."
 
-#: Civi/Herald/Channel/ActivityChannel.php, Civi/Herald/Channel/PushoverChannel.php, Civi/Herald/Dispatch/Dispatcher.php, ang/heraldAdmin/fields.html, ang/heraldAdmin/topic.html
+#: Civi/Herald/Channel/ActivityChannel.php, Civi/Herald/Channel/PushoverChannel.php, Civi/Herald/Dispatch/Dispatcher.php
 msgid "(required)"
 msgstr "(Pflichtfeld)"
+
+#: ang/heraldAdmin/channel.html, ang/heraldAdmin/fields.html, ang/heraldAdmin/topic.html
+msgid "Required"
+msgstr "Pflichtfeld"
 
 #: ang/heraldAdmin/fields.html, ang/heraldAdmin/topics.js
 msgid "(not set)"
@@ -2302,10 +2278,6 @@ msgstr "Anwendungstoken"
 msgid "Bot token"
 msgstr "Bot-Token"
 
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Channel (direct and address-list mode — subscribers use their own preferred channel)"
-msgstr "Kanal (Direkt- und Adresslisten-Modus — Abonnent:innen nutzen ihren eigenen bevorzugten Kanal)"
-
 #: Civi/Herald/Admin/AdminScreens.php, ang/heraldAdmin/channel.html, ang/heraldAdmin/channels.html, managed/Navigation.mgd.php
 msgid "Channels"
 msgstr "Kanäle"
@@ -2494,10 +2466,6 @@ msgstr "Über ein Topic"
 msgid "Topic \"%1\""
 msgstr "Topic „%1“"
 
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Topic (its route sets channel, recipients and aggregation)"
-msgstr "Topic (seine Route legt Kanal, Empfänger und Bündelung fest)"
-
 #: ang/heraldAdmin/channels.html, ang/heraldAdmin/topics.html
 msgid "Used by"
 msgstr "Verwendet von"
@@ -2561,10 +2529,6 @@ msgstr "Kontakte, die ihn als ihren Kanal gewählt haben: %1. Bis sie einen ande
 #: Civi/Herald/Channel/StoredConfig.php
 msgid "\"%1\" is sent only to the channel's \"%2\"; set \"%2\" as well."
 msgstr "„%1“ wird nur an „%2“ des Kanals gesendet; tragen Sie auch „%2“ ein."
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Subscribers of topic (only used in subscriber mode)"
-msgstr "Abonnent:innen des Topics (nur im Abonnent:innen-Modus verwendet)"
 
 #: CRM/Herald/CivirulesAdapter/SendOptions.php
 msgid "Subscribers — fan out to all contacts subscribed to a topic"
@@ -2661,3 +2625,39 @@ msgstr "An das Topic „%1“ gesendet; alle Empfänger:innen erhalten es über 
 #: Civi/Herald/Topic/WithdrawRules.php
 msgid "Without subscriptions, \"%1\" would reach the subscribers of \"%2\"; name them in its route as subscribers_of to keep that."
 msgstr "Ohne Abonnements würde „%1“ die Abonnent:innen von „%2“ erreichen; nennen Sie diese in seiner Route als subscribers_of, um das beizubehalten."
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Subscription scope"
+msgstr "Abo-Bezug"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Variables"
+msgstr "Variablen"
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Its route sets the channel, the recipients and the aggregation."
+msgstr "Seine Route legt Kanal, Empfänger:innen und Bündelung fest."
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Separated by commas or new lines. The addresses are not linked to contacts."
+msgstr "Durch Komma oder Zeilenumbruch getrennt. Die Adressen sind mit keinen Kontakten verknüpft."
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Skips contacts who opted out of email or whose address is on hold."
+msgstr "Überspringt Kontakte, die keine E-Mails wünschen oder deren Adresse gesperrt ist."
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Which email address of a contact to use; without one of this type, the primary one."
+msgstr "Welche E-Mail-Adresse eines Kontakts genutzt wird; ohne eine dieser Art die primäre."
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Reaches only the subscriptions scoped to the record that fired the rule, plus unscoped ones."
+msgstr "Erreicht nur die Abos, die auf den auslösenden Datensatz beschränkt sind, und Abos ohne Bezug."
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "0 sends each alert at once; a window collects alerts and sends them as one message."
+msgstr "0 sendet jede Meldung sofort; ein Fenster sammelt Meldungen und sendet sie als eine Nachricht."
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "A JSON object passed to the template."
+msgstr "Ein JSON-Objekt, das an die Vorlage übergeben wird."

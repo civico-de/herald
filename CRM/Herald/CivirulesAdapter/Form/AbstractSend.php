@@ -19,6 +19,12 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
    */
   abstract class CRM_Herald_CivirulesAdapter_Form_AbstractSend extends CRM_CivirulesActions_Form_Form {
 
+    /**
+     * Help shown below a field, by element name.
+     * @var array<string, string>
+     */
+    protected array $descriptions = [];
+
     protected const JSON_FLAGS =
       JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR;
 
@@ -58,7 +64,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
       $this->add(
         'select',
         'topic',
-        E::ts('Topic (its route sets channel, recipients and aggregation)'),
+        E::ts('Topic'),
         ['' => E::ts('- select topic -')] + CRM_Herald_CivirulesAdapter_SendOptions::topics(),
       );
       $this->add(
@@ -70,39 +76,37 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
       $this->add(
         'select',
         'subscribers_of',
-        E::ts('Subscribers of topic (only used in subscriber mode)'),
+        E::ts('Subscribers of topic'),
         CRM_Herald_CivirulesAdapter_SendOptions::subscribableTopics(),
       );
       $this->add(
         'select',
         'group_id',
-        E::ts('Group (only used in group mode)'),
+        E::ts('Group'),
         CRM_Herald_CivirulesAdapter_SendOptions::groups(),
       );
       $this->add(
         'textarea',
         'email_addresses',
-        E::ts('Email addresses (address-list mode; comma or newline separated)'),
+        E::ts('Email addresses'),
         ['rows' => 3, 'cols' => 60],
       );
       $this->add(
         'checkbox',
         'respect_suspension',
-        E::ts('Respect communication suspension (skip opted-out / on-hold email recipients in fan-outs)'),
+        E::ts('Respect communication suspension'),
       );
       $this->add(
         'select',
         'email_location_type',
-        E::ts('Preferred location type for email recipients (fallback: primary address)'),
+        E::ts('Email location type'),
         CRM_Herald_CivirulesAdapter_SendOptions::locationTypes(),
       );
       if ($this->supportsScopeEntity()) {
         $this->add(
           'select',
           'scope_entity',
-          E::ts(
-            'Subscription scope entity (subscriber mode: only reach subscriptions scoped to the trigger\'s entity instance, plus unscoped ones)',
-          ),
+          E::ts('Subscription scope'),
           [
             '' => E::ts('- none (all subscriptions) -'),
             'Event' => E::ts('Event'),
@@ -114,7 +118,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
       $this->add(
         'select',
         'channel',
-        E::ts('Channel (direct and address-list mode — subscribers use their own preferred channel)'),
+        E::ts('Channel'),
         ['' => E::ts('- select channel -')] + CRM_Herald_CivirulesAdapter_SendOptions::channels(),
       );
       // A digest brings its own template.
@@ -126,12 +130,24 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
       $this->add(
         'text',
         'aggregate_minutes',
-        E::ts(
-          'Aggregate window in minutes (0 = send immediately; > 0 collects alerts and sends one combined message per window to prevent spam)',
-        ),
+        E::ts('Aggregate window in minutes'),
         ['size' => 5],
       );
 
+      $this->descriptions = [
+        'topic' => E::ts('Its route sets the channel, the recipients and the aggregation.'),
+        'email_addresses' => E::ts('Separated by commas or new lines. The addresses are not linked to contacts.'),
+        'respect_suspension' => E::ts('Skips contacts who opted out of email or whose address is on hold.'),
+        'email_location_type' => E::ts(
+          'Which email address of a contact to use; without one of this type, the primary one.',
+        ),
+        'scope_entity' => E::ts(
+          'Reaches only the subscriptions scoped to the record that fired the rule, plus unscoped ones.',
+        ),
+        'aggregate_minutes' => E::ts(
+          '0 sends each alert at once; a window collects alerts and sends them as one message.',
+        ),
+      ];
       $this->addExtraFields();
       $this->addFormRule(
         fn (array $values): array|bool => CRM_Herald_CivirulesAdapter_SendFormFields::errors(
@@ -145,6 +161,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
         ['type' => 'cancel', 'name' => E::ts('Cancel')],
       ]);
       CRM_Herald_CivirulesAdapter_FormElements::assign($this);
+      $this->assign('heraldDescriptions', $this->descriptions);
     }
 
     /**
