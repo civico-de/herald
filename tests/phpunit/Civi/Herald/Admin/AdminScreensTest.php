@@ -93,8 +93,23 @@ class AdminScreensTest extends AdminTestCase {
     $this->assertStringEndsWith('civicrm/admin/herald#/channels', $links[1]['url']);
     $this->assertStringEndsWith('civicrm/admin/herald#/topics', $links[2]['url']);
     $this->assertMatchesRegularExpression('#civicrm/admin/herald/digests[?&]reset=1$#', $links[8]['url']);
-    // Every screen but the settings form says what it is for.
-    $this->assertNotContains('', array_column(array_slice($links, 1), 'description'));
+    // Each entry is a dt with its dd; a bare dt breaks the definition list.
+    $this->assertNotContains('', array_column($links, 'description'));
+  }
+
+  public function testTheOverviewLoadsTheAdminConsoleStyles(): void {
+    $loaded = static function (string $path): bool {
+      $_GET['q'] = $path;
+      \Civi::service('herald.admin_screens')->hook_civicrm_pageRun(new \Civi\Angular\Page\Main());
+      return \CRM_Core_Region::instance(\CRM_Core_Resources::DEFAULT_REGION)->get('civicrm:css/admin.css') !== NULL;
+    };
+    try {
+      $this->assertFalse($loaded('civicrm/admin/other'));
+      $this->assertTrue($loaded(AdminScreens::BASE_PATH));
+    }
+    finally {
+      unset($_GET['q']);
+    }
   }
 
   public function testTheSettingsPageLinksTheScreens(): void {

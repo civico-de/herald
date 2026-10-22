@@ -48,15 +48,16 @@ final class AdminScreens extends AutoService implements HookInterface {
    */
   public static function links(): array {
     $descriptions = [
-      'herald_channels' => E::ts('the bots, accounts and senders herald sends through.'),
-      'herald_topics' => E::ts('where each topic is delivered.'),
-      'herald_cleaning' => E::ts('rules that turn free text into clean groups for searches and notifications.'),
-      'herald_hosts' => E::ts('which hosts the webhook channel may call.'),
-      'herald_monitor' => E::ts('expected checks and snoozes.'),
-      'herald_test' => E::ts('send a message through a channel or a topic.'),
-      'herald_preview' => E::ts('render a herald template with sample values.'),
-      'herald_digests' => E::ts('summaries from searches and sections, sent on a schedule.'),
-      'herald_parked_alerts' => E::ts('alerts the flush job could not deliver, and their reactivation.'),
+      'herald_settings' => E::ts('Single values such as the monitor topic, its thresholds and the retry limits.'),
+      'herald_channels' => E::ts('The bots, accounts and senders herald sends through.'),
+      'herald_topics' => E::ts('Where each topic is delivered.'),
+      'herald_cleaning' => E::ts('Rules that turn free text into clean groups for searches and notifications.'),
+      'herald_hosts' => E::ts('Which hosts the webhook channel may call.'),
+      'herald_monitor' => E::ts('Expected checks and snoozes.'),
+      'herald_test' => E::ts('Send a message through a channel or a topic.'),
+      'herald_preview' => E::ts('Render a herald template with sample values.'),
+      'herald_digests' => E::ts('Summaries from searches and sections, sent on a schedule.'),
+      'herald_parked_alerts' => E::ts('Alerts the flush job could not deliver, and their reactivation.'),
     ];
     $items = \Civi\Api4\Navigation::get(checkPermissions: FALSE)
       ->addSelect('name', 'label', 'url')
@@ -86,6 +87,15 @@ final class AdminScreens extends AutoService implements HookInterface {
    */
   public static function angularSettings(): array {
     return ['links' => self::links()];
+  }
+
+  /**
+   * The overview lists its screens like core's admin console, which brings this stylesheet itself.
+   */
+  public function hook_civicrm_pageRun(\CRM_Core_Page $page): void {
+    if ($page instanceof \Civi\Angular\Page\Main && \CRM_Utils_System::currentPath() === self::BASE_PATH) {
+      \Civi::resources()->addStyleFile('civicrm', 'css/admin.css');
+    }
   }
 
   public function hook_civicrm_buildForm(string $formName, \CRM_Core_Form $form): void {

@@ -1053,27 +1053,27 @@ msgid "Settings"
 msgstr "Einstellungen"
 
 #: ang/heraldAdmin/index.html
-msgid "where each topic is delivered."
-msgstr "wohin jedes Topic zugestellt wird."
+msgid "Where each topic is delivered."
+msgstr "Wohin jedes Topic zugestellt wird."
 
 #: ang/heraldAdmin/index.html
-msgid "which hosts the webhook channel may call."
-msgstr "welche Hosts der Webhook-Kanal aufrufen darf."
+msgid "Which hosts the webhook channel may call."
+msgstr "Welche Hosts der Webhook-Kanal aufrufen darf."
 
 #: ang/heraldAdmin/index.html
-msgid "expected checks and snoozes."
-msgstr "erwartete Checks und Stummschaltungen."
+msgid "Expected checks and snoozes."
+msgstr "Erwartete Checks und Stummschaltungen."
 
 #: ang/heraldAdmin/index.html
-msgid "send a message through a channel or a topic."
-msgstr "eine Nachricht über einen Kanal oder ein Topic senden."
+msgid "Send a message through a channel or a topic."
+msgstr "Eine Nachricht über einen Kanal oder ein Topic senden."
 
 #: ang/heraldAdmin/index.html
-msgid "render a herald template with sample values."
-msgstr "eine herald-Vorlage mit Beispielwerten darstellen."
+msgid "Render a herald template with sample values."
+msgstr "Eine herald-Vorlage mit Beispielwerten darstellen."
 
 #: ang/heraldAdmin/index.html
-msgid "alerts the flush job could not deliver, and their reactivation."
+msgid "Alerts the flush job could not deliver, and their reactivation."
 msgstr "Meldungen, die der Flush-Job nicht zustellen konnte, und ihre Reaktivierung."
 
 #: ang/heraldAdmin/messages.html
@@ -1516,7 +1516,7 @@ msgstr "Den Report „%1“ gibt es nicht."
 msgid "Digests"
 msgstr "Reports"
 
-msgid "summaries from searches and sections, sent on a schedule."
+msgid "Summaries from searches and sections, sent on a schedule."
 msgstr "Zusammenfassungen aus Suchen und Abschnitten, nach Zeitplan verschickt."
 
 #: Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/WebhookChannel.php, schema/HeraldDigest.entityType.php, templates/CRM/Herald/CivirulesAdapter/Form/Schedule.tpl
@@ -2123,7 +2123,7 @@ msgid "Cleaned fields"
 msgstr "Bereinigte Felder"
 
 #: Civi/Herald/Admin/AdminScreens.php
-msgid "rules that turn free text into clean groups for searches and notifications."
+msgid "Rules that turn free text into clean groups for searches and notifications."
 msgstr "Regeln, die Freitext für Suchen und Benachrichtigungen in saubere Gruppen fassen."
 
 #: settings/herald.setting.php
@@ -2491,8 +2491,8 @@ msgid "Yes"
 msgstr "Ja"
 
 #: Civi/Herald/Admin/AdminScreens.php
-msgid "the bots, accounts and senders herald sends through."
-msgstr "die Bots, Konten und Absender, über die herald sendet."
+msgid "The bots, accounts and senders herald sends through."
+msgstr "Die Bots, Konten und Absender, über die herald sendet."
 
 #: settings/herald.setting.php
 msgid "Configured channels: map of channel name to type, label, active, subscribable and config. Write through Herald.saveChannel, which encrypts the secrets."
@@ -2661,3 +2661,7 @@ msgstr "0 sendet jede Meldung sofort; ein Fenster sammelt Meldungen und sendet s
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "A JSON object passed to the template."
 msgstr "Ein JSON-Objekt, das an die Vorlage übergeben wird."
+
+#: Civi/Herald/Admin/AdminScreens.php
+msgid "Single values such as the monitor topic, its thresholds and the retry limits."
+msgstr "Einzelwerte wie das Monitor-Topic, seine Schwellen und die Wiederholungsgrenzen."
