@@ -32,6 +32,7 @@ if (class_exists('CRM_CivirulesConditions_Form_Form')) {
         ['type' => 'next', 'name' => E::ts('Save'), 'isDefault' => TRUE],
         ['type' => 'cancel', 'name' => E::ts('Cancel')],
       ]);
+      CRM_Herald_CivirulesAdapter_FormElements::assign($this);
     }
 
     /**

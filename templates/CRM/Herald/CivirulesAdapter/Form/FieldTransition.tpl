@@ -4,7 +4,7 @@
 
 <div class="crm-block crm-form-block">
   <table class="form-layout">
-    {foreach from=$form.elementNames item=field}
+    {foreach from=$elementNames item=field}
       {if $form.$field.label}
         <tr class="crm-herald-form-block-{$field}">
           <td class="label">{$form.$field.label}</td>

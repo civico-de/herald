@@ -392,15 +392,7 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     \Civi::settings()->set(\Civi\Herald\Topic\Router::SETTING, [
       'mornings' => ['channel' => 'email', 'email_subject' => 'Hi'],
     ]);
-    $handlerId = (int) CRM_Core_DAO::singleValueQuery(
-      'SELECT id FROM civirule_action WHERE class_name = %1',
-      [1 => [CRM_Herald_CivirulesAdapter_Action_Digest::class, 'String']],
-    );
-    $id = $this->insert(self::ACTION, $handlerId, $this->rule('herald_test_digest_subject'));
-    $form = $this->open(
-      (string) (new CRM_Herald_CivirulesAdapter_Action_Digest())->getExtraDataInputUrl($id),
-      CRM_Herald_CivirulesAdapter_Form_SendDigest::class,
-    );
+    $form = $this->digestForm('herald_test_digest_subject');
     $form->_submitValues = ['digest' => 'herald_test_subject', 'send_via' => 'topic', 'topic' => 'mornings'];
     $form->_flagSubmitted = TRUE;
 
@@ -499,6 +491,31 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     $form->_flagSubmitted = TRUE;
 
     $this->assertTrue($form->validate(), json_encode($form->_errors, JSON_THROW_ON_ERROR));
+  }
+
+  private function digestForm(string $rule): CRM_Core_Form {
+    $handlerId = (int) CRM_Core_DAO::singleValueQuery(
+      'SELECT id FROM civirule_action WHERE class_name = %1',
+      [1 => [CRM_Herald_CivirulesAdapter_Action_Digest::class, 'String']],
+    );
+    $id = $this->insert(self::ACTION, $handlerId, $this->rule($rule));
+    return $this->open(
+      (string) (new CRM_Herald_CivirulesAdapter_Action_Digest())->getExtraDataInputUrl($id),
+      CRM_Herald_CivirulesAdapter_Form_SendDigest::class,
+    );
+  }
+
+  private function rendered(CRM_Core_Form $form): string {
+    $smarty = CRM_Core_Smarty::singleton();
+    $smarty->assign('form', $form->toSmarty());
+    return $smarty->fetch((string) $form->getTemplateFileName());
+  }
+
+  public function testEveryFormShowsItsFields(): void {
+    // Each form assigns its fields to the shared Smarty, so render it at once.
+    $this->assertStringContainsString('name="delivery_mode"', $this->rendered($this->sendForm()));
+    $this->assertStringContainsString('name="digest"', $this->rendered($this->digestForm('herald_test_shown')));
+    $this->assertStringContainsString('name="from_operator"', $this->rendered($this->transitionForm()));
   }
 
   private function transitionForm(): CRM_Core_Form {

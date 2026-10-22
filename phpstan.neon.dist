@@ -44,6 +44,9 @@ parameters:
 		- herald.civix.php
 		- phpstan-stubs/CRM_Civirules_DAO_Base.php
 		- phpstan-stubs/CRM_Civirules_DAO_RuleCondition.php
+		# core's PEAR packages load through the include path, not the autoloader
+		- /var/www/html/core/packages/HTML/Common.php
+		- /var/www/html/core/packages/HTML/QuickForm/element.php
 	# phpstanBootstrap.php already autoloads core's own ext packages and
 	# every extension in info.xml <requires>. CiviRules is optional, so the
 	# dev profile fetches it and its classes are scanned from there.
