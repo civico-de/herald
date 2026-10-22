@@ -18,6 +18,7 @@ final class CRM_Herald_Upgrader_InlineSearchDisplay {
    */
   public static function settings(array $search): array {
     $default = \Civi\Api4\SearchDisplay::getDefault(checkPermissions: FALSE)
+      ->setLanguage(\Civi\Herald\Digest\DisplayColumns::NAMES_LANGUAGE)
       ->setSavedSearch($search['name'])
       ->setType('table')
       ->execute()

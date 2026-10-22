@@ -167,6 +167,27 @@ class SearchSourceTest extends TestCase implements HeadlessInterface, Transactio
   }
 
   /**
+   * SearchKit translates headers when it reads a display; a digest text keeps one set of names.
+   */
+  public function testThePlaceholdersAreTheSameInEveryLanguage(): void {
+    $count = ['select' => ['COUNT(id) AS COUNT_id']];
+    $named = $this->display($count, [['type' => 'field', 'key' => 'COUNT_id', 'label' => 'Count']]);
+    $auto = $this->display($count, [], ['columnMode' => 'auto']);
+    $english = [SearchSource::placeholders($named), SearchSource::placeholders($auto)];
+
+    \CRM_Core_I18n::singleton()->setLocale('de_DE');
+    try {
+      $translated = SearchDisplay::get(checkPermissions: FALSE)->addWhere('id', '=', $named)->execute()->single();
+      self::assertSame('Anzahl', $translated['settings']['columns'][0]['label'], 'the German translation is installed');
+      self::assertSame($english, [SearchSource::placeholders($named), SearchSource::placeholders($auto)]);
+      self::assertSame(4, SearchSource::values($named)['count']);
+    }
+    finally {
+      \CRM_Core_I18n::singleton()->setLocale('en_US');
+    }
+  }
+
+  /**
    * A rewrite formats the display's cell; the template formats the value itself.
    */
   public function testValuesAreRawNotRewritten(): void {

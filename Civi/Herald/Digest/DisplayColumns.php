@@ -12,6 +12,9 @@ use CRM_Herald_ExtensionUtil as E;
  */
 final class DisplayColumns {
 
+  // SearchKit translates headers on read in any other language; placeholder names stay those of the stored ones.
+  public const NAMES_LANGUAGE = 'en_US';
+
   /**
    * The display with the name of its search, or NULL.
    *
@@ -19,6 +22,7 @@ final class DisplayColumns {
    */
   public static function display(int $id): ?array {
     $display = \Civi\Api4\SearchDisplay::get(checkPermissions: FALSE)
+      ->setLanguage(self::NAMES_LANGUAGE)
       ->addSelect('*', 'saved_search_id.name', 'saved_search_id.api_params')
       ->addWhere('id', '=', $id)
       ->execute()
@@ -45,6 +49,7 @@ final class DisplayColumns {
     $settings = (array) ($display['settings'] ?? []);
     if (($settings['columnMode'] ?? NULL) === 'auto') {
       $default = \Civi\Api4\SearchDisplay::getDefault(checkPermissions: FALSE)
+        ->setLanguage(self::NAMES_LANGUAGE)
         ->setSavedSearch(Cast::toString($display['saved_search_id.name']))
         ->setType(Cast::toString($display['type']))
         ->execute()
