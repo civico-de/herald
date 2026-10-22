@@ -67,4 +67,13 @@ abstract class CRM_Herald_Upgrader_Steps extends CRM_Herald_Upgrader_EarlySteps 
     return TRUE;
   }
 
+  /**
+   * The self-service profile opens as a standalone form.
+   */
+  public function upgrade_1016(): bool {
+    $this->ctx->log->info('herald: offering the herald_my_preferences profile as a standalone form');
+    CRM_Herald_Upgrader_PreferencesProfile::ensure();
+    return TRUE;
+  }
+
 }

@@ -5,6 +5,7 @@ declare(strict_types = 1);
 use Civi\Api4\CustomField;
 use Civi\Api4\UFField;
 use Civi\Api4\UFGroup;
+use Civi\Api4\UFJoin;
 
 /**
  * The `herald_my_preferences` profile lets staff edit their own
@@ -26,13 +27,14 @@ final class CRM_Herald_Upgrader_PreferencesProfile {
   ];
 
   /**
-   * Create the profile and any missing field; existing rows, including admin
-   * edits to them, are kept.
+   * Create the profile, its standalone-form use and any missing field;
+   * existing rows, including admin edits to them, are kept.
    *
    * @return int The profile's UFGroup id.
    */
   public static function ensure(): int {
     $gid = self::group();
+    self::standalone($gid);
     foreach (self::FIELDS as $f) {
       /** @var array{id: int}|null $cf */
       $cf = CustomField::get(checkPermissions: FALSE)
@@ -64,6 +66,26 @@ final class CRM_Herald_Upgrader_PreferencesProfile {
         ->execute();
     }
     return $gid;
+  }
+
+  /**
+   * core's profile/edit refuses a profile without a `Profile` join.
+   */
+  private static function standalone(int $gid): void {
+    $joined = UFJoin::get(checkPermissions: FALSE)
+      ->addWhere('uf_group_id', '=', $gid)
+      ->addWhere('module', '=', 'Profile')
+      ->execute()
+      ->count();
+    if ($joined > 0) {
+      return;
+    }
+    UFJoin::create(checkPermissions: FALSE)
+      ->addValue('uf_group_id', $gid)
+      ->addValue('module', 'Profile')
+      ->addValue('is_active', value: TRUE)
+      ->addValue('weight', 1)
+      ->execute();
   }
 
   private static function group(): int {

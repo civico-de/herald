@@ -5,6 +5,7 @@ declare(strict_types = 1);
 use Civi\Api4\CustomField;
 use Civi\Api4\UFField;
 use Civi\Api4\UFGroup;
+use Civi\Api4\UFJoin;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
@@ -55,6 +56,30 @@ class CRM_Herald_Upgrader_PreferencesProfileTest extends TestCase implements Hea
 
     self::assertCount(6, $fields);
     self::assertSame('Preferred channel', $fields['custom_' . $channel['id']]);
+    self::assertSame(['Profile'], $this->modules($this->gid()));
+  }
+
+  public function testUpgradeLetsTheProfileOpenAsAStandaloneForm(): void {
+    $gid = $this->gid();
+    UFJoin::delete(checkPermissions: FALSE)->addWhere('uf_group_id', '=', $gid)->execute();
+    $ctx = new CRM_Queue_TaskContext();
+    $ctx->log = CRM_Core_Error::createDebugLogger();
+
+    self::assertTrue(CRM_Herald_Upgrader::_queueAdapter($ctx, 'herald', 'upgrade_1016'));
+    self::assertTrue(CRM_Herald_Upgrader::_queueAdapter($ctx, 'herald', 'upgrade_1016'));
+
+    self::assertSame(['Profile'], $this->modules($gid));
+  }
+
+  /**
+   * @return list<string>
+   */
+  private function modules(int $gid): array {
+    /** @var list<string> */
+    return UFJoin::get(checkPermissions: FALSE)
+      ->addWhere('uf_group_id', '=', $gid)
+      ->execute()
+      ->column('module');
   }
 
   public function testUpgradeRestoresMissingFieldsAndKeepsEditedOnes(): void {
