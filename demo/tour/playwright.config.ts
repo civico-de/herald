@@ -13,9 +13,10 @@ export default defineConfig({
   outputDir: "out/results",
   timeout: 900_000,
   workers: 1,
-  reporter: "list",
+  reporter: [["list"], ["html", { open: "never", outputFolder: "out/report" }]],
   use: {
     actionTimeout: 30_000,
+    trace: "retain-on-failure",
     navigationTimeout: 60_000,
     baseURL: process.env.TOUR_BASE_URL ?? "http://localhost:8080",
   },
