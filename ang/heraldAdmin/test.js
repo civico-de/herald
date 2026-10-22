@@ -55,7 +55,11 @@
                     1: ctrl.topic,
                   },
                 )
-              : ts('Sent to topic "%1" through %2.', { 1: ctrl.topic, 2: rows[0].channel }),
+              : rows[0].channel
+                ? ts('Sent to topic "%1" through %2.', { 1: ctrl.topic, 2: rows[0].channel })
+                : ts('Sent to topic "%1"; each recipient gets it on their own channel.', {
+                    1: ctrl.topic,
+                  }),
           );
         }
         const channel = ctrl.selected();

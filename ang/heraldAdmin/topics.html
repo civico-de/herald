@@ -16,6 +16,9 @@
     <thead>
       <tr>
         <th scope="col">{{:: $ctrl.ts('Topic') }}</th>
+        <th scope="col">{{:: $ctrl.ts('Label') }}</th>
+        <th scope="col">{{:: $ctrl.ts('Subscribable') }}</th>
+        <th scope="col">{{:: $ctrl.ts('Subscribers') }}</th>
         <th scope="col">{{:: $ctrl.ts('Channel') }}</th>
         <th scope="col">{{:: $ctrl.ts('Delivery mode') }}</th>
         <th scope="col">{{:: $ctrl.ts('Aggregate window in minutes') }}</th>
@@ -26,6 +29,9 @@
     <tbody>
       <tr ng-repeat="row in $ctrl.rows">
         <th scope="row">{{ row.name }}</th>
+        <td>{{ row.label }}</td>
+        <td>{{ row.subscribable ? $ctrl.ts('Yes') : $ctrl.ts('No') }}</td>
+        <td>{{ row.subscribers }}</td>
         <td>{{ row.channel || row.fallback }}</td>
         <td>{{ row.mode || row.fallback }}</td>
         <td>{{ row.aggregate || row.fallback }}</td>

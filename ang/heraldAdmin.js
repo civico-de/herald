@@ -213,19 +213,12 @@
         isEmpty: isEmpty,
         modes: [
           { value: "direct", label: ts("Direct: the recipient set on the route or the channel") },
-          { value: "subscribers", label: ts("Subscribers of a notification type") },
+          { value: "subscribers", label: ts("Contacts who subscribed to this topic") },
           { value: "group", label: ts("Members of a group") },
           { value: "addresses", label: ts("A list of email addresses") },
         ],
         // Dispatcher parameters every route may carry; channel keys come from Herald.getChannelTypes.
         deliveryFields: () => [
-          {
-            key: "subscription_type",
-            label: ts("Subscription type"),
-            type: "string",
-            modes: ["subscribers"],
-            help: ts("Name of the notification type contacts subscribe to."),
-          },
           { key: "group_id", label: ts("Group ID"), type: "int", modes: ["group"] },
           {
             key: "email_addresses",

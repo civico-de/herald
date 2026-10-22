@@ -26,7 +26,7 @@
             const map = heraldAdmin.asMap(loaded[0]);
             const usage = {};
             loaded[2].forEach((row) => {
-              usage[row.topic] = row.used_by;
+              usage[row.topic] = row;
             });
             const channels = {};
             loaded[1].forEach((channel) => {
@@ -38,8 +38,12 @@
             });
             ctrl.rows = Object.keys(map).map((name) => {
               const route = heraldAdmin.asMap(map[name]);
+              const used = usage[name] || { used_by: [], subscribers: 0 };
               return {
                 name: name,
+                label: route.label || name,
+                subscribable: route.subscribable === true,
+                subscribers: used.subscribers,
                 href: "#/topics/edit/" + encodeURIComponent(name),
                 channel: route.channel ? channels[route.channel] || route.channel : "",
                 mode: route.delivery_mode ? modes[route.delivery_mode] || route.delivery_mode : "",
@@ -47,7 +51,7 @@
                 aggregate: heraldAdmin.isEmpty(route.aggregate_minutes)
                   ? ""
                   : String(route.aggregate_minutes),
-                usedBy: usage[name] || [],
+                usedBy: used.used_by,
               };
             });
             ctrl.hasDefault = heraldAdmin.has(map, "default");
@@ -72,7 +76,12 @@
       ctrl.remove = (row) => {
         CRM.confirm({
           title: ts('Delete topic "%1"', { 1: row.name }),
-          message: ts("Publishers of this topic then use the default route, if there is one."),
+          message: row.subscribers
+            ? ts(
+                "Publishers of this topic then use the default route, if there is one. Contacts who subscribed to it: %1. Their subscriptions stay stored but no longer reach anyone.",
+                { 1: row.subscribers },
+              )
+            : ts("Publishers of this topic then use the default route, if there is one."),
         }).on("crmConfirm:yes", () => {
           // The dialog runs outside Angular's digest.
           $timeout(() => remove(row));

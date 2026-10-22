@@ -26,14 +26,6 @@ msgid "Direct — send to one recipient configured below"
 msgstr "Direkt — an einen unten konfigurierten Empfänger senden"
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Subscribers — fan out to all contacts opted into a subscription type"
-msgstr "Abonnent:innen — an alle Kontakte verteilen, die einen Abo-Typ gewählt haben"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Subscription type (only used in subscriber mode)"
-msgstr "Abo-Typ (nur im Abonnent:innen-Modus verwendet)"
-
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "Message template"
 msgstr "Nachrichtenvorlage"
 
@@ -289,23 +281,23 @@ msgstr "Event gelöscht"
 msgid "open"
 msgstr "offen"
 
-#: managed/SubscriberPreferences.mgd.php
+#: CRM/Herald/Upgrader/SubscriptionTypes.php
 msgid "Every completed contribution"
 msgstr "Jeder abgeschlossene Beitrag"
 
-#: managed/SubscriberPreferences.mgd.php
+#: CRM/Herald/Upgrader/SubscriptionTypes.php
 msgid "Every pending contribution"
 msgstr "Jeder ausstehende Beitrag"
 
-#: managed/SubscriberPreferences.mgd.php
+#: CRM/Herald/Upgrader/SubscriptionTypes.php
 msgid "Pending → Completed transitions"
 msgstr "Übergänge Ausstehend → Abgeschlossen"
 
-#: managed/SubscriberPreferences.mgd.php
+#: CRM/Herald/Upgrader/SubscriptionTypes.php
 msgid "Daily digest"
 msgstr "Täglicher Report"
 
-#: managed/SubscriberPreferences.mgd.php
+#: CRM/Herald/Upgrader/SubscriptionTypes.php
 msgid "Weekly digest"
 msgstr "Wöchentlicher Report"
 
@@ -352,18 +344,6 @@ msgstr "Die persönliche Incoming-Webhook-URL (z. B. ein Slack-DM-Webhook)."
 #: CRM/Herald/Upgrader/PreferencesProfile.php, managed/SubscriberPreferences.mgd.php
 msgid "Subscriptions"
 msgstr "Abonnements"
-
-#: managed/SubscriberPreferences.mgd.php
-msgid "Tick the kinds of notifications you want to receive on your preferred channel."
-msgstr "Die Arten von Benachrichtigungen ankreuzen, die über den bevorzugten Kanal ankommen sollen."
-
-#: managed/SubscriberPreferences.mgd.php
-msgid "Herald: Subscription type"
-msgstr "Herald: Abo-Typ"
-
-#: managed/SubscriberPreferences.mgd.php
-msgid "Kinds of notification a contact can opt into. Used by herald subscriber-mode actions."
-msgstr "Benachrichtigungsarten, die ein Kontakt abonnieren kann. Wird von den herald-Aktionen im Abonnent:innen-Modus verwendet."
 
 #: managed/SubscriberPreferences.mgd.php
 msgid "Notification preferences"
@@ -996,10 +976,6 @@ msgstr "Bearer-Token (Authorization-Header)"
 msgid "Channel"
 msgstr "Kanal"
 
-#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, Civi/Herald/Topic/RouteFields.php, ang/heraldAdmin.js, managed/SubscriberPreferences.mgd.php
-msgid "Subscription type"
-msgstr "Abo-Typ"
-
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, Civi/Herald/Topic/RouteFields.php, ang/heraldAdmin.js
 msgid "Email addresses"
 msgstr "E-Mail-Adressen"
@@ -1513,20 +1489,12 @@ msgid "Direct: the recipient set on the route or the channel"
 msgstr "Direkt: der in der Route oder im Kanal gesetzte Empfänger"
 
 #: ang/heraldAdmin.js
-msgid "Subscribers of a notification type"
-msgstr "Abonnent:innen eines Abo-Typs"
-
-#: ang/heraldAdmin.js
 msgid "Members of a group"
 msgstr "Mitglieder einer Gruppe"
 
 #: ang/heraldAdmin.js
 msgid "A list of email addresses"
 msgstr "Eine Liste von E-Mail-Adressen"
-
-#: ang/heraldAdmin.js
-msgid "Name of the notification type contacts subscribe to."
-msgstr "Name des Abo-Typs, den Kontakte abonnieren."
 
 #: ang/heraldAdmin.js
 msgid "Group ID"
@@ -2593,3 +2561,103 @@ msgstr "Kontakte, die ihn als ihren Kanal gewählt haben: %1. Bis sie einen ande
 #: Civi/Herald/Channel/StoredConfig.php
 msgid "\"%1\" is sent only to the channel's \"%2\"; set \"%2\" as well."
 msgstr "„%1“ wird nur an „%2“ des Kanals gesendet; tragen Sie auch „%2“ ein."
+
+#: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
+msgid "Subscribers of topic (only used in subscriber mode)"
+msgstr "Abonnent:innen des Topics (nur im Abonnent:innen-Modus verwendet)"
+
+#: CRM/Herald/CivirulesAdapter/SendOptions.php
+msgid "Subscribers — fan out to all contacts subscribed to a topic"
+msgstr "Abonnent:innen — an alle Kontakte verteilen, die ein Topic abonniert haben"
+
+#: Civi/Herald/Topic/RouteFields.php
+msgid "Subscribers of topic"
+msgstr "Abonnent:innen des Topics"
+
+#: Civi/Herald/Topic/SubscriberRules.php
+msgid "Choose the topic whose subscribers to reach."
+msgstr "Wählen Sie das Topic, dessen Abonnent:innen erreicht werden sollen."
+
+#: Civi/Herald/Topic/WithdrawRules.php
+msgid "Contacts must be able to subscribe to \"%1\" while it is in use:"
+msgstr "Kontakte müssen „%1“ abonnieren können, solange es verwendet wird:"
+
+#: Civi/Herald/Topic/SubscriberRules.php
+msgid "Contacts cannot subscribe to the topic \"%1\"."
+msgstr "Kontakte können das Topic „%1“ nicht abonnieren."
+
+#: Civi/Herald/Topic/TopicRules.php
+msgid "%1 belong to the topic, not to its route."
+msgstr "%1 gehören zum Topic, nicht zu seiner Route."
+
+#: Civi/Herald/Topic/TopicRules.php
+msgid "A route to subscribers reaches the contacts who subscribed to this topic; let contacts subscribe to it."
+msgstr "Eine Route an Abonnent:innen erreicht die Kontakte, die dieses Topic abonniert haben; erlauben Sie Kontakten, es zu abonnieren."
+
+#: Civi/Herald/Topic/TopicRules.php
+msgid "Contacts cannot subscribe to \"default\"; it only backs the other topics."
+msgstr "Kontakte können „default“ nicht abonnieren; es ergänzt nur die anderen Topics."
+
+#: Civi/Herald/Topic/TopicRules.php
+msgid "The topic \"%1\" cannot be renamed while %2 contacts subscribe to it."
+msgstr "Das Topic „%1“ kann nicht umbenannt werden, solange %2 Kontakte es abonniert haben."
+
+#: ang/heraldAdmin.js
+msgid "Contacts who subscribed to this topic"
+msgstr "Kontakte, die dieses Topic abonniert haben"
+
+#: ang/heraldAdmin/topic.html
+msgid "Contacts can subscribe to this topic"
+msgstr "Kontakte dürfen dieses Topic abonnieren"
+
+#: ang/heraldAdmin/topic.html, ang/heraldAdmin/topics.html
+msgid "Label"
+msgstr "Bezeichnung"
+
+#: ang/heraldAdmin/topic.html
+msgid "Offers the topic in the notification preferences of contacts. The delivery mode \"Contacts who subscribed to this topic\" reaches them."
+msgstr "Bietet das Topic in den Benachrichtigungseinstellungen der Kontakte an. Der Zustellmodus „Kontakte, die dieses Topic abonniert haben“ erreicht sie."
+
+#: ang/heraldAdmin/topic.html
+msgid "Shown to contacts and on these screens; empty shows the topic name."
+msgstr "Wird Kontakten und auf diesen Seiten angezeigt; leer zeigt den Namen des Topics."
+
+#: ang/heraldAdmin/topic.js
+msgid "Other parameters: \"%1\" is set by a field above."
+msgstr "Weitere Parameter: „%1“ wird über ein Feld oben gesetzt."
+
+#: ang/heraldAdmin/topics.html
+msgid "Subscribable"
+msgstr "Abonnierbar"
+
+#: ang/heraldAdmin/topics.html
+msgid "Subscribers"
+msgstr "Abonnent:innen"
+
+#: ang/heraldAdmin/topics.js
+msgid "Publishers of this topic then use the default route, if there is one. Contacts who subscribed to it: %1. Their subscriptions stay stored but no longer reach anyone."
+msgstr "Wer an dieses Topic publiziert, nutzt dann die Route „default“, sofern es sie gibt. Kontakte, die es abonniert haben: %1. Ihre Abos bleiben gespeichert, erreichen aber niemanden mehr."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Herald: Subscribable topic"
+msgstr "Herald: Abonnierbares Topic"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "The topics a contact can subscribe to; herald keeps them in step with its topics."
+msgstr "Die Topics, die ein Kontakt abonnieren kann; herald gleicht sie mit seinen Topics ab."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Tick the topics you want to receive notifications about on your preferred channel."
+msgstr "Die Topics ankreuzen, zu denen Benachrichtigungen über den bevorzugten Kanal ankommen sollen."
+
+#: Civi/Herald/Topic/DefaultRules.php
+msgid "Topic \"%1\": %2"
+msgstr "Topic „%1“: %2"
+
+#: ang/heraldAdmin/test.js
+msgid "Sent to topic \"%1\"; each recipient gets it on their own channel."
+msgstr "An das Topic „%1“ gesendet; alle Empfänger:innen erhalten es über ihren eigenen Kanal."
+
+#: Civi/Herald/Topic/WithdrawRules.php
+msgid "Without subscriptions, \"%1\" would reach the subscribers of \"%2\"; name them in its route as subscribers_of to keep that."
+msgstr "Ohne Abonnements würde „%1“ die Abonnent:innen von „%2“ erreichen; nennen Sie diese in seiner Route als subscribers_of, um das beizubehalten."

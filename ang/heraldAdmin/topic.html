@@ -8,6 +8,16 @@
       <input type="text" id="herald-topic-name" class="crm-form-text" ng-model="$ctrl.name" required aria-describedby="herald-topic-name-help" ng-change="$ctrl.channelChanged()" />
       <p class="description" id="herald-topic-name-help">{{:: $ctrl.ts('The name publishers use, for example ops. The topic named default backs every other topic.') }}</p>
     </div>
+    <div class="herald-admin-field">
+      <label for="herald-topic-label">{{:: $ctrl.ts('Label') }}</label>
+      <input type="text" id="herald-topic-label" class="crm-form-text" ng-model="$ctrl.label" aria-describedby="herald-topic-label-help" />
+      <p class="description" id="herald-topic-label-help">{{:: $ctrl.ts('Shown to contacts and on these screens; empty shows the topic name.') }}</p>
+    </div>
+    <div class="herald-admin-field" ng-if="!$ctrl.isDefault()">
+      <input type="checkbox" id="herald-topic-subscribable" ng-model="$ctrl.subscribable" aria-describedby="herald-topic-subscribable-help" />
+      <label for="herald-topic-subscribable">{{:: $ctrl.ts('Contacts can subscribe to this topic') }}</label>
+      <p class="description" id="herald-topic-subscribable-help">{{:: $ctrl.ts('Offers the topic in the notification preferences of contacts. The delivery mode "Contacts who subscribed to this topic" reaches them.') }}</p>
+    </div>
     <fieldset>
       <legend>{{:: $ctrl.ts('Delivery') }}</legend>
       <div class="herald-admin-field">

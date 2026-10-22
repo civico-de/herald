@@ -2,6 +2,8 @@
   "use strict";
 
   const ts = CRM.ts("herald");
+  // Keys of the topic itself, not of its route (TopicMeta::KEYS).
+  const META = ["label", "subscribable"];
 
   angular.module("heraldAdmin").controller("HeraldAdminTopicCtrl", [
     "$q",
@@ -101,6 +103,8 @@
           }
           original = ctrl.isNew ? {} : heraldAdmin.asMap(map[editing]);
           ctrl.name = ctrl.isNew ? "" : editing;
+          ctrl.label = typeof original.label === "string" ? original.label : "";
+          ctrl.subscribable = original.subscribable === true;
           ctrl.channel = typeof original.channel === "string" ? original.channel : null;
           ctrl.mode = typeof original.delivery_mode === "string" ? original.delivery_mode : null;
           ctrl.effective = effectiveChannel();
@@ -110,7 +114,10 @@
           const other = {};
           Object.keys(original).forEach((key) => {
             const known =
-              key === "channel" || key === "delivery_mode" || shown.some((f) => f.key === key);
+              META.indexOf(key) !== -1 ||
+              key === "channel" ||
+              key === "delivery_mode" ||
+              shown.some((f) => f.key === key);
             if (!known) {
               other[key] = original[key];
             }
@@ -145,6 +152,11 @@
         } catch (e) {
           built.errors.push(ts("Other parameters: %1", { 1: e.message }));
         }
+        Object.keys(values).forEach((key) => {
+          if (META.indexOf(key) !== -1) {
+            built.errors.push(ts('Other parameters: "%1" is set by a field above.', { 1: key }));
+          }
+        });
         return { route: heraldAdmin.ordered(values, original), errors: built.errors };
       };
 
@@ -160,6 +172,8 @@
           crmApi4("Herald", "saveTopic", {
             topic: ctrl.name,
             route: built.route,
+            label: ctrl.label || "",
+            subscribable: !ctrl.isDefault() && ctrl.subscribable === true,
             previousName: ctrl.isNew ? "" : editing,
           }),
         )
