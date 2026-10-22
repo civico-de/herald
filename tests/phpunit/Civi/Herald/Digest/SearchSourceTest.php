@@ -174,16 +174,27 @@ class SearchSourceTest extends TestCase implements HeadlessInterface, Transactio
     $named = $this->display($count, [['type' => 'field', 'key' => 'COUNT_id', 'label' => 'Count']]);
     $auto = $this->display($count, [], ['columnMode' => 'auto']);
     $english = [SearchSource::placeholders($named), SearchSource::placeholders($auto)];
+    // A word replacement translates without a German .mo file on the site.
+    \CRM_Core_BAO_WordReplacement::setLocaleCustomStrings('de_DE', [
+      'enabled' => ['exactMatch' => ['Count' => 'Anzahl']],
+    ]);
+    unset(\Civi::$statics['CRM_Core_I18n']);
 
-    \CRM_Core_I18n::singleton()->setLocale('de_DE');
+    // Built directly: negotiating German needs its .mo file.
+    \CRM_Core_I18n::singleton()->setLocale(new \Civi\Core\Locale([
+      'nominal' => 'de_DE',
+      'ts' => 'de_DE',
+      'uf' => 'de_DE',
+    ]));
     try {
       $translated = SearchDisplay::get(checkPermissions: FALSE)->addWhere('id', '=', $named)->execute()->single();
-      self::assertSame('Anzahl', $translated['settings']['columns'][0]['label'], 'the German translation is installed');
+      self::assertSame('Anzahl', $translated['settings']['columns'][0]['label'], 'SearchKit translates the header');
       self::assertSame($english, [SearchSource::placeholders($named), SearchSource::placeholders($auto)]);
       self::assertSame(4, SearchSource::values($named)['count']);
     }
     finally {
       \CRM_Core_I18n::singleton()->setLocale('en_US');
+      unset(\Civi::$statics['CRM_Core_I18n']);
     }
   }
 
