@@ -52,8 +52,11 @@ Digests and rules are only created when missing, so edits to them stay.
 
 ## Feature tour: `tour/`
 
-`tour/run.sh` walks through herald's screens in a browser. It records an
-English video with on-screen captions and writes the handbook screenshots:
+`tour/run.sh` walks through herald's screens in a browser, in six parts:
+channels and topics, subscriptions, test message and templates, alerts with
+CiviRules, digests, and operations. It records one English video per part,
+with captions and a frame around what each caption explains, and writes the
+handbook screenshots:
 English ones to `handbook/images/`, German ones to `handbook/images/de/`.
 
 It needs the dev stack running (`cd .docker && docker compose up -d`),
@@ -65,7 +68,9 @@ npx playwright install chromium
 bun run tour
 ```
 
-The video lands in `demo/tour/out/herald-tour.mp4`, which is ignored by git.
+The videos land in `demo/tour/out/herald-<n>-<part>.mp4`, which git ignores.
+Captions stay on screen for about 70 ms a character, at least four seconds;
+both values sit at the top of `tour/tour.spec.ts`.
 The screenshots are committed; rerun the tour after a screen changes.
 
 Before the browser starts, the script runs `digests.php` and

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Records demo/tour/out/herald-tour.mp4 and writes the handbook screenshots in
+# Records the videos demo/tour/out/herald-*.mp4 and writes the handbook screenshots in
 # English and German, against the running dev stack (.docker).
 set -euo pipefail
 cd "$(dirname "$0")/../.."
@@ -19,11 +19,13 @@ curl -fsS -X DELETE "$TOUR_MAILDEV_URL/email/all" >/dev/null
 
 cv api4 Setting.set +v lcMessages=en_US >/dev/null
 TOUR_LOCALE=en npx playwright test -c demo/tour/playwright.config.ts
-video="$(find demo/tour/out/results -name '*.webm' | head -1)"
-ffmpeg -y -loglevel error -i "$video" -c:v libx264 -pix_fmt yuv420p -movflags +faststart demo/tour/out/herald-tour.mp4
+for video in demo/tour/out/herald-*.webm; do
+  ffmpeg -y -loglevel error -i "$video" -c:v libx264 -pix_fmt yuv420p -movflags +faststart "${video%.webm}.mp4"
+  rm "$video"
+done
 
 cv scr /var/www/html/ext/herald/demo/tour/prepare.php > demo/tour/out/state.json
 cv api4 Setting.set +v lcMessages=de_DE >/dev/null
 TOUR_LOCALE=de npx playwright test -c demo/tour/playwright.config.ts
 
-echo "video: demo/tour/out/herald-tour.mp4"
+ls demo/tour/out/herald-*.mp4

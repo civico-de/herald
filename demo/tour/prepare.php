@@ -33,6 +33,7 @@ $topics = is_array($topics) ? $topics : [];
 if (isset($topics['donations'])) {
   Herald::deleteTopic(FALSE)->setTopic('donations')->execute();
 }
+HeraldDigest::delete(FALSE)->addWhere('name', '=', 'weekly_report')->execute();
 if (isset((new ChannelStore())->all()['team_mail'])) {
   Herald::deleteChannel(FALSE)->setName('team_mail')->execute();
 }
