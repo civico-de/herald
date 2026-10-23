@@ -23,14 +23,25 @@
       var mode = $('#delivery_mode').val();
       var fanOut = ['subscribers', 'group'].indexOf(mode) !== -1;
       var type = vars.channelTypes[$('#channel').val()] || '';
+      // A topic's route decides its mode, so a scope stays offered there.
+      function applies(name) {
+        if (own.indexOf(name) === -1 || (viaTopic && name === 'scope_entity')) {
+          return true;
+        }
+        return !viaTopic && (!modes[name] || modes[name].indexOf(mode) !== -1);
+      }
       row('topic').toggle(viaTopic);
       own.forEach(function (name) {
-        row(name).toggle(!viaTopic && (!modes[name] || modes[name].indexOf(mode) !== -1));
+        row(name).toggle(applies(name) && vars.advanced.indexOf(name) === -1);
       });
-      // A topic's route decides its mode, so a scope stays offered there.
-      if (viaTopic) {
-        row('scope_entity').show();
-      }
+      var advancedShown = vars.advanced.filter(applies);
+      vars.advanced.forEach(function (name) {
+        row(name).toggle(advancedShown.indexOf(name) !== -1 && !!expanded.advanced);
+      });
+      var advancedHeading = $('.crm-herald-type-heading[data-herald-type="advanced"]');
+      advancedHeading.toggle(advancedShown.length > 0);
+      advancedHeading.find('button').attr('aria-expanded', expanded.advanced ? 'true' : 'false');
+      advancedHeading.find('.crm-i').toggleClass('fa-chevron-down', !!expanded.advanced).toggleClass('fa-chevron-right', !expanded.advanced);
       var shownTypes = {};
       $.each(vars.fields, function (name, field) {
         // A fan-out reaches each contact on their own channel: every type's presentation keys apply.
@@ -42,7 +53,7 @@
           shownTypes[group] = true;
         }
       });
-      $('.crm-herald-type-heading').each(function () {
+      $('.crm-herald-type-heading').not(advancedHeading).each(function () {
         var group = $(this).data('heraldType');
         var open = !fanOut || !!expanded[group];
         $(this).toggle(!!shownTypes[group]);
@@ -50,13 +61,18 @@
         $(this).find('.crm-i').toggleClass('fa-chevron-down', open).toggleClass('fa-chevron-right', !open);
       });
     }
-    // A type starts open when one of its fields holds a value.
+    // A type starts open when one of its fields holds a value, Advanced when one differs from a new rule's.
     var expanded = {};
     $.each(vars.fields, function (name) {
       var value = $('#' + name).val();
       if (value !== undefined && value !== null && value !== '') {
         expanded[row(name).data('heraldType')] = true;
       }
+    });
+    expanded.advanced = vars.advanced.some(function (name) {
+      var field = $('#' + name);
+      var value = field.is(':checkbox') ? field.prop('checked') : $.trim(field.val() || '');
+      return value === true || ['', '0', '[]', '{}', false].indexOf(value) === -1;
     });
     $('.crm-herald-type-toggle').on('click', function () {
       var group = $(this).closest('tr').data('heraldType');

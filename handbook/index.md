@@ -66,6 +66,8 @@ Now set up a rule that reports every completed contribution:
 
 Channels of the other types are added the same way. [Channels](channels.md) lists their fields.
 
+The administration page groups its screens: setting up, testing and operating, and advanced ones whose defaults suit most sites.
+
 ![The Herald administration page](images/admin.png)
 
 ## Uninstall

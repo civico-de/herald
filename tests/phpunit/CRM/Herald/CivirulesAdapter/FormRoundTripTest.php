@@ -518,6 +518,24 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     $this->assertStringContainsString('name="from_operator"', $this->rendered($this->transitionForm()));
   }
 
+  public function testTheSendFormsListTheAdvancedFieldsLastUnderTheirHeading(): void {
+    $notification = $this->rendered($this->sendForm());
+    $headingRow = '<tr class="crm-herald-type-heading" data-herald-type="advanced">';
+    $heading = strpos($notification, $headingRow);
+    $this->assertNotFalse($heading);
+    $this->assertLessThan($heading, strpos($notification, 'name="template"'));
+    foreach (['respect_suspension', 'email_location_type', 'scope_entity', 'aggregate_minutes', 'vars'] as $field) {
+      $this->assertGreaterThan($heading, strpos($notification, "name=\"{$field}\""), $field);
+    }
+    $this->assertSame(1, substr_count($notification, $headingRow));
+
+    $digest = $this->rendered($this->digestForm('herald_test_advanced'));
+    $this->assertLessThan(
+      strpos($digest, $headingRow),
+      strpos($digest, 'name="digest"'),
+    );
+  }
+
   private function transitionForm(): CRM_Core_Form {
     $handlerId = (int) CRM_Core_DAO::singleValueQuery(
       'SELECT id FROM civirule_condition WHERE class_name = %1',

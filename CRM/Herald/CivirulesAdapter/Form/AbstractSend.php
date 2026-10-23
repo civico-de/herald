@@ -25,6 +25,11 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
      */
     protected array $descriptions = [];
 
+    /**
+     * Fields whose defaults suit most rules; the form lists them last, under Advanced.
+     */
+    private const ADVANCED = ['respect_suspension', 'email_location_type', 'scope_entity', 'aggregate_minutes', 'vars'];
+
     protected const JSON_FLAGS =
       JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR;
 
@@ -160,8 +165,12 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
         ['type' => 'next', 'name' => E::ts('Save'), 'isDefault' => TRUE],
         ['type' => 'cancel', 'name' => E::ts('Cancel')],
       ]);
-      CRM_Herald_CivirulesAdapter_FormElements::assign($this);
+      CRM_Herald_CivirulesAdapter_FormElements::assign($this, self::ADVANCED);
       $this->assign('heraldDescriptions', $this->descriptions);
+      $advanced = array_values(array_filter(self::ADVANCED, $this->elementExists(...)));
+      $this->assign('heraldAdvanced', array_fill_keys($advanced, TRUE));
+      $this->assign('heraldAdvancedLabel', E::ts('Advanced'));
+      \Civi::resources()->addVars('heraldSendForm', ['advanced' => $advanced]);
     }
 
     /**

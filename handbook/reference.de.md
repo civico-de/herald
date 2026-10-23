@@ -22,6 +22,8 @@ herald ergänzt CiviRules um zwei Aktionen. Ihre Formulare haben diese Felder ge
 - Die Zustellfelder des Typs des gewählten Kanals, etwa die Telegram-Chat-ID. Leere Felder behalten die Standardwerte des Kanals.
 - Sammelfenster in Minuten. 0 sendet sofort, siehe [Sammelnachrichten](delivery.md#sammelnachrichten).
 
+Die Option „Kommunikationssperren beachten“, der Adresstyp der E-Mail, der Abo-Bezug, das Sammelfenster und die Variablen stehen unter „Erweitert“ am Ende des Formulars. Der Abschnitt öffnet sich von selbst, sobald eines dieser Felder einen Wert hat.
+
 Die Formulare erfordern die Berechtigung „administer CiviCRM“ (CiviCRM administrieren).
 
 ![Eine Regel mit Feldwechsel und Benachrichtigung](images/de/rule.png)
@@ -232,7 +234,7 @@ Reports haben keine festen Variablen; ihre Quellen benennen sie, siehe [Platzhal
 
 ## Einstellungen
 
-Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'name=value'`. Einstellungen, die eine Liste oder eine Zuordnung enthalten, nehmen JSON auf. Die einfachen Einstellungen finden Sie auch auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen (`civicrm/admin/setting/herald`). Die Listen- und Zuordnungseinstellungen haben eigene Seiten unter `civicrm/admin/herald`: Kanäle, Topic-Routen, Bereinigte Felder, Erlaubte Webhook-Hosts und Monitor-Checks. Die Einstellungsseite verlinkt sie. Alle erfordern „administer CiviCRM“.
+Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'name=value'`. Einstellungen, die eine Liste oder eine Zuordnung enthalten, nehmen JSON auf. Die einfachen Einstellungen finden Sie auch auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen (`civicrm/admin/setting/herald`). Die Listen- und Zuordnungseinstellungen haben eigene Seiten unter `civicrm/admin/herald`: Kanäle, Topic-Routen, Bereinigte Felder, Erlaubte Webhook-Hosts und Monitor-Checks. Die Einstellungsseite zeigt die Schwellen und Grenzen unter „Erweitert“ und verlinkt die Übersicht aller Seiten. Alle erfordern „administer CiviCRM“.
 
 | Einstellung | Standard | Bedeutung |
 |---|---|---|

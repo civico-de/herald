@@ -22,6 +22,8 @@ herald adds two CiviRules actions. Their forms share these fields:
 - The delivery fields of the chosen channel's type, such as the Telegram chat ID. Empty fields keep the channel's defaults.
 - Aggregate window in minutes. 0 sends at once, see [Aggregation](delivery.md#aggregation).
 
+The suspension option, the email location type, the subscription scope, the aggregate window and the variables sit under "Advanced" at the end of the form. It opens by itself when one of them holds a value.
+
 The forms need the permission "administer CiviCRM".
 
 ![A rule with a field transition and a notification](images/rule.png)
@@ -232,7 +234,7 @@ Digests have no fixed variables; their sources name them, see [Placeholders](dig
 
 ## Settings
 
-Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value'`. Settings that hold a list or a map take JSON. The plain settings are also on the Herald settings screen, Administer » Herald » Settings (`civicrm/admin/setting/herald`). The list and map settings have their own screens on `civicrm/admin/herald`: Channels, Topic routes, Cleaned fields, Webhook allowed hosts and Monitor checks. The settings screen links to them. All of them need "administer CiviCRM".
+Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value'`. Settings that hold a list or a map take JSON. The plain settings are also on the Herald settings screen, Administer » Herald » Settings (`civicrm/admin/setting/herald`). The list and map settings have their own screens on `civicrm/admin/herald`: Channels, Topic routes, Cleaned fields, Webhook allowed hosts and Monitor checks. The settings screen shows the thresholds and limits under "Advanced" and links to the overview of all screens. All of them need "administer CiviCRM".
 
 | Setting | Default | Meaning |
 |---|---|---|

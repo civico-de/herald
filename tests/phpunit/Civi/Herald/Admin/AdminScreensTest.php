@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Admin;
 
 use Civi\Api4\HeraldBufferedAlert;
+use Civi\Api4\Navigation;
 use Civi\Api4\SearchDisplay;
 use Civi\Herald\Buffer\AlertBuffer;
 
@@ -73,28 +74,42 @@ class AdminScreensTest extends AdminTestCase {
     );
   }
 
-  public function testTheOverviewLinksEveryMenuEntry(): void {
-    $links = AdminScreens::angularSettings()['links'];
+  public function testTheOverviewGroupsEveryMenuEntry(): void {
+    $groups = AdminScreens::angularSettings()['groups'];
     $this->assertSame(
       [
-        'herald_settings',
-        'herald_channels',
-        'herald_topics',
-        'herald_cleaning',
-        'herald_hosts',
-        'herald_monitor',
-        'herald_test',
-        'herald_preview',
-        'herald_digests',
-        'herald_parked_alerts',
+        'setup' => ['herald_channels', 'herald_topics', 'herald_digests'],
+        'operations' => ['herald_monitor', 'herald_test', 'herald_preview', 'herald_parked_alerts'],
+        'advanced' => ['herald_settings', 'herald_cleaning', 'herald_hosts'],
       ],
-      array_column($links, 'name'),
+      array_map(
+        static fn (array $group): array => array_column($group['links'], 'name'),
+        array_column($groups, NULL, 'name'),
+      ),
     );
-    $this->assertStringEndsWith('civicrm/admin/herald#/channels', $links[1]['url']);
-    $this->assertStringEndsWith('civicrm/admin/herald#/topics', $links[2]['url']);
-    $this->assertMatchesRegularExpression('#civicrm/admin/herald/digests[?&]reset=1$#', $links[8]['url']);
+    $links = array_column(array_merge(...array_column($groups, 'links')), NULL, 'name');
+    $this->assertStringEndsWith('civicrm/admin/herald#/channels', $links['herald_channels']['url']);
+    $this->assertMatchesRegularExpression(
+      '#civicrm/admin/herald/digests[?&]reset=1$#',
+      $links['herald_digests']['url'],
+    );
     // Each entry is a dt with its dd; a bare dt breaks the definition list.
     $this->assertNotContains('', array_column($links, 'description'));
+  }
+
+  public function testAMenuEntryNoGroupNamesIsListedUnderAdvanced(): void {
+    Navigation::create(FALSE)
+      ->setValues([
+        'name' => 'herald_from_elsewhere',
+        'label' => 'From elsewhere',
+        'url' => 'civicrm/elsewhere',
+        'parent_id.name' => 'herald',
+        'domain_id' => 'current_domain',
+        'weight' => 99,
+      ])
+      ->execute();
+    $advanced = array_column(AdminScreens::angularSettings()['groups'], NULL, 'name')['advanced'];
+    $this->assertSame('herald_from_elsewhere', end($advanced['links'])['name']);
   }
 
   public function testTheOverviewLoadsTheAdminConsoleStyles(): void {
@@ -112,20 +127,35 @@ class AdminScreensTest extends AdminTestCase {
     }
   }
 
-  public function testTheSettingsPageLinksTheScreens(): void {
+  public function testTheSettingsPageLinksTheOverview(): void {
     $form = new \CRM_Admin_Form_Generic();
     $form->urlPath = ['civicrm', 'admin', 'setting', 'herald'];
     \Civi::service('herald.admin_screens')->hook_civicrm_buildForm('CRM_Admin_Form_Generic', $form);
     $html = \CRM_Core_Region::instance('crm-setting-form-herald-top')->render('');
-    $this->assertStringContainsString('civicrm/admin/herald', $html);
-    $this->assertStringContainsString('#/monitor', $html);
-    $this->assertStringContainsString('Herald_Parked_Alerts_Table', $html);
-    $this->assertStringContainsString('civicrm/admin/herald/digests', $html);
+    $this->assertMatchesRegularExpression('#<a href="[^"]*civicrm/admin/herald(\?|&amp;)reset=1">#', $html);
 
     $other = new \CRM_Admin_Form_Generic();
     $other->urlPath = ['civicrm', 'admin', 'setting', 'smtp'];
     \Civi::service('herald.admin_screens')->hook_civicrm_buildForm('CRM_Admin_Form_Generic', $other);
     $this->assertSame('', \CRM_Core_Region::instance('crm-setting-form-smtp-top')->render(''));
+  }
+
+  public function testTheSettingsPagePutsThresholdsAndLimitsUnderAdvanced(): void {
+    $form = new \CRM_Admin_Form_Generic();
+    $form->urlPath = ['civicrm', 'admin', 'setting', 'herald'];
+    \Civi::service('herald.admin_screens')->hook_civicrm_preProcess('CRM_Admin_Form_Generic', $form);
+    $this->assertSame('Advanced', $form->sections['advanced']['title']);
+
+    $sections = [];
+    $onPage = array_filter(
+      \Civi\Core\SettingsMetadata::getMetadata(['group' => 'herald']),
+      static fn (array $setting): bool => isset($setting['settings_pages']['herald']),
+    );
+    foreach ($onPage as $name => $setting) {
+      $sections[$setting['settings_pages']['herald']['section'] ?? 'default'][] = $name;
+    }
+    $this->assertSame(['herald_contact_email_channel', 'herald_monitor_topic'], $sections['default']);
+    $this->assertCount(5, $sections['advanced']);
   }
 
   public function testTheParkedAlertsDisplayOffersOnlyReactivation(): void {

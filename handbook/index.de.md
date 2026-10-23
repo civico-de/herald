@@ -66,6 +66,8 @@ Richten Sie nun eine Regel ein, die jeden abgeschlossenen Beitrag meldet:
 
 Kanäle der anderen Typen legen Sie genauso an. Ihre Felder finden Sie unter [Kanäle](channels.md).
 
+Die Administrationsseite gruppiert ihre Seiten: Einrichten, Testen und Betreiben sowie erweiterte Seiten, deren Standardwerte für die meisten Seiten passen.
+
 ![Die Herald-Administrationsseite](images/de/admin.png)
 
 ## Deinstallation

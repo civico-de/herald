@@ -81,12 +81,53 @@ final class AdminScreens extends AutoService implements HookInterface {
   }
 
   /**
-   * Settings of the heraldAdmin Angular module.
+   * Menu entry names per overview group; the everyday screens come first.
    *
-   * @return array{links: list<array{name: string, label: string, url: string, description: string}>}
+   * @return array<string, array{title: string, names: list<string>}>
+   */
+  private static function groups(): array {
+    return [
+      'setup' => [
+        'title' => E::ts('Set up'),
+        'names' => ['herald_channels', 'herald_topics', 'herald_digests'],
+      ],
+      'operations' => [
+        'title' => E::ts('Test and operate'),
+        'names' => ['herald_monitor', 'herald_test', 'herald_preview', 'herald_parked_alerts'],
+      ],
+      'advanced' => [
+        'title' => E::ts('Advanced'),
+        'names' => ['herald_settings', 'herald_cleaning', 'herald_hosts'],
+      ],
+    ];
+  }
+
+  /**
+   * Settings of the heraldAdmin Angular module: the menu entries in their overview groups, in menu order.
+   * An entry no group names, such as one another extension adds, goes under Advanced.
+   *
+   * @return array{groups: list<array{name: string, title: string, links: list<array{name: string, label: string, url: string, description: string}>}>}
    */
   public static function angularSettings(): array {
-    return ['links' => self::links()];
+    $links = self::links();
+    $groups = self::groups();
+    $named = array_merge(...array_values(array_column($groups, 'names')));
+    $result = [];
+    foreach ($groups as $name => $group) {
+      $result[] = [
+        'name' => $name,
+        'title' => $group['title'],
+        'links' => array_values(array_filter(
+          $links,
+          static fn (array $link): bool => (
+            in_array($link['name'], $group['names'], TRUE)
+            || $name === 'advanced'
+            && !in_array($link['name'], $named, TRUE)
+          ),
+        )),
+      ];
+    }
+    return ['groups' => $result];
   }
 
   /**
@@ -98,25 +139,31 @@ final class AdminScreens extends AutoService implements HookInterface {
     }
   }
 
+  /**
+   * The settings form shows the values most sites set first; thresholds and limits follow under Advanced.
+   */
+  public function hook_civicrm_preProcess(string $formName, \CRM_Core_Form $form): void {
+    if ($form instanceof \CRM_Admin_Form_Generic && $form->getSettingPageFilter() === 'herald') {
+      $form->sections['advanced'] = [
+        'title' => E::ts('Advanced'),
+        'description' => E::ts('Thresholds and limits whose defaults suit most sites.'),
+        'weight' => 10,
+      ];
+    }
+  }
+
   public function hook_civicrm_buildForm(string $formName, \CRM_Core_Form $form): void {
     if (!$form instanceof \CRM_Admin_Form_Generic || $form->getSettingPageFilter() !== 'herald') {
       return;
     }
-    $items = '';
-    foreach (self::links() as $link) {
-      if ($link['name'] === 'herald_settings') {
-        continue;
-      }
-      $items .=
-        '<li><a href="' . htmlspecialchars($link['url']) . '">' . htmlspecialchars($link['label']) . '</a></li>';
-    }
+    $overview = \CRM_Utils_System::url(self::BASE_PATH, 'reset=1', htmlize: FALSE);
     \CRM_Core_Region::instance('crm-setting-form-herald-top')->add([
       'markup' =>
-        '<nav class="help" aria-labelledby="herald-admin-links"><p id="herald-admin-links">'
-          . htmlspecialchars(E::ts('Lists and maps of these settings are edited on their own screens:'))
-          . '</p><ul>'
-          . $items
-          . '</ul></nav>',
+        '<p class="help"><a href="'
+          . htmlspecialchars($overview)
+          . '">'
+          . htmlspecialchars(E::ts('Channels, topics, digests and the other herald screens'))
+          . '</a></p>',
     ]);
   }
 

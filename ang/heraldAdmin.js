@@ -271,7 +271,7 @@
   module.controller("HeraldAdminIndexCtrl", [
     function () {
       this.ts = ts;
-      this.links = CRM.heraldAdmin.links;
+      this.groups = CRM.heraldAdmin.groups;
     },
   ]);
 })(angular);

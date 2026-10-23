@@ -139,10 +139,10 @@ return [
     'is_domain' => 1,
     'is_contact' => 0,
     'description' => E::ts(
-      'Hysteresis: number of consecutive failing runs before a check\'s fail transition is reported. 1 = report on the first failure (default).',
+      'How many failing runs in a row before a check is reported as failed. 1 reports the first failure.',
     ),
     'title' => E::ts('Monitor Open-After Threshold'),
-    'settings_pages' => ['herald' => ['weight' => 71]],
+    'settings_pages' => ['herald' => ['section' => 'advanced', 'weight' => 71]],
   ],
   'herald_monitor_close_after' => [
     'group_name' => 'Herald Settings',
@@ -155,10 +155,10 @@ return [
     'is_domain' => 1,
     'is_contact' => 0,
     'description' => E::ts(
-      'Hysteresis: number of consecutive ok runs before a check\'s recovery is reported. 1 = report on the first recovery (default).',
+      'How many successful runs in a row before a recovery is reported. 1 reports the first one.',
     ),
     'title' => E::ts('Monitor Close-After Threshold'),
-    'settings_pages' => ['herald' => ['weight' => 72]],
+    'settings_pages' => ['herald' => ['section' => 'advanced', 'weight' => 72]],
   ],
   'herald_monitor_renotify_hours' => [
     'group_name' => 'Herald Settings',
@@ -171,10 +171,10 @@ return [
     'is_domain' => 1,
     'is_contact' => 0,
     'description' => E::ts(
-      'Re-announce a check that has stayed in the reported-fail state this many hours. 0 disables reminders.',
+      'Reminds of a check that is still failing after this many hours. 0 sends no reminders.',
     ),
     'title' => E::ts('Monitor Renotify Hours'),
-    'settings_pages' => ['herald' => ['weight' => 73]],
+    'settings_pages' => ['herald' => ['section' => 'advanced', 'weight' => 73]],
   ],
   'herald_monitor_snooze' => [
     'group_name' => 'Herald Settings',
@@ -218,10 +218,10 @@ return [
     'is_domain' => 1,
     'is_contact' => 0,
     'description' => E::ts(
-      'How often Job.herald_buffer_flush retries a failing buffer group before parking it in the dead letter (visible via Herald.getParkedAlerts, reactivated via Herald.reactivateParkedAlerts). A fan-out that resolves to no recipients is parked immediately regardless of this value.',
+      'How often an alert that fails to send is retried before it is parked; parked alerts can be reactivated under Parked alerts. An alert without any recipient is parked at once.',
     ),
     'title' => E::ts('Buffer Flush Max Attempts'),
-    'settings_pages' => ['herald' => ['weight' => 80]],
+    'settings_pages' => ['herald' => ['section' => 'advanced', 'weight' => 80]],
   ],
   'herald_buffer_max_items' => [
     'group_name' => 'Herald Settings',
@@ -234,9 +234,9 @@ return [
     'is_domain' => 1,
     'is_contact' => 0,
     'description' => E::ts(
-      'How many individual alerts an aggregated message prints before it ends in "… and N more". The summary header always counts all of them. A bulk operation can fill one aggregation window with thousands of entries; 0 prints every one of them.',
+      'How many alerts a combined message lists before it ends in "… and N more"; its header always counts all of them. 0 lists every one.',
     ),
     'title' => E::ts('Buffer Aggregate Max Items'),
-    'settings_pages' => ['herald' => ['weight' => 81]],
+    'settings_pages' => ['herald' => ['section' => 'advanced', 'weight' => 81]],
   ],
 ];

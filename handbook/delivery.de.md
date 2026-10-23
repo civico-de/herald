@@ -126,7 +126,7 @@ Der Check-Monitor veröffentlicht in das Topic, das in `herald_monitor_topic` st
 
 ## Sammelnachrichten
 
-Meldungen, die gehäuft auftreten, lassen sich sammeln und als eine Nachricht verschicken. Setzen Sie dazu `aggregate_minutes` an einer Aktion oder einer Topic-Route; im Aktionsformular heißt das Feld „Sammelfenster in Minuten“. Der Standard 0 sendet sofort.
+Meldungen, die gehäuft auftreten, lassen sich sammeln und als eine Nachricht verschicken. Setzen Sie dazu `aggregate_minutes` an einer Aktion oder einer Topic-Route; im Aktionsformular heißt das Feld „Sammelfenster in Minuten“ und steht unter „Erweitert“. Der Standard 0 sendet sofort.
 
 Ein Wert über 0 legt die gerenderte Meldung in der Tabelle `civicrm_herald_buffer` ab. Der geplante Job „Herald: Sammelpuffer für Meldungen leeren“ läuft bei jedem Cron-Lauf. Sobald die älteste wartende Meldung einer Gruppe älter ist als ihr Fenster, wird die ganze Gruppe als eine Nachricht verschickt.
 

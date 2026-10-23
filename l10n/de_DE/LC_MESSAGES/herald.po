@@ -378,24 +378,24 @@ msgid "Digests Sent Today (internal)"
 msgstr "Heute verschickte Reports (intern)"
 
 #: settings/herald.setting.php
-msgid "Hysteresis: number of consecutive failing runs before a check's fail transition is reported. 1 = report on the first failure (default)."
-msgstr "Hysterese: Anzahl aufeinanderfolgender fehlgeschlagener Läufe, bevor der fail-Übergang eines Checks gemeldet wird. 1 = beim ersten Fehler melden (Standard)."
+msgid "How many failing runs in a row before a check is reported as failed. 1 reports the first failure."
+msgstr "Wie viele fehlgeschlagene Läufe in Folge, bevor ein Check als fehlgeschlagen gemeldet wird. 1 meldet den ersten Fehler."
 
 #: settings/herald.setting.php
 msgid "Monitor Open-After Threshold"
 msgstr "Monitor-Schwelle zum Öffnen"
 
 #: settings/herald.setting.php
-msgid "Hysteresis: number of consecutive ok runs before a check's recovery is reported. 1 = report on the first recovery (default)."
-msgstr "Hysterese: Anzahl aufeinanderfolgender erfolgreicher Läufe, bevor die Erholung eines Checks gemeldet wird. 1 = bei der ersten Erholung melden (Standard)."
+msgid "How many successful runs in a row before a recovery is reported. 1 reports the first one."
+msgstr "Wie viele erfolgreiche Läufe in Folge, bevor eine Erholung gemeldet wird. 1 meldet die erste."
 
 #: settings/herald.setting.php
 msgid "Monitor Close-After Threshold"
 msgstr "Monitor-Schwelle zum Schließen"
 
 #: settings/herald.setting.php
-msgid "Re-announce a check that has stayed in the reported-fail state this many hours. 0 disables reminders."
-msgstr "Einen Check, der so viele Stunden im gemeldeten Fehlerzustand bleibt, erneut melden. 0 deaktiviert Erinnerungen."
+msgid "Reminds of a check that is still failing after this many hours. 0 sends no reminders."
+msgstr "Erinnert an einen Check, der nach so vielen Stunden noch fehlschlägt. 0 sendet keine Erinnerungen."
 
 #: settings/herald.setting.php
 msgid "Monitor Renotify Hours"
@@ -454,16 +454,16 @@ msgid "Webhook Allowed Hosts"
 msgstr "Erlaubte Webhook-Hosts"
 
 #: settings/herald.setting.php
-msgid "How often Job.herald_buffer_flush retries a failing buffer group before parking it in the dead letter (visible via Herald.getParkedAlerts, reactivated via Herald.reactivateParkedAlerts). A fan-out that resolves to no recipients is parked immediately regardless of this value."
-msgstr "Wie oft Job.herald_buffer_flush eine fehlschlagende Puffergruppe erneut versucht, bevor sie geparkt wird (sichtbar über Herald.getParkedAlerts, reaktivierbar über Herald.reactivateParkedAlerts). Ein Fan-out ohne Empfänger wird unabhängig von diesem Wert sofort geparkt."
+msgid "How often an alert that fails to send is retried before it is parked; parked alerts can be reactivated under Parked alerts. An alert without any recipient is parked at once."
+msgstr "Wie oft eine Meldung, die nicht gesendet werden kann, erneut versucht wird, bevor sie geparkt wird; unter Geparkte Meldungen lässt sie sich wieder aktivieren. Eine Meldung ohne Empfänger wird sofort geparkt."
 
 #: settings/herald.setting.php
 msgid "Buffer Flush Max Attempts"
 msgstr "Maximale Zustellversuche des Sammelpuffers"
 
 #: settings/herald.setting.php
-msgid "How many individual alerts an aggregated message prints before it ends in \"… and N more\". The summary header always counts all of them. A bulk operation can fill one aggregation window with thousands of entries; 0 prints every one of them."
-msgstr "Wie viele einzelne Meldungen eine Sammelnachricht ausgibt, bevor sie mit „… und N weitere“ endet. Die Kopfzeile zählt immer alle. Eine Massenoperation kann ein Sammelfenster mit Tausenden Einträgen füllen; 0 gibt alle aus."
+msgid "How many alerts a combined message lists before it ends in \"… and N more\"; its header always counts all of them. 0 lists every one."
+msgstr "Wie viele Meldungen eine Sammelnachricht aufführt, bevor sie mit „… und N weitere“ endet; ihre Kopfzeile zählt immer alle. 0 führt alle auf."
 
 #: settings/herald.setting.php
 msgid "Buffer Aggregate Max Items"
@@ -725,8 +725,8 @@ msgid "Parked alerts"
 msgstr "Geparkte Meldungen"
 
 #: Civi/Herald/Admin/AdminScreens.php
-msgid "Lists and maps of these settings are edited on their own screens:"
-msgstr "Listen und Zuordnungen dieser Einstellungen werden auf eigenen Seiten bearbeitet:"
+msgid "Thresholds and limits whose defaults suit most sites."
+msgstr "Schwellen und Grenzen, deren Standardwerte für die meisten Seiten passen."
 
 #: Civi/Herald/Admin/AdminScreens.php
 msgid "Reactivate parked alerts"
@@ -1045,8 +1045,8 @@ msgid "The allowlist is empty: webhooks may call any public address."
 msgstr "Die Liste ist leer: Webhooks dürfen jede öffentliche Adresse aufrufen."
 
 #: ang/heraldAdmin/index.html
-msgid "The settings form holds the single values; the lists and maps are edited here."
-msgstr "Das Einstellungsformular enthält die Einzelwerte; Listen und Zuordnungen werden hier bearbeitet."
+msgid "Channels, topics, digests and the other herald screens"
+msgstr "Kanäle, Topics, Reports und die übrigen herald-Seiten"
 
 #: Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Channel/EmailChannel.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PushoverChannel.php, Civi/Herald/Channel/WebhookChannel.php, ang/heraldAdmin.js, ang/heraldAdmin/index.html, ang/heraldDigest.ang.php, herald.civix.php, managed/Navigation.mgd.php, settings/herald.setting.php
 msgid "Settings"
@@ -2665,3 +2665,12 @@ msgstr "Ein JSON-Objekt, das an die Vorlage übergeben wird."
 #: Civi/Herald/Admin/AdminScreens.php
 msgid "Single values such as the monitor topic, its thresholds and the retry limits."
 msgstr "Einzelwerte wie das Monitor-Topic, seine Schwellen und die Wiederholungsgrenzen."
+
+msgid "Set up"
+msgstr "Einrichten"
+
+msgid "Test and operate"
+msgstr "Testen und betreiben"
+
+msgid "Advanced"
+msgstr "Erweitert"

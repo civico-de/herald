@@ -70,7 +70,7 @@ All settings are optional. By default herald reports the first failing run and t
 | `herald_monitor_renotify_hours` | 24 | Send a reminder when a check has kept failing for this many hours. 0 turns reminders off. |
 | `herald_monitor_topic` | ops | The topic the alerts are published to. |
 
-These four are on the Herald settings screen, Administer » Herald » Settings. Snoozes and expected checks are on Administer » Herald » Monitor checks.
+These four are on the Herald settings screen, Administer » Herald » Settings, all but the topic under "Advanced". Snoozes and expected checks are on Administer » Herald » Monitor checks.
 
 That screen lists every check an enabled extension offers, every expected or snoozed check and every check the monitor has a state for. Each row shows the last reported status in words, the failing and healthy runs in a row, when a failure was last reported and whether an enabled extension still offers the check. The screen does not run the checks and does not show their details.
 

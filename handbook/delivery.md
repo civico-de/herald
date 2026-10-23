@@ -126,7 +126,7 @@ The check monitor publishes to the topic named in `herald_monitor_topic`, which 
 
 ## Aggregation
 
-Alerts that come in bursts can be collected and sent as one message. Set `aggregate_minutes` on an action or a topic route; in the action form it is the field "Aggregate window in minutes". The default 0 sends at once.
+Alerts that come in bursts can be collected and sent as one message. Set `aggregate_minutes` on an action or a topic route; in the action form it is the field "Aggregate window in minutes" under "Advanced". The default 0 sends at once.
 
 A value above 0 stores the rendered alert in the table `civicrm_herald_buffer`. The scheduled job "Herald: Flush alert aggregation buffer" runs on every cron run. Once the oldest waiting alert of a group is older than its window, the whole group goes out as one message.
 

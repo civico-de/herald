@@ -1,10 +1,12 @@
 <div id="bootstrap-theme" class="herald-admin">
   <h1 crm-page-title>{{:: $ctrl.ts('Herald administration') }}</h1>
-  <p>{{:: $ctrl.ts('The settings form holds the single values; the lists and maps are edited here.') }}</p>
-  <div class="admin-section-items">
-    <dl ng-repeat="link in $ctrl.links">
-      <dt><a ng-href="{{:: link.url }}">{{:: link.label }}</a></dt>
-      <dd ng-if=":: link.description">{{:: link.description }}</dd>
-    </dl>
+  <div ng-repeat="group in $ctrl.groups" id="admin-section-herald-{{:: group.name }}">
+    <h3>{{:: group.title }}</h3>
+    <div class="admin-section-items">
+      <dl ng-repeat="link in group.links">
+        <dt><a ng-href="{{:: link.url }}">{{:: link.label }}</a></dt>
+        <dd>{{:: link.description }}</dd>
+      </dl>
+    </div>
   </div>
 </div>
