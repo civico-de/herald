@@ -8,7 +8,7 @@ if (class_exists('CRM_Civirules_Condition')) {
    * CiviRules adapter: did field X of the configured entity transition from
    * (operator, value) to (operator, value)? The decision is
    * Herald.checkFieldTransition; this unpacks the entity id, the configured
-   * comparison and CiviRules' pre-edit value.
+   * comparison and the edit's values before and after.
    *
    * Condition parameters (all strings, via the parameter form):
    *   entity         — APIv4 entity name (e.g. "Contribution")
@@ -26,7 +26,8 @@ if (class_exists('CRM_Civirules_Condition')) {
         return FALSE;
       }
       $rawId = $triggerData->getEntityData($entity)['id'] ?? 0;
-      $original = CRM_Herald_CivirulesAdapter_OriginalData::rawField($triggerData, $entity, $field);
+      $original = CRM_Herald_CivirulesAdapter_EditData::before($triggerData, $entity, $field);
+      $after = CRM_Herald_CivirulesAdapter_EditData::after($triggerData, $entity, $field);
 
       // CiviRules evaluates rules in a system context (cron, post-commit
       // queue) — there is no acting user whose ACLs could apply.
@@ -38,8 +39,8 @@ if (class_exists('CRM_Civirules_Condition')) {
         ->setFromValue($params['from_value'])
         ->setToOperator($params['to_operator'])
         ->setToValue($params['to_value'])
-        ->setOriginalValue($original['value'])
-        ->setHasOriginal($original['known'])
+        ->setBefore($original['known'] ? ['value' => $original['value']] : [])
+        ->setAfter($after['known'] ? ['value' => $after['value']] : [])
         ->execute();
 
       return !empty($result->first()['matched']);

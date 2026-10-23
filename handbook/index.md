@@ -19,7 +19,7 @@ With CiviRules installed, herald adds four building blocks to it:
 - the action "Herald: Send notification (generic)", which renders a template with the data of the trigger
 - the action "Herald: Send digest", which sends a summary
 - the trigger "Herald: Schedule", which fires once at a set hour on chosen weekdays
-- the condition "Herald: Field transition", which compares a field's value before and after an edit, such as a contribution moving from Pending to Completed
+- the condition "Herald: Field transition", which compares a field's value before and after an edit, such as an event being deactivated. CiviRules ships such conditions only for a few fields, such as statuses.
 
 A notification can go to one recipient, to every contact who subscribed to its topic, to the members of a group, or to a list of email addresses. Each contact can choose their own channel. Alerts that come in bursts can be collected and sent as one message per time window. See [Delivery](delivery.md).
 

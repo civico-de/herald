@@ -19,23 +19,14 @@ Three rules follow a donation (paid at once, announced as a bank transfer, recei
 |---|---|---|---|
 | Paid at once | Contribution is added | Contribution Status is (not) one of: Completed | Herald: New completed contribution |
 | Transfer announced | Contribution is added | Contribution Status is (not) one of: Pending, and Contribution is (not) of Financial Type(s): Donation | Herald: New pending contribution |
-| Transfer received | Contribution is changed | Herald: Field transition, see below, and Contribution Status is (not) one of: Completed | Herald: Contribution status changed |
+| Transfer received | Contribution is changed | Compare Old Contribution Status to New Contribution Status: from Pending to Completed | Herald: Contribution status changed |
 | Daily summary | Herald: Schedule, see [Scheduled digests](digests.md#scheduled-digests) | | A digest with the display "Digest: contributions yesterday" |
 
 The first three use the action "Herald: Send notification (generic)"; the daily summary uses "Herald: Send digest".
 
 The financial type condition on "Transfer announced" matters when the site sells tickets. A pending event order is also a pending contribution and would otherwise be announced as a donation. Tickets get their own rules below.
 
-"Transfer received" uses herald's condition "Herald: Field transition" with these values:
-
-| Field | Value |
-|---|---|
-| Entity | Contribution |
-| Field | contribution_status_id:name |
-| Before | = Pending |
-| After | any value |
-
-The condition reads the status before the edit from the copy CiviRules keeps of the record, so it works with delayed actions too. With a custom field, a delayed action needs one more setting, see [Field transition](reference.md#field-transition).
+"Transfer received" uses a condition CiviRules ships. It compares the status before the edit with the status after it, so it fires once when a transfer is booked, not on later edits of the contribution. For fields CiviRules has no such condition for, herald adds "Herald: Field transition", see [Event lifecycle](#event-lifecycle).
 
 Campaign progress needs no setup. A contribution that belongs to a campaign brings the campaign's title, total and count. When the campaign has a revenue goal, it also brings the goal and the percentage reached. See [Contribution variables](reference.md#contribution-variables).
 
@@ -59,7 +50,7 @@ The same source can drive a rule of its own with the opposite operator. To count
 |---|---|---|---|
 | Ticket paid online | Contribution is added | Financial type is the ticket type, status is Completed | Herald: New ticket/event contribution |
 | Ticket ordered by transfer | Contribution is added | Financial type is the ticket type, status is Pending | Herald: Ticket ordered, bank transfer announced |
-| Ticket transfer received | Contribution is changed | Herald: Field transition on contribution_status_id:name with Before = Pending, financial type is the ticket type, status is Completed | Herald: Ticket bank transfer received |
+| Ticket transfer received | Contribution is changed | Compare Old Contribution Status to New Contribution Status: from Pending to Completed, and financial type is the ticket type | Herald: Ticket bank transfer received |
 
 All three use "Herald: Send notification (generic)". Sales come in bursts after an announcement, so set "Aggregate window in minutes" to 5. Seven sales inside the window then arrive as one message headed "📬 7 messages, total 385.00 € (collected over 5 min)", followed by the individual sales. See [Aggregation](delivery.md#aggregation).
 

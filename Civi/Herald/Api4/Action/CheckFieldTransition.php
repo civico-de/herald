@@ -13,8 +13,8 @@ use Civi\Herald\PreEditSnapshot;
 /**
  * Did field X of entity E transition from (operator, value) to (operator, value)?
  *
- * Backs the "Field transition" CiviRules condition. The post-edit value comes
- * from the live row, since the trigger payload may omit the field.
+ * Backs the "Field transition" CiviRules condition. The post-edit value is the
+ * caller's when it has one, else the live row's.
  *
  * @method $this setEntity(string $entity)
  * @method $this setEntityId(int $entityId)
@@ -23,8 +23,8 @@ use Civi\Herald\PreEditSnapshot;
  * @method $this setFromValue(string $fromValue)
  * @method $this setToOperator(string $toOperator)
  * @method $this setToValue(string $toValue)
- * @method $this setOriginalValue(mixed $originalValue)
- * @method $this setHasOriginal(bool $hasOriginal)
+ * @method $this setBefore(array<string, mixed> $before)
+ * @method $this setAfter(array<string, mixed> $after)
  */
 class CheckFieldTransition extends AbstractAction {
 
@@ -71,17 +71,19 @@ class CheckFieldTransition extends AbstractAction {
   protected string $toValue = '';
 
   /**
-   * Pre-edit field value from the caller's own original data (CiviRules
-   * serialises it into its queue); only read when $hasOriginal is TRUE.
-   * @var mixed
+   * Pre-edit value from the caller's own original data (CiviRules serialises it
+   * into its queue), as ['value' => x]; [] when the caller has none.
+   * @var array
+   * @phpstan-var array<string, mixed>
    */
-  protected mixed $originalValue = NULL;
+  protected array $before = [];
 
   /**
-   * TRUE when the caller could supply an original-data value at all.
-   * @var bool
+   * Post-edit value as the edit wrote it, as ['value' => x]; [] reads the live row.
+   * @var array
+   * @phpstan-var array<string, mixed>
    */
-  protected bool $hasOriginal = FALSE;
+  protected array $after = [];
 
   public function _run(Result $result): void {
     $result[] = ['matched' => $this->matched()];
@@ -93,13 +95,15 @@ class CheckFieldTransition extends AbstractAction {
     }
 
     $beforeState = self::resolveBeforeState(
-      ['known' => $this->hasOriginal, 'value' => $this->originalValue],
+      self::state($this->before),
       $this->entity,
       $this->entityId,
       $this->field,
     );
 
-    $current = FieldTransitionSnapshotter::currentValue($this->entity, $this->entityId, $this->field);
+    $current = $this->after !== []
+      ? self::state($this->after)
+      : FieldTransitionSnapshotter::currentValue($this->entity, $this->entityId, $this->field);
     if (!$current['known']) {
       return FALSE;
     }
@@ -131,6 +135,18 @@ class CheckFieldTransition extends AbstractAction {
       return ['known' => TRUE, 'value' => PreEditSnapshot::get($entity, $entityId, $field)];
     }
     return ['known' => FALSE, 'value' => NULL];
+  }
+
+  /**
+   * @param array<array-key, mixed> $given
+   * @return array{known: bool, value: mixed}
+   */
+  private static function state(array $given): array {
+    return (
+      array_key_exists('value', $given)
+        ? ['known' => TRUE, 'value' => $given['value']]
+        : ['known' => FALSE, 'value' => NULL]
+    );
   }
 
 }

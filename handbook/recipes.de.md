@@ -21,23 +21,14 @@ Drei Regeln begleiten eine Spende: sofort bezahlt, als Überweisung angekündigt
 |---|---|---|---|
 | Sofort bezahlt | Contribution is added | Contribution Status is (not) one of: Completed | Herald: Neuer abgeschlossener Beitrag |
 | Überweisung angekündigt | Contribution is added | Contribution Status is (not) one of: Pending, und Contribution is (not) of Financial Type(s): Donation | Herald: Neuer ausstehender Beitrag |
-| Überweisung eingegangen | Contribution is changed | Herald: Field transition, siehe unten, und Contribution Status is (not) one of: Completed | Herald: Beitragsstatus geändert |
+| Überweisung eingegangen | Contribution is changed | Compare Old Contribution Status to New Contribution Status: von Pending zu Completed | Herald: Beitragsstatus geändert |
 | Tägliche Zusammenfassung | Herald: Schedule, siehe [Geplante Reports](digests.md#geplante-reports) | | Ein Report mit der Anzeige „Report: Beiträge gestern“ |
 
 Die ersten drei verwenden die Aktion „Herald: Send notification (generic)“, die tägliche Zusammenfassung „Herald: Send digest“.
 
 Die Bedingung auf den Finanztyp bei „Überweisung angekündigt“ ist wichtig, wenn die Site Tickets verkauft. Eine ausstehende Event-Bestellung ist ebenfalls ein ausstehender Beitrag und würde sonst als Spende angekündigt. Für Tickets gibt es weiter unten eigene Regeln.
 
-„Überweisung eingegangen“ verwendet die herald-Bedingung „Herald: Field transition“ mit diesen Werten:
-
-| Feld | Wert |
-|---|---|
-| Entität | Contribution |
-| Feld | contribution_status_id:name |
-| Vorher | = Pending |
-| Nachher | beliebiger Wert |
-
-Die Bedingung liest den Status vor der Änderung aus der Kopie, die CiviRules vom Datensatz aufbewahrt, und funktioniert daher auch mit verzögerten Aktionen. Bei einem benutzerdefinierten Feld braucht eine verzögerte Aktion eine zusätzliche Einstellung, siehe [Feldwechsel](reference.md#feldwechsel).
+„Überweisung eingegangen“ verwendet eine Bedingung, die CiviRules mitbringt. Sie vergleicht den Status vor der Änderung mit dem danach und feuert daher einmal, wenn eine Überweisung gebucht wird, nicht bei späteren Änderungen des Beitrags. Für Felder, für die CiviRules keine solche Bedingung hat, ergänzt herald „Herald: Field transition“, siehe [Lebenszyklus von Events](#lebenszyklus-von-events).
 
 Der Fortschritt einer Kampagne braucht keine Einrichtung. Ein Beitrag, der zu einer Kampagne gehört, bringt Titel, Summe und Anzahl der Kampagne mit. Hat die Kampagne ein Umsatzziel, kommen das Ziel und der erreichte Prozentsatz hinzu. Siehe [Beitragsvariablen](reference.md#beitragsvariablen).
 
@@ -61,7 +52,7 @@ Dieselbe Quelle kann mit dem umgekehrten Operator auch eine eigene Regel steuern
 |---|---|---|---|
 | Ticket online bezahlt | Contribution is added | Finanztyp ist der Ticket-Typ, Status ist Completed | Herald: Neuer Ticket-/Event-Beitrag |
 | Ticket per Überweisung bestellt | Contribution is added | Finanztyp ist der Ticket-Typ, Status ist Pending | Herald: Ticket bestellt, Überweisung angekündigt |
-| Ticket-Überweisung eingegangen | Contribution is changed | Herald: Field transition auf contribution_status_id:name mit Vorher = Pending, Finanztyp ist der Ticket-Typ, Status ist Completed | Herald: Ticket-Überweisung eingegangen |
+| Ticket-Überweisung eingegangen | Contribution is changed | Compare Old Contribution Status to New Contribution Status: von Pending zu Completed, und Finanztyp ist der Ticket-Typ | Herald: Ticket-Überweisung eingegangen |
 
 Alle drei verwenden „Herald: Send notification (generic)“. Nach einer Ankündigung kommen Verkäufe gehäuft, setzen Sie daher das „Sammelfenster in Minuten“ auf 5. Sieben Verkäufe innerhalb des Fensters erscheinen dann als eine Nachricht mit der Kopfzeile „📬 7 Meldungen, gesamt 385,00 € (gesammelt über 5 min)“, gefolgt von den einzelnen Verkäufen. Siehe [Sammelnachrichten](delivery.md#sammelnachrichten).
 

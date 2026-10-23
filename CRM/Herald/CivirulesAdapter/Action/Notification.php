@@ -32,7 +32,7 @@ if (class_exists('CRM_Civirules_Action')) {
           'Membership' => $triggerData->getEntityData('Membership'),
           'Participant' => $triggerData->getEntityData('Participant'),
           'Event' => $triggerData->getEntityData('Event'),
-          'original' => CRM_Herald_CivirulesAdapter_OriginalData::all($triggerData),
+          'original' => CRM_Herald_CivirulesAdapter_EditData::originals($triggerData),
         ])
         ->execute();
     }

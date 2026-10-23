@@ -89,7 +89,7 @@ The value before the edit comes from the copy CiviRules keeps of the record. For
 
 herald's own copy lasts only as long as the request, but a delayed action rechecks its conditions later, in the cron run. CiviRules keeps custom fields under different names and has no fields of referenced records, so for them herald's copy is the only source. On a delayed action with such a field, tick "Don't recheck condition upon processing of delayed action", or the condition never fires.
 
-The value after the edit is read from the stored record, so a partial update that did not write the field is judged by its real value.
+The value after the edit is the one this edit wrote, as CiviRules passes it on. CiviRules evaluates once the whole save is committed, and one save can write a record several times, so the stored record may already hold a later write. When the edit did not write the field, herald reads the stored record.
 
 herald takes its copy only of fields that active rules watch. A long-running queue or command line worker sees a newly configured field only after a restart.
 
@@ -115,7 +115,7 @@ The entity `Herald` offers these actions. The actions need the permission "admin
 | notify | actionParams, triggerContext | What "Send notification" calls. |
 | notifyDigest | digest, actionParams, sendHour, daily, skipEmpty | What "Send digest" calls, and scripts, see [Sending a digest](digests.md#sending-a-digest). |
 | checkSchedule | ruleId, schedule | What "Herald: Schedule" calls. Returns `due`, `slot`, `last_run` and `not_before`. |
-| checkFieldTransition | entity, entityId, field, fromOperator, fromValue, toOperator, toValue, originalValue, hasOriginal | What "Field transition" calls. Returns `matched`. |
+| checkFieldTransition | entity, entityId, field, fromOperator, fromValue, toOperator, toValue, before, after | What "Field transition" calls. `before` and `after` take the values of one edit as `{"value": …}`; without `before` it uses the snapshot of the current request, without `after` the stored record. Returns `matched`. |
 | getChannelTypes | type, optional | Lists the channel types and the keys they accept, with scope, secret and recipient flags. |
 | getChannels | withUsage, optional | Lists the configured channels. Secrets show only as set or not. withUsage adds who names each channel. |
 | saveChannel | name, channel, isNew | Validates one channel and stores it in `herald_channels`, its secrets encrypted. A secret left out or empty keeps its stored value, `null` clears it. |

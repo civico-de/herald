@@ -89,7 +89,7 @@ Der Wert vor der Änderung stammt aus der Kopie, die CiviRules vom Datensatz auf
 
 Die eigene Kopie von herald lebt nur so lange wie die Anfrage, eine verzögerte Aktion prüft ihre Bedingungen aber erst später im Cron-Lauf. Benutzerdefinierte Felder führt CiviRules unter anderen Namen, und Felder verknüpfter Datensätze hat es gar nicht. Für sie ist die Kopie von herald also die einzige Quelle. Setzen Sie bei einer verzögerten Aktion mit einem solchen Feld „Don't recheck condition upon processing of delayed action“, sonst löst die Bedingung nie aus.
 
-Der Wert nach der Änderung wird aus dem gespeicherten Datensatz gelesen. Eine Teilaktualisierung, die das Feld nicht schreibt, wird daher nach dem tatsächlich gespeicherten Wert beurteilt.
+Der Wert nach der Änderung ist der, den diese Änderung geschrieben hat, so wie CiviRules ihn weitergibt. CiviRules wertet erst aus, wenn das ganze Speichern abgeschlossen ist, und ein Speichern kann einen Datensatz mehrmals schreiben; der gespeicherte Datensatz kann dann schon einen späteren Stand enthalten. Hat die Änderung das Feld nicht geschrieben, liest herald den gespeicherten Datensatz.
 
 herald kopiert nur Felder, die aktive Regeln beobachten. Ein lange laufender Queue- oder Kommandozeilen-Worker sieht ein neu konfiguriertes Feld erst nach einem Neustart.
 
@@ -115,7 +115,7 @@ Die Entität `Herald` bietet diese Aktionen. Die Aktionen erfordern die Berechti
 | notify | actionParams, triggerContext | Wird von „Send notification“ aufgerufen. |
 | notifyDigest | digest, actionParams, sendHour, daily, skipEmpty | Wird von „Send digest“ und von Skripten aufgerufen, siehe [Einen Report verschicken](digests.md#einen-report-verschicken). |
 | checkSchedule | ruleId, schedule | Wird von „Herald: Schedule“ aufgerufen. Gibt `due`, `slot`, `last_run` und `not_before` zurück. |
-| checkFieldTransition | entity, entityId, field, fromOperator, fromValue, toOperator, toValue, originalValue, hasOriginal | Wird von „Field transition“ aufgerufen. Gibt `matched` zurück. |
+| checkFieldTransition | entity, entityId, field, fromOperator, fromValue, toOperator, toValue, before, after | Wird von „Field transition“ aufgerufen. `before` und `after` nehmen die Werte eines Edits als `{"value": …}`; ohne `before` gilt der Schnappschuss der laufenden Anfrage, ohne `after` der gespeicherte Datensatz. Gibt `matched` zurück. |
 | getChannelTypes | type, optional | Listet die Kanaltypen und die Schlüssel auf, die sie akzeptieren, mit den Angaben zu Geltungsbereich, Geheimnis und Ziel. |
 | getChannels | withUsage, optional | Listet die konfigurierten Kanäle auf. Geheimnisse erscheinen nur als gesetzt oder nicht gesetzt. withUsage ergänzt, wer jeden Kanal nennt. |
 | saveChannel | name, channel, isNew | Prüft einen Kanal und speichert ihn in `herald_channels`, seine Geheimnisse verschlüsselt. Ein ausgelassenes oder leeres Geheimnis behält seinen gespeicherten Wert, `null` löscht ihn. |

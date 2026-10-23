@@ -63,9 +63,14 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransitionConditionTest extends
     return $data;
   }
 
+  /**
+   * @param array<string, mixed> $original
+   * @param array<string, mixed> $after The edit's own values, as CiviRules copies them from the DAO
+   */
   private function triggerDataWithOriginal(
     int $contributionId,
     array $original,
+    array $after = [],
   ): CRM_Civirules_TriggerData_TriggerData {
     $data = new class() extends CRM_Civirules_TriggerData_TriggerData implements
       CRM_Civirules_TriggerData_Interface_OriginalData {
@@ -84,7 +89,7 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransitionConditionTest extends
 
     };
     $data->original = $original;
-    $data->setEntityData('Contribution', ['id' => $contributionId]);
+    $data->setEntityData('Contribution', ['id' => $contributionId] + $after);
     return $data;
   }
 
@@ -124,6 +129,104 @@ class CRM_Herald_CivirulesAdapter_Condition_FieldTransitionConditionTest extends
     $this->assertFalse(
       $this->condition($this->pendingToCompletedParams())->isConditionValid($this->triggerData($id)),
     );
+  }
+
+  /**
+   * CiviRules runs after the commit: an earlier edit of the same save must not
+   * see the status a later edit wrote.
+   */
+  public function testTheEditsOwnValueBeatsTheLiveRow(): void {
+    $id = $this->createContribution(1);
+    $condition = $this->condition($this->pendingToCompletedParams());
+    $this->assertFalse($condition->isConditionValid(
+      $this->triggerDataWithOriginal($id, ['contribution_status_id' => 2], ['contribution_status_id' => '2']),
+    ));
+    $this->assertTrue($condition->isConditionValid(
+      $this->triggerDataWithOriginal($id, ['contribution_status_id' => 2], ['contribution_status_id' => '1']),
+    ));
+  }
+
+  /**
+   * The DAO leaves an emptied column out; the stored record then answers.
+   */
+  public function testAnEmptiedColumnIsEmptyAfterTheEdit(): void {
+    $id = $this->createContribution(1);
+    $params = [
+      'entity' => 'Contribution',
+      'field' => 'check_number',
+      'from_operator' => '=',
+      'from_value' => '42',
+      'to_operator' => 'is_empty',
+      'to_value' => '',
+    ];
+    $write = static fn (?string $value) => \Civi\Api4\Contribution::update(checkPermissions: FALSE)
+      ->addWhere('id', '=', $id)
+      ->addValue('check_number', $value)
+      ->execute();
+    $write('42');
+    $write(NULL);
+    $this->assertArrayNotHasKey('check_number', $this->posted);
+    $this->assertTrue($this->condition($params)->isConditionValid(
+      $this->triggerDataWithOriginal($id, ['check_number' => '42'], $this->posted),
+    ));
+  }
+
+  /**
+   * The values the last edit of a contribution wrote, as CiviRules copies them.
+   * @var array<string, mixed>
+   */
+  private array $posted = [];
+
+  public function hook_civicrm_post(string $op, string $objectName, ?int $objectId, mixed &$objectRef): void {
+    if ($op === 'edit' && $objectName === 'Contribution' && is_object($objectRef)) {
+      $this->posted = [];
+      CRM_Core_DAO::storeValues($objectRef, $this->posted);
+    }
+  }
+
+  /**
+   * @return array<string, string>
+   */
+  private static function changed(string $field): array {
+    return [
+      'entity' => 'Contribution',
+      'field' => $field,
+      'from_operator' => '',
+      'from_value' => '',
+      'to_operator' => 'not_empty',
+      'to_value' => '',
+    ];
+  }
+
+  /**
+   * The DAO keeps text HTML-encoded; rewriting the same text is no change.
+   */
+  public function testRewrittenTextIsNoChange(): void {
+    $id = $this->createContribution(1);
+    $write = static fn () => \Civi\Api4\Contribution::update(checkPermissions: FALSE)
+      ->addWhere('id', '=', $id)
+      ->addValue('source', 'a <b> & c')
+      ->execute();
+    $write();
+    $write();
+    $this->assertSame('a &lt;b&gt; & c', $this->posted['source']);
+    $data = $this->triggerDataWithOriginal($id, ['source' => 'a <b> & c'], ['source' => $this->posted['source']]);
+    $this->assertFalse($this->condition(self::changed('source'))->isConditionValid($data));
+    $params = ['to_operator' => '=', 'to_value' => 'a <b> & c', 'from_operator' => '=', 'from_value' => 'a <b> & c'];
+    $this->assertTrue($this->condition($params + self::changed('source'))->isConditionValid($data));
+  }
+
+  /**
+   * Forms write dates as YmdHis; the same moment is no change.
+   */
+  public function testADateWrittenAsDigitsIsNoChange(): void {
+    $id = $this->createContribution(1);
+    $data = $this->triggerDataWithOriginal(
+      $id,
+      ['receive_date' => '2026-10-23 10:00:00'],
+      ['receive_date' => '20261023100000'],
+    );
+    $this->assertFalse($this->condition(self::changed('receive_date'))->isConditionValid($data));
   }
 
   public function testOriginalDataBeatsSnapshot(): void {
