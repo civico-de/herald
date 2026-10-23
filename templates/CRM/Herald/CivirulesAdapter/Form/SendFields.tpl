@@ -1,4 +1,4 @@
-{* herald: the fields of a send action form, the channel-type options under a heading per type, then Advanced *}
+{* herald: the fields of a send action form, then Advanced with the channel-type options under a heading per type *}
 <div class="crm-block crm-form-block">
   <table class="form-layout">
     {assign var=heraldGroup value=''}
@@ -14,12 +14,12 @@
         {if $heraldType && $heraldType != $heraldGroup}
           <tr class="crm-herald-type-heading" data-herald-type="{$heraldType}">
             <td colspan="2">
-              <h4>
+              {if $heraldType == 'advanced'}<h4>{else}<h5>{/if}
                 <button type="button" class="crm-hover-button crm-herald-type-toggle" aria-expanded="true">
                   <i class="crm-i fa-chevron-down" aria-hidden="true"></i>
                   {if $heraldType == 'advanced'}{$heraldAdvancedLabel|escape}{else}{$heraldTypeLabels.$heraldType|escape}{/if}
                 </button>
-              </h4>
+              {if $heraldType == 'advanced'}</h4>{else}</h5>{/if}
             </td>
           </tr>
         {/if}

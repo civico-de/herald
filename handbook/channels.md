@@ -54,7 +54,7 @@ A channel that a topic route, a rule action, a scheduled job, a waiting or parke
 
 Each type has two kinds of keys. Account fields, such as `bot_token` or `ntfy_server`, belong to the channel only. A delivery that sets one fails: a route or rule action is not saved ("… belong to the channel, not to a delivery; set them under Channels."), and a call fails with "… belong to the channel configuration, not to a delivery". Delivery fields, such as `chat_id` or `ntfy_priority`, can be set on the channel as defaults and on each delivery. Where a delivery sets them depends on the caller:
 
-- A CiviRules action shows the delivery fields of the chosen channel's type. A field left empty, or a yes/no field on "- channel default -", keeps the channel's value; a chosen 0 or "No" overrides it.
+- A CiviRules action shows the delivery fields of the chosen channel's type: the recipients in the form, the presentation fields under "Advanced". A field left empty, or a yes/no field on "- channel default -", keeps the channel's value; a chosen 0 or "No" overrides it.
 - A topic route takes them in its entry.
 - `Herald.send` takes them in `config`.
 

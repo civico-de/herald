@@ -34,42 +34,48 @@
       own.forEach(function (name) {
         row(name).toggle(applies(name) && vars.advanced.indexOf(name) === -1);
       });
+      var shownTypes = {};
+      $.each(vars.fields, function (name, field) {
+        var forType = field.types.indexOf(type) !== -1;
+        if (field.recipient) {
+          row(name).toggle(!viaTopic && !fanOut && forType);
+          return;
+        }
+        // A fan-out reaches each contact on their own channel: every type's presentation keys apply.
+        var group = row(name).data('heraldType');
+        var keyApplies = !viaTopic && (fanOut || forType);
+        // A direct delivery shows its one type open.
+        row(name).toggle(keyApplies && !!expanded.advanced && (!fanOut || !!expanded[group]));
+        if (keyApplies) {
+          shownTypes[group] = true;
+        }
+      });
       var advancedShown = vars.advanced.filter(applies);
       vars.advanced.forEach(function (name) {
         row(name).toggle(advancedShown.indexOf(name) !== -1 && !!expanded.advanced);
       });
       var advancedHeading = $('.crm-herald-type-heading[data-herald-type="advanced"]');
-      advancedHeading.toggle(advancedShown.length > 0);
+      advancedHeading.toggle(advancedShown.length > 0 || !$.isEmptyObject(shownTypes));
       advancedHeading.find('button').attr('aria-expanded', expanded.advanced ? 'true' : 'false');
       advancedHeading.find('.crm-i').toggleClass('fa-chevron-down', !!expanded.advanced).toggleClass('fa-chevron-right', !expanded.advanced);
-      var shownTypes = {};
-      $.each(vars.fields, function (name, field) {
-        // A fan-out reaches each contact on their own channel: every type's presentation keys apply.
-        var applies = !viaTopic && (fanOut ? !field.recipient : field.types.indexOf(type) !== -1);
-        var group = row(name).data('heraldType');
-        // A direct delivery shows its one type open, since its recipient is among the fields.
-        row(name).toggle(applies && (!fanOut || !!expanded[group]));
-        if (applies) {
-          shownTypes[group] = true;
-        }
-      });
       $('.crm-herald-type-heading').not(advancedHeading).each(function () {
         var group = $(this).data('heraldType');
         var open = !fanOut || !!expanded[group];
-        $(this).toggle(!!shownTypes[group]);
+        $(this).toggle(!!shownTypes[group] && !!expanded.advanced);
         $(this).find('button').prop('disabled', !fanOut).attr('aria-expanded', open ? 'true' : 'false');
         $(this).find('.crm-i').toggleClass('fa-chevron-down', open).toggleClass('fa-chevron-right', !open);
       });
     }
     // A type starts open when one of its fields holds a value, Advanced when one differs from a new rule's.
     var expanded = {};
-    $.each(vars.fields, function (name) {
+    $.each(vars.fields, function (name, field) {
       var value = $('#' + name).val();
-      if (value !== undefined && value !== null && value !== '') {
+      if (!field.recipient && value !== undefined && value !== null && value !== '') {
         expanded[row(name).data('heraldType')] = true;
+        expanded.advanced = true;
       }
     });
-    expanded.advanced = vars.advanced.some(function (name) {
+    expanded.advanced = expanded.advanced || vars.advanced.some(function (name) {
       var field = $('#' + name);
       var value = field.is(':checkbox') ? field.prop('checked') : $.trim(field.val() || '');
       return value === true || ['', '0', '[]', '{}', false].indexOf(value) === -1;

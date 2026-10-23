@@ -14,13 +14,17 @@ final class CRM_Herald_CivirulesAdapter_SendFormFields {
   /**
    * The delivery keys of the channel types; blank ones leave the channel's
    * own value. The page script shows those of the chosen channel's type.
+   *
+   * @return list<string> the keys that are no recipient, for the form to list under Advanced
    */
-  public static function addTo(\CRM_Core_Form $form): void {
+  public static function addTo(\CRM_Core_Form $form): array {
     $fields = CRM_Herald_CivirulesAdapter_SendParams::channelFields();
     $typeOf = [];
     foreach ($fields as $key => $field) {
-      // The template sets each field under a heading of its first channel type.
-      $typeOf[$key] = $field['types'][0];
+      // The template sets each non-recipient field under a heading of its first channel type.
+      if (!$field['recipient']) {
+        $typeOf[$key] = $field['types'][0];
+      }
       $others = array_map(ChannelRegistry::label(...), array_slice($field['types'], 1));
       $label = $field['label'] . ($others === [] ? '' : ' (' . implode(', ', $others) . ')');
       $options = $field['options'] ?? [];
@@ -41,6 +45,7 @@ final class CRM_Herald_CivirulesAdapter_SendFormFields {
       ),
       'channelTypes' => CRM_Herald_CivirulesAdapter_SendOptions::channelTypes(),
     ]);
+    return array_keys($typeOf);
   }
 
   /**

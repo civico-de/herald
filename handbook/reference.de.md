@@ -19,10 +19,10 @@ herald ergänzt CiviRules um zwei Aktionen. Ihre Formulare haben diese Felder ge
 - Zustellmodus, mit dem Topic, dessen Abonnent:innen erreicht werden, der Gruppe, den E-Mail-Adressen, der Option „Kommunikationssperren beachten“ und dem Adresstyp der E-Mail. Siehe [Zustellmodi](delivery.md#zustellmodi).
 - Kanal, einer der aktiven Kanäle unter Administrieren » Herald » Kanäle. Direkt- und Adresslisten-Modus senden über ihn. Abonnent:innen und Gruppenmitglieder verwenden ihren eigenen Kanal.
 - Nachrichtenvorlage.
-- Die Zustellfelder des Typs des gewählten Kanals, etwa die Telegram-Chat-ID. Leere Felder behalten die Standardwerte des Kanals.
+- Die Empfängerfelder des Typs des gewählten Kanals, etwa die Telegram-Chat-ID. Leere Felder behalten die Standardwerte des Kanals.
 - Sammelfenster in Minuten. 0 sendet sofort, siehe [Sammelnachrichten](delivery.md#sammelnachrichten).
 
-Die Option „Kommunikationssperren beachten“, der Adresstyp der E-Mail, der Abo-Bezug, das Sammelfenster und die Variablen stehen unter „Erweitert“ am Ende des Formulars. Der Abschnitt öffnet sich von selbst, sobald eines dieser Felder einen Wert hat.
+Die Option „Kommunikationssperren beachten“, der Adresstyp der E-Mail, der Abo-Bezug, das Sammelfenster und die Variablen stehen unter „Erweitert“ am Ende des Formulars, danach die Darstellungsoptionen jedes Kanaltyps, etwa die ntfy-Priorität. Direkt- und Adresslisten-Modus zeigen die des Typs des gewählten Kanals; Abonnenten- und Gruppenmodus zeigen die aller Typen, jeweils unter eigener Überschrift, da jeder Kontakt die Nachricht über seinen eigenen Kanal erhält. „Erweitert“ öffnet sich von selbst, sobald eines seiner Felder einen Wert hat.
 
 Die Formulare erfordern die Berechtigung „administer CiviCRM“ (CiviCRM administrieren).
 

@@ -54,7 +54,7 @@ Ein Kanal, den eine Topic-Route, eine Regelaktion, ein geplanter Job, eine warte
 
 Jeder Typ hat zwei Arten von Schlüsseln. Kontofelder wie `bot_token` oder `ntfy_server` gehören nur zum Kanal. Eine Zustellung, die eines setzt, schlägt fehl: Eine Route oder Regelaktion wird nicht gespeichert („… gehören zum Kanal, nicht zu einer Zustellung; tragen Sie sie unter Kanäle ein.“), ein Aufruf scheitert mit „… belong to the channel configuration, not to a delivery“. Zustellfelder wie `chat_id` oder `ntfy_priority` lassen sich am Kanal als Standard und an jeder Zustellung setzen. Wo eine Zustellung sie setzt, hängt vom Aufrufer ab:
 
-- Eine CiviRules-Aktion zeigt die Zustellfelder des Typs des gewählten Kanals. Ein leeres Feld oder ein Ja/Nein-Feld auf „- Vorgabe des Kanals -“ behält den Wert des Kanals; eine gewählte 0 oder „Nein“ überschreibt ihn.
+- Eine CiviRules-Aktion zeigt die Zustellfelder des Typs des gewählten Kanals: die Empfänger im Formular, die Darstellungsfelder unter „Erweitert“. Ein leeres Feld oder ein Ja/Nein-Feld auf „- Vorgabe des Kanals -“ behält den Wert des Kanals; eine gewählte 0 oder „Nein“ überschreibt ihn.
 - Eine Topic-Route nimmt sie in ihrem Eintrag auf.
 - `Herald.send` nimmt sie in `config` entgegen.
 

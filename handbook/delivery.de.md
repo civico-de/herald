@@ -52,7 +52,7 @@ Jeder Kontakt kann einen Kanal und die gewünschten Benachrichtigungen wählen. 
 | Abonnements | Die Topics, die der Kontakt abonniert hat |
 | Bezug: Objekttyp, Bezug: Objekt-ID | Optional, siehe [Abos mit Bezug](#abos-mit-bezug) |
 
-Admins können diese Felder am Kontaktdatensatz ausfüllen. Zur Selbstverwaltung installiert herald das Profil „My notification preferences“ (meine Benachrichtigungseinstellungen). Schlagen Sie seine ID unter Administrieren » Daten und Masken anpassen » Profile (englisch: Administer » Customize Data and Screens » Profiles) nach und schicken Sie den Mitarbeitenden diesen Link:
+Admins können diese Felder im Tab „Benachrichtigungseinstellungen“ des Kontakts ausfüllen. Zur Selbstverwaltung installiert herald das Profil „My notification preferences“ (meine Benachrichtigungseinstellungen). Schlagen Sie seine ID unter Administrieren » Daten und Masken anpassen » Profile (englisch: Administer » Customize Data and Screens » Profiles) nach und schicken Sie den Mitarbeitenden diesen Link:
 
 ```
 /civicrm/profile/edit?gid=<id>&reset=1
@@ -60,7 +60,7 @@ Admins können diese Felder am Kontaktdatensatz ausfüllen. Zur Selbstverwaltung
 
 CiviCRM öffnet das Profil für den angemeldeten Kontakt, der nur seinen eigenen Datensatz sehen und bearbeiten kann.
 
-Um die Abonnements zu nutzen, setzen Sie den Zustellmodus einer Aktion auf „Abonnent:innen“ und wählen das Topic unter „Abonnent:innen des Topics“. Das an der Aktion eingetragene Ziel wird in diesem Modus ignoriert. Die Nachricht an jede:n Abonnent:in geht über den Kanal, den die Person gewählt hat, mit dem Konto dieses Kanals, etwa seinem Bot. Von der Regel gelangen nur Darstellungsoptionen dorthin:
+Um die Abonnements zu nutzen, setzen Sie den Zustellmodus einer Aktion auf „Abonnent:innen“ und wählen das Topic unter „Abonnent:innen des Topics“. Das an der Aktion eingetragene Ziel wird in diesem Modus ignoriert. Die Nachricht an jede:n Abonnent:in geht über den Kanal, den die Person gewählt hat, mit dem Konto dieses Kanals, etwa seinem Bot. Von der Regel gelangen nur Darstellungsoptionen dorthin; das Aktionsformular führt sie unter „Erweitert“:
 
 - Telegram: `parse_mode`, `disable_notification`, `disable_web_page_preview`
 - Webhook: `webhook_method`, `webhook_body_format`, `webhook_body_key`

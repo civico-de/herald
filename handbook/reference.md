@@ -19,10 +19,10 @@ herald adds two CiviRules actions. Their forms share these fields:
 - Delivery mode, with the topic whose subscribers to reach, the group, the email addresses, the suspension option and the email location type. See [Delivery modes](delivery.md#delivery-modes).
 - Channel, one of the active channels under Administer » Herald » Channels. Direct and address mode send through it. Subscribers and group members use their own channel.
 - Message template.
-- The delivery fields of the chosen channel's type, such as the Telegram chat ID. Empty fields keep the channel's defaults.
+- The recipient fields of the chosen channel's type, such as the Telegram chat ID. Empty fields keep the channel's defaults.
 - Aggregate window in minutes. 0 sends at once, see [Aggregation](delivery.md#aggregation).
 
-The suspension option, the email location type, the subscription scope, the aggregate window and the variables sit under "Advanced" at the end of the form. It opens by itself when one of them holds a value.
+The suspension option, the email location type, the subscription scope, the aggregate window and the variables sit under "Advanced" at the end of the form, followed by the presentation options of each channel type, such as the ntfy priority. Direct and address mode show those of the chosen channel's type; subscriber and group mode show every type's, each under its own heading, since each contact gets the message on their own channel. "Advanced" opens by itself when one of its fields holds a value.
 
 The forms need the permission "administer CiviCRM".
 

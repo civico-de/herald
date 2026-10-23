@@ -52,7 +52,7 @@ Each contact can choose a channel and the notifications they want. herald adds t
 | Subscriptions | The topics the contact subscribed to |
 | Scope: entity type, Scope: entity ID | Optional, see [Scoped subscriptions](#scoped-subscriptions) |
 
-Admins can fill these in on the contact record. For self-service, herald installs the profile "My notification preferences". Look up its ID under Administer » Customize Data and Screens » Profiles, and send staff this link:
+Admins can fill these in on the contact's tab "Notification preferences". For self-service, herald installs the profile "My notification preferences". Look up its ID under Administer » Customize Data and Screens » Profiles, and send staff this link:
 
 ```
 /civicrm/profile/edit?gid=<id>&reset=1
@@ -60,7 +60,7 @@ Admins can fill these in on the contact record. For self-service, herald install
 
 CiviCRM opens the profile for the logged-in contact, who can see and edit only their own record.
 
-To use the subscriptions, set an action's delivery mode to "Subscribers" and choose the topic under "Subscribers of topic". The action's own recipient is ignored in this mode. Each subscriber's message goes through the channel they chose, with that channel's account, such as its bot. Only presentation options are passed from the rule:
+To use the subscriptions, set an action's delivery mode to "Subscribers" and choose the topic under "Subscribers of topic". The action's own recipient is ignored in this mode. Each subscriber's message goes through the channel they chose, with that channel's account, such as its bot. Only presentation options are passed from the rule; the action form lists them under "Advanced":
 
 - Telegram: `parse_mode`, `disable_notification`, `disable_web_page_preview`
 - webhook: `webhook_method`, `webhook_body_format`, `webhook_body_key`

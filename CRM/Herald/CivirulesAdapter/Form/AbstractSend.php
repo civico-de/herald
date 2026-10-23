@@ -26,7 +26,8 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
     protected array $descriptions = [];
 
     /**
-     * Fields whose defaults suit most rules; the form lists them last, under Advanced.
+     * Fields whose defaults suit most rules; the form lists them last, under Advanced,
+     * followed by the channel types' keys that are no recipient.
      */
     private const ADVANCED = ['respect_suspension', 'email_location_type', 'scope_entity', 'aggregate_minutes', 'vars'];
 
@@ -131,7 +132,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
       if ($templates !== []) {
         $this->add('select', 'template', E::ts('Message template'), $templates, required: TRUE);
       }
-      CRM_Herald_CivirulesAdapter_SendFormFields::addTo($this);
+      $presentation = CRM_Herald_CivirulesAdapter_SendFormFields::addTo($this);
       $this->add(
         'text',
         'aggregate_minutes',
@@ -165,7 +166,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
         ['type' => 'next', 'name' => E::ts('Save'), 'isDefault' => TRUE],
         ['type' => 'cancel', 'name' => E::ts('Cancel')],
       ]);
-      CRM_Herald_CivirulesAdapter_FormElements::assign($this, self::ADVANCED);
+      CRM_Herald_CivirulesAdapter_FormElements::assign($this, [...self::ADVANCED, ...$presentation]);
       $this->assign('heraldDescriptions', $this->descriptions);
       $advanced = array_values(array_filter(self::ADVANCED, $this->elementExists(...)));
       $this->assign('heraldAdvanced', array_fill_keys($advanced, TRUE));

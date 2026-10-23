@@ -518,7 +518,7 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     $this->assertStringContainsString('name="from_operator"', $this->rendered($this->transitionForm()));
   }
 
-  public function testTheSendFormsListTheAdvancedFieldsLastUnderTheirHeading(): void {
+  public function testTheSendFormsListTheAdvancedAndPresentationFieldsLastUnderTheirHeading(): void {
     $notification = $this->rendered($this->sendForm());
     $headingRow = '<tr class="crm-herald-type-heading" data-herald-type="advanced">';
     $heading = strpos($notification, $headingRow);
@@ -528,6 +528,13 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
       $this->assertGreaterThan($heading, strpos($notification, "name=\"{$field}\""), $field);
     }
     $this->assertSame(1, substr_count($notification, $headingRow));
+    // Recipients stay in view; a channel type's presentation keys follow under Advanced.
+    $this->assertLessThan($heading, strpos($notification, 'name="chat_id"'));
+    $this->assertGreaterThan($heading, strpos($notification, 'name="ntfy_priority"'));
+    $this->assertGreaterThan($heading, strpos(
+      $notification,
+      '<tr class="crm-herald-type-heading" data-herald-type="ntfy">',
+    ));
 
     $digest = $this->rendered($this->digestForm('herald_test_advanced'));
     $this->assertLessThan(
