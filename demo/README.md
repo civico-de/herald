@@ -50,33 +50,8 @@ A rerun deletes every contribution and activity of the six donors and
 creates them anew; anything else entered for those donors is lost too.
 Digests and rules are only created when missing, so edits to them stay.
 
-## Feature tour: `tour/`
+## Handbook screenshots
 
-`tour/run.sh` walks through herald's screens in a browser, in six parts:
-channels and topics, subscriptions, test message and templates, alerts with
-CiviRules, digests, and operations. It records one English video per part,
-with captions and a frame around what each caption explains, and writes the
-handbook screenshots:
-English ones to `handbook/images/`, German ones to `handbook/images/de/`.
-
-It needs the dev stack running (`cd .docker && docker compose up -d`),
-`ffmpeg` on the host, and the pinned Playwright:
-
-```bash
-bun install
-npx playwright install chromium
-bun run tour
-```
-
-The videos land in `demo/tour/out/herald-<n>-<part>.mp4`, which git ignores.
-Captions stay on screen for about 70 ms a character, at least four seconds;
-both values sit at the top of `tour/tour.spec.ts`.
-The screenshots are committed; rerun the tour after a screen changes.
-
-Before the browser starts, the script runs `digests.php` and
-`tour/prepare.php` on the site. `prepare.php` adds a topic `news` with three
-synthetic subscribers, an `email` channel, the rule `herald_tour_donation`
-and a parked alert. It also removes the channel `team_mail` and the topic
-`donations`, which the tour creates on screen. For the German pass the
-script sets the site language to `de_DE` and switches it back to `en_US`
-when it exits.
+The screenshots in `handbook/images/` (English) and `handbook/images/de/`
+(German) are taken by a browser tour against the dev stack filled with this
+seed data. Retake them after a screen changes.
