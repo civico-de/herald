@@ -24,7 +24,7 @@ Jeder andere Modus lässt den Versand scheitern. Das Aktionsformular speichert k
 
 Im Abonnent:innen-Modus ist jedes Abo auf das Topic ein Ziel. Ein Abo, dessen Kanal fehlt oder dem das Ziel fehlt, das sein Kanal braucht, wird übersprungen.
 
-Im Gruppenmodus spielen Topics und Bezüge keine Rolle. Ein Gruppenmitglied wird über jedes seiner Abos erreicht, an dem „Gruppennachrichten“ gesetzt ist. Ein Mitglied ohne verwendbares solches Abo erhält stattdessen eine E-Mail an die eigene Adresse, über den Kanal aus der Einstellung „E-Mail-Kanal für Kontakte“. Das gilt auch für ein Mitglied, dessen einziges Gruppen-Abo eine Telegram-Zeile mit leerer Chat-ID ist.
+Im Gruppenmodus spielen Topics und Bezüge keine Rolle. Ein Gruppenmitglied wird über den Kanal erreicht, den es unter [Nachrichten an Gruppen](#nachrichten-an-gruppen) gewählt hat. Ein Mitglied ohne einen solchen Kanal, oder dessen Kanal es nicht erreicht, erhält stattdessen eine E-Mail an die eigene Adresse, über den Kanal aus der Einstellung „E-Mail-Kanal für Kontakte“. Das gilt auch für ein Mitglied, dessen Gruppenkanal Telegram mit leerer Chat-ID ist.
 
 Der Adresslisten-Modus sendet immer E-Mail, über den E-Mail-Kanal, den die Aktion nennt. Trennen Sie die Adressen durch Kommas, Semikolons oder Zeilenumbrüche. Er eignet sich für Funktionsadressen und Empfänger:innen, die keine Kontakte sind.
 
@@ -50,20 +50,32 @@ Ein Kontakt abonniert über beliebig viele Abos, jedes ein Kanal mit seinem Ziel
 | Kanal | Einer der Kanäle, die Kontakten angeboten werden, siehe [Einen Kanal konfigurieren](channels.md#einen-kanal-konfigurieren) |
 | Ziel | Wohin der Kanal zustellt: eine Telegram-Chat-ID, ein Pushover-Benutzer- oder Gruppenschlüssel, ein ntfy-Topic oder eine Webhook-URL. Bei einem E-Mail-Kanal bleibt es leer für die primäre Adresse des Kontakts, oder Sie tragen eine andere Adresse ein, etwa ein Funktionspostfach. |
 | Topics | Die Topics, die dieses Abo trägt |
-| Gruppennachrichten | Dieses Abo erhält auch Zustellungen an Gruppen, siehe Gruppenmodus oben |
 | Bezug: Objekttyp, Bezug: Objekt-ID | Optional, siehe [Abos mit Bezug](#abos-mit-bezug) |
 
 So erhält eine Kollegin fehlgeschlagene Zahlungen per Pushover und den Tagesbericht per E-Mail, mit zwei Zeilen. Erreichen zwei Zeilen einen Kontakt über denselben Kanal und dasselbe Ziel, kommt die Nachricht einmal an.
 
-Beim Speichern prüft herald die Zeile: Ein Kanal außer E-Mail braucht ein Ziel, eine eingetragene E-Mail-Adresse muss eine sein, eine Webhook-URL muss dieselben Prüfungen bestehen wie beim Senden (siehe [Webhook](channels.md#webhook)), und eine Zeile ohne Topics muss Gruppennachrichten erhalten. Die Vermerke des Kontakts zu E-Mails, „Do not email“ und die Abmeldung, gelten auch für eine eingetragene Adresse.
+Beim Speichern prüft herald die Zeile: Ein Kanal außer E-Mail braucht ein Ziel, eine eingetragene E-Mail-Adresse muss eine sein, eine Webhook-URL muss dieselben Prüfungen bestehen wie beim Senden (siehe [Webhook](channels.md#webhook)), und eine Zeile braucht mindestens ein Topic. Die Vermerke des Kontakts zu E-Mails, „Do not email“ und die Abmeldung, gelten auch für eine eingetragene Adresse.
 
-Admins legen die Zeilen im Tab „Benachrichtigungs-Abos“ des Kontakts an und bearbeiten sie dort. Zur Selbstverwaltung installiert herald das Profil „My notification preferences“ (meine Benachrichtigungseinstellungen). Schlagen Sie seine ID unter Administrieren » Daten und Masken anpassen » Profile (englisch: Administer » Customize Data and Screens » Profiles) nach und schicken Sie den Mitarbeitenden diesen Link:
+### Nachrichten an Gruppen
+
+Eine Nachricht an eine Gruppe erreicht deren Mitglieder unabhängig von ihren Topics; wer in der Gruppe ist, entscheiden Admins. Wie solche Nachrichten ankommen, wählt jeder Kontakt einmal, in den Feldern „Nachrichten an Gruppen“ auf der Kontaktübersicht:
+
+| Feld | Bedeutung |
+|---|---|
+| Kanal | Einer der Kanäle, die Kontakten angeboten werden. Bleibt er leer, gehen Nachrichten an die Gruppen des Kontakts per E-Mail an die primäre Adresse. |
+| Ziel | Wie bei einem Abo |
+
+Beim Speichern prüft herald das Ziel wie bei einem Abo.
+
+### Abos verwalten
+
+Admins legen die Zeilen im Tab „Benachrichtigungs-Abos“ des Kontakts an und bearbeiten sie dort. Zur Selbstverwaltung installiert herald das Profil „My notifications“ (meine Benachrichtigungen). Schlagen Sie seine ID unter Administrieren » Daten und Masken anpassen » Profile (englisch: Administer » Customize Data and Screens » Profiles) nach und schicken Sie den Mitarbeitenden diesen Link:
 
 ```
 /civicrm/profile/edit?gid=<id>&reset=1
 ```
 
-CiviCRM listet dort die eigenen Zeilen des angemeldeten Kontakts, mit „Add New Record“ (neuer Datensatz) und Links zum Ansehen, Bearbeiten und Löschen; die Zeilen anderer Kontakte erreicht niemand. Die Mitarbeitenden brauchen die Rechte „profile edit“ und „access all custom data“: Ohne das zweite zeigt CiviCRM das Profil ohne jedes seiner Felder.
+Das Profil zeigt die „Nachrichten an Gruppen“ des angemeldeten Kontakts als Formular und listet darunter seine eigenen Zeilen, mit „Add New Record“ (neuer Datensatz) und Links zum Ansehen, Bearbeiten und Löschen; die Zeilen anderer Kontakte erreicht niemand. Die Mitarbeitenden brauchen die Rechte „profile edit“ und „access all custom data“: Ohne das zweite zeigt CiviCRM das Profil ohne jedes seiner Felder.
 
 Um die Abonnements zu nutzen, setzen Sie den Zustellmodus einer Aktion auf „Abonnent:innen“ und wählen das Topic unter „Abonnent:innen des Topics“. Das an der Aktion eingetragene Ziel wird in diesem Modus ignoriert. Die Nachricht an jede:n Abonnent:in geht über den Kanal, den die Person gewählt hat, mit dem Konto dieses Kanals, etwa seinem Bot. Von der Regel gelangen nur Darstellungsoptionen dorthin; das Aktionsformular führt sie unter „Erweitert“:
 
@@ -85,7 +97,7 @@ Ein Topic, das eine Route, eine Regelaktion, ein Job oder eine wartende Meldung 
 
 ### Abos mit Bezug
 
-Ein Abo lässt sich auf einen einzelnen Datensatz beschränken, etwa auf das Event mit der ID 42. Setzen Sie dazu „Bezug: Objekttyp“ auf Event und „Bezug: Objekt-ID“ auf 42. Diese Zeile erhält dann nur noch Benachrichtigungen zu diesem Event. Um zwei Events zu verfolgen, legen Sie zwei Zeilen an.
+Ein Abo lässt sich auf einen einzelnen Datensatz beschränken, etwa auf das Event mit der ID 42. Wählen Sie dazu unter „Bezug: Objekttyp“ Event und tragen Sie unter „Bezug: Objekt-ID“ 42 ein; die Liste bietet Event, Mitgliedschaft und Teilnehmer:in. Eine Zeile mit nur einer der beiden Angaben wird beim Speichern abgewiesen. Diese Zeile erhält dann nur noch Benachrichtigungen zu diesem Event. Um zwei Events zu verfolgen, legen Sie zwei Zeilen an.
 
 Auf welchen Datensatz sich eine Regel bezieht, legt das Feld „Abo-Bezug“ an der Aktion „Herald: Send notification (generic)“ fest. Zur Auswahl stehen Event, Mitgliedschaft und Teilnehmer:in, und herald übernimmt die ID aus dem Trigger. Event funktioniert auch bei Triggern auf Teilnahmen, über das Event der Teilnahme.
 

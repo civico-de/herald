@@ -38,7 +38,8 @@ Eine mehrzeilige Feldgruppe `herald_subscription` (`is_multiple`, `style` `Tab`)
 | `recipient` | Text | der Empfänger im Format des Kanaltyps; bei E-Mail leer = die Adresse des Kontakts |
 | `topics` | Mehrfachauswahl, Optionsgruppe `herald_subscribable_topic` | Pflicht, mindestens eines |
 | `source_entity_type`, `source_entity_id` | Text, Zahl | optionaler Bezug dieser Zeile |
-| `for_groups` | Ja/Nein | diese Zeile gilt auch für Gruppennachrichten, siehe unten |
+
+Dazu eine einzeilige Feldgruppe `herald_group_delivery` (`style` `Inline`) auf Contact mit `channel` (dieselbe Optionsgruppe, leer erlaubt) und `recipient`: wie Nachrichten an die Gruppen des Kontakts ankommen, siehe unten.
 
 Warum eine mehrzeilige Feldgruppe statt einer eigenen Tabelle (wie im Plan „Abos auf Topics“ noch vermutet): CiviCRM bringt dafür den Tab am Kontakt mit Tabelle, Anlegen, Bearbeiten und Löschen mit, ein APIv4-Entity `Custom_herald_subscription`, SearchKit für Zählungen und die Listenansicht mehrzeiliger Gruppen im Profil für die Selbstverwaltung. Eine eigene Tabelle bräuchte Schema, DAO, Upgrade, Kontakt-Tab, Formular und ACL selbst. Die Optionsgruppen bleiben dieselben, also auch ihr Sync aus Kanälen und Topics.
 
@@ -46,7 +47,7 @@ Warum eine mehrzeilige Feldgruppe statt einer eigenen Tabelle (wie im Plan „Ab
 
 Jeder Kanaltyp nennt in `getSemanticFields()` seinen Abonnenten-Empfänger: `recipient => chat_id` (Telegram), `pushover_user_key`, `ntfy_topic`, `webhook_url`, `email_to`. Ein Typ ohne diesen Eintrag ist nicht abonnierbar (`SubscriptionConfig::reachable()`). Der Lookup legt `recipient` unter diesen Key; `ContactRows::RECIPIENT_FIELDS` fällt weg.
 
-Prüfen beim Speichern: Der Wert muss die Prüfungen bestehen, die beim Senden ohnehin gelten (etwa die Webhook-URL gegen die erlaubten Hosts), damit ein Fehler im Formular auffällt statt erst bei der Zustellung. Das hängt an `hook_civicrm_validateForm` für das Tab-Formular (`CRM_Contact_Form_CustomData`) und das Profil (`CRM_Profile_Form_Edit`), weil ein im `pre`-Hook geworfener Fehler kein Formularfehler wäre; ein ungültiger Wert ist ein Fehler im Formular, keine stille Korrektur. Schreibt jemand über APIv4 direkt, prüft niemand; der Versand prüft dieselben Regeln ohnehin.
+Prüfen beim Speichern: Der Wert muss die Prüfungen bestehen, die beim Senden ohnehin gelten (etwa die Webhook-URL gegen die erlaubten Hosts), damit ein Fehler im Formular auffällt statt erst bei der Zustellung. Das hängt an `hook_civicrm_validateForm` für das Tab-Formular (`CRM_Contact_Form_CustomData`), die Kontaktübersicht (`CRM_Contact_Form_Inline_CustomData`, `CRM_Contact_Form_Contact`) und das Profil (`CRM_Profile_Form_Edit`), weil ein im `pre`-Hook geworfener Fehler kein Formularfehler wäre; ein ungültiger Wert ist ein Fehler im Formular, keine stille Korrektur. Schreibt jemand über APIv4 direkt, prüft niemand; der Versand prüft dieselben Regeln ohnehin.
 
 ### E-Mail
 
@@ -62,7 +63,7 @@ Die Zählung der Übersprungenen (`suspended`, `scope_mismatch`, `no_channel`, `
 
 ### An eine Gruppe
 
-Der Gruppenmodus kennt keine Topics und keinen Bezug. Er erreicht jedes Mitglied über seine brauchbaren Zeilen mit `for_groups`, jede einmal; ohne brauchbare solche Zeile bekommt das Mitglied wie heute eine E-Mail über `herald_contact_email_channel`. Ein Haken statt „die erste Zeile“, weil eine Reihenfolge der Zeilen nichts bedeutet und eine geratene Wahl Meldungen an einen Kanal schickt, den der Kontakt dafür nie vorgesehen hat.
+Der Gruppenmodus kennt keine Topics und keinen Bezug. Er erreicht jedes Mitglied über seinen Kanal aus `herald_group_delivery`; ohne einen brauchbaren bekommt das Mitglied wie heute eine E-Mail über `herald_contact_email_channel`. Eine eigene Einstellung pro Kontakt statt eines Hakens an den Abo-Zeilen, weil die Frage „über welchen Kanal erreichen mich Nachrichten an meine Gruppen“ nichts mit den Topics einer Zeile zu tun hat; ein Haken an der Zeile vermischte beides und ließe auch Zeilen mit Bezug Gruppennachrichten ohne Bezug empfangen. Die Einstellung trägt Kanal und Empfänger selbst statt auf eine Zeile zu verweisen, damit nichts ins Leere zeigt, wenn eine Zeile gelöscht wird. Ein Kanal pro Kontakt reicht; mehrere wären erst bei belegtem Bedarf nötig.
 
 ### Zählungen in den Admin-Screens
 
@@ -70,7 +71,7 @@ Kanalliste (Abonnenten pro Kanal, `ang/heraldAdmin/channels.js`) und Topic-Liste
 
 ## Selbstverwaltung
 
-Das Profil `herald_my_preferences` bleibt, mit den Feldern der neuen Gruppe statt der alten. Core-Profile können mehrzeilige Feldgruppen: Im Bearbeiten-Modus listen sie die Zeilen des Kontakts mit Ansehen, Bearbeiten und Löschen und bieten „Add New Record“ im Dialog an (`CRM_Profile_Page_MultipleRecordFieldsListing`, `multiRecord=add|update|delete` in `CRM_Profile_Form_Edit`). Der Link `/civicrm/profile/edit?gid=<id>&reset=1` bleibt damit gültig. Die Prüfung des Empfängers läuft über denselben Hook wie im Tab.
+Das Profil `herald_my_preferences` bleibt, mit den Feldern der neuen Gruppen statt der alten. Im Bearbeiten-Modus zeigt Core einzeilige Felder als Formular und mehrzeilige darunter als Liste (`CRM_Profile_Form::preProcess()`, `shiftMultiRecordFields()`), mit einem gemeinsamen Speichern-Knopf. Core-Profile können mehrzeilige Feldgruppen: Im Bearbeiten-Modus listen sie die Zeilen des Kontakts mit Ansehen, Bearbeiten und Löschen und bieten „Add New Record“ im Dialog an (`CRM_Profile_Page_MultipleRecordFieldsListing`, `multiRecord=add|update|delete` in `CRM_Profile_Form_Edit`). Der Link `/civicrm/profile/edit?gid=<id>&reset=1` bleibt damit gültig. Die Prüfung des Empfängers läuft über denselben Hook wie im Tab.
 
 Gemessen am 23.10.2026 im Dev-Stack mit einer mehrzeiligen Wegwerf-Gruppe (Kanal, Empfänger, Topics) und einem Nutzer mit „profile edit“, „edit my contact“, aber ohne „edit all contacts“:
 
@@ -86,10 +87,10 @@ Der Link im Handbuch bleibt `/civicrm/profile/edit?gid=<id>&reset=1`; ein fester
 Für jeden Kontakt mit einem Datensatz in `herald_preferences`, in SQL über die Custom-Tabellen, ohne Kontaktdaten zu lesen oder zu loggen:
 
 1. **Feldgruppe anlegen.** Die mgd-Datei deklariert `herald_subscription` neben `herald_preferences`; der Reconcile vor dem Upgrade-Schritt legt sie an.
-2. **Zeilen schreiben.** Hat der Kontakt `preferred_channel` und mindestens ein Topic, wird eine Zeile: Kanal, der Empfänger aus der Spalte des Kanaltyps, die Topics, der Bezug, `for_groups` = ja. Hat er einen Kanal ohne Topics, wird eine Zeile ohne Topics mit `for_groups` = ja, damit der Gruppenmodus ihn weiter erreicht; nur diese Zeilen dürfen ohne Topic bestehen.
+2. **Zeilen und Gruppenkanal schreiben.** Hat der Kontakt `preferred_channel`, werden Kanal und der Empfänger aus der Spalte des Kanaltyps sein Gruppenkanal in `herald_group_delivery`, damit der Gruppenmodus ihn weiter auf demselben Weg erreicht. Hat er außerdem mindestens ein Topic, wird eine Zeile: Kanal, Empfänger, die Topics, der Bezug.
 3. **Übrige Empfänger.** Werte in den Spalten anderer Typen als dem gewählten wurden bisher nie benutzt. Sie werden nicht übernommen; das Upgrade schreibt ihre Zahl pro Spalte ins Log (eine Zahl, keine Werte).
-4. **Profil umstellen, alte Feldgruppe entfernen.** `PreferencesProfile::ensure()` ersetzt die Felder des Profils durch die der neuen Gruppe, danach fällt `herald_preferences` samt Tabelle (aus der mgd-Datei genommen, `cleanup` greift erst, wenn der Schritt gelaufen ist, wie bei `SubscriptionTypes::fieldGroup()`).
-5. **Zweiter Lauf.** Ein wiederholter Schritt legt keine Zeile doppelt an: Er überspringt Kontakte, die schon eine Zeile in `herald_subscription` haben.
+4. **Alte Feldgruppe entfernen, Profil umstellen.** `SubscriptionRows::retire()` löscht die Profilfelder auf die alten Felder und dann `herald_preferences` samt Tabelle; danach legt `PreferencesProfile::ensure()` die Felder der neuen Gruppen im Profil an.
+5. **Zweiter Lauf.** Ein wiederholter Schritt legt nichts doppelt an: Er schreibt keine Zeile für Kontakte, die schon eine haben, und keinen Gruppenkanal für Kontakte, die schon einen haben.
 
 Bis zum Upgrade-Schritt lesen Lookup und Zählungen weiter `herald_preferences` als eine Zeile pro Kontakt (`LegacyPreferences`), damit zwischen dem Austausch des Codes und `cv updb` keine Meldung verloren geht. Der Schalter ist `LegacyPreferences::pending()`: ob die alte Feldgruppe noch existiert. Die Schema-Version taugt nicht, weil ein abgebrochener Schritt sie stehen lässt, die Gruppe aber schon weg sein kann. Solange sie existiert, deklariert die mgd-Datei sie weiter (`CRM_Herald_Upgrader_PreferencesGroup`), damit der Reconcile sie nicht vorzeitig löscht.
 
@@ -99,12 +100,12 @@ Die Migration liest auch Kontakte im Papierkorb: Wer wiederhergestellt wird, hat
 
 | Stelle | Änderung |
 |---|---|
-| `managed/SubscriberPreferences.mgd.php` | neue Gruppe `herald_subscription`, alte erst nach dem Upgrade weg |
+| `managed/SubscriberPreferences.mgd.php` | neue Gruppen `herald_subscription` und `herald_group_delivery`, alte erst nach dem Upgrade weg |
 | `Channel*::getSemanticFields()` | `recipient` pro abonnierbarem Typ |
 | `ContactRows`, `SubscriberLookup`, `GroupRecipients`, `SubscriptionScope` | Zeilen statt Kontakt, `RECIPIENT_FIELDS` weg |
 | `SubscribableTopics`, `channels.js` | Zählungen über die neue Gruppe |
 | `hook_civicrm_validateForm` (`SubscriptionForm`, `SubscriptionRules`) | Empfänger und Pflicht-Topics prüfen |
-| `CRM_Herald_Upgrader_PreferencesProfile` | Felder der neuen Gruppe |
+| `CRM_Herald_Upgrader_PreferencesProfile` | Felder der neuen Gruppen |
 | Upgrade-Schritt | Migration wie oben, mit Tests (zweite Domain, zweiter Lauf, Kontakt ohne Topics, Kontakt mit Bezug) |
 | Handbuch | `delivery.md` (Subscribers, Scoped subscriptions, Group mode, nötiges Recht „access all custom data“ für das Profil), `deploy.md` (Upgrade), Screenshots |
 | Tour (`extension-tours`) | Tab mit zwei Zeilen, Profil mit Zeilenliste |

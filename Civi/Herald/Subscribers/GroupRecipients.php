@@ -9,9 +9,9 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 /**
  * Resolves the members of a CiviCRM group into dispatch instructions.
  *
- * A member goes out through each usable subscription marked for group
- * messages. A member without one gets their own resolved address through
- * the contact email channel (ContactRows::emailChannel()).
+ * A member goes out through the channel they chose for messages to their
+ * groups. A member without a usable one gets their own resolved address
+ * through the contact email channel (ContactRows::emailChannel()).
  *
  * @phpstan-import-type Subscription from Subscriptions
  */
@@ -43,7 +43,7 @@ class GroupRecipients {
   }
 
   /**
-   * Map group-member rows and their group subscriptions to dispatch
+   * Map group-member rows and their group channels to dispatch
    * instructions. Pure — test-seam.
    *
    * @param array<int, array<string, mixed>> $rows
@@ -99,8 +99,8 @@ class GroupRecipients {
   }
 
   /**
-   * The member's usable group subscriptions; an unusable one falls back to
-   * the member's own address like a missing one.
+   * The member's group channel if usable; an unusable one falls back to the
+   * member's own address like a missing one.
    *
    * @param list<Subscription> $subscriptions
    * @param non-empty-list<array<string, mixed>> $contactRows

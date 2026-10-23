@@ -89,7 +89,7 @@ class CRM_Herald_Upgrader_SubscriptionRowsTest extends TestCase implements Headl
   private function rows(): array {
     $rows = [];
     foreach (\Civi\Api4\CustomValue::get(Subscriptions::GROUP, checkPermissions: FALSE)
-      ->addSelect('entity_id', 'channel', 'recipient', 'topics', 'for_groups', 'source_entity_type', 'source_entity_id')
+      ->addSelect('entity_id', 'channel', 'recipient', 'topics', 'source_entity_type', 'source_entity_id')
       ->addWhere('entity_id', 'IN', $this->contacts)
       ->addOrderBy('id')
       ->execute() as $row) {
@@ -100,13 +100,35 @@ class CRM_Herald_Upgrader_SubscriptionRowsTest extends TestCase implements Headl
     return $rows;
   }
 
+  /**
+   * @return array<int, array{channel: mixed, recipient: mixed}> Contact id => group channel
+   */
+  private function groupChannels(): array {
+    $prefix = Subscriptions::GROUP_DELIVERY . '.';
+    return array_map(
+      static fn (array $contact): array => [
+        'channel' => $contact[$prefix . 'channel'],
+        'recipient' => $contact[$prefix . 'recipient'],
+      ],
+      \Civi\Api4\Contact::get(checkPermissions: FALSE)
+        ->addSelect('id', $prefix . 'channel', $prefix . 'recipient')
+        ->addWhere('id', 'IN', $this->contacts)
+        ->addWhere('is_deleted', 'IN', [FALSE, TRUE])
+        ->addWhere($prefix . 'channel', 'IS NOT EMPTY')
+        ->addOrderBy('id')
+        ->execute()
+        ->indexBy('id')
+        ->getArrayCopy(),
+    );
+  }
+
   private static function upgrade(): void {
     $ctx = new CRM_Queue_TaskContext();
     $ctx->log = CRM_Core_Error::createDebugLogger();
     self::assertTrue(CRM_Herald_Upgrader::_queueAdapter($ctx, 'herald', 'upgrade_1017'));
   }
 
-  public function testEachRecordWithAChannelBecomesOneRowAndTheOldGroupGoes(): void {
+  public function testARecordBecomesARowAndTheGroupChannelAndTheOldGroupGoes(): void {
     $telegram = $this->contact([
       'preferred_channel' => 'ops_bot',
       'telegram_chat_id' => '111',
@@ -124,24 +146,38 @@ class CRM_Herald_Upgrader_SubscriptionRowsTest extends TestCase implements Headl
     ]);
 
     $counts = CRM_Herald_Upgrader_SubscriptionRows::migrate();
-    $this->assertSame(['rows' => 3, 'without_channel' => 1, 'unused' => ['pushover_user_key' => 1]], $counts);
+    $this->assertSame(
+      ['rows' => 2, 'group_channels' => 3, 'without_channel' => 1, 'unused' => ['pushover_user_key' => 1]],
+      $counts,
+    );
     self::upgrade();
 
-    $global = ['for_groups' => TRUE, 'source_entity_type' => NULL, 'source_entity_id' => NULL];
     $this->assertEquals(
       [
-        $telegram => [['channel' => 'ops_bot', 'recipient' => '111', 'topics' => ['news', 'ops']] + $global],
-        $groupsOnly => [['channel' => 'email', 'recipient' => NULL, 'topics' => []] + $global],
+        $telegram => [[
+          'channel' => 'ops_bot',
+          'recipient' => '111',
+          'topics' => ['news', 'ops'],
+          'source_entity_type' => NULL,
+          'source_entity_id' => NULL,
+        ]],
         $scoped => [[
           'channel' => 'push',
           'recipient' => 'key',
           'topics' => ['news'],
-          'for_groups' => TRUE,
           'source_entity_type' => 'Event',
           'source_entity_id' => 42,
         ]],
       ],
       $this->rows(),
+    );
+    $this->assertSame(
+      [
+        $telegram => ['channel' => 'ops_bot', 'recipient' => '111'],
+        $groupsOnly => ['channel' => 'email', 'recipient' => NULL],
+        $scoped => ['channel' => 'push', 'recipient' => 'key'],
+      ],
+      $this->groupChannels(),
     );
     $this->assertArrayNotHasKey($noChannel, $this->rows());
     $this->assertFalse(LegacyPreferences::pending());
@@ -160,12 +196,15 @@ class CRM_Herald_Upgrader_SubscriptionRowsTest extends TestCase implements Headl
     self::upgrade();
 
     $this->assertSame('7', $this->rows()[$trashed][0]['recipient']);
+    $this->assertSame('7', $this->groupChannels()[$trashed]['recipient']);
   }
 
   public function testARerunWritesNoRowTwice(): void {
     $this->contact(['preferred_channel' => 'ops_bot', 'telegram_chat_id' => '1', 'subscriptions' => ['news']]);
-    $this->assertSame(1, CRM_Herald_Upgrader_SubscriptionRows::migrate()['rows']);
-    $this->assertSame(0, CRM_Herald_Upgrader_SubscriptionRows::migrate()['rows']);
+    $first = CRM_Herald_Upgrader_SubscriptionRows::migrate();
+    $this->assertSame([1, 1], [$first['rows'], $first['group_channels']]);
+    $again = CRM_Herald_Upgrader_SubscriptionRows::migrate();
+    $this->assertSame([0, 0], [$again['rows'], $again['group_channels']]);
     self::upgrade();
     self::upgrade();
     $this->assertCount(1, array_merge(...array_values($this->rows())));

@@ -30,7 +30,7 @@ final class ContactRows {
 
   /**
    * The email channel a group member's own address is reached through when
-   * the member has no usable subscription for group messages.
+   * the member has no usable channel for messages to their groups.
    */
   public static function emailChannel(): string {
     $name = \Civi::settings()->get(self::EMAIL_CHANNEL_SETTING);

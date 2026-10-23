@@ -76,14 +76,14 @@ abstract class CRM_Herald_Upgrader_Steps extends CRM_Herald_Upgrader_EarlySteps 
   }
 
   /**
-   * The one preference record per contact becomes a subscription row; the
-   * profile switches to the rows and the old group goes.
+   * The one preference record per contact becomes a subscription row and the
+   * group channel; the profile switches to them and the old group goes.
    */
   public function upgrade_1017(): bool {
     CRM_Herald_Upgrader_Reconcile::run();
     $counts = CRM_Herald_Upgrader_SubscriptionRows::migrate();
     $this->ctx->log->info(
-      "herald: wrote {$counts['rows']} subscription row(s); {$counts['without_channel']} preference(s) had topics but no channel",
+      "herald: wrote {$counts['rows']} subscription row(s) and {$counts['group_channels']} group channel(s); {$counts['without_channel']} preference(s) had topics but no channel",
     );
     foreach ($counts['unused'] as $field => $count) {
       $this->ctx->log->info(

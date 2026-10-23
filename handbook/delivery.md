@@ -24,7 +24,7 @@ Any other mode fails the send. The action form does not save a mode without its 
 
 In subscriber mode, every subscription to the topic is a recipient. A subscription whose channel is gone, or that lacks the recipient its channel needs, is skipped.
 
-In group mode, topics and scopes do not matter. A group member is reached through each of their subscriptions marked "Group messages". A member without a usable one gets an email at their own address instead, through the channel named in the setting "Contact email channel". That includes a member whose only group subscription is a Telegram row with an empty chat ID.
+In group mode, topics and scopes do not matter. A group member is reached through the channel they chose under [Messages to groups](#messages-to-groups). A member without one, or whose channel cannot reach them, gets an email at their own address instead, through the channel named in the setting "Contact email channel". That includes a member whose group channel is Telegram with an empty chat ID.
 
 Address mode always sends email, through the email channel named on the action. Separate the addresses with commas, semicolons or line breaks. It suits operational recipients who are not contacts.
 
@@ -50,20 +50,32 @@ A contact subscribes through any number of subscriptions, each one channel with 
 | Channel | One of the channels offered to contacts, see [Configuring a channel](channels.md#configuring-a-channel) |
 | Recipient | Where the channel delivers: a Telegram chat ID, a Pushover user or group key, an ntfy topic or a webhook URL. For an email channel, leave it empty to use the contact's primary address, or enter another address, such as a shared mailbox. |
 | Topics | The topics this subscription carries |
-| Group messages | This subscription also receives group deliveries, see the group mode above |
 | Scope: entity type, Scope: entity ID | Optional, see [Scoped subscriptions](#scoped-subscriptions) |
 
 So one colleague can get failed payments through Pushover and the daily report by email, with two rows. When two rows reach a contact through the same channel and recipient, the contact gets the message once.
 
-Saving a row checks it: a channel other than email needs a recipient, an entered email address must be one, a webhook URL must pass the same checks as on sending (see [Webhook](channels.md#webhook)), and a row without topics must take group messages. The rules of an email address on the contact itself, "Do not email" and opt-out, also hold for an entered address.
+Saving a row checks it: a channel other than email needs a recipient, an entered email address must be one, a webhook URL must pass the same checks as on sending (see [Webhook](channels.md#webhook)), and a row needs at least one topic. The rules of an email address on the contact itself, "Do not email" and opt-out, also hold for an entered address.
 
-Admins add and edit the rows on the contact's tab "Notification subscriptions". For self-service, herald installs the profile "My notification preferences". Look up its ID under Administer » Customize Data and Screens » Profiles, and send staff this link:
+### Messages to groups
+
+A message to a group goes to its members whatever their topics; an admin decides who is in the group. Each contact chooses once how such messages reach them, in the fields "Messages to groups" on the contact summary:
+
+| Field | Meaning |
+|---|---|
+| Channel | One of the channels offered to contacts. Left empty, messages to the contact's groups go by email to the primary address. |
+| Recipient | As for a subscription |
+
+Saving checks the recipient as for a subscription.
+
+### Managing subscriptions
+
+Admins add and edit the rows on the contact's tab "Notification subscriptions". For self-service, herald installs the profile "My notifications". Look up its ID under Administer » Customize Data and Screens » Profiles, and send staff this link:
 
 ```
 /civicrm/profile/edit?gid=<id>&reset=1
 ```
 
-CiviCRM lists the logged-in contact's own rows there, with "Add New Record" and links to view, edit and delete each; nobody reaches another contact's rows. Staff need the permissions "profile edit" and "access all custom data": without the latter, CiviCRM shows the profile without any of its fields.
+The profile shows the logged-in contact's "Messages to groups" as a form, and below it lists their own rows, with "Add New Record" and links to view, edit and delete each; nobody reaches another contact's rows. Staff need the permissions "profile edit" and "access all custom data": without the latter, CiviCRM shows the profile without any of its fields.
 
 To use the subscriptions, set an action's delivery mode to "Subscribers" and choose the topic under "Subscribers of topic". The action's own recipient is ignored in this mode. Each subscriber's message goes through the channel they chose, with that channel's account, such as its bot. Only presentation options are passed from the rule; the action form lists them under "Advanced":
 
@@ -85,7 +97,7 @@ A topic that a route, a rule action, a job or a waiting alert names in `subscrib
 
 ### Scoped subscriptions
 
-A subscription can be limited to one record, such as the event with ID 42. Set "Scope: entity type" to Event and "Scope: entity ID" to 42. That row then receives only notifications about that event. To follow two events, add two rows.
+A subscription can be limited to one record, such as the event with ID 42. Pick Event under "Scope: entity type" and enter 42 under "Scope: entity ID"; the list offers Event, Membership and Participant. A row with only one of the two is rejected on save. That row then receives only notifications about that event. To follow two events, add two rows.
 
 A rule says which record it is about with the field "Subscription scope entity" on the action "Herald: Send notification (generic)". The choices are Event, Membership and Participant, and herald takes the ID from the trigger. Event also works on participant triggers, through the participant's event.
 

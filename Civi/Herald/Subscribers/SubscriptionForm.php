@@ -8,12 +8,18 @@ use Civi\Herald\Api4\Rows;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * Checks a subscription row on the contact tab and the self-service profile
- * against what its channel needs, so a bad row fails on save, not on send.
+ * Checks subscription rows and the group channel on the contact screens and
+ * the self-service profile against what their channel needs, so a bad entry
+ * fails on save, not on send.
  */
 final class SubscriptionForm {
 
-  private const FORMS = ['CRM_Contact_Form_CustomData', 'CRM_Profile_Form_Edit'];
+  private const FORMS = [
+    'CRM_Contact_Form_CustomData',
+    'CRM_Contact_Form_Inline_CustomData',
+    'CRM_Contact_Form_Contact',
+    'CRM_Profile_Form_Edit',
+  ];
 
   /**
    * The tab names a row's elements custom_<field>_<row>, the profile custom_<field>.
@@ -31,9 +37,9 @@ final class SubscriptionForm {
       if (preg_match('/^custom_(\d+)(_-?\d+)?$/', (string) $element, $match) !== 1) {
         continue;
       }
-      $name = $names[(int) $match[1]] ?? NULL;
+      [$group, $name] = $names[(int) $match[1]] ?? [NULL, NULL];
       if ($name !== NULL) {
-        $records[$match[2] ?? ''][$name] = [(string) $element, $value];
+        $records[$group . ($match[2] ?? '')][$name] = [(string) $element, $value];
       }
     }
     foreach ($records as $record) {
@@ -44,17 +50,22 @@ final class SubscriptionForm {
   }
 
   /**
-   * @return array<int, string> Field id => name
+   * Both groups name their fields channel and recipient.
+   *
+   * @return array<int, array{0: string, 1: string}> Field id => [group, name]
    */
   private static function fieldNames(): array {
     $names = [];
     foreach (Rows::of(
       \Civi\Api4\CustomField::get(checkPermissions: FALSE)
-        ->addSelect('id', 'name')
-        ->addWhere('custom_group_id:name', '=', Subscriptions::GROUP)
+        ->addSelect('id', 'name', 'custom_group_id:name')
+        ->addWhere('custom_group_id:name', 'IN', [Subscriptions::GROUP, Subscriptions::GROUP_DELIVERY])
         ->execute(),
     ) as $field) {
-      $names[Cast::toInt($field['id'])] = Cast::toString($field['name']);
+      $names[Cast::toInt($field['id'])] = [
+        Cast::toString($field['custom_group_id:name']),
+        Cast::toString($field['name']),
+      ];
     }
     return $names;
   }

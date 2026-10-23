@@ -2676,8 +2676,16 @@ msgid "Advanced"
 msgstr "Erweitert"
 
 #: Civi/Herald/Subscribers/SubscriptionRules.php
-msgid "Pick at least one topic, or receive group messages through this row."
-msgstr "Wählen Sie mindestens ein Topic, oder empfangen Sie über diese Zeile Gruppennachrichten."
+msgid "Pick at least one topic."
+msgstr "Wählen Sie mindestens ein Topic."
+
+#: Civi/Herald/Subscribers/SubscriptionRules.php
+msgid "Enter the ID of the record, or clear the entity type."
+msgstr "Geben Sie die ID des Datensatzes ein, oder leeren Sie den Objekttyp."
+
+#: Civi/Herald/Subscribers/SubscriptionRules.php
+msgid "Pick the entity type of the record, or clear the ID."
+msgstr "Wählen Sie den Objekttyp des Datensatzes, oder leeren Sie die ID."
 
 #: Civi/Herald/Subscribers/SubscriptionRules.php
 msgid "Enter an email address, or leave it empty for your primary address."
@@ -2715,21 +2723,34 @@ msgstr "Topics"
 msgid "The topics you want to receive notifications about through this channel."
 msgstr "Die Topics, zu denen Sie über diesen Kanal Benachrichtigungen erhalten möchten."
 
-#: managed/SubscriberPreferences.mgd.php
-msgid "Group messages"
-msgstr "Gruppennachrichten"
 
 #: managed/SubscriberPreferences.mgd.php
-msgid "Also receive messages sent to a group you belong to through this channel."
-msgstr "Auch Nachrichten an eine Gruppe, zu der Sie gehören, über diesen Kanal empfangen."
+msgid "Optional: limit this subscription to one record, such as an event. Leave empty for a global subscription."
+msgstr "Optional: dieses Abo auf einen einzelnen Datensatz beschränken, etwa ein Event. Für ein globales Abo leer lassen."
 
 #: managed/SubscriberPreferences.mgd.php
-msgid "Optional: limit this subscription to one source entity (e.g. Event). Leave empty for a global subscription."
-msgstr "Optional: dieses Abo auf eine Quell-Entität beschränken (z. B. Event). Für ein globales Abo leer lassen."
+msgid "Herald: Scope entity"
+msgstr "Herald: Bezugsobjekt"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "The records a subscription can be limited to."
+msgstr "Die Datensätze, auf die sich ein Abo beschränken lässt."
 
 #: managed/SubscriberPreferences.mgd.php
 msgid "Notification subscriptions"
 msgstr "Benachrichtigungs-Abos"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Messages to groups"
+msgstr "Nachrichten an Gruppen"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "How messages sent to a group this contact belongs to reach them. Without a channel they go by email to the primary address."
+msgstr "Wie Nachrichten an Gruppen, in denen dieser Kontakt Mitglied ist, ankommen. Ohne Kanal gehen sie per E-Mail an die primäre Adresse."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Leave it empty to receive messages to your groups by email."
+msgstr "Leer lassen, um Nachrichten an Ihre Gruppen per E-Mail zu erhalten."
 
 #: managed/SubscriberPreferences.mgd.php
 msgid "The channels this contact receives herald notifications through, and on which topics."

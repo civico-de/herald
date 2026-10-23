@@ -19,6 +19,11 @@ final class Subscriptions {
   public const GROUP = 'herald_subscription';
 
   /**
+   * One record per contact: the channel and recipient for messages to its groups.
+   */
+  public const GROUP_DELIVERY = 'herald_group_delivery';
+
+  /**
    * @return list<Subscription>
    */
   public static function ofTopic(string $topic): array {
@@ -29,7 +34,7 @@ final class Subscriptions {
   }
 
   /**
-   * The rows of these contacts that also take group messages.
+   * The channels these contacts chose for messages to their groups, unscoped.
    *
    * @param list<int> $contactIds
    * @return list<Subscription>
@@ -41,9 +46,23 @@ final class Subscriptions {
     if (LegacyPreferences::pending()) {
       return LegacyPreferences::forGroups($contactIds);
     }
-    return self::rows(
-      self::get()->addWhere('entity_id', 'IN', $contactIds)->addWhere('for_groups', '=', value: TRUE),
-    );
+    $prefix = self::GROUP_DELIVERY . '.';
+    $rows = [];
+    foreach (\Civi\Api4\Contact::get(checkPermissions: FALSE)
+      ->addSelect('id', $prefix . 'channel', $prefix . 'recipient')
+      ->addWhere('id', 'IN', $contactIds)
+      ->addWhere($prefix . 'channel', 'IS NOT EMPTY')
+      ->execute() as $contact) {
+      /** @var array<string, mixed> $contact */
+      $rows[] = self::row(
+        Cast::toInt($contact['id'] ?? 0),
+        Cast::toString($contact[$prefix . 'channel'] ?? ''),
+        Cast::toString($contact[$prefix . 'recipient'] ?? ''),
+        '',
+        0,
+      );
+    }
+    return $rows;
   }
 
   /**

@@ -78,12 +78,15 @@ class RecipientQueryTest extends TestCase implements HeadlessInterface, HookInte
     return $groupId;
   }
 
-  public function testGroupFanOutMixesGroupSubscriptionsAndEmailFallback(): void {
-    $telegramContact = $this->createContact();
-    $this->subscribe($telegramContact, ['channel' => 'telegram', 'recipient' => '111', 'for_groups' => TRUE]);
+  public function testGroupFanOutMixesGroupChannelsAndEmailFallback(): void {
+    $telegramContact = $this->createContact([
+      Subscriptions::GROUP_DELIVERY . '.channel' => 'telegram',
+      Subscriptions::GROUP_DELIVERY . '.recipient' => '111',
+    ]);
+    $this->subscribe($telegramContact, ['channel' => 'telegram', 'recipient' => '333', 'topics' => ['news']]);
     $plainContact = $this->createContact();
     $this->addEmail($plainContact, 'group-fallback@example.org');
-    // A row without the group flag serves topics only.
+    // A subscription row serves its topics only.
     $this->subscribe($plainContact, ['channel' => 'telegram', 'recipient' => '222', 'topics' => ['news']]);
     $noRecipient = $this->createContact();
     $groupId = $this->createGroupWith($telegramContact, $plainContact, $noRecipient);

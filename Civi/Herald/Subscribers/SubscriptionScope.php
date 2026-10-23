@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Subscribers;
 
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
+use CRM_Herald_ExtensionUtil as E;
 
 /**
  * Source-entity scoping of per-contact subscriptions.
@@ -15,6 +16,18 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  * matches everything.
  */
 final class SubscriptionScope {
+
+  public const OPTION_GROUP = 'herald_scope_entity';
+
+  /**
+   * The entities a send action can name as its scope, and so a row can be
+   * scoped to; the action takes the id from the trigger's payload of it.
+   *
+   * @return array<string, string> Entity => label
+   */
+  public static function entities(): array {
+    return ['Event' => E::ts('Event'), 'Membership' => E::ts('Membership'), 'Participant' => E::ts('Participant')];
+  }
 
   /**
    * Scope declared by the notification, from action params + trigger context.
@@ -67,6 +80,41 @@ final class SubscriptionScope {
    */
   private static function id(array $triggerContext, string $entity, string $field): int {
     return Cast::toInt(((array) ($triggerContext[$entity] ?? []))[$field] ?? 0);
+  }
+
+  /**
+   * A scope needs both its type and its id; half of one matches nothing.
+   *
+   * @param array<string, array{0: string, 1: mixed}> $record
+   * @return array<string, string>
+   */
+  public static function errors(array $record): array {
+    if (!isset($record['source_entity_type'], $record['source_entity_id'])) {
+      return [];
+    }
+    $empty = self::emptyHalf($record['source_entity_type'][1], $record['source_entity_id'][1]);
+    if ($empty === NULL) {
+      return [];
+    }
+    $messages = [
+      'source_entity_id' => E::ts('Enter the ID of the record, or clear the entity type.'),
+      'source_entity_type' => E::ts('Pick the entity type of the record, or clear the ID.'),
+    ];
+    return [$record[$empty][0] => $messages[$empty]];
+  }
+
+  /**
+   * The field left empty in a half-filled scope, or NULL when both or neither are set.
+   *
+   * @return 'source_entity_type'|'source_entity_id'|null
+   */
+  private static function emptyHalf(mixed $type, mixed $id): ?string {
+    $hasType = trim(Cast::toString($type)) !== '';
+    $hasId = Cast::toInt($id) > 0;
+    if ($hasType === $hasId) {
+      return NULL;
+    }
+    return $hasType ? 'source_entity_id' : 'source_entity_type';
   }
 
 }

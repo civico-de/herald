@@ -6,6 +6,7 @@ use Civi\Api4\CustomField;
 use Civi\Api4\UFField;
 use Civi\Api4\UFGroup;
 use Civi\Api4\UFJoin;
+use Civi\Herald\Subscribers\Subscriptions;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
@@ -43,30 +44,49 @@ class CRM_Herald_Upgrader_PreferencesProfileTest extends TestCase implements Hea
     return $group['id'];
   }
 
-  public function testInstallCreatesTheProfileOnTheSubscriptionRows(): void {
-    /** @var array{id: int} $channel */
-    $channel = CustomField::get(checkPermissions: FALSE)
-      ->addSelect('id')
-      ->addWhere('custom_group_id:name', '=', 'herald_subscription')
-      ->addWhere('name', '=', 'channel')
-      ->execute()
-      ->single();
-
+  public function testInstallCreatesTheProfileOnTheGroupChannelAndTheRows(): void {
     $fields = $this->fields($this->gid());
 
-    self::assertCount(4, $fields);
-    self::assertSame('Channel', $fields['custom_' . $channel['id']]);
-    self::assertSame(['Profile'], $this->modules($this->gid()));
+    self::assertCount(5, $fields);
+    self::assertSame('Channel', $fields[self::fieldName(Subscriptions::GROUP, 'channel')]);
     self::assertSame(
-      [TRUE],
-      array_values(array_unique(
-        UFField::get(checkPermissions: FALSE)
-          ->addWhere('uf_group_id', '=', $this->gid())
-          ->execute()
-          ->column('is_multi_summary'),
-      )),
-      'the row list shows only summary fields',
+      'Channel for messages to my groups',
+      $fields[self::fieldName(Subscriptions::GROUP_DELIVERY, 'channel')],
     );
+    self::assertSame(
+      'Leave it empty to receive messages to your groups by email.',
+      UFField::get(checkPermissions: FALSE)
+        ->addWhere('field_name', '=', self::fieldName(Subscriptions::GROUP_DELIVERY, 'channel'))
+        ->execute()
+        ->single()['help_pre'],
+    );
+    self::assertSame(['Profile'], $this->modules($this->gid()));
+    $summary = UFField::get(checkPermissions: FALSE)
+      ->addWhere('uf_group_id', '=', $this->gid())
+      ->execute()
+      ->column('is_multi_summary', 'field_name');
+    self::assertSame(
+      [
+        self::fieldName(Subscriptions::GROUP_DELIVERY, 'channel') => FALSE,
+        self::fieldName(Subscriptions::GROUP_DELIVERY, 'recipient') => FALSE,
+        self::fieldName(Subscriptions::GROUP, 'channel') => TRUE,
+        self::fieldName(Subscriptions::GROUP, 'recipient') => TRUE,
+        self::fieldName(Subscriptions::GROUP, 'topics') => TRUE,
+      ],
+      array_map(boolval(...), $summary),
+      'the row list shows the row fields, the form the group channel',
+    );
+  }
+
+  private static function fieldName(string $group, string $name): string {
+    /** @var array{id: int} $field */
+    $field = CustomField::get(checkPermissions: FALSE)
+      ->addSelect('id')
+      ->addWhere('custom_group_id:name', '=', $group)
+      ->addWhere('name', '=', $name)
+      ->execute()
+      ->single();
+    return 'custom_' . $field['id'];
   }
 
   public function testUpgradeLetsTheProfileOpenAsAStandaloneForm(): void {
@@ -108,8 +128,28 @@ class CRM_Herald_Upgrader_PreferencesProfileTest extends TestCase implements Hea
 
     self::assertSame($gid, $this->gid());
     $fields = $this->fields($gid);
-    self::assertCount(4, $fields);
+    self::assertCount(5, $fields);
     self::assertSame('Edited by an admin', $fields[$fieldNames[1]]);
+  }
+
+  public function testTheOldTitleIsReplacedAndAnEditedOneKept(): void {
+    $gid = $this->gid();
+    $title = static fn (): mixed => UFGroup::get(checkPermissions: FALSE)
+      ->addWhere('id', '=', $gid)
+      ->execute()
+      ->single()['title'];
+    $set = static fn (string $text) => UFGroup::update(checkPermissions: FALSE)
+      ->addWhere('id', '=', $gid)
+      ->addValue('title', $text)
+      ->execute();
+
+    $set('My notification preferences');
+    CRM_Herald_Upgrader_PreferencesProfile::ensure();
+    self::assertSame('My notifications', $title());
+
+    $set('Our alerts');
+    CRM_Herald_Upgrader_PreferencesProfile::ensure();
+    self::assertSame('Our alerts', $title());
   }
 
   public function testTheOldHelpTextIsReplacedAndAnEditedOneKept(): void {
@@ -125,7 +165,10 @@ class CRM_Herald_Upgrader_PreferencesProfileTest extends TestCase implements Hea
 
     $set('Pick your preferred channel and what kinds of notifications you want to receive.');
     CRM_Herald_Upgrader_PreferencesProfile::ensure();
-    self::assertSame('Add a row for each channel you want notifications on, with the topics it carries.', $help());
+    self::assertSame(
+      'Choose how messages to your groups reach you, and add a row for each channel you want topic notifications on.',
+      $help(),
+    );
 
     $set('Our own words');
     CRM_Herald_Upgrader_PreferencesProfile::ensure();
@@ -140,7 +183,7 @@ class CRM_Herald_Upgrader_PreferencesProfileTest extends TestCase implements Hea
     $gid = CRM_Herald_Upgrader_PreferencesProfile::ensure();
 
     self::assertSame($gid, $this->gid());
-    self::assertCount(4, $this->fields($gid));
+    self::assertCount(5, $this->fields($gid));
   }
 
 }

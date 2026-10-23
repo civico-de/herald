@@ -47,7 +47,7 @@ final class LegacyPreferences {
   }
 
   /**
-   * Every record with a channel served group messages.
+   * Every record with a channel served messages to the contact's groups.
    *
    * @param list<int> $contactIds
    * @return list<Subscription>
@@ -84,6 +84,15 @@ final class LegacyPreferences {
       Cast::toString($record['source_entity_type'] ?? ''),
       Cast::toInt($record['source_entity_id'] ?? 0),
     );
+  }
+
+  /**
+   * @param array<string, mixed> $record
+   * @return list<string>
+   */
+  public static function topics(array $record): array {
+    $topics = $record['subscriptions'] ?? NULL;
+    return is_array($topics) ? array_values(array_filter($topics, is_string(...))) : [];
   }
 
   private static function get(): DAOGetAction {

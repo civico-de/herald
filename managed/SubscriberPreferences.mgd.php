@@ -2,6 +2,8 @@
 
 declare(strict_types = 1);
 
+use Civi\Herald\Subscribers\Subscriptions;
+use Civi\Herald\Subscribers\SubscriptionScope;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
@@ -9,9 +11,11 @@ use CRM_Herald_ExtensionUtil as E;
  *
  * Defines:
  *   - Option groups `herald_preferred_channel` and `herald_subscribable_topic`,
- *     which herald fills from its channels and topics.
+ *     which herald fills from its channels and topics, and `herald_scope_entity`.
  *   - Multi-record custom group `herald_subscription` on Contact: one row per
  *     channel, recipient, topics and optional scope.
+ *   - Custom group `herald_group_delivery` on Contact: the channel and
+ *     recipient for messages to the contact's groups.
  *
  * The self-service profile is not shipped here: its UFFields name custom
  * fields by id (CRM_Herald_Upgrader_PreferencesProfile).
@@ -53,21 +57,14 @@ $subscriptionFields = [
     'help_pre' => E::ts('The topics you want to receive notifications about through this channel.'),
   ],
   [
-    'name' => 'for_groups',
-    'label' => E::ts('Group messages'),
-    'data_type' => 'Boolean',
-    'html_type' => 'Radio',
-    'weight' => 40,
-    'help_pre' => E::ts('Also receive messages sent to a group you belong to through this channel.'),
-  ],
-  [
     'name' => 'source_entity_type',
     'label' => E::ts('Scope: entity type'),
     'data_type' => 'String',
-    'html_type' => 'Text',
+    'html_type' => 'Select',
+    'option_group_name' => SubscriptionScope::OPTION_GROUP,
     'weight' => 50,
     'help_pre' => E::ts(
-      'Optional: limit this subscription to one source entity (e.g. Event). Leave empty for a global subscription.',
+      'Optional: limit this subscription to one record, such as an event. Leave empty for a global subscription.',
     ),
   ],
   [
@@ -129,6 +126,43 @@ $managed[] = [
   ],
 ];
 
+$managed[] = [
+  'name' => 'OptionGroup_herald_scope_entity',
+  'entity' => 'OptionGroup',
+  'cleanup' => 'unused',
+  'update' => 'unmodified',
+  'params' => [
+    'version' => 4,
+    'values' => [
+      'name' => SubscriptionScope::OPTION_GROUP,
+      'title' => E::ts('Herald: Scope entity'),
+      'description' => E::ts('The records a subscription can be limited to.'),
+      'is_active' => TRUE,
+      'is_reserved' => TRUE,
+    ],
+  ],
+];
+foreach (array_keys(SubscriptionScope::entities()) as $weight => $entity) {
+  $managed[] = [
+    'name' => 'OptionValue_herald_scope_entity_' . $entity,
+    'entity' => 'OptionValue',
+    'cleanup' => 'unused',
+    'update' => 'unmodified',
+    'params' => [
+      'version' => 4,
+      'values' => [
+        'option_group_id.name' => SubscriptionScope::OPTION_GROUP,
+        'name' => $entity,
+        'value' => $entity,
+        'label' => SubscriptionScope::entities()[$entity],
+        'weight' => $weight + 1,
+        'is_active' => TRUE,
+        'is_reserved' => TRUE,
+      ],
+    ],
+  ];
+}
+
 // Until upgrade_1017 has moved the preferences into subscriptions, they stay as shipped.
 if (\Civi\Herald\Subscribers\LegacyPreferences::pending()) {
   $managed = [...$managed, ...CRM_Herald_Upgrader_PreferencesGroup::declarations()];
@@ -154,34 +188,86 @@ $managed[] = [
   ],
 ];
 
-foreach ($subscriptionFields as $f) {
-  $values = [
-    'custom_group_id.name' => 'herald_subscription',
-    'name' => $f['name'],
-    'label' => $f['label'],
-    'data_type' => $f['data_type'],
-    'html_type' => $f['html_type'],
-    'is_searchable' => TRUE,
-    'is_active' => TRUE,
-    'is_required' => $f['is_required'] ?? FALSE,
-    'weight' => $f['weight'],
-  ];
-  if (!empty($f['help_pre'])) {
-    $values['help_pre'] = $f['help_pre'];
+$managed[] = [
+  'name' => 'CustomGroup_herald_group_delivery',
+  'entity' => 'CustomGroup',
+  'cleanup' => 'unused',
+  'update' => 'unmodified',
+  'params' => [
+    'version' => 4,
+    'values' => [
+      'name' => Subscriptions::GROUP_DELIVERY,
+      'title' => E::ts('Messages to groups'),
+      'extends' => 'Contact',
+      'style' => 'Inline',
+      'is_multiple' => FALSE,
+      'collapse_display' => FALSE,
+      'is_active' => TRUE,
+      'help_pre' => E::ts(
+        'How messages sent to a group this contact belongs to reach them. Without a channel they go by email to the primary address.',
+      ),
+    ],
+  ],
+];
+
+/**
+ * @var array<int, array{name: string, label: string, data_type: string, html_type: string, weight: int, help_pre?: string, option_group_name?: string, serialize?: int, is_required?: bool}> $groupDeliveryFields
+ */
+$groupDeliveryFields = [
+  [
+    'name' => 'channel',
+    'label' => E::ts('Channel'),
+    'data_type' => 'String',
+    'html_type' => 'Select',
+    'option_group_name' => 'herald_preferred_channel',
+    'weight' => 10,
+    'help_pre' => E::ts('Leave it empty to receive messages to your groups by email.'),
+  ],
+  [
+    'name' => 'recipient',
+    'label' => E::ts('Recipient'),
+    'data_type' => 'String',
+    'html_type' => 'Text',
+    'weight' => 20,
+    'help_pre' => E::ts(
+      'Where the channel delivers to: a Telegram chat ID, a Pushover user or group key, an ntfy topic or a webhook URL. Leave it empty for an email channel to use your primary address.',
+    ),
+  ],
+];
+
+foreach ([
+  Subscriptions::GROUP => $subscriptionFields,
+  Subscriptions::GROUP_DELIVERY => $groupDeliveryFields,
+] as $group => $fields) {
+  foreach ($fields as $f) {
+    $values = [
+      'custom_group_id.name' => $group,
+      'name' => $f['name'],
+      'label' => $f['label'],
+      'data_type' => $f['data_type'],
+      'html_type' => $f['html_type'],
+      'is_searchable' => TRUE,
+      'is_active' => TRUE,
+      'is_required' => $f['is_required'] ?? FALSE,
+      'weight' => $f['weight'],
+    ];
+    if (!empty($f['help_pre'])) {
+      $values['help_pre'] = $f['help_pre'];
+    }
+    if (!empty($f['option_group_name'])) {
+      $values['option_group_id.name'] = $f['option_group_name'];
+    }
+    if (!empty($f['serialize'])) {
+      $values['serialize'] = (int) $f['serialize'];
+    }
+    $managed[] = [
+      'name' => "CustomField_{$group}_{$f['name']}",
+      'entity' => 'CustomField',
+      'cleanup' => 'unused',
+      'update' => 'unmodified',
+      'params' => ['version' => 4, 'values' => $values],
+    ];
   }
-  if (!empty($f['option_group_name'])) {
-    $values['option_group_id.name'] = $f['option_group_name'];
-  }
-  if (!empty($f['serialize'])) {
-    $values['serialize'] = (int) $f['serialize'];
-  }
-  $managed[] = [
-    'name' => 'CustomField_herald_subscription_' . $f['name'],
-    'entity' => 'CustomField',
-    'cleanup' => 'unused',
-    'update' => 'unmodified',
-    'params' => ['version' => 4, 'values' => $values],
-  ];
 }
 
 return $managed;

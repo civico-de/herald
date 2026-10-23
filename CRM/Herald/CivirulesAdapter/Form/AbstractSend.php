@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use Civi\Herald\Subscribers\SubscriptionScope;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
@@ -113,12 +114,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
           'select',
           'scope_entity',
           E::ts('Subscription scope'),
-          [
-            '' => E::ts('- none (all subscriptions) -'),
-            'Event' => E::ts('Event'),
-            'Membership' => E::ts('Membership'),
-            'Participant' => E::ts('Participant'),
-          ],
+          ['' => E::ts('- none (all subscriptions) -')] + SubscriptionScope::entities(),
         );
       }
       $this->add(

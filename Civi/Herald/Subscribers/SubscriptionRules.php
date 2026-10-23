@@ -9,8 +9,8 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
- * What a submitted subscription row must satisfy: a recipient its channel can
- * deliver to, and a topic unless it only takes group messages.
+ * What a submitted subscription row or group channel must satisfy: a
+ * recipient its channel can deliver to, and for a row a topic.
  */
 final class SubscriptionRules {
 
@@ -29,10 +29,10 @@ final class SubscriptionRules {
         $errors[$element] = $message;
       }
     }
-    if (isset($record['topics']) && !self::picked($record['topics'][1]) && empty($record['for_groups'][1])) {
-      $errors[$record['topics'][0]] = E::ts('Pick at least one topic, or receive group messages through this row.');
+    if (isset($record['topics']) && !self::picked($record['topics'][1])) {
+      $errors[$record['topics'][0]] = E::ts('Pick at least one topic.');
     }
-    return $errors;
+    return $errors + SubscriptionScope::errors($record);
   }
 
   private static function recipientError(string $type, string $recipient): ?string {
