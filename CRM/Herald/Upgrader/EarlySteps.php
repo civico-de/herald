@@ -67,12 +67,10 @@ abstract class CRM_Herald_Upgrader_EarlySteps extends \CRM_Extension_Upgrader_Ba
   }
 
   /**
-   * Existing installs: the self-service preferences profile, formerly a
-   * one-off script; a profile that script created is kept.
+   * Formerly created the self-service profile; upgrade_1017 does that on the
+   * subscription rows, which do not exist yet at this point.
    */
   public function upgrade_1009(): bool {
-    $this->ctx->log->info('herald: ensuring the herald_my_preferences profile');
-    CRM_Herald_Upgrader_PreferencesProfile::ensure();
     return TRUE;
   }
 

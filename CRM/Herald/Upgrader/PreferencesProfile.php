@@ -6,10 +6,11 @@ use Civi\Api4\CustomField;
 use Civi\Api4\UFField;
 use Civi\Api4\UFGroup;
 use Civi\Api4\UFJoin;
+use Civi\Herald\Subscribers\Subscriptions;
 
 /**
- * The `herald_my_preferences` profile lets staff edit their own
- * herald_preferences at /civicrm/profile/edit?gid=<id>&reset=1. Not mgd-php:
+ * The `herald_my_preferences` profile lets staff list, add and edit their own
+ * subscription rows at /civicrm/profile/edit?gid=<id>&reset=1. Not mgd-php:
  * a UFField names its custom field as `custom_<id>`, known only once the
  * managed custom fields exist.
  */
@@ -17,13 +18,21 @@ final class CRM_Herald_Upgrader_PreferencesProfile {
 
   public const NAME = 'herald_my_preferences';
 
+  private const HELP = 'Add a row for each channel you want notifications on, with the topics it carries.';
+
+  /**
+   * The help text of the one-record profile; an admin's own text stays.
+   */
+  private const SINGLE_RECORD_HELP = 'Pick your preferred channel and what kinds of notifications you want to receive.';
+
+  /**
+   * The row list shows only fields with is_multi_summary.
+   */
   private const FIELDS = [
-    ['name' => 'preferred_channel', 'label' => 'Preferred channel', 'required' => TRUE, 'weight' => 10],
-    ['name' => 'telegram_chat_id', 'label' => 'Telegram chat ID', 'required' => FALSE, 'weight' => 20],
-    ['name' => 'pushover_user_key', 'label' => 'Pushover user key', 'required' => FALSE, 'weight' => 30],
-    ['name' => 'ntfy_topic', 'label' => 'ntfy topic', 'required' => FALSE, 'weight' => 40],
-    ['name' => 'webhook_url', 'label' => 'Webhook URL', 'required' => FALSE, 'weight' => 50],
-    ['name' => 'subscriptions', 'label' => 'Subscriptions', 'required' => TRUE, 'weight' => 60],
+    ['name' => 'channel', 'label' => 'Channel', 'required' => TRUE, 'weight' => 10],
+    ['name' => 'recipient', 'label' => 'Recipient', 'required' => FALSE, 'weight' => 20],
+    ['name' => 'topics', 'label' => 'Topics', 'required' => FALSE, 'weight' => 30],
+    ['name' => 'for_groups', 'label' => 'Group messages', 'required' => FALSE, 'weight' => 40],
   ];
 
   /**
@@ -39,12 +48,12 @@ final class CRM_Herald_Upgrader_PreferencesProfile {
       /** @var array{id: int}|null $cf */
       $cf = CustomField::get(checkPermissions: FALSE)
         ->addSelect('id')
-        ->addWhere('custom_group_id:name', '=', 'herald_preferences')
+        ->addWhere('custom_group_id:name', '=', Subscriptions::GROUP)
         ->addWhere('name', '=', $f['name'])
         ->execute()
         ->first();
       if ($cf === NULL) {
-        throw new CRM_Core_Exception("herald: custom field herald_preferences.{$f['name']} is missing");
+        throw new CRM_Core_Exception('herald: custom field ' . Subscriptions::GROUP . ".{$f['name']} is missing");
       }
       $fieldName = 'custom_' . $cf['id'];
       $present = UFField::get(checkPermissions: FALSE)
@@ -61,6 +70,7 @@ final class CRM_Herald_Upgrader_PreferencesProfile {
         ->addValue('label', $f['label'])
         ->addValue('is_required', $f['required'])
         ->addValue('weight', $f['weight'])
+        ->addValue('is_multi_summary', value: TRUE)
         ->addValue('is_active', value: TRUE)
         ->addValue('visibility', 'User and User Admin Only')
         ->execute();
@@ -89,13 +99,19 @@ final class CRM_Herald_Upgrader_PreferencesProfile {
   }
 
   private static function group(): int {
-    /** @var array{id: int}|null $existing */
+    /** @var array{id: int, help_pre: string|null}|null $existing */
     $existing = UFGroup::get(checkPermissions: FALSE)
-      ->addSelect('id')
+      ->addSelect('id', 'help_pre')
       ->addWhere('name', '=', self::NAME)
       ->execute()
       ->first();
     if ($existing !== NULL) {
+      if ($existing['help_pre'] === self::SINGLE_RECORD_HELP) {
+        UFGroup::update(checkPermissions: FALSE)
+          ->addWhere('id', '=', $existing['id'])
+          ->addValue('help_pre', self::HELP)
+          ->execute();
+      }
       return $existing['id'];
     }
     /** @var array{id: int} $created */
@@ -105,7 +121,7 @@ final class CRM_Herald_Upgrader_PreferencesProfile {
       ->addValue('group_type', 'Individual,Contact')
       ->addValue('is_active', value: TRUE)
       ->addValue('is_reserved', value: FALSE)
-      ->addValue('help_pre', 'Pick your preferred channel and what kinds of notifications you want to receive.')
+      ->addValue('help_pre', self::HELP)
       ->execute()
       ->single();
     return $created['id'];

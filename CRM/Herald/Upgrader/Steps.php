@@ -68,10 +68,29 @@ abstract class CRM_Herald_Upgrader_Steps extends CRM_Herald_Upgrader_EarlySteps 
   }
 
   /**
-   * The self-service profile opens as a standalone form.
+   * Formerly opened the profile as a standalone form; upgrade_1017 does that
+   * once the subscription rows exist.
    */
   public function upgrade_1016(): bool {
-    $this->ctx->log->info('herald: offering the herald_my_preferences profile as a standalone form');
+    return TRUE;
+  }
+
+  /**
+   * The one preference record per contact becomes a subscription row; the
+   * profile switches to the rows and the old group goes.
+   */
+  public function upgrade_1017(): bool {
+    CRM_Herald_Upgrader_Reconcile::run();
+    $counts = CRM_Herald_Upgrader_SubscriptionRows::migrate();
+    $this->ctx->log->info(
+      "herald: wrote {$counts['rows']} subscription row(s); {$counts['without_channel']} preference(s) had topics but no channel",
+    );
+    foreach ($counts['unused'] as $field => $count) {
+      $this->ctx->log->info(
+        "herald: {$count} value(s) in {$field} were not the chosen channel's recipient field and were not moved",
+      );
+    }
+    CRM_Herald_Upgrader_SubscriptionRows::retire();
     CRM_Herald_Upgrader_PreferencesProfile::ensure();
     return TRUE;
   }

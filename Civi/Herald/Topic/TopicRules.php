@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Topic;
 
-use Civi\Herald\Subscribers\SubscribableTopics;
+use Civi\Herald\Subscribers\Subscriptions;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
@@ -58,7 +58,7 @@ final class TopicRules {
    * @return list<string>
    */
   public static function renameErrors(string $previous): array {
-    $subscribers = SubscribableTopics::subscribers($previous);
+    $subscribers = Subscriptions::subscribers($previous);
     return (
       $subscribers > 0
         ? [E::ts('The topic "%1" cannot be renamed while %2 contacts subscribe to it.', [

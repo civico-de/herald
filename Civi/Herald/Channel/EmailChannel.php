@@ -143,7 +143,7 @@ class EmailChannel implements ChannelInterface {
    * @return array<string, string>
    */
   public function getSemanticFields(): array {
-    return ['subject' => 'email_subject', 'format' => 'email_format'];
+    return ['subject' => 'email_subject', 'format' => 'email_format', 'recipient' => 'email_to'];
   }
 
 }

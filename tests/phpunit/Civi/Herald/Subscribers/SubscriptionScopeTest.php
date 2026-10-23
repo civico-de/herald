@@ -37,16 +37,13 @@ class SubscriptionScopeTest extends TestCase {
   }
 
   public function testUnscopedRowMatchesEverything(): void {
-    $row = [];
+    $row = ['source_entity_type' => '', 'source_entity_id' => 0];
     $this->assertTrue(SubscriptionScope::rowMatches($row, NULL));
     $this->assertTrue(SubscriptionScope::rowMatches($row, ['entity_type' => 'Event', 'entity_id' => 5]));
   }
 
   public function testScopedRowMatchesOnlyItsEntityInstance(): void {
-    $row = [
-      'herald_preferences.source_entity_type' => 'Event',
-      'herald_preferences.source_entity_id' => 5,
-    ];
+    $row = ['source_entity_type' => 'Event', 'source_entity_id' => 5];
     $this->assertTrue(SubscriptionScope::rowMatches($row, ['entity_type' => 'Event', 'entity_id' => 5]));
     $this->assertFalse(SubscriptionScope::rowMatches($row, ['entity_type' => 'Event', 'entity_id' => 6]));
     $this->assertFalse(SubscriptionScope::rowMatches($row, ['entity_type' => 'Campaign', 'entity_id' => 5]));

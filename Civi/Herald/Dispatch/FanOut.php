@@ -20,7 +20,7 @@ final class FanOut {
 
   /**
    * Contacts resolved by subscription or group, each through the channel
-   * their preference names. Only presentation options travel from the params
+   * their subscription names. Only presentation options travel from the params
    * (ChannelConfig::subscriberSafe()).
    *
    * @param array<string, mixed> $params

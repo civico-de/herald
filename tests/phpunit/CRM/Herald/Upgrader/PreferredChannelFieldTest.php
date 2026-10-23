@@ -27,6 +27,7 @@ class CRM_Herald_Upgrader_PreferredChannelFieldTest extends TestCase implements 
 
   protected function setUp(): void {
     parent::setUp();
+    \Civi\Herald\LegacyPreferencesFixture::install();
     foreach ([ChannelStore::SETTING, Router::SETTING] as $name) {
       $this->saved[$name] = \Civi::settings()->get($name);
     }
@@ -37,6 +38,7 @@ class CRM_Herald_Upgrader_PreferredChannelFieldTest extends TestCase implements 
       \Civi::settings()->set($name, $value);
     }
     PreferredChannelOptions::sync();
+    \Civi\Herald\LegacyPreferencesFixture::remove();
     parent::tearDown();
   }
 

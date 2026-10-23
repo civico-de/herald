@@ -55,6 +55,20 @@ class WebhookChannel implements ChannelInterface {
   }
 
   /**
+   * Why the URL may not be posted to under the site's allowed hosts, or NULL.
+   */
+  public static function violation(string $url): ?string {
+    $allowed = \Civi::settings()->get('herald_webhook_allowed_hosts');
+    try {
+      WebhookUrlGuard::assert($url, ['allowed_hosts' => is_array($allowed) ? $allowed : []]);
+    }
+    catch (\CRM_Core_Exception $e) {
+      return $e->getMessage();
+    }
+    return NULL;
+  }
+
+  /**
    * @param array<string, mixed> $config
    */
   public function send(string $renderedBody, array $config): void {
@@ -166,12 +180,12 @@ class WebhookChannel implements ChannelInterface {
   /**
    * A webhook payload carries no subject, and webhook_body_format selects the
    * envelope (text/json/slack/discord), not how the body text is to be
-   * interpreted — so neither semantic maps.
+   * interpreted — so neither subject nor format maps.
    *
    * @return array<string, string>
    */
   public function getSemanticFields(): array {
-    return [];
+    return ['recipient' => 'webhook_url'];
   }
 
 }

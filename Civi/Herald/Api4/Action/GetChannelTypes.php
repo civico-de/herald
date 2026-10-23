@@ -7,7 +7,7 @@ namespace Civi\Herald\Api4\Action;
 use Civi\Api4\Generic\AbstractAction;
 use Civi\Api4\Generic\Result;
 use Civi\Herald\Channel\ChannelRegistry;
-use Civi\Herald\Subscribers\ContactRows;
+use Civi\Herald\Subscribers\SubscriptionConfig;
 
 /**
  * List the channel types with the config keys each one accepts.
@@ -36,7 +36,7 @@ class GetChannelTypes extends AbstractAction {
         'label' => ChannelRegistry::label($channel->getKey()),
         'config_schema' => $channel->getConfigSchema(),
         'semantic_fields' => $channel->getSemanticFields(),
-        'subscribable' => ContactRows::reachable($channel->getKey()),
+        'subscribable' => SubscriptionConfig::reachable($channel->getKey()),
       ];
     }
     $result->exchangeArray($rows);

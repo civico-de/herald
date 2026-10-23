@@ -25,7 +25,7 @@ final class EmailRecipient {
   public static function of(array $contactRows, array $options): array {
     $first = $contactRows[0];
     $respect = !empty($options['respect_suspension']);
-    if (!empty($first['do_not_email']) || $respect && !empty($first['is_opt_out'])) {
+    if (self::blocked($first, $options)) {
       return ['address' => '', 'suspended' => TRUE];
     }
     $candidates = [];
@@ -40,6 +40,16 @@ final class EmailRecipient {
       }
     }
     return ['address' => '', 'suspended' => $candidates !== []];
+  }
+
+  /**
+   * Whether the contact refuses email at any address.
+   *
+   * @param array<string, mixed> $contact
+   * @param array<string, mixed> $options
+   */
+  public static function blocked(array $contact, array $options): bool {
+    return !empty($contact['do_not_email']) || !empty($options['respect_suspension']) && !empty($contact['is_opt_out']);
   }
 
 }

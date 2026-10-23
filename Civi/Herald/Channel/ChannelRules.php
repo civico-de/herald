@@ -4,7 +4,7 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Channel;
 
-use Civi\Herald\Subscribers\ContactRows;
+use Civi\Herald\Subscribers\SubscriptionConfig;
 use CRM_Herald_ExtensionUtil as E;
 
 /**
@@ -41,7 +41,7 @@ final class ChannelRules {
         ? NULL
         : E::ts('A channel name starts with a lowercase letter and holds only a-z, 0-9 and _.'),
       $existence,
-      empty($record['subscribable']) || ContactRows::reachable($type)
+      empty($record['subscribable']) || SubscriptionConfig::reachable($type)
         ? NULL
         : E::ts('Contacts cannot receive through a channel of type "%1".', [1 => $type]),
     ]);

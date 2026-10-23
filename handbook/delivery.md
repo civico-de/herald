@@ -22,9 +22,9 @@ Every herald CiviRules action has a delivery mode. Topic routes take the same pa
 
 Any other mode fails the send. The action form does not save a mode without its required parameter.
 
-In subscriber mode, a contact without a chosen channel, or without the recipient that channel needs, is skipped.
+In subscriber mode, every subscription to the topic is a recipient. A subscription whose channel is gone, or that lacks the recipient its channel needs, is skipped.
 
-In group mode, subscriptions and scopes do not matter. A group member without usable preferences gets an email at their own address instead, through the channel named in the setting "Contact email channel". That includes a member who chose Telegram but left the chat ID empty.
+In group mode, topics and scopes do not matter. A group member is reached through each of their subscriptions marked "Group messages". A member without a usable one gets an email at their own address instead, through the channel named in the setting "Contact email channel". That includes a member whose only group subscription is a Telegram row with an empty chat ID.
 
 Address mode always sends email, through the email channel named on the action. Separate the addresses with commas, semicolons or line breaks. It suits operational recipients who are not contacts.
 
@@ -37,28 +37,33 @@ Two options apply to the contact modes, subscribers and group:
 | `respect_suspension` | off | Also skip email recipients who opted out or whose address is on hold. |
 | `email_location_type` | primary | Send to the contact's email of this location type. Contacts without one get their primary address. |
 
-An info entry in the CiviCRM log counts the contacts left out, by reason: `suspended`, `scope_mismatch`, `no_channel` (no channel chosen, or the chosen channel is gone, inactive or no longer offered to contacts) and `no_recipient` (no address, chat or topic for the channel).
+An info entry in the CiviCRM log counts what was left out, by reason: `suspended`, `scope_mismatch`, `no_channel` (the subscription's channel is gone, inactive or no longer offered to contacts) and `no_recipient` (no address, chat or topic for the channel). Subscriber mode counts subscriptions, group mode counts members.
 
 A failed delivery to one recipient does not stop the others. herald logs a warning and moves on to the next contact. The delivery as a whole fails only when every recipient failed, or when there was nobody to send to: no subscriber, an empty group or an empty address list. Once at least one recipient got the message, the delivery counts as done, and herald does not retry the recipients it failed to reach.
 
 ## Subscribers
 
-Each contact can choose a channel and the notifications they want. herald adds the custom field group "Notification preferences" to contacts:
+A contact subscribes through any number of subscriptions, each one channel with its recipient and the topics it carries. herald adds the custom field group "Notification subscriptions" to contacts, one row per subscription:
 
 | Field | Meaning |
 |---|---|
-| Preferred channel | One of the channels offered to contacts, see [Configuring a channel](channels.md#configuring-a-channel) |
-| Telegram chat ID, Pushover user/group key, ntfy topic, Webhook URL | The recipient for the type of the chosen channel. Email needs none and uses the contact's own address. |
-| Subscriptions | The topics the contact subscribed to |
+| Channel | One of the channels offered to contacts, see [Configuring a channel](channels.md#configuring-a-channel) |
+| Recipient | Where the channel delivers: a Telegram chat ID, a Pushover user or group key, an ntfy topic or a webhook URL. For an email channel, leave it empty to use the contact's primary address, or enter another address, such as a shared mailbox. |
+| Topics | The topics this subscription carries |
+| Group messages | This subscription also receives group deliveries, see the group mode above |
 | Scope: entity type, Scope: entity ID | Optional, see [Scoped subscriptions](#scoped-subscriptions) |
 
-Admins can fill these in on the contact's tab "Notification preferences". For self-service, herald installs the profile "My notification preferences". Look up its ID under Administer » Customize Data and Screens » Profiles, and send staff this link:
+So one colleague can get failed payments through Pushover and the daily report by email, with two rows. When two rows reach a contact through the same channel and recipient, the contact gets the message once.
+
+Saving a row checks it: a channel other than email needs a recipient, an entered email address must be one, a webhook URL must pass the same checks as on sending (see [Webhook](channels.md#webhook)), and a row without topics must take group messages. The rules of an email address on the contact itself, "Do not email" and opt-out, also hold for an entered address.
+
+Admins add and edit the rows on the contact's tab "Notification subscriptions". For self-service, herald installs the profile "My notification preferences". Look up its ID under Administer » Customize Data and Screens » Profiles, and send staff this link:
 
 ```
 /civicrm/profile/edit?gid=<id>&reset=1
 ```
 
-CiviCRM opens the profile for the logged-in contact, who can see and edit only their own record.
+CiviCRM lists the logged-in contact's own rows there, with "Add New Record" and links to view, edit and delete each; nobody reaches another contact's rows. Staff need the permissions "profile edit" and "access all custom data": without the latter, CiviCRM shows the profile without any of its fields.
 
 To use the subscriptions, set an action's delivery mode to "Subscribers" and choose the topic under "Subscribers of topic". The action's own recipient is ignored in this mode. Each subscriber's message goes through the channel they chose, with that channel's account, such as its bot. Only presentation options are passed from the rule; the action form lists them under "Advanced":
 
@@ -70,21 +75,21 @@ To use the subscriptions, set an action's delivery mode to "Subscribers" and cho
 
 Recipients, CC and BCC are never passed on. The headers and token of a webhook channel belong to its default URL, so a contact's own webhook URL never receives them.
 
-Contacts subscribe to [topics](#topics). A fresh install offers none. To offer one, tick "Contacts can subscribe to this topic" on the topic's form, or save it with `cv api4 Herald.saveTopic topic=news label=News subscribable=1 'route={"delivery_mode":"subscribers"}'`. The topic then appears in the field "Subscriptions" under its label. herald keeps the option group `herald_subscribable_topic` in step with the topics of every domain, so do not edit its values by hand.
+Contacts subscribe to [topics](#topics). A fresh install offers none. To offer one, tick "Contacts can subscribe to this topic" on the topic's form, or save it with `cv api4 Herald.saveTopic topic=news label=News subscribable=1 'route={"delivery_mode":"subscribers"}'`. The topic then appears in the field "Topics" under its label. herald keeps the option group `herald_subscribable_topic` in step with the topics of every domain, so do not edit its values by hand.
 
 A topic that a route, a rule action, a job or a waiting alert names in `subscribers_of` cannot stop offering itself. Neither can a topic whose route would then reach the subscribers that `default` names; to keep that, name them in the route's `subscribers_of`. Otherwise, when a topic stops offering itself, the subscriptions stay stored, but no delivery reaches them any more. A delivery to the subscribers of such a topic fails with "contacts cannot subscribe to the topic".
 
-![Notification preferences on a contact](images/contact-preferences.png)
+![Notification subscriptions on a contact](images/contact-preferences.png)
 
 ![The self-service profile](images/profile.png)
 
 ### Scoped subscriptions
 
-A preference record can be limited to one record, such as the event with ID 42. Set "Scope: entity type" to Event and "Scope: entity ID" to 42. That contact then receives only notifications about that event.
+A subscription can be limited to one record, such as the event with ID 42. Set "Scope: entity type" to Event and "Scope: entity ID" to 42. That row then receives only notifications about that event. To follow two events, add two rows.
 
 A rule says which record it is about with the field "Subscription scope entity" on the action "Herald: Send notification (generic)". The choices are Event, Membership and Participant, and herald takes the ID from the trigger. Event also works on participant triggers, through the participant's event.
 
-A preference record without a scope receives everything it subscribed to. The scope applies to all subscriptions of the record. A scoped record therefore receives no notifications without a scope, such as contribution alerts, and no digests, because the digest action has no scope. The self-service profile does not include the scope fields, so admins set them on the contact.
+A subscription without a scope receives everything on its topics. A scoped row receives no notifications without a scope, such as contribution alerts, and no digests, because the digest action has no scope; the contact's other rows are not affected. The self-service profile does not include the scope fields, so admins set them on the contact.
 
 ## Topics
 

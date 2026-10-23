@@ -80,6 +80,19 @@ function herald_civicrm_post($op, $objectName, $objectId, &$objectRef): void {
 }
 
 /**
+ * Implements hook_civicrm_validateForm().
+ *
+ * @param string $formName
+ * @param array<array-key, mixed> $fields
+ * @param array<array-key, mixed> $files
+ * @param \CRM_Core_Form $form
+ * @param array<array-key, mixed> $errors
+ */
+function herald_civicrm_validateForm($formName, &$fields, &$files, &$form, &$errors): void {
+  \Civi\Herald\Subscribers\SubscriptionForm::validate((string) $formName, $fields, $errors);
+}
+
+/**
  * Implements hook_civicrm_alterLogTables().
  *
  * The alert buffer is a transient work queue; logging it costs an INSERT and

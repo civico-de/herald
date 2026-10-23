@@ -29,16 +29,16 @@ class SubscribableTopicsTest extends TestCase implements HeadlessInterface, Tran
     \Civi\Api4\Contact::create(checkPermissions: FALSE)
       ->addValue('contact_type', 'Individual')
       ->addValue('first_name', 'Subscriber')
-      ->addValue('herald_preferences.preferred_channel', 'email')
-      ->addValue('herald_preferences.subscriptions', ['ops-de'])
+      ->addChain('subscription', \Civi\Api4\CustomValue::create(Subscriptions::GROUP, checkPermissions: FALSE)
+        ->setValues(['entity_id' => '$id', 'channel' => 'email', 'topics' => ['ops-de']]))
       ->addChain('email', \Civi\Api4\Email::create(checkPermissions: FALSE)
         ->addValue('contact_id', '$id')
         ->addValue('email', 'subscriber@example.org'))
       ->execute();
 
-    $this->assertSame(1, SubscribableTopics::subscribers('ops-de'));
-    $this->assertSame(0, SubscribableTopics::subscribers('ops_de'));
-    $this->assertSame(0, SubscribableTopics::subscribers('ops%'));
+    $this->assertSame(1, Subscriptions::subscribers('ops-de'));
+    $this->assertSame(0, Subscriptions::subscribers('ops_de'));
+    $this->assertSame(0, Subscriptions::subscribers('ops%'));
     $this->assertSame([], (new SubscriberLookup())->findByTopic('ops_de'));
   }
 

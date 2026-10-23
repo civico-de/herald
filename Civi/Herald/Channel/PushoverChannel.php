@@ -126,7 +126,7 @@ class PushoverChannel implements ChannelInterface {
    * @return array<string, string>
    */
   public function getSemanticFields(): array {
-    return ['subject' => 'pushover_title'];
+    return ['subject' => 'pushover_title', 'recipient' => 'pushover_user_key'];
   }
 
 }

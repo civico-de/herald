@@ -7,7 +7,7 @@ namespace Civi\Herald\Channel;
 use Civi\Herald\Subscribers\OptionSync;
 
 /**
- * Keeps the options of a contact's preferred channel in step with the
+ * Keeps the channel options of a subscription in step with the
  * active subscribable channels of every domain.
  */
 final class PreferredChannelOptions {

@@ -22,9 +22,9 @@ Jede CiviRules-Aktion von herald hat einen Zustellmodus. Auch Topic-Routen kenne
 
 Jeder andere Modus lässt den Versand scheitern. Das Aktionsformular speichert keinen Modus ohne seinen Pflichtparameter.
 
-Im Abonnent:innen-Modus wird ein Kontakt ohne gewählten Kanal oder ohne das Ziel, das dieser Kanal braucht, übersprungen.
+Im Abonnent:innen-Modus ist jedes Abo auf das Topic ein Ziel. Ein Abo, dessen Kanal fehlt oder dem das Ziel fehlt, das sein Kanal braucht, wird übersprungen.
 
-Im Gruppenmodus spielen Abonnements und Bezüge keine Rolle. Ein Gruppenmitglied ohne verwendbare Einstellungen erhält stattdessen eine E-Mail an die eigene Adresse, über den Kanal aus der Einstellung „E-Mail-Kanal für Kontakte“. Das gilt auch für ein Mitglied, das Telegram gewählt, die Chat-ID aber leer gelassen hat.
+Im Gruppenmodus spielen Topics und Bezüge keine Rolle. Ein Gruppenmitglied wird über jedes seiner Abos erreicht, an dem „Gruppennachrichten“ gesetzt ist. Ein Mitglied ohne verwendbares solches Abo erhält stattdessen eine E-Mail an die eigene Adresse, über den Kanal aus der Einstellung „E-Mail-Kanal für Kontakte“. Das gilt auch für ein Mitglied, dessen einziges Gruppen-Abo eine Telegram-Zeile mit leerer Chat-ID ist.
 
 Der Adresslisten-Modus sendet immer E-Mail, über den E-Mail-Kanal, den die Aktion nennt. Trennen Sie die Adressen durch Kommas, Semikolons oder Zeilenumbrüche. Er eignet sich für Funktionsadressen und Empfänger:innen, die keine Kontakte sind.
 
@@ -37,28 +37,33 @@ Zwei Optionen gelten für die Kontaktmodi, also Abonnent:innen und Gruppe:
 | `respect_suspension` | aus | Auch E-Mail-Empfänger:innen überspringen, die sich abgemeldet haben oder deren Adresse gesperrt ist. |
 | `email_location_type` | primär | An die E-Mail-Adresse des Kontakts mit diesem Adresstyp senden. Kontakte ohne eine solche Adresse erhalten die Nachricht an ihre primäre Adresse. |
 
-Ein Info-Eintrag im CiviCRM-Protokoll zählt die ausgelassenen Kontakte nach Grund: `suspended` (gesperrt), `scope_mismatch` (Bezug passt nicht), `no_channel` (kein Kanal gewählt, oder der gewählte Kanal ist gelöscht, inaktiv oder wird Kontakten nicht mehr angeboten) und `no_recipient` (keine Adresse, kein Chat, kein Topic für den Kanal).
+Ein Info-Eintrag im CiviCRM-Protokoll zählt, was ausgelassen wurde, nach Grund: `suspended` (gesperrt), `scope_mismatch` (Bezug passt nicht), `no_channel` (der Kanal des Abos ist gelöscht, inaktiv oder wird Kontakten nicht mehr angeboten) und `no_recipient` (keine Adresse, kein Chat, kein Topic für den Kanal). Der Abonnent:innen-Modus zählt Abos, der Gruppenmodus Mitglieder.
 
 Scheitert die Zustellung an einzelne Empfänger:innen, hält das die übrigen nicht auf. herald protokolliert eine Warnung und macht mit dem nächsten Kontakt weiter. Die Zustellung als Ganzes schlägt nur fehl, wenn sie bei allen Empfänger:innen fehlgeschlagen ist oder wenn es niemanden gab, an den herald senden konnte: keine Abonnent:innen, eine leere Gruppe oder eine leere Adressliste. Sobald mindestens eine Person die Nachricht erhalten hat, gilt die Zustellung als erledigt; für die gescheiterten Empfänger:innen unternimmt herald keinen weiteren Versuch.
 
 ## Abonnements
 
-Jeder Kontakt kann einen Kanal und die gewünschten Benachrichtigungen wählen. herald ergänzt Kontakte dafür um die Gruppe benutzerdefinierter Felder „Benachrichtigungseinstellungen“:
+Ein Kontakt abonniert über beliebig viele Abos, jedes ein Kanal mit seinem Ziel und den Topics, die es trägt. herald ergänzt Kontakte dafür um die Gruppe benutzerdefinierter Felder „Benachrichtigungs-Abos“, eine Zeile pro Abo:
 
 | Feld | Bedeutung |
 |---|---|
-| Bevorzugter Kanal | Einer der Kanäle, die Kontakten angeboten werden, siehe [Einen Kanal konfigurieren](channels.md#einen-kanal-konfigurieren) |
-| Telegram-Chat-ID, Pushover-Benutzer-/Gruppenschlüssel, ntfy-Topic, Webhook-URL | Das Ziel für den Typ des gewählten Kanals. E-Mail braucht keines und verwendet die eigene Adresse des Kontakts. |
-| Abonnements | Die Topics, die der Kontakt abonniert hat |
+| Kanal | Einer der Kanäle, die Kontakten angeboten werden, siehe [Einen Kanal konfigurieren](channels.md#einen-kanal-konfigurieren) |
+| Ziel | Wohin der Kanal zustellt: eine Telegram-Chat-ID, ein Pushover-Benutzer- oder Gruppenschlüssel, ein ntfy-Topic oder eine Webhook-URL. Bei einem E-Mail-Kanal bleibt es leer für die primäre Adresse des Kontakts, oder Sie tragen eine andere Adresse ein, etwa ein Funktionspostfach. |
+| Topics | Die Topics, die dieses Abo trägt |
+| Gruppennachrichten | Dieses Abo erhält auch Zustellungen an Gruppen, siehe Gruppenmodus oben |
 | Bezug: Objekttyp, Bezug: Objekt-ID | Optional, siehe [Abos mit Bezug](#abos-mit-bezug) |
 
-Admins können diese Felder im Tab „Benachrichtigungseinstellungen“ des Kontakts ausfüllen. Zur Selbstverwaltung installiert herald das Profil „My notification preferences“ (meine Benachrichtigungseinstellungen). Schlagen Sie seine ID unter Administrieren » Daten und Masken anpassen » Profile (englisch: Administer » Customize Data and Screens » Profiles) nach und schicken Sie den Mitarbeitenden diesen Link:
+So erhält eine Kollegin fehlgeschlagene Zahlungen per Pushover und den Tagesbericht per E-Mail, mit zwei Zeilen. Erreichen zwei Zeilen einen Kontakt über denselben Kanal und dasselbe Ziel, kommt die Nachricht einmal an.
+
+Beim Speichern prüft herald die Zeile: Ein Kanal außer E-Mail braucht ein Ziel, eine eingetragene E-Mail-Adresse muss eine sein, eine Webhook-URL muss dieselben Prüfungen bestehen wie beim Senden (siehe [Webhook](channels.md#webhook)), und eine Zeile ohne Topics muss Gruppennachrichten erhalten. Die Vermerke des Kontakts zu E-Mails, „Do not email“ und die Abmeldung, gelten auch für eine eingetragene Adresse.
+
+Admins legen die Zeilen im Tab „Benachrichtigungs-Abos“ des Kontakts an und bearbeiten sie dort. Zur Selbstverwaltung installiert herald das Profil „My notification preferences“ (meine Benachrichtigungseinstellungen). Schlagen Sie seine ID unter Administrieren » Daten und Masken anpassen » Profile (englisch: Administer » Customize Data and Screens » Profiles) nach und schicken Sie den Mitarbeitenden diesen Link:
 
 ```
 /civicrm/profile/edit?gid=<id>&reset=1
 ```
 
-CiviCRM öffnet das Profil für den angemeldeten Kontakt, der nur seinen eigenen Datensatz sehen und bearbeiten kann.
+CiviCRM listet dort die eigenen Zeilen des angemeldeten Kontakts, mit „Add New Record“ (neuer Datensatz) und Links zum Ansehen, Bearbeiten und Löschen; die Zeilen anderer Kontakte erreicht niemand. Die Mitarbeitenden brauchen die Rechte „profile edit“ und „access all custom data“: Ohne das zweite zeigt CiviCRM das Profil ohne jedes seiner Felder.
 
 Um die Abonnements zu nutzen, setzen Sie den Zustellmodus einer Aktion auf „Abonnent:innen“ und wählen das Topic unter „Abonnent:innen des Topics“. Das an der Aktion eingetragene Ziel wird in diesem Modus ignoriert. Die Nachricht an jede:n Abonnent:in geht über den Kanal, den die Person gewählt hat, mit dem Konto dieses Kanals, etwa seinem Bot. Von der Regel gelangen nur Darstellungsoptionen dorthin; das Aktionsformular führt sie unter „Erweitert“:
 
@@ -70,21 +75,21 @@ Um die Abonnements zu nutzen, setzen Sie den Zustellmodus einer Aktion auf „Ab
 
 Ziele, CC und BCC werden nie übernommen. Header und Token eines Webhook-Kanals gehören zu seiner Standard-URL, die eigene Webhook-URL eines Kontakts erhält sie also nie.
 
-Kontakte abonnieren [Topics](#topics). Eine neue Installation bietet keines an. Um eines anzubieten, setzen Sie im Formular des Topics den Haken „Kontakte dürfen dieses Topic abonnieren“, oder speichern Sie es mit `cv api4 Herald.saveTopic topic=news label=News subscribable=1 'route={"delivery_mode":"subscribers"}'`. Das Topic erscheint dann unter seiner Bezeichnung im Feld „Abonnements“. herald hält die Optionsgruppe `herald_subscribable_topic` mit den Topics aller Domains im Einklang; bearbeiten Sie ihre Werte also nicht von Hand.
+Kontakte abonnieren [Topics](#topics). Eine neue Installation bietet keines an. Um eines anzubieten, setzen Sie im Formular des Topics den Haken „Kontakte dürfen dieses Topic abonnieren“, oder speichern Sie es mit `cv api4 Herald.saveTopic topic=news label=News subscribable=1 'route={"delivery_mode":"subscribers"}'`. Das Topic erscheint dann unter seiner Bezeichnung im Feld „Topics“. herald hält die Optionsgruppe `herald_subscribable_topic` mit den Topics aller Domains im Einklang; bearbeiten Sie ihre Werte also nicht von Hand.
 
 Ein Topic, das eine Route, eine Regelaktion, ein Job oder eine wartende Meldung in `subscribers_of` nennt, lässt sich nicht zurückziehen. Ebenso wenig ein Topic, dessen Route danach die Abonnent:innen erreichen würde, die `default` nennt; soll sie das, nennen Sie diese in `subscribers_of` der Route. Sonst gilt: Bietet sich ein Topic nicht mehr an, bleiben die Abonnements gespeichert, aber keine Zustellung erreicht sie mehr. Eine Zustellung an die Abonnent:innen eines solchen Topics scheitert mit „contacts cannot subscribe to the topic“.
 
-![Benachrichtigungseinstellungen an einem Kontakt](images/de/contact-preferences.png)
+![Benachrichtigungs-Abos an einem Kontakt](images/de/contact-preferences.png)
 
 ![Das Profil zum Selbsteintragen](images/de/profile.png)
 
 ### Abos mit Bezug
 
-Ein Einstellungsdatensatz lässt sich auf einen einzelnen Datensatz beschränken, etwa auf das Event mit der ID 42. Setzen Sie dazu „Bezug: Objekttyp“ auf Event und „Bezug: Objekt-ID“ auf 42. Dieser Kontakt erhält dann nur noch Benachrichtigungen zu diesem Event.
+Ein Abo lässt sich auf einen einzelnen Datensatz beschränken, etwa auf das Event mit der ID 42. Setzen Sie dazu „Bezug: Objekttyp“ auf Event und „Bezug: Objekt-ID“ auf 42. Diese Zeile erhält dann nur noch Benachrichtigungen zu diesem Event. Um zwei Events zu verfolgen, legen Sie zwei Zeilen an.
 
 Auf welchen Datensatz sich eine Regel bezieht, legt das Feld „Abo-Bezug“ an der Aktion „Herald: Send notification (generic)“ fest. Zur Auswahl stehen Event, Mitgliedschaft und Teilnehmer:in, und herald übernimmt die ID aus dem Trigger. Event funktioniert auch bei Triggern auf Teilnahmen, über das Event der Teilnahme.
 
-Ein Einstellungsdatensatz ohne Bezug erhält alles, was er abonniert hat. Der Bezug gilt für alle Abonnements des Datensatzes. Ein Datensatz mit Bezug erhält daher keine Benachrichtigungen ohne Bezug mehr, etwa Beitragsmeldungen, und auch keine Reports, denn die Report-Aktion hat keinen Bezug. Das Profil zur Selbstverwaltung enthält die Bezugsfelder nicht, Admins setzen sie also am Kontakt.
+Ein Abo ohne Bezug erhält alles zu seinen Topics. Eine Zeile mit Bezug erhält keine Benachrichtigungen ohne Bezug, etwa Beitragsmeldungen, und auch keine Reports, denn die Report-Aktion hat keinen Bezug; die übrigen Zeilen des Kontakts betrifft das nicht. Das Profil zur Selbstverwaltung enthält die Bezugsfelder nicht, Admins setzen sie also am Kontakt.
 
 ## Topics
 

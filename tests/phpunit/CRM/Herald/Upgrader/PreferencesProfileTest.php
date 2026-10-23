@@ -43,20 +43,30 @@ class CRM_Herald_Upgrader_PreferencesProfileTest extends TestCase implements Hea
     return $group['id'];
   }
 
-  public function testInstallCreatesTheProfileOnTheCustomFields(): void {
+  public function testInstallCreatesTheProfileOnTheSubscriptionRows(): void {
     /** @var array{id: int} $channel */
     $channel = CustomField::get(checkPermissions: FALSE)
       ->addSelect('id')
-      ->addWhere('custom_group_id:name', '=', 'herald_preferences')
-      ->addWhere('name', '=', 'preferred_channel')
+      ->addWhere('custom_group_id:name', '=', 'herald_subscription')
+      ->addWhere('name', '=', 'channel')
       ->execute()
       ->single();
 
     $fields = $this->fields($this->gid());
 
-    self::assertCount(6, $fields);
-    self::assertSame('Preferred channel', $fields['custom_' . $channel['id']]);
+    self::assertCount(4, $fields);
+    self::assertSame('Channel', $fields['custom_' . $channel['id']]);
     self::assertSame(['Profile'], $this->modules($this->gid()));
+    self::assertSame(
+      [TRUE],
+      array_values(array_unique(
+        UFField::get(checkPermissions: FALSE)
+          ->addWhere('uf_group_id', '=', $this->gid())
+          ->execute()
+          ->column('is_multi_summary'),
+      )),
+      'the row list shows only summary fields',
+    );
   }
 
   public function testUpgradeLetsTheProfileOpenAsAStandaloneForm(): void {
@@ -65,8 +75,8 @@ class CRM_Herald_Upgrader_PreferencesProfileTest extends TestCase implements Hea
     $ctx = new CRM_Queue_TaskContext();
     $ctx->log = CRM_Core_Error::createDebugLogger();
 
-    self::assertTrue(CRM_Herald_Upgrader::_queueAdapter($ctx, 'herald', 'upgrade_1016'));
-    self::assertTrue(CRM_Herald_Upgrader::_queueAdapter($ctx, 'herald', 'upgrade_1016'));
+    self::assertTrue(CRM_Herald_Upgrader::_queueAdapter($ctx, 'herald', 'upgrade_1017'));
+    self::assertTrue(CRM_Herald_Upgrader::_queueAdapter($ctx, 'herald', 'upgrade_1017'));
 
     self::assertSame(['Profile'], $this->modules($gid));
   }
@@ -94,12 +104,32 @@ class CRM_Herald_Upgrader_PreferencesProfileTest extends TestCase implements Hea
     $ctx = new CRM_Queue_TaskContext();
     $ctx->log = CRM_Core_Error::createDebugLogger();
 
-    self::assertTrue(CRM_Herald_Upgrader::_queueAdapter($ctx, 'herald', 'upgrade_1009'));
+    self::assertTrue(CRM_Herald_Upgrader::_queueAdapter($ctx, 'herald', 'upgrade_1017'));
 
     self::assertSame($gid, $this->gid());
     $fields = $this->fields($gid);
-    self::assertCount(6, $fields);
+    self::assertCount(4, $fields);
     self::assertSame('Edited by an admin', $fields[$fieldNames[1]]);
+  }
+
+  public function testTheOldHelpTextIsReplacedAndAnEditedOneKept(): void {
+    $gid = $this->gid();
+    $help = static fn (): mixed => UFGroup::get(checkPermissions: FALSE)
+      ->addWhere('id', '=', $gid)
+      ->execute()
+      ->single()['help_pre'];
+    $set = static fn (string $text) => UFGroup::update(checkPermissions: FALSE)
+      ->addWhere('id', '=', $gid)
+      ->addValue('help_pre', $text)
+      ->execute();
+
+    $set('Pick your preferred channel and what kinds of notifications you want to receive.');
+    CRM_Herald_Upgrader_PreferencesProfile::ensure();
+    self::assertSame('Add a row for each channel you want notifications on, with the topics it carries.', $help());
+
+    $set('Our own words');
+    CRM_Herald_Upgrader_PreferencesProfile::ensure();
+    self::assertSame('Our own words', $help());
   }
 
   public function testUpgradeCreatesTheProfileWhereNoneExists(): void {
@@ -110,7 +140,7 @@ class CRM_Herald_Upgrader_PreferencesProfileTest extends TestCase implements Hea
     $gid = CRM_Herald_Upgrader_PreferencesProfile::ensure();
 
     self::assertSame($gid, $this->gid());
-    self::assertCount(6, $this->fields($gid));
+    self::assertCount(4, $this->fields($gid));
   }
 
 }

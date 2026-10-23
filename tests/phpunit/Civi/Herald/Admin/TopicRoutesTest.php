@@ -169,7 +169,8 @@ class TopicRoutesTest extends AdminTestCase {
 
     \Civi\Api4\Contact::create(FALSE)
       ->addValue('contact_type', 'Individual')
-      ->addValue('herald_preferences.subscriptions', ['news'])
+      ->addChain('subscription', \Civi\Api4\CustomValue::create('herald_subscription', FALSE)
+        ->setValues(['entity_id' => '$id', 'channel' => 'email', 'topics' => ['news']]))
       ->execute();
     $usage = array_column(self::call('getTopicUsage'), 'subscribers', 'topic');
     $this->assertSame(1, $usage['news']);

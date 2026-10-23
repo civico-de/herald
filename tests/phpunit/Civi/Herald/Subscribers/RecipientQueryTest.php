@@ -42,6 +42,15 @@ class RecipientQueryTest extends TestCase implements HeadlessInterface, HookInte
     return (int) $create->execute()->first()['id'];
   }
 
+  /**
+   * @param array<string, mixed> $values
+   */
+  private function subscribe(int $contactId, array $values): void {
+    \Civi\Api4\CustomValue::create(Subscriptions::GROUP, checkPermissions: FALSE)
+      ->setValues(['entity_id' => $contactId] + $values)
+      ->execute();
+  }
+
   private function addEmail(int $contactId, string $email, ?int $locationTypeId = NULL, bool $onHold = FALSE): void {
     $create = \Civi\Api4\Email::create(checkPermissions: FALSE)
       ->addValue('contact_id', $contactId)
@@ -69,13 +78,13 @@ class RecipientQueryTest extends TestCase implements HeadlessInterface, HookInte
     return $groupId;
   }
 
-  public function testGroupFanOutMixesPreferencesAndEmailFallback(): void {
-    $telegramContact = $this->createContact([
-      'herald_preferences.preferred_channel' => 'telegram',
-      'herald_preferences.telegram_chat_id' => '111',
-    ]);
+  public function testGroupFanOutMixesGroupSubscriptionsAndEmailFallback(): void {
+    $telegramContact = $this->createContact();
+    $this->subscribe($telegramContact, ['channel' => 'telegram', 'recipient' => '111', 'for_groups' => TRUE]);
     $plainContact = $this->createContact();
     $this->addEmail($plainContact, 'group-fallback@example.org');
+    // A row without the group flag serves topics only.
+    $this->subscribe($plainContact, ['channel' => 'telegram', 'recipient' => '222', 'topics' => ['news']]);
     $noRecipient = $this->createContact();
     $groupId = $this->createGroupWith($telegramContact, $plainContact, $noRecipient);
 
@@ -122,18 +131,16 @@ class RecipientQueryTest extends TestCase implements HeadlessInterface, HookInte
   public function testScopedSubscriberLookupFiltersByEntityInstance(): void {
     \Civi::settings()->set(Router::SETTING, ['news' => ['subscribable' => TRUE]]);
     SubscribableTopics::sync();
-    $scoped = $this->createContact([
-      'herald_preferences.preferred_channel' => 'telegram',
-      'herald_preferences.telegram_chat_id' => 'scoped',
-      'herald_preferences.subscriptions' => ['news'],
-      'herald_preferences.source_entity_type' => 'Event',
-      'herald_preferences.source_entity_id' => 12_345,
+    $scoped = $this->createContact();
+    $this->subscribe($scoped, [
+      'channel' => 'telegram',
+      'recipient' => 'scoped',
+      'topics' => ['news'],
+      'source_entity_type' => 'Event',
+      'source_entity_id' => 12_345,
     ]);
-    $global = $this->createContact([
-      'herald_preferences.preferred_channel' => 'telegram',
-      'herald_preferences.telegram_chat_id' => 'global',
-      'herald_preferences.subscriptions' => ['news'],
-    ]);
+    $global = $this->createContact();
+    $this->subscribe($global, ['channel' => 'telegram', 'recipient' => 'global', 'topics' => ['news']]);
 
     $lookup = new SubscriberLookup();
     $matching = $lookup->findByTopic('news', [
@@ -148,6 +155,28 @@ class RecipientQueryTest extends TestCase implements HeadlessInterface, HookInte
 
     $unscoped = $lookup->findByTopic('news');
     $this->assertSame([$global], array_column($unscoped, 'contact_id'));
+  }
+
+  public function testEachMatchingRowOfALivingContactIsARecipient(): void {
+    \Civi::settings()->set(Router::SETTING, ['news' => ['subscribable' => TRUE], 'ops' => ['subscribable' => TRUE]]);
+    SubscribableTopics::sync();
+    $contact = $this->createContact();
+    $this->addEmail($contact, 'own@example.org');
+    $this->subscribe($contact, ['channel' => 'telegram', 'recipient' => '1', 'topics' => ['news', 'ops']]);
+    $this->subscribe($contact, ['channel' => 'email', 'topics' => ['news']]);
+    $this->subscribe($contact, ['channel' => 'telegram', 'recipient' => '2', 'topics' => ['ops']]);
+    $deleted = $this->createContact(['is_deleted' => TRUE]);
+    $this->subscribe($deleted, ['channel' => 'telegram', 'recipient' => '3', 'topics' => ['news']]);
+
+    $this->assertSame(
+      [['chat_id' => '1'], ['email_to' => 'own@example.org']],
+      array_column((new SubscriberLookup())->findByTopic('news'), 'config'),
+    );
+    $this->assertSame(
+      2,
+      Subscriptions::subscribers('news'),
+      'a trashed contact keeps its rows and still holds the topic',
+    );
   }
 
 }

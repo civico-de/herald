@@ -16,25 +16,7 @@ final class ContactRows {
   public const EMAIL_CHANNEL_SETTING = 'herald_contact_email_channel';
 
   /**
-   * Channel type => the preference field holding a contact's recipient and
-   * the key it fills. Email reaches the contact's own address instead.
-   */
-  public const RECIPIENT_FIELDS = [
-    'telegram' => ['telegram_chat_id', 'chat_id'],
-    'pushover' => ['pushover_user_key', 'pushover_user_key'],
-    'ntfy' => ['ntfy_topic', 'ntfy_topic'],
-    'webhook' => ['webhook_url', 'webhook_url'],
-  ];
-
-  /**
-   * Whether a contact can receive through a channel of this type.
-   */
-  public static function reachable(string $type): bool {
-    return $type === 'email' || isset(self::RECIPIENT_FIELDS[$type]);
-  }
-
-  /**
-   * The channels a contact can choose as preferred channel: name => type.
+   * The channels a subscription can name: name => type.
    *
    * @return array<string, string>
    */
@@ -47,8 +29,8 @@ final class ContactRows {
   }
 
   /**
-   * The email channel a contact's own address is reached through when the
-   * contact has no usable preference.
+   * The email channel a group member's own address is reached through when
+   * the member has no usable subscription for group messages.
    */
   public static function emailChannel(): string {
     $name = \Civi::settings()->get(self::EMAIL_CHANNEL_SETTING);
@@ -66,11 +48,6 @@ final class ContactRows {
     $query = \Civi\Api4\Contact::get(checkPermissions: FALSE)
       ->addSelect(
         'id',
-        'herald_preferences.preferred_channel',
-        'herald_preferences.telegram_chat_id',
-        'herald_preferences.pushover_user_key',
-        'herald_preferences.ntfy_topic',
-        'herald_preferences.webhook_url',
         'email_primary.email',
         'email_primary.on_hold',
         'do_not_email',
@@ -93,37 +70,49 @@ final class ContactRows {
   }
 
   /**
-   * Bucket join-duplicated rows per contact, keeping row order. Rows without
-   * a contact id each form their own bucket.
+   * The query rows of these contacts; none for no ids.
    *
-   * @param array<int, array<string, mixed>> $rows
-   * @return array<int, non-empty-array<int, array<string, mixed>>>
+   * @param list<int> $contactIds
+   * @param array<string, mixed> $options
+   * @return array<int, array<string, mixed>>
    */
-  public static function byContact(array $rows): array {
-    $grouped = [];
-    $anonymous = [];
-    foreach ($rows as $row) {
-      $contactId = Cast::toInt($row['id'] ?? 0);
-      if ($contactId <= 0) {
-        $anonymous[] = [$row];
-        continue;
-      }
-      $grouped[$contactId][] = $row;
+  public static function of(array $contactIds, array $options): array {
+    if ($contactIds === []) {
+      return [];
     }
-    return array_merge(array_values($grouped), $anonymous);
+    /** @var array<int, array<string, mixed>> */
+    return self::query($options)
+      ->addWhere('id', 'IN', array_values(array_unique($contactIds)))
+      ->execute()
+      ->getArrayCopy();
   }
 
   /**
-   * Config for a contact's preferred channel of a non-email type, or NULL
-   * when the recipient field that type needs is empty or the type has none.
+   * Query rows by contact id, keeping row order.
    *
-   * @param array<string, mixed> $row
-   * @return array<string, mixed>|null
+   * @param array<int, array<string, mixed>> $rows
+   * @return array<int, non-empty-list<array<string, mixed>>>
    */
-  public static function channelConfig(string $type, array $row): ?array {
-    [$field, $key] = self::RECIPIENT_FIELDS[$type] ?? ['', ''];
-    $value = $field === '' ? NULL : $row['herald_preferences.' . $field] ?? NULL;
-    return empty($value) ? NULL : [$key => $value];
+  public static function byId(array $rows): array {
+    $grouped = [];
+    foreach ($rows as $row) {
+      $grouped[Cast::toInt($row['id'] ?? 0)][] = $row;
+    }
+    return $grouped;
+  }
+
+  /**
+   * Recipients without repeats: one send per contact, channel and config.
+   *
+   * @param array<int, array{contact_id: int, channel: string, config: array<string, mixed>}> $recipients
+   * @return list<array{contact_id: int, channel: string, config: array<string, mixed>}>
+   */
+  public static function distinct(array $recipients): array {
+    $seen = [];
+    foreach ($recipients as $recipient) {
+      $seen[serialize($recipient)] ??= $recipient;
+    }
+    return array_values($seen);
   }
 
 }

@@ -51,16 +51,16 @@
           });
 
       ctrl.remove = (row) =>
-        crmApi4("Contact", "get", {
-          select: ["row_count"],
-          where: [["herald_preferences.preferred_channel", "=", row.name]],
+        crmApi4("Custom_herald_subscription", "get", {
+          select: ["COUNT(DISTINCT entity_id) AS contacts"],
+          where: [["channel", "=", row.name]],
         })
-          .then((chosen) =>
+          .then((subscribed) =>
             CRM.confirm({
               title: ts('Delete channel "%1"', { 1: row.label }),
               message: ts(
-                "Contacts who chose it as their channel: %1. Until they choose another, subscriber deliveries skip them and group deliveries send them email.",
-                { 1: chosen.count },
+                "Contacts subscribed through it: %1. Their subscriptions on it stop delivering until they pick another channel; group deliveries then send them email.",
+                { 1: subscribed[0] ? subscribed[0].contacts : 0 },
               ),
             }).on("crmConfirm:yes", () => {
               // The dialog runs outside Angular's digest.

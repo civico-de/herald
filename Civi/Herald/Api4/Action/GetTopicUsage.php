@@ -7,7 +7,7 @@ namespace Civi\Herald\Api4\Action;
 use Civi\Api4\Generic\AbstractAction;
 use Civi\Api4\Generic\Result;
 use Civi\Herald\Admin\ParamsInUse;
-use Civi\Herald\Subscribers\SubscribableTopics;
+use Civi\Herald\Subscribers\Subscriptions;
 use Civi\Herald\Topic\Router;
 
 /**
@@ -25,7 +25,7 @@ class GetTopicUsage extends AbstractAction {
       $result[] = [
         'topic' => (string) $topic,
         'used_by' => ParamsInUse::ofTopic((string) $topic),
-        'subscribers' => SubscribableTopics::subscribers((string) $topic),
+        'subscribers' => Subscriptions::subscribers((string) $topic),
       ];
     }
   }

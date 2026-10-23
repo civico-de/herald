@@ -7,7 +7,7 @@ namespace Civi\Herald\Subscribers;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * Brings an option group of the contact preferences in line with what herald
+ * Brings an option group of the contact subscriptions in line with what herald
  * offers, over every domain: contacts span domains, and the current domain's
  * title wins for a name several domains share.
  */

@@ -44,13 +44,13 @@ Warum eine mehrzeilige Feldgruppe statt einer eigenen Tabelle (wie im Plan „Ab
 
 ### Empfänger ohne feste Spalte
 
-Jeder Kanaltyp nennt in `getSemanticFields()` seinen Abonnenten-Empfänger: `recipient => chat_id` (Telegram), `pushover_user_key`, `ntfy_topic`, `webhook_url`, `email_to`. Ein Typ ohne diesen Eintrag ist nicht abonnierbar (heute `ContactRows::reachable()`). Der Lookup legt `recipient` unter diesen Key; `ContactRows::RECIPIENT_FIELDS` fällt weg.
+Jeder Kanaltyp nennt in `getSemanticFields()` seinen Abonnenten-Empfänger: `recipient => chat_id` (Telegram), `pushover_user_key`, `ntfy_topic`, `webhook_url`, `email_to`. Ein Typ ohne diesen Eintrag ist nicht abonnierbar (`SubscriptionConfig::reachable()`). Der Lookup legt `recipient` unter diesen Key; `ContactRows::RECIPIENT_FIELDS` fällt weg.
 
-Prüfen beim Speichern: Der Wert muss die Prüfungen bestehen, die beim Senden ohnehin gelten (etwa die Webhook-URL gegen die erlaubten Hosts), damit ein Fehler im Formular auffällt statt erst bei der Zustellung. Das hängt am `pre`-Hook der Feldgruppe, weil der Tab ein Core-Formular ist; ein ungültiger Wert ist ein Fehler im Formular, keine stille Korrektur.
+Prüfen beim Speichern: Der Wert muss die Prüfungen bestehen, die beim Senden ohnehin gelten (etwa die Webhook-URL gegen die erlaubten Hosts), damit ein Fehler im Formular auffällt statt erst bei der Zustellung. Das hängt an `hook_civicrm_validateForm` für das Tab-Formular (`CRM_Contact_Form_CustomData`) und das Profil (`CRM_Profile_Form_Edit`), weil ein im `pre`-Hook geworfener Fehler kein Formularfehler wäre; ein ungültiger Wert ist ein Fehler im Formular, keine stille Korrektur. Schreibt jemand über APIv4 direkt, prüft niemand; der Versand prüft dieselben Regeln ohnehin.
 
 ### E-Mail
 
-Leerer `recipient` bei einem E-Mail-Kanal heißt wie heute: die Adresse des Kontakts, nach Adresstyp und Sperren aus `EmailRecipient::of()`. Eine eingetragene Adresse gilt direkt; die Sperren des Kontakts (`do_not_email`, `is_opt_out`, `on_hold` der Hauptadresse) gelten trotzdem, weil sie dem Kontakt gehören, nicht der Adresse.
+Leerer `recipient` bei einem E-Mail-Kanal heißt wie heute: die Adresse des Kontakts, nach Adresstyp und Sperren aus `EmailRecipient::of()`. Eine eingetragene Adresse gilt direkt; die Sperren des Kontakts (`do_not_email`, mit „Kommunikationssperren beachten“ auch `is_opt_out`) gelten trotzdem, weil sie dem Kontakt gehören, nicht der Adresse. `on_hold` gehört dagegen einer Adresse und gilt nur, wenn der Kanal die Adresse des Kontakts nimmt (`EmailRecipient::blocked()` gegen `EmailRecipient::of()`).
 
 ## Zustellung
 
@@ -62,11 +62,11 @@ Die Zählung der Übersprungenen (`suspended`, `scope_mismatch`, `no_channel`, `
 
 ### An eine Gruppe
 
-Der Gruppenmodus kennt keine Topics. Er erreicht jedes Mitglied über seine Zeilen mit `for_groups`, jede einmal; ohne solche Zeile bekommt das Mitglied wie heute eine E-Mail über `herald_contact_email_channel`. Ein Haken statt „die erste Zeile“, weil eine Reihenfolge der Zeilen nichts bedeutet und eine geratene Wahl Meldungen an einen Kanal schickt, den der Kontakt dafür nie vorgesehen hat.
+Der Gruppenmodus kennt keine Topics und keinen Bezug. Er erreicht jedes Mitglied über seine brauchbaren Zeilen mit `for_groups`, jede einmal; ohne brauchbare solche Zeile bekommt das Mitglied wie heute eine E-Mail über `herald_contact_email_channel`. Ein Haken statt „die erste Zeile“, weil eine Reihenfolge der Zeilen nichts bedeutet und eine geratene Wahl Meldungen an einen Kanal schickt, den der Kontakt dafür nie vorgesehen hat.
 
 ### Zählungen in den Admin-Screens
 
-Kanalliste (Abonnenten pro Kanal, `ang/heraldAdmin/channels.js`) und Topic-Liste (`SubscribableTopics`) zählen Kontakte mit mindestens einer Zeile über `Custom_herald_subscription` statt über `herald_preferences`. Das Löschen eines Kanals oder Topics nennt im Bestätigungsdialog weiterhin die Zahl.
+Kanalliste (Abonnenten pro Kanal, `ang/heraldAdmin/channels.js`) und Topic-Liste (`Subscriptions::subscribers()`) zählen Kontakte mit mindestens einer Zeile über `Custom_herald_subscription` statt über `herald_preferences`. Das Löschen eines Kanals oder Topics nennt im Bestätigungsdialog weiterhin die Zahl.
 
 ## Selbstverwaltung
 
@@ -79,7 +79,7 @@ Gemessen am 23.10.2026 im Dev-Stack mit einer mehrzeiligen Wegwerf-Gruppe (Kanal
 - Ohne „access all custom data“ zeigt das Profil keine benutzerdefinierten Felder, die Seite bleibt leer. Das gilt für das heutige Profil genauso; das Handbuch nennt das Recht bisher nicht.
 - Eine fremde `id` leitet auf die Startseite um. Eine fremde `recordId` mit eigener `id` findet die Zeile nicht („Record doesnot exist“, beim Speichern entstünde eine neue eigene Zeile), Löschen bietet keinen Knopf an. Fremde Zeilen sind also nicht erreichbar; die Seite wirft dabei PHP-Notices im Template, ein Core-Bug für `upstream-bugs.md`.
 
-Den Link im Handbuch (`/civicrm/profile/edit?gid=<id>`) ersetzt der feste Pfad; die ID nachzuschlagen entfällt.
+Der Link im Handbuch bleibt `/civicrm/profile/edit?gid=<id>&reset=1`; ein fester Pfad bräuchte eine eigene Route für eine Seite, die Core schon hat.
 
 ## Upgrade
 
@@ -91,7 +91,9 @@ Für jeden Kontakt mit einem Datensatz in `herald_preferences`, in SQL über die
 4. **Profil umstellen, alte Feldgruppe entfernen.** `PreferencesProfile::ensure()` ersetzt die Felder des Profils durch die der neuen Gruppe, danach fällt `herald_preferences` samt Tabelle (aus der mgd-Datei genommen, `cleanup` greift erst, wenn der Schritt gelaufen ist, wie bei `SubscriptionTypes::fieldGroup()`).
 5. **Zweiter Lauf.** Ein wiederholter Schritt legt keine Zeile doppelt an: Er überspringt Kontakte, die schon eine Zeile in `herald_subscription` haben.
 
-Bis zum Upgrade-Schritt lesen Lookup und Zählungen weiter `herald_preferences`; der Code liest erst nach Schritt 2 die neue Gruppe. Dazu ein Schalter wie `fieldGroup()`, abgeleitet aus der Schema-Version, nicht aus einem Setting.
+Bis zum Upgrade-Schritt lesen Lookup und Zählungen weiter `herald_preferences` als eine Zeile pro Kontakt (`LegacyPreferences`), damit zwischen dem Austausch des Codes und `cv updb` keine Meldung verloren geht. Der Schalter ist `LegacyPreferences::pending()`: ob die alte Feldgruppe noch existiert. Die Schema-Version taugt nicht, weil ein abgebrochener Schritt sie stehen lässt, die Gruppe aber schon weg sein kann. Solange sie existiert, deklariert die mgd-Datei sie weiter (`CRM_Herald_Upgrader_PreferencesGroup`), damit der Reconcile sie nicht vorzeitig löscht.
+
+Die Migration liest auch Kontakte im Papierkorb: Wer wiederhergestellt wird, hat seine Abos noch. Kanaltypen löst sie über alle Domains auf, weil ein Kanal nur in einer anderen Domain bekannt sein kann. Profilfelder auf die alten Felder löscht der Schritt selbst, weil Core sie mit dem Feld stehen lässt.
 
 ## Wer was ändert
 
@@ -101,7 +103,7 @@ Bis zum Upgrade-Schritt lesen Lookup und Zählungen weiter `herald_preferences`;
 | `Channel*::getSemanticFields()` | `recipient` pro abonnierbarem Typ |
 | `ContactRows`, `SubscriberLookup`, `GroupRecipients`, `SubscriptionScope` | Zeilen statt Kontakt, `RECIPIENT_FIELDS` weg |
 | `SubscribableTopics`, `channels.js` | Zählungen über die neue Gruppe |
-| neuer `pre`-Hook | Empfänger und Pflicht-Topics prüfen |
+| `hook_civicrm_validateForm` (`SubscriptionForm`, `SubscriptionRules`) | Empfänger und Pflicht-Topics prüfen |
 | `CRM_Herald_Upgrader_PreferencesProfile` | Felder der neuen Gruppe |
 | Upgrade-Schritt | Migration wie oben, mit Tests (zweite Domain, zweiter Lauf, Kontakt ohne Topics, Kontakt mit Bezug) |
 | Handbuch | `delivery.md` (Subscribers, Scoped subscriptions, Group mode, nötiges Recht „access all custom data“ für das Profil), `deploy.md` (Upgrade), Screenshots |
@@ -111,9 +113,9 @@ Bis zum Upgrade-Schritt lesen Lookup und Zählungen weiter `herald_preferences`;
 
 Im Dev-Stack (civikitchen), Ergebnis mit Zahl in diesen Plan:
 
-1. **Tab und Formular.** Eine mehrzeilige Feldgruppe mit Mehrfachauswahl-Feld: zeigt der Tab die Topics lesbar, und lässt sich eine Zeile anlegen und bearbeiten?
-2. **`pre`-Hook.** Kommt der Hook bei Tab-Formular, Profil und APIv4 mit denselben Werten an, und erscheint eine geworfene Ausnahme im Tab als Formularfehler?
-3. **APIv4 `CONTAINS`** auf dem Mehrfachauswahl-Feld einer mehrzeiligen Gruppe, über `Contact.get` mit Join und direkt über `Custom_herald_subscription.get`.
+1. **Tab und Formular.** Ergebnis: Stil „Tab“ zeigt jede Zeile als Block mit lesbaren Topics, Bearbeiten und Löschen. „Tab with table“ rendert in 6.19 eine SearchKit-Anzeige mit Afform-Formularen aus `civicrm_admin_ui`; dort griffe die Prüfung über `validateForm` nicht, und die Ansicht hinge an einer optionalen Extension. herald bleibt bei „Tab“.
+2. **Prüfung.** Ergebnis: Tab und Profil prüfen über `validateForm`; die Elemente heißen im Tab `custom_<Feld>_<Zeile>` (neue Zeilen negativ), im Profil `custom_<Feld>`.
+3. **APIv4 `CONTAINS`.** Ergebnis: Direkt über `Custom_herald_subscription.get` funktioniert es, auch mit Sonderzeichen im Topic-Namen. `Contact.get` mit `herald_subscription.topics` liefert bei mehrzeiligen Gruppen doppelte Kontaktzeilen ohne die Feldwerte und taugt nicht; der Lookup liest deshalb die Zeilen und filtert lebende Kontakte über `entity_id.is_deleted`/`entity_id.is_deceased`.
 4. **Profil.** Erledigt, Ergebnis unter „Selbstverwaltung“.
 
 Auf den Installationen (nur Zählungen; die Abfragen schreibe ich, ausführen ist deine Sache): Kontakte mit Präferenzen, davon mit Bezug, mit Kanal ohne Topics, und Werte in Empfängerspalten, die nicht zum gewählten Kanal gehören.

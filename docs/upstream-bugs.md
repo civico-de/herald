@@ -74,6 +74,14 @@ CKEditor 4 stores `>` as `&gt;` and `&&` as `&amp;&amp;` in a message template, 
 
 `CRM_Core_Smarty` sets `error_reporting` to `E_ALL` only with debugging on, on `localhost` and in unit tests; elsewhere the global setting applies, so a placeholder typo can render silently on production. `CRM_Utils_String::parseOneOffStringThroughSmarty()` installs a handler of its own that lets warnings pass to PHP. `TemplateCheck` therefore renders with `E_ALL` and a handler that turns warnings and notices into errors, and honours `error_reporting()` inside it, because Smarty silences its own writes of compiled templates. Status: core design.
 
+### Profiles warn on a foreign record of a multi-record group
+
+`civicrm/profile/edit` with `multiRecord=update` or `delete` and a `recordId` that belongs to another contact shows "Record doesnot exist" and offers no delete button. The template still reads the missing buttons, so PHP logs notices such as `Undefined array key "_qf_Edit_upload_delete"`. The record stays out of reach; saving the form creates a new record of the logged-in contact. The subscription profile (`CRM_Herald_Upgrader_PreferencesProfile`) is exposed to this and herald accepts it. Status: not reported.
+
+### The custom data tab drops the first record's input on a form error
+
+When `civicrm/contact/view/cd/edit` for a multi-record group fails validation, the form comes back with the first record's stored values instead of what was entered; later records keep their input. Core's own "Channel is a required field." does the same, so the subscription checks share it. Errors appear only in the list at the top, not at the fields, for core's checks as well. Status: not reported.
+
 ### Standalone tests can reach the main database
 
 On Standalone, `SettingsManager::bootSettings()` builds `CIVICRM_DSN` from the `CIVICRM_DB_*` environment variables before `settings.php` applies `TEST_DB_DSN`. The headless tests would then run against the main database. `tests/phpunit/bootstrap.php` sets `CIVICRM_DB_NAME=civicrm_test` for the whole test process. Status: not reported.
@@ -84,7 +92,7 @@ herald's admin screens use the markup of Afform fields inside `#bootstrap-theme`
 
 ### Dark buttons are too pale
 
-In dark mode Minetta sets `--crm-primary-color` to `--crm-c-gray-500` (`#919297`) and the button text to white: 3.1:1, below 4.5:1. This hits `.btn-primary`, `.btn-secondary` and `.btn-default`. Setting `--crm-primary-color: #55565b` gives 7.3:1. Status: not reported.
+In dark mode Minetta sets `--crm-primary-color` to `--crm-c-gray-500` (`#919297`) and the button text to white: 3.1:1, below 4.5:1. This hits `.btn-primary`, `.btn-secondary` and `.btn-default`. QuickForm buttons such as Save on the subscription tab and the profile (`.crm-button`) fail the same way. Setting `--crm-primary-color: #55565b` gives 7.3:1. Status: not reported.
 
 ### Required markers are too faint
 

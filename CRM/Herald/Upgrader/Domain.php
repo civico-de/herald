@@ -49,4 +49,20 @@ final class CRM_Herald_Upgrader_Domain {
     return new ChannelStore(NULL, $this->settings());
   }
 
+  /**
+   * Channel name => type across all domains, inactive ones included; a
+   * name several domains use takes the type of the lowest domain id.
+   *
+   * @return array<string, string>
+   */
+  public static function channelTypes(): array {
+    $types = [];
+    foreach (self::ids() as $domainId) {
+      foreach ((new self($domainId, ''))->store()->all() as $name => $record) {
+        $types[$name] ??= $record['type'];
+      }
+    }
+    return $types;
+  }
+
 }

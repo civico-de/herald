@@ -124,7 +124,7 @@ class NtfyChannel implements ChannelInterface {
    * @return array<string, string>
    */
   public function getSemanticFields(): array {
-    return ['subject' => 'ntfy_title'];
+    return ['subject' => 'ntfy_title', 'recipient' => 'ntfy_topic'];
   }
 
 }

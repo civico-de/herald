@@ -50,13 +50,16 @@ class GetChannelTypesTest extends TestCase implements HeadlessInterface, HookInt
   public function testExposesTheSemanticFieldMapping(): void {
     $rows = civicrm_api4('Herald', 'getChannelTypes', ['checkPermissions' => FALSE])->indexBy('key');
 
-    $this->assertSame(['subject' => 'email_subject', 'format' => 'email_format'], $rows['email']['semantic_fields']);
-    $this->assertSame(['subject' => 'ntfy_title'], $rows['ntfy']['semantic_fields']);
+    $this->assertSame(
+      ['subject' => 'email_subject', 'format' => 'email_format', 'recipient' => 'email_to'],
+      $rows['email']['semantic_fields'],
+    );
+    $this->assertSame(['subject' => 'ntfy_title', 'recipient' => 'ntfy_topic'], $rows['ntfy']['semantic_fields']);
     $this->assertSame(
       ['subject' => 'activity_subject', 'format' => 'activity_format'],
       $rows['activity']['semantic_fields'],
     );
-    $this->assertSame([], $rows['telegram']['semantic_fields']);
+    $this->assertSame(['recipient' => 'chat_id'], $rows['telegram']['semantic_fields']);
   }
 
   /**

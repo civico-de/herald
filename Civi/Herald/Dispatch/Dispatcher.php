@@ -34,7 +34,7 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  *   subscribers_of      — the topic whose subscribers delivery_mode=subscribers
  *                         reaches; a topic's route defaults it to that topic
  *   group_id            — required when delivery_mode=group; recipients are the
- *                         group's contacts (own preferred channel, email fallback)
+ *                         group's contacts (own group subscriptions, email fallback)
  *   email_addresses     — required when delivery_mode=addresses; raw address
  *                         list (comma/semicolon/newline separated), no contacts
  *   respect_suspension  — bool; skip is_opt_out / on-hold email recipients in

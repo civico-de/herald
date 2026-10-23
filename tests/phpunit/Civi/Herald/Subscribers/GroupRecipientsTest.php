@@ -14,19 +14,14 @@ class GroupRecipientsTest extends TestCase {
 
   private const TYPES = ['telegram' => 'telegram', 'email' => 'email'];
 
-  private static function map(array $rows, array $options = []): array {
-    return GroupRecipients::mapGroupRows($rows, $options, self::TYPES, 'email');
+  private static function map(array $rows, array $options = [], array $subscriptions = []): array {
+    return GroupRecipients::mapGroupRows($rows, $subscriptions, $options, self::TYPES, 'email');
   }
 
   private function row(array $overrides): array {
     return $overrides
     + [
       'id' => 0,
-      'herald_preferences.preferred_channel' => '',
-      'herald_preferences.telegram_chat_id' => '',
-      'herald_preferences.pushover_user_key' => '',
-      'herald_preferences.ntfy_topic' => '',
-      'herald_preferences.webhook_url' => '',
       'email_primary.email' => '',
       'email_primary.on_hold' => FALSE,
       'do_not_email' => FALSE,
@@ -34,15 +29,8 @@ class GroupRecipientsTest extends TestCase {
     ];
   }
 
-  public function testMemberWithPreferenceUsesOwnChannel(): void {
-    $rows = [
-      $this->row([
-        'id' => 1,
-        'herald_preferences.preferred_channel' => 'telegram',
-        'herald_preferences.telegram_chat_id' => '111',
-      ]),
-    ];
-    $mapped = self::map($rows);
+  public function testMemberWithAGroupSubscriptionUsesItsChannel(): void {
+    $mapped = self::map([$this->row(['id' => 1])], [], [Subscriptions::row(1, 'telegram', '111', '', 0)]);
     $this->assertSame(
       [['contact_id' => 1, 'channel' => 'telegram', 'config' => ['chat_id' => '111']]],
       $mapped['recipients'],
@@ -50,7 +38,7 @@ class GroupRecipientsTest extends TestCase {
     $this->assertSame([], $mapped['skipped']);
   }
 
-  public function testMemberWithoutPreferenceFallsBackToOwnEmail(): void {
+  public function testMemberWithoutGroupSubscriptionFallsBackToOwnEmail(): void {
     $rows = [$this->row(['id' => 2, 'email_primary.email' => 'a@example.org'])];
     $mapped = self::map($rows);
     $this->assertSame(
@@ -59,17 +47,42 @@ class GroupRecipientsTest extends TestCase {
     );
   }
 
-  public function testMemberWithBrokenPreferenceFallsBackToEmail(): void {
-    // Preferred channel picked but recipient id missing → email fallback.
-    $rows = [
-      $this->row([
-        'id' => 3,
-        'herald_preferences.preferred_channel' => 'telegram',
-        'email_primary.email' => 'b@example.org',
-      ]),
+  public function testMemberWithAnUnusableGroupSubscriptionFallsBackToEmail(): void {
+    $rows = [$this->row(['id' => 3, 'email_primary.email' => 'b@example.org'])];
+    $mapped = self::map(
+      $rows,
+      [],
+      [Subscriptions::row(3, 'telegram', '', '', 0), Subscriptions::row(3, 'matrix', 'x', '', 0)],
+    );
+    $this->assertSame(
+      [['contact_id' => 3, 'channel' => 'email', 'config' => ['email_to' => 'b@example.org']]],
+      $mapped['recipients'],
+    );
+  }
+
+  public function testMemberGetsEachUsableGroupSubscriptionOnceAndNoFallback(): void {
+    $rows = [$this->row(['id' => 4, 'email_primary.email' => 'own@example.org'])];
+    $subscriptions = [
+      Subscriptions::row(4, 'telegram', '1', 'Event', 42),
+      Subscriptions::row(4, 'telegram', '1', '', 0),
+      Subscriptions::row(4, 'email', 'team@example.org', '', 0),
     ];
-    $mapped = self::map($rows);
-    $this->assertSame('email', $mapped['recipients'][0]['channel']);
+    $this->assertSame(
+      [
+        ['contact_id' => 4, 'channel' => 'telegram', 'config' => ['chat_id' => '1']],
+        ['contact_id' => 4, 'channel' => 'email', 'config' => ['email_to' => 'team@example.org']],
+      ],
+      self::map($rows, [], $subscriptions)['recipients'],
+    );
+  }
+
+  public function testOnlyTheMembersOwnSubscriptionsCount(): void {
+    $mapped = self::map(
+      [$this->row(['id' => 5, 'email_primary.email' => 'own@example.org'])],
+      [],
+      [Subscriptions::row(6, 'telegram', '1', '', 0)],
+    );
+    $this->assertSame([['email_to' => 'own@example.org']], array_column($mapped['recipients'], 'config'));
   }
 
   public function testMemberWithoutAnyRecipientCountedAsSkipped(): void {
@@ -189,6 +202,7 @@ class GroupRecipientsTest extends TestCase {
   public function testFallbackGoesThroughTheContactEmailChannel(): void {
     $mapped = GroupRecipients::mapGroupRows(
       [$this->row(['id' => 9, 'email_primary.email' => 'ada@example.org'])],
+      [],
       [],
       self::TYPES,
       'staff_mail',

@@ -61,14 +61,14 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
 
   public function setUpHeadless() {
     return \Civi\Herald\HeadlessSite::standard()
-      ->callback([self::class, 'createReferenceField'], 'herald_form_round_trip_reference_field')
+      ->callback([self::class, 'createCustomFields'], 'herald_form_round_trip_custom_fields')
       ->apply();
   }
 
   /**
-   * A custom contact reference field, which joins as herald_ref.person.
+   * A custom contact reference field, which joins as herald_ref.person, and a text field herald_ref.code.
    */
-  public static function createReferenceField(): void {
+  public static function createCustomFields(): void {
     \Civi\Api4\CustomGroup::create(FALSE)
       ->setValues(['name' => 'herald_ref', 'title' => 'herald_ref', 'extends' => 'Contact'])
       ->addChain('field', \Civi\Api4\CustomField::create(FALSE)->setValues([
@@ -77,6 +77,13 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
         'label' => 'person',
         'data_type' => 'ContactReference',
         'html_type' => 'Autocomplete-Select',
+      ]))
+      ->addChain('code', \Civi\Api4\CustomField::create(FALSE)->setValues([
+        'custom_group_id' => '$id',
+        'name' => 'code',
+        'label' => 'code',
+        'data_type' => 'String',
+        'html_type' => 'Text',
       ]))
       ->execute();
   }
@@ -466,14 +473,14 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     return [
       'core field' => [[]],
       'option suffix' => [['field' => 'status_id:name', 'from_value' => 'Grace', 'to_value' => 'Expired']],
-      'custom field' => [['entity' => 'Contact', 'field' => 'herald_preferences.preferred_channel']],
+      'custom field' => [['entity' => 'Contact', 'field' => 'herald_ref.code']],
       'joined field' => [['field' => 'contact_id.contact_type']],
       'joined option suffix' => [[
         'field' => 'contact_id.gender_id:name',
         'from_value' => 'Male',
         'to_value' => 'Female',
       ]],
-      'joined custom field' => [['field' => 'contact_id.herald_preferences.preferred_channel']],
+      'joined custom field' => [['field' => 'contact_id.herald_ref.code']],
       'two joins' => [['field' => 'contact_id.employer_id.display_name']],
       'join behind a custom reference' => [['entity' => 'Contact', 'field' => 'herald_ref.person.display_name']],
       'ordering with a number' => [['from_operator' => '>=', 'from_value' => ' 2 ']],

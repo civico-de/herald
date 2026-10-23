@@ -32,7 +32,7 @@
     </div>
     <div class="form-group" ng-if="$ctrl.typeOf().subscribable">
       <label class="crm-af-field-label"><input type="checkbox" id="herald-channel-subscribable" ng-model="$ctrl.subscribable" aria-describedby="herald-channel-subscribable-help" /> {{:: $ctrl.ts('Contacts can choose it') }}</label>
-      <p class="crm-af-field-help-post" id="herald-channel-subscribable-help">{{:: $ctrl.ts('Offers the channel as preferred channel in the notification preferences of contacts.') }}</p>
+      <p class="crm-af-field-help-post" id="herald-channel-subscribable-help">{{:: $ctrl.ts('Offers the channel in the notification subscriptions of contacts.') }}</p>
     </div>
     <fieldset ng-if="$ctrl.typeOf()">
       <legend>{{:: $ctrl.ts('Account') }}</legend>

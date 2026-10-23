@@ -33,6 +33,7 @@ abstract class CRM_Herald_Upgrader_TopicSubscriptionsTestCase extends TestCase i
 
   protected function setUp(): void {
     parent::setUp();
+    \Civi\Herald\LegacyPreferencesFixture::install();
     foreach (CRM_Herald_Upgrader_Domain::ids() as $id) {
       $this->saved[$id] = \Civi::settings($id)->get(Router::SETTING);
     }
@@ -61,6 +62,7 @@ abstract class CRM_Herald_Upgrader_TopicSubscriptionsTestCase extends TestCase i
       ->addWhere('name', '=', 'herald_subscription_type')
       ->execute();
     SubscribableTopics::sync();
+    \Civi\Herald\LegacyPreferencesFixture::remove();
     parent::tearDown();
   }
 
@@ -218,7 +220,7 @@ abstract class CRM_Herald_Upgrader_TopicSubscriptionsTestCase extends TestCase i
         ->execute()
         ->count(),
     );
-    $this->assertSame(1, SubscribableTopics::subscribers('completed_alert'));
+    $this->assertSame(1, \Civi\Herald\Subscribers\Subscriptions::subscribers('completed_alert'));
     $stored = (array) \Civi\Api4\Contact::get(checkPermissions: FALSE)
       ->addSelect('herald_preferences.subscriptions')
       ->addWhere('id', '=', $this->contacts[0])

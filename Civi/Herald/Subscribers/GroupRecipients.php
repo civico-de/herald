@@ -9,10 +9,11 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 /**
  * Resolves the members of a CiviCRM group into dispatch instructions.
  *
- * Contacts with usable herald_preferences go out via their own preferred
- * channel (same mapping as subscriber mode). Contacts without get their own
- * resolved address through the contact email channel
- * (ContactRows::emailChannel()), the only recipient that needs no preference.
+ * A member goes out through each usable subscription marked for group
+ * messages. A member without one gets their own resolved address through
+ * the contact email channel (ContactRows::emailChannel()).
+ *
+ * @phpstan-import-type Subscription from Subscriptions
  */
 class GroupRecipients {
 
@@ -28,7 +29,10 @@ class GroupRecipients {
     }
     /** @var array<int, array<string, mixed>> $rows */
     $rows = ContactRows::query($options)->addWhere('groups', 'IN', [$groupId])->execute()->getArrayCopy();
-    $mapped = self::mapGroupRows($rows, $options);
+    $members = array_values(array_unique(array_map(static fn (array $row): int => Cast::toInt(
+      $row['id'] ?? 0,
+    ), $rows)));
+    $mapped = self::mapGroupRows($rows, Subscriptions::forGroups($members), $options);
     if ($mapped['skipped'] !== []) {
       \Civi::log()->info('herald: group fan-out skipped recipients', [
         'group_id' => $groupId,
@@ -39,9 +43,11 @@ class GroupRecipients {
   }
 
   /**
-   * Map group-member rows to dispatch instructions. Pure — test-seam.
+   * Map group-member rows and their group subscriptions to dispatch
+   * instructions. Pure — test-seam.
    *
    * @param array<int, array<string, mixed>> $rows
+   * @param list<Subscription> $subscriptions
    * @param array<string, mixed> $options
    * @param array<string, string>|null $types Channel name => type; default ContactRows::subscribable().
    * @return array{
@@ -51,46 +57,73 @@ class GroupRecipients {
    */
   public static function mapGroupRows(
     array $rows,
+    array $subscriptions,
     array $options = [],
     ?array $types = NULL,
     ?string $emailChannel = NULL,
   ): array {
     $types ??= ContactRows::subscribable();
     $emailChannel ??= ContactRows::emailChannel();
+    $own = [];
+    foreach ($subscriptions as $subscription) {
+      $own[$subscription['contact_id']][] = $subscription;
+    }
     $out = [];
     /** @var array<string, int> $skipped */
     $skipped = [];
-    $bump = static function (string $reason) use (&$skipped): void {
-      $skipped[$reason] = ($skipped[$reason] ?? 0) + 1;
-    };
-    foreach (ContactRows::byContact($rows) as $contactRows) {
-      // The location-email join can duplicate a contact (several addresses of
-      // that location type); preference fields are identical on every row, so
-      // the first speaks for the contact — but email deliverability must be
-      // judged across ALL of a contact's rows, not just the first.
-      $row = $contactRows[0];
-      $contactId = Cast::toInt($row['id'] ?? 0);
-      $channel = Cast::toString($row['herald_preferences.preferred_channel'] ?? '');
-      $type = $types[$channel] ?? '';
-      $config = $type !== '' && $type !== 'email' ? ContactRows::channelConfig($type, $row) : NULL;
-      if ($config === NULL) {
-        // Email path: an email channel preferred, or the fallback for contacts
-        // without (usable) preferences — their own resolved address.
-        $channel = $type === 'email' ? $channel : $emailChannel;
-        $delivery = EmailRecipient::of($contactRows, $options);
-        if ($delivery['suspended']) {
-          $bump('suspended');
-          continue;
-        }
-        if ($delivery['address'] === '') {
-          $bump('no_recipient');
-          continue;
-        }
-        $config = ['email_to' => $delivery['address']];
+    foreach (ContactRows::byId($rows) as $contactId => $contactRows) {
+      $reached = self::subscribed($contactId, $own[$contactId] ?? [], $contactRows, $options, $types);
+      if ($reached !== []) {
+        array_push($out, ...$reached);
+        continue;
       }
-      $out[] = ['contact_id' => $contactId, 'channel' => $channel, 'config' => $config];
+      // The location-email join can duplicate a member; deliverability is
+      // judged across all of its rows.
+      $delivery = EmailRecipient::of($contactRows, $options);
+      $reason = match (TRUE) {
+        $delivery['suspended'] => 'suspended',
+        $delivery['address'] === '' => 'no_recipient',
+        default => NULL,
+      };
+      if ($reason !== NULL) {
+        $skipped[$reason] = ($skipped[$reason] ?? 0) + 1;
+        continue;
+      }
+      $out[] = [
+        'contact_id' => $contactId,
+        'channel' => $emailChannel,
+        'config' => ['email_to' => $delivery['address']],
+      ];
     }
-    return ['recipients' => $out, 'skipped' => $skipped];
+    return ['recipients' => ContactRows::distinct($out), 'skipped' => $skipped];
+  }
+
+  /**
+   * The member's usable group subscriptions; an unusable one falls back to
+   * the member's own address like a missing one.
+   *
+   * @param list<Subscription> $subscriptions
+   * @param non-empty-list<array<string, mixed>> $contactRows
+   * @param array<string, mixed> $options
+   * @param array<string, string> $types
+   * @return list<array{contact_id: int, channel: string, config: array<string, mixed>}>
+   */
+  private static function subscribed(
+    int $contactId,
+    array $subscriptions,
+    array $contactRows,
+    array $options,
+    array $types,
+  ): array {
+    $out = [];
+    foreach ($subscriptions as $subscription) {
+      $type = $types[$subscription['channel']] ?? NULL;
+      $config = $type === NULL ? NULL : SubscriptionConfig::of($type, $subscription, $contactRows, $options)[0];
+      if ($config !== NULL) {
+        $out[] = ['contact_id' => $contactId, 'channel' => $subscription['channel'], 'config' => $config];
+      }
+    }
+    return $out;
   }
 
 }

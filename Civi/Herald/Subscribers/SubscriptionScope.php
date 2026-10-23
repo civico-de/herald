@@ -9,10 +9,10 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 /**
  * Source-entity scoping of per-contact subscriptions.
  *
- * A preference record may carry source_entity_type + source_entity_id
- * (e.g. Event 42): its subscriptions then only fire for notifications that
- * declare they concern that entity instance. An unscoped record (NULL/empty
- * fields) is global and matches everything.
+ * A subscription may carry source_entity_type + source_entity_id
+ * (e.g. Event 42): it then only fires for notifications that declare they
+ * concern that entity instance. An unscoped subscription is global and
+ * matches everything.
  */
 final class SubscriptionScope {
 
@@ -41,18 +41,18 @@ final class SubscriptionScope {
   }
 
   /**
-   * Does a preference row's scope admit a notification with the given scope?
+   * Does a subscription's scope admit a notification with the given scope?
    *
    * Unscoped row → always yes. Scoped row → only when the notification
    * declares the same entity instance; an unscoped notification never reaches
    * scoped subscriptions.
    *
-   * @param array<string, mixed> $row APIv4 Contact row with herald_preferences.* fields.
+   * @param array{source_entity_type: string, source_entity_id: int, ...} $subscription
    * @param array{entity_type: string, entity_id: int}|null $scope
    */
-  public static function rowMatches(array $row, ?array $scope): bool {
-    $rowType = Cast::toString($row['herald_preferences.source_entity_type'] ?? '');
-    $rowId = Cast::toInt($row['herald_preferences.source_entity_id'] ?? 0);
+  public static function rowMatches(array $subscription, ?array $scope): bool {
+    $rowType = $subscription['source_entity_type'];
+    $rowId = $subscription['source_entity_id'];
     if ($rowType === '' && $rowId <= 0) {
       return TRUE;
     }

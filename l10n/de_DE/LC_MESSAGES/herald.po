@@ -2523,8 +2523,8 @@ msgid "Channel saved."
 msgstr "Kanal gespeichert."
 
 #: ang/heraldAdmin/channels.js
-msgid "Contacts who chose it as their channel: %1. Until they choose another, subscriber deliveries skip them and group deliveries send them email."
-msgstr "Kontakte, die ihn als ihren Kanal gewählt haben: %1. Bis sie einen anderen wählen, überspringen Zustellungen an Abonnenten sie, und Zustellungen an Gruppen schicken ihnen E-Mail."
+msgid "Contacts subscribed through it: %1. Their subscriptions on it stop delivering until they pick another channel; group deliveries then send them email."
+msgstr "Kontakte mit einem Abo über ihn: %1. Ihre Abos auf ihm stellen nichts mehr zu, bis sie einen anderen Kanal wählen; Zustellungen an Gruppen schicken ihnen dann E-Mail."
 
 #: Civi/Herald/Channel/StoredConfig.php
 msgid "\"%1\" is sent only to the channel's \"%2\"; set \"%2\" as well."
@@ -2674,3 +2674,63 @@ msgstr "Testen und betreiben"
 
 msgid "Advanced"
 msgstr "Erweitert"
+
+#: Civi/Herald/Subscribers/SubscriptionRules.php
+msgid "Pick at least one topic, or receive group messages through this row."
+msgstr "Wählen Sie mindestens ein Topic, oder empfangen Sie über diese Zeile Gruppennachrichten."
+
+#: Civi/Herald/Subscribers/SubscriptionRules.php
+msgid "Enter an email address, or leave it empty for your primary address."
+msgstr "Geben Sie eine E-Mail-Adresse ein, oder lassen Sie das Feld für Ihre Hauptadresse leer."
+
+#: Civi/Herald/Subscribers/SubscriptionRules.php
+msgid "This channel needs a recipient."
+msgstr "Dieser Kanal braucht ein Ziel."
+
+#: ang/heraldAdmin/channel.html
+msgid "Offers the channel in the notification subscriptions of contacts."
+msgstr "Bietet den Kanal in den Benachrichtigungs-Abos von Kontakten an."
+
+#: ang/heraldAdmin/topic.html
+msgid "Offers the topic in the notification subscriptions of contacts. The delivery mode \"Contacts who subscribed to this topic\" reaches them."
+msgstr "Bietet das Topic in den Benachrichtigungs-Abos von Kontakten an. Der Zustellmodus „Kontakte, die dieses Topic abonniert haben“ erreicht sie."
+
+#: ang/heraldAdmin/topic.html
+msgid "In the subscriber and group modes, recipients come from the subscriptions of each contact; only presentation options are used from here."
+msgstr "Im Abonnent:innen- und im Gruppenmodus kommen die Ziele aus den Abos der einzelnen Kontakte; von hier werden nur die Darstellungsoptionen verwendet."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Recipient"
+msgstr "Ziel"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Where the channel delivers to: a Telegram chat ID, a Pushover user or group key, an ntfy topic or a webhook URL. Leave it empty for an email channel to use your primary address."
+msgstr "Wohin der Kanal zustellt: eine Telegram-Chat-ID, ein Pushover-Benutzer- oder Gruppenschlüssel, ein ntfy-Topic oder eine Webhook-URL. Bei einem E-Mail-Kanal leer lassen, um Ihre Hauptadresse zu verwenden."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Topics"
+msgstr "Topics"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "The topics you want to receive notifications about through this channel."
+msgstr "Die Topics, zu denen Sie über diesen Kanal Benachrichtigungen erhalten möchten."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Group messages"
+msgstr "Gruppennachrichten"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Also receive messages sent to a group you belong to through this channel."
+msgstr "Auch Nachrichten an eine Gruppe, zu der Sie gehören, über diesen Kanal empfangen."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Optional: limit this subscription to one source entity (e.g. Event). Leave empty for a global subscription."
+msgstr "Optional: dieses Abo auf eine Quell-Entität beschränken (z. B. Event). Für ein globales Abo leer lassen."
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "Notification subscriptions"
+msgstr "Benachrichtigungs-Abos"
+
+#: managed/SubscriberPreferences.mgd.php
+msgid "The channels this contact receives herald notifications through, and on which topics."
+msgstr "Die Kanäle, über die dieser Kontakt herald-Benachrichtigungen erhält, und zu welchen Topics."
