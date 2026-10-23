@@ -22,7 +22,7 @@ final class TopicRules {
     $errors = [];
     $named = array_values(array_intersect(array_keys($route), TopicMeta::KEYS));
     if ($named !== []) {
-      $errors[] = E::ts('%1 belong to the topic, not to its route.', [1 => implode(', ', $named)]);
+      $errors[] = E::ts('%1 belong to the topic itself, not to its delivery settings.', [1 => implode(', ', $named)]);
     }
     if ($topic === 'default' && $meta['subscribable']) {
       $errors[] = E::ts('Contacts cannot subscribe to "default"; it only backs the other topics.');
@@ -33,7 +33,7 @@ final class TopicRules {
       && TopicMeta::subscribersOf($topic, $route + ['subscribable' => $meta['subscribable']], $merged) === $topic;
     if ($toOwn && $topic !== 'default' && !$meta['subscribable']) {
       $errors[] = E::ts(
-        'A route to subscribers reaches the contacts who subscribed to this topic; let contacts subscribe to it.',
+        'Delivery to subscribers reaches the contacts who subscribed to this topic; let contacts subscribe to it.',
       );
     }
     return $errors;

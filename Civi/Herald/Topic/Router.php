@@ -48,7 +48,7 @@ class Router {
     $entries = self::entries($map, $topic);
     if ($entries === []) {
       throw new \CRM_Core_Exception(sprintf(
-        'herald: no route for topic "%s" — add it (or a "default" entry) to the %s setting.',
+        'herald: there is no topic "%s" — add it (or a "default" topic) to the %s setting.',
         $topic,
         self::SETTING,
       ));
@@ -59,7 +59,7 @@ class Router {
     $mode = $params['delivery_mode'] ?? 'direct';
     // A fan-out reaches each contact on their own channel.
     if (empty($params['channel']) && !in_array($mode, ['subscribers', 'group'], TRUE)) {
-      throw new \CRM_Core_Exception(sprintf('herald: the route of topic "%s" names no channel.', $topic));
+      throw new \CRM_Core_Exception(sprintf('herald: the topic "%s" names no channel.', $topic));
     }
     if ($mode === 'subscribers') {
       $params['subscribers_of'] = TopicMeta::subscribersOf($topic, $map[$topic] ?? NULL, $params);

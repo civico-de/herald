@@ -31,7 +31,7 @@ final class ActionChecks {
   public function topicErrors(mixed $topic, array $params): array {
     $errors = [];
     if (!is_string($topic) || !Router::exists($topic)) {
-      $errors[] = E::ts('There is no topic "%1" and no "default" route.', [
+      $errors[] = E::ts('There is no topic "%1" and no "default" topic.', [
         1 => is_scalar($topic) ? (string) $topic : '',
       ]);
     }

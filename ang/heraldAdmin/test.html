@@ -1,13 +1,13 @@
 <div id="bootstrap-theme" class="herald-admin">
   <h1 crm-page-title>{{:: $ctrl.ts('Test message') }}</h1>
   <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
-  <p>{{:: $ctrl.ts('Sends a real message: through one channel with the recipient entered here, or through a topic route as an alert would go.') }}</p>
+  <p>{{:: $ctrl.ts('Sends a real message: through one channel with the recipient entered here, or through a topic, as an alert would go.') }}</p>
   <div ng-include="'~/heraldAdmin/messages.html'"></div>
   <form ng-if="$ctrl.loaded" ng-submit="$ctrl.send()" novalidate>
     <fieldset>
       <legend>{{:: $ctrl.ts('Send through') }}</legend>
       <label class="radio-inline"><input type="radio" class="crm-form-radio" id="herald-test-target-channel" name="target" value="channel" ng-model="$ctrl.target" /> {{:: $ctrl.ts('A channel') }}</label>
-      <label class="radio-inline"><input type="radio" class="crm-form-radio" id="herald-test-target-topic" name="target" value="topic" ng-model="$ctrl.target" /> {{:: $ctrl.ts('A topic route') }}</label>
+      <label class="radio-inline"><input type="radio" class="crm-form-radio" id="herald-test-target-topic" name="target" value="topic" ng-model="$ctrl.target" /> {{:: $ctrl.ts('A topic') }}</label>
     </fieldset>
     <div ng-if="$ctrl.target === 'channel'">
       <div class="form-group">

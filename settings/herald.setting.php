@@ -80,9 +80,9 @@ return [
     'is_domain' => 1,
     'is_contact' => 0,
     'description' => E::ts(
-      'Topic routing for Herald.publish: map of topic name to delivery params (channel, chat_id, aggregate_minutes, …). A "default" entry backs all topics.',
+      'Topics for Herald.publish: map of topic name to delivery params (channel, chat_id, aggregate_minutes, …). A "default" entry backs all topics.',
     ),
-    'title' => E::ts('Topic Routes'),
+    'title' => E::ts('Topics'),
     // Every write path keeps the subscription options in step.
     'post_change' => ['Civi\\Herald\\Subscribers\\SubscribableTopics::sync'],
   ],

@@ -47,7 +47,7 @@ class ActionTopicTest extends TestCase implements HeadlessInterface, Transaction
       $validator->actionErrors(['topic' => 'ops', 'chat_id' => '-1', 'aggregate_minutes' => 5]),
     );
     $this->assertSame(
-      ['There is no topic "nowhere" and no "default" route.'],
+      ['There is no topic "nowhere" and no "default" topic.'],
       $validator->actionErrors(['topic' => 'nowhere']),
     );
   }

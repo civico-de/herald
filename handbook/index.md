@@ -23,7 +23,7 @@ With CiviRules installed, herald adds four building blocks to it:
 
 A notification can go to one recipient, to every contact who subscribed to its topic, to the members of a group, or to a list of email addresses. Each contact can choose their own channel. Alerts that come in bursts can be collected and sent as one message per time window. See [Delivery](delivery.md).
 
-Scripts and other extensions can publish to a named topic such as ops. A topic route decides which channel and recipient each topic reaches, so the publisher never needs to know a chat ID or a URL.
+Scripts and other extensions can publish to a named topic such as ops. A topic bundles messages of one kind, and its entry decides which channel and recipients they reach, so the publisher never needs to know a chat ID or a URL.
 
 A digest is a subject and a text filled from SearchKit displays, such as yesterday's contributions, and from numbers another extension provides. You set them up under Administer » Herald » Digests, and they usually go out daily or weekly, from a rule on the trigger "Herald: Schedule". See [Digests](digests.md).
 

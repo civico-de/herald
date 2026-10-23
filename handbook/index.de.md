@@ -21,9 +21,9 @@ Ist CiviRules installiert, ergänzt herald es um vier Bausteine:
 - den Trigger „Herald: Schedule“, der an gewählten Wochentagen einmal zu einer festen Stunde auslöst
 - die Bedingung „Herald: Field transition“, die den Wert eines Feldes vor und nach einer Änderung vergleicht, etwa wenn ein Event deaktiviert wird. CiviRules bringt solche Bedingungen nur für wenige Felder mit, etwa für Status.
 
-Eine Benachrichtigung kann an ein einzelnes Ziel gehen, an alle Kontakte, die ihr Topic abonniert haben, an die Mitglieder einer Gruppe oder an eine Liste von E-Mail-Adressen. Jeder Kontakt kann seinen eigenen Kanal wählen. Meldungen, die gehäuft auftreten, lassen sich sammeln und als eine Nachricht pro Zeitfenster verschicken. Siehe [Zustellung](delivery.md).
+Eine Benachrichtigung kann an ein einzelnes Ziel gehen, an alle Kontakte, die ihr Thema abonniert haben, an die Mitglieder einer Gruppe oder an eine Liste von E-Mail-Adressen. Jeder Kontakt kann seinen eigenen Kanal wählen. Meldungen, die gehäuft auftreten, lassen sich sammeln und als eine Nachricht pro Zeitfenster verschicken. Siehe [Zustellung](delivery.md).
 
-Skripte und andere Extensions können Nachrichten an ein benanntes Topic wie ops schicken. Eine Topic-Route legt fest, welchen Kanal und welches Ziel jedes Topic erreicht. Wer eine Nachricht schickt, muss also nie eine Chat-ID oder eine URL kennen.
+Skripte und andere Extensions können Nachrichten an ein benanntes Thema wie ops schicken. Ein Thema bündelt Nachrichten einer Art, und sein Eintrag legt fest, welchen Kanal und welche Empfänger:innen sie erreichen. Wer eine Nachricht schickt, muss also nie eine Chat-ID oder eine URL kennen.
 
 Ein Report ist ein Betreff und ein Text, die aus SearchKit-Anzeigen gefüllt werden, etwa mit den Beiträgen von gestern, und aus Zahlen, die eine andere Extension liefert. Reports richten Sie unter Administrieren » Herald » Reports ein. Meist werden sie täglich oder wöchentlich verschickt, ausgelöst von einer Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
 
@@ -31,7 +31,7 @@ Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet
 
 ## Voraussetzungen
 
-herald benötigt SearchKit und Form Core, die Teil von CiviCRM sind. CiviRules ist optional; wenn Sie es nutzen, braucht herald Version 3.36 oder neuer, und der Systemstatus meldet eine ältere. herald registriert seine Regel-Bausteine, egal ob Sie CiviRules vor oder nach herald installieren. Ohne CiviRules funktionieren die API, die geplanten Jobs, die Topics und der Check-Monitor weiterhin. Die unterstützten Versionen von CiviCRM und PHP stehen in der `info.xml` der Extension.
+herald benötigt SearchKit und Form Core, die Teil von CiviCRM sind. CiviRules ist optional; wenn Sie es nutzen, braucht herald Version 3.36 oder neuer, und der Systemstatus meldet eine ältere. herald registriert seine Regel-Bausteine, egal ob Sie CiviRules vor oder nach herald installieren. Ohne CiviRules funktionieren die API, die geplanten Jobs, die Themen und der Check-Monitor weiterhin. Die unterstützten Versionen von CiviCRM und PHP stehen in der `info.xml` der Extension.
 
 ## Installation
 
@@ -78,7 +78,7 @@ Beim Deinstallieren entfernt herald seine CiviRules-Bausteine, und CiviRules ent
 
 - [Rezepte](recipes.md) zeigt vollständige Beispiele für Spenden, Ticketverkäufe, Events und Anmeldungen.
 - [Kanäle](channels.md) beschreibt, wie Sie Kanäle konfigurieren, und die Felder, Optionen und Grenzen jedes Typs.
-- [Zustellung](delivery.md) erklärt Empfänger:innen, Abonnements, Topics, das Sammeln von Meldungen und was passiert, wenn eine Zustellung fehlschlägt.
+- [Zustellung](delivery.md) erklärt Empfänger:innen, Abonnements, Themen, das Sammeln von Meldungen und was passiert, wenn eine Zustellung fehlschlägt.
 - [Reports](digests.md) beschreibt Text, Quellen, Platzhalter, die mitgelieferten Suchen, bereinigte Felder und den zeitgesteuerten Versand.
 - [Check-Monitor](monitor.md) zeigt, wie Sie einen Health-Check beisteuern und die Meldungen feinjustieren.
 - [Referenz](reference.md) listet die CiviRules-Aktionen, -Trigger und -Bedingungen, die API, die geplanten Jobs, die Vorlagen, die Einstellungen und die Hooks auf.

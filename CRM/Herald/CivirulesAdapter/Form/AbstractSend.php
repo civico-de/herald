@@ -137,7 +137,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
       );
 
       $this->descriptions = [
-        'topic' => E::ts('Its route sets the channel, the recipients and the aggregation.'),
+        'topic' => E::ts('The topic sets the channel, the recipients and the aggregation.'),
         'email_addresses' => E::ts('Separated by commas or new lines. The addresses are not linked to contacts.'),
         'respect_suspension' => E::ts('Skips contacts who opted out of email or whose address is on hold.'),
         'email_location_type' => E::ts(

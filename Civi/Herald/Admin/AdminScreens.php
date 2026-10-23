@@ -31,7 +31,7 @@ final class AdminScreens extends AutoService implements HookInterface {
   public static function screens(): array {
     return [
       'channels' => E::ts('Channels'),
-      'topics' => E::ts('Topic routes'),
+      'topics' => E::ts('Topics'),
       'cleaning' => E::ts('Cleaned fields'),
       'hosts' => E::ts('Webhook allowed hosts'),
       'monitor' => E::ts('Monitor checks'),

@@ -1,6 +1,6 @@
 <div id="bootstrap-theme" class="herald-admin">
-  <h1 crm-page-title>{{:: $ctrl.isNew ? $ctrl.ts('Add topic route') : $ctrl.ts('Edit topic route') }}</h1>
-  <p><a href="#/topics">{{:: $ctrl.ts('Topic routes') }}</a></p>
+  <h1 crm-page-title>{{:: $ctrl.isNew ? $ctrl.ts('Add topic') : $ctrl.ts('Edit topic') }}</h1>
+  <p><a href="#/topics">{{:: $ctrl.ts('Topics') }}</a></p>
   <div ng-include="'~/heraldAdmin/messages.html'"></div>
   <form name="topicForm" ng-if="$ctrl.loaded" ng-submit="$ctrl.save()" novalidate>
     <div class="form-group">
@@ -27,7 +27,7 @@
         <label class="crm-af-field-label" for="herald-topic-channel">{{:: $ctrl.ts('Channel') }}</label>
         <div class="crm-af-field">
           <select id="herald-topic-channel" class="form-control" ng-model="$ctrl.channel" ng-change="$ctrl.channelChanged()" ng-options="c.key as c.label for c in $ctrl.channels" aria-describedby="herald-topic-channel-help">
-            <option value="">{{ $ctrl.isDefault() ? $ctrl.ts('(not set)') : $ctrl.ts('(from the default route)') }}</option>
+            <option value="">{{ $ctrl.isDefault() ? $ctrl.ts('(not set)') : $ctrl.ts('(from the default topic)') }}</option>
           </select>
         </div>
         <p class="crm-af-field-help-post" id="herald-topic-channel-help">{{:: $ctrl.ts('One of the channels set up under Channels. The fields below follow the channel this topic ends up using; empty ones keep the channel\'s own values.') }}</p>
@@ -36,7 +36,7 @@
         <label class="crm-af-field-label" for="herald-topic-mode">{{:: $ctrl.ts('Delivery mode') }}</label>
         <div class="crm-af-field">
           <select id="herald-topic-mode" class="form-control" ng-model="$ctrl.mode" ng-options="m.value as m.label for m in $ctrl.modes">
-            <option value="">{{ $ctrl.isDefault() ? $ctrl.ts('(not set: direct)') : $ctrl.ts('(from the default route)') }}</option>
+            <option value="">{{ $ctrl.isDefault() ? $ctrl.ts('(not set: direct)') : $ctrl.ts('(from the default topic)') }}</option>
           </select>
         </div>
       </div>

@@ -227,7 +227,7 @@ class NotifyDigestTest extends TestCase implements HeadlessInterface, HookInterf
     return [
       'email_subject' => [self::DELIVERY + ['email_subject' => 'Morning numbers']],
       'another channel\'s subject' => [self::DELIVERY + ['activity_subject' => 'Morning numbers']],
-      'in the topic route' => [['topic' => 'mornings']],
+      'in the topic' => [['topic' => 'mornings']],
     ];
   }
 

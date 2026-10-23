@@ -11,7 +11,7 @@ Der Check-Monitor meldet, wenn auf der Site etwas ausfällt und wenn es wieder f
 
 herald meldet nur Wechsel: wenn ein Check anfängt fehlzuschlagen und wenn er wieder in Ordnung ist. Solange er weiter fehlschlägt, erinnert herald einmal am Tag daran.
 
-Der geplante Job „Herald: Check-Monitor ausführen“ führt die Checks aus. Jeder Wechsel geht mit der Vorlage „Herald: Statuswechsel eines Monitor-Checks“ an das Topic, das in `herald_monitor_topic` steht, standardmäßig ops. Wohin die Meldungen gehen, legen Sie fest, indem Sie für dieses Topic in `herald_topics` eine Route anlegen, siehe [Topics](delivery.md#topics). Eine minimale Route:
+Der geplante Job „Herald: Check-Monitor ausführen“ führt die Checks aus. Jeder Wechsel geht mit der Vorlage „Herald: Statuswechsel eines Monitor-Checks“ an das Thema, das in `herald_monitor_topic` steht, standardmäßig ops. Wohin die Meldungen gehen, legen Sie fest, indem Sie für dieses Thema in `herald_topics` einen Eintrag anlegen, siehe [Themen](delivery.md#themen). Ein minimaler Eintrag:
 
 ```bash
 cv api4 Setting.set +v 'herald_topics={"ops": {"channel": "telegram", "chat_id": "-100…"}}'
@@ -68,9 +68,9 @@ Alle Einstellungen sind optional. Standardmäßig meldet herald den ersten fehlg
 | `herald_monitor_open_after` | 1 | Einen Fehler erst nach so vielen fehlgeschlagenen Läufen in Folge melden. So meldet ein Check, der zwischen gesund und fehlgeschlagen hin und her springt, nicht jeden Ausreißer. |
 | `herald_monitor_close_after` | 1 | Eine Entwarnung erst nach so vielen gesunden Läufen in Folge melden. |
 | `herald_monitor_renotify_hours` | 24 | Eine Erinnerung senden, wenn ein Check so viele Stunden lang fehlschlägt. 0 schaltet Erinnerungen ab. |
-| `herald_monitor_topic` | ops | Das Topic, in das die Meldungen veröffentlicht werden. |
+| `herald_monitor_topic` | ops | Das Thema, in das die Meldungen veröffentlicht werden. |
 
-Diese vier finden Sie auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen, alle außer dem Topic unter „Erweitert“. Stummschaltungen und erwartete Checks stehen unter Administrieren » Herald » Monitor-Checks.
+Diese vier finden Sie auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen, alle außer dem Thema unter „Erweitert“. Stummschaltungen und erwartete Checks stehen unter Administrieren » Herald » Monitor-Checks.
 
 Diese Seite listet jeden Check, den eine aktivierte Extension anbietet, jeden erwarteten oder stummgeschalteten Check und jeden Check, für den der Monitor einen Zustand gespeichert hat. Jede Zeile zeigt den zuletzt gemeldeten Status in Worten, die fehlgeschlagenen und gesunden Läufe in Folge, wann zuletzt ein Fehler gemeldet wurde und ob eine aktivierte Extension den Check noch anbietet. Die Seite führt die Checks nicht aus und zeigt ihre Details nicht.
 
@@ -107,7 +107,7 @@ Die Einstellung `herald_monitor_state` enthält den letzten Zustand jedes Checks
 - Jeder Lauf setzt eine Sperre. Ein Lauf, der sich mit einem anderen überschneidet, wird übersprungen, statt doppelt zu senden.
 - Der Zustand jedes Checks wird direkt nach dem Veröffentlichen seiner Meldung gespeichert. Ein Absturz mitten im Lauf wiederholt die Meldungen davor nicht. Nur ein Absturz genau zwischen dem Veröffentlichen einer Meldung und dem Speichern des Zustands kann diese eine Meldung doppelt senden.
 - Schlägt eine Veröffentlichung fehl, behält der Check seinen alten Zustand, und der nächste Lauf meldet den Wechsel erneut. Der Joblauf endet dann mit dem Fehler „herald monitor: N transition(s) could not be published, see the CiviCRM log“, und jeder Fehler steht als Warnung in diesem Protokoll.
-- Hat die Route des Topics ein Sammelfenster, landet eine Meldung zunächst nur im Puffer. Der Job zum Leeren des Puffers stellt sie später zu.
+- Hat das Thema ein Sammelfenster, landet eine Meldung zunächst nur im Puffer. Der Job zum Leeren des Puffers stellt sie später zu.
 
 ## Grenzen
 

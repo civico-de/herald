@@ -29,7 +29,7 @@ class RouterTest extends TestCase {
   }
 
   public function testARouteWithoutAChannelThrows(): void {
-    $this->expectExceptionMessage('herald: the route of topic "anything" names no channel.');
+    $this->expectExceptionMessage('herald: the topic "anything" names no channel.');
     Router::resolveFrom(['default' => ['chat_id' => '-1']], 'anything');
   }
 

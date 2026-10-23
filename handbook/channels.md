@@ -8,7 +8,7 @@ routes:
 
 # Channels
 
-A channel is a named, configured way to deliver a message: one Telegram bot, one Slack webhook, one ntfy server, one Pushover app, one email sender or CiviCRM activities. Actions, topic routes and API calls name the channel, for example `ops_bot`, never a token. A site can have several channels of one type, such as two Telegram bots.
+A channel is a named, configured way to deliver a message: one Telegram bot, one Slack webhook, one ntfy server, one Pushover app, one email sender or CiviCRM activities. Actions, topics and API calls name the channel, for example `ops_bot`, never a token. A site can have several channels of one type, such as two Telegram bots.
 
 | Type | Delivers to | The channel holds |
 |---|---|---|
@@ -24,7 +24,7 @@ A channel is a named, configured way to deliver a message: one Telegram bot, one
 Administer » Herald » Channels lists the channels, their type and who uses them. "Add channel" asks for:
 
 - the type, which cannot change later;
-- the name that actions, routes and calls use: lowercase letters, digits and `_`, starting with a letter. It cannot change later either;
+- the name that actions, topics and calls use: lowercase letters, digits and `_`, starting with a letter. It cannot change later either;
 - a title for lists and forms;
 - whether the channel is active. Sends through an inactive channel fail;
 - whether contacts may choose it as their own channel. Only telegram, webhook, ntfy, pushover and email channels can be offered to contacts, see [Subscribers](delivery.md#subscribers);
@@ -44,7 +44,7 @@ cv api4 Herald.getChannels
 cv api4 Herald.deleteChannel name=ops_bot
 ```
 
-A channel that a topic route, a rule action, a scheduled job, a waiting or parked alert or the contact email setting still names cannot be deleted. The error lists them. Contacts who chose a deleted channel as theirs are skipped by subscriber deliveries and get email in group deliveries until they choose another; the confirmation shows how many there are.
+A channel that a topic, a rule action, a scheduled job, a waiting or parked alert or the contact email setting still names cannot be deleted. The error lists them. Contacts who chose a deleted channel as theirs are skipped by subscriber deliveries and get email in group deliveries until they choose another; the confirmation shows how many there are.
 
 ![The list of channels](images/channels.png)
 
@@ -52,10 +52,10 @@ A channel that a topic route, a rule action, a scheduled job, a waiting or parke
 
 ### Account fields and delivery fields
 
-Each type has two kinds of keys. Account fields, such as `bot_token` or `ntfy_server`, belong to the channel only. A delivery that sets one fails: a route or rule action is not saved ("… belong to the channel, not to a delivery; set them under Channels."), and a call fails with "… belong to the channel configuration, not to a delivery". Delivery fields, such as `chat_id` or `ntfy_priority`, can be set on the channel as defaults and on each delivery. Where a delivery sets them depends on the caller:
+Each type has two kinds of keys. Account fields, such as `bot_token` or `ntfy_server`, belong to the channel only. A delivery that sets one fails: a topic or rule action is not saved ("… belong to the channel, not to a delivery; set them under Channels."), and a call fails with "… belong to the channel configuration, not to a delivery". Delivery fields, such as `chat_id` or `ntfy_priority`, can be set on the channel as defaults and on each delivery. Where a delivery sets them depends on the caller:
 
 - A CiviRules action shows the delivery fields of the chosen channel's type: the recipients in the form, the presentation fields under "Advanced". A field left empty, or a yes/no field on "- channel default -", keeps the channel's value; a chosen 0 or "No" overrides it.
-- A topic route takes them in its entry.
+- A topic takes them in its entry.
 - `Herald.send` takes them in `config`.
 
 To list the keys of each type, with labels, types and whether they belong to the account:
@@ -66,7 +66,7 @@ cv api4 Herald.getChannelTypes type=ntfy
 
 `Herald.send` passes unknown keys through unchanged and lists them in its result as `unknown_config_keys`. A typo shows up there and does not stop the delivery.
 
-`Herald.send` also accepts a subject and a format that work on every channel. herald maps the subject to the email subject, the ntfy title, the Pushover title or the activity subject. It maps the format, text or html, to the email and activity format. Channels that have no such field ignore both. Actions and topic routes do not have these shortcuts and use the channel's own keys, such as `email_subject`.
+`Herald.send` also accepts a subject and a format that work on every channel. herald maps the subject to the email subject, the ntfy title, the Pushover title or the activity subject. It maps the format, text or html, to the email and activity format. Channels that have no such field ignore both. Actions and topics do not have these shortcuts and use the channel's own keys, such as `email_subject`.
 
 ## Message format
 
@@ -113,7 +113,7 @@ Alerts that were waiting for aggregation stay in the buffer until a send succeed
 
 ## Webhook
 
-The webhook channel sends an HTTP request to a URL. The URL is a delivery field: a channel can hold a default URL, and an action, a route or a subscriber can name its own.
+The webhook channel sends an HTTP request to a URL. The URL is a delivery field: a channel can hold a default URL, and an action, a topic or a subscriber can name its own.
 
 | Key | Meaning |
 |---|---|
@@ -224,7 +224,7 @@ Type and status are option names, not numbers, and must be active on the site.
 
 ## Test message
 
-Administer » Herald » Test message sends a real message. "A channel" sends through one configured channel, with the target and options you enter on the screen. Empty fields fall back to the channel's defaults. "A topic route" publishes through a route, as a real alert would. If the route aggregates, it buffers the message until the next flush, and the screen says so.
+Administer » Herald » Test message sends a real message. "A channel" sends through one configured channel, with the target and options you enter on the screen. Empty fields fall back to the channel's defaults. "A topic" publishes to a topic, as a real alert would. If the topic aggregates, it buffers the message until the next flush, and the screen says so.
 
 Input errors are listed on the screen. A delivery error from the channel itself is shown in full to users with the permission "view debug output". Others see an error ID, and the CiviCRM log holds the message under that ID.
 
@@ -250,9 +250,9 @@ These are the configuration errors the channels raise. In a direct delivery they
 |---|---|
 | there is no channel "…" | The delivery names a channel that does not exist. Check the name on Administer » Herald » Channels. |
 | the channel "…" is switched off | Activate the channel or name another one. |
-| the delivery names no channel | Choose a channel on the action, the route or the call. |
-| the route of topic "…" names no channel | Give the route a channel. |
-| … belong to the channel configuration, not to a delivery | Move the key, such as `bot_token`, from the action, route or call to the channel. |
+| the delivery names no channel | Choose a channel on the action, the topic or the call. |
+| the topic "…" names no channel | Give the topic or the default topic a channel. |
+| … belong to the channel configuration, not to a delivery | Move the key, such as `bot_token`, from the action, topic or call to the channel. |
 | the Telegram channel has no bot_token | Set the bot token on the channel. |
 | no chat_id, neither on the delivery nor on the channel | Set a chat ID on the action or a default chat on the channel. |
 | Telegram API returned HTTP 400 | The error body says why. A wrong chat ID, a bot that is not in the chat and a [supergroup upgrade](#when-a-group-becomes-a-supergroup) are the usual causes. |
@@ -263,7 +263,7 @@ These are the configuration errors the channels raise. In a direct delivery they
 | webhook URL must not contain credentials | Remove the user name and password from the URL. Use `webhook_auth_token` or `webhook_headers` instead. |
 | webhook_headers must map header names to text or numbers | Write the headers as a JSON object of names and values, for example `{"X-Source": "civicrm"}`. `true`, `false`, `null`, lists and nested objects are not header values. |
 | could not resolve webhook host | Check the host name and the server's DNS. |
-| no ntfy_topic, neither on the delivery nor on the channel | Set a topic on the action or a default topic on the channel. |
+| no ntfy_topic, neither on the delivery nor on the channel | Set an ntfy topic on the action or a default ntfy topic on the channel. |
 | the Pushover channel has no pushover_app_token | Set the app token on the channel. |
 | no pushover_user_key, neither on the delivery nor on the channel | Set a key on the action or a default key on the channel. |
 | no email_to, neither on the delivery nor on the channel | Set a recipient address on the action or a default on the channel. |

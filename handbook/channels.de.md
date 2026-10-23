@@ -8,7 +8,7 @@ routes:
 
 # Kanäle
 
-Ein Kanal ist ein benannter, konfigurierter Weg, eine Nachricht zuzustellen: ein Telegram-Bot, ein Slack-Webhook, ein ntfy-Server, eine Pushover-App, ein E-Mail-Absender oder CiviCRM-Aktivitäten. Aktionen, Topic-Routen und API-Aufrufe nennen den Kanal, zum Beispiel `ops_bot`, nie ein Token. Eine Site kann mehrere Kanäle desselben Typs haben, etwa zwei Telegram-Bots.
+Ein Kanal ist ein benannter, konfigurierter Weg, eine Nachricht zuzustellen: ein Telegram-Bot, ein Slack-Webhook, ein ntfy-Server, eine Pushover-App, ein E-Mail-Absender oder CiviCRM-Aktivitäten. Aktionen, Themen und API-Aufrufe nennen den Kanal, zum Beispiel `ops_bot`, nie ein Token. Eine Site kann mehrere Kanäle desselben Typs haben, etwa zwei Telegram-Bots.
 
 | Typ | Ziel | Der Kanal enthält |
 |---|---|---|
@@ -24,7 +24,7 @@ Ein Kanal ist ein benannter, konfigurierter Weg, eine Nachricht zuzustellen: ein
 Administrieren » Herald » Kanäle listet die Kanäle mit ihrem Typ und mit den Stellen, die sie verwenden. „Kanal hinzufügen“ fragt nach:
 
 - dem Typ, der sich später nicht mehr ändern lässt;
-- dem Namen, den Aktionen, Routen und Aufrufe verwenden: Kleinbuchstaben, Ziffern und `_`, beginnend mit einem Buchstaben. Auch er lässt sich später nicht mehr ändern;
+- dem Namen, den Aktionen, Themen und Aufrufe verwenden: Kleinbuchstaben, Ziffern und `_`, beginnend mit einem Buchstaben. Auch er lässt sich später nicht mehr ändern;
 - einem Titel für Listen und Formulare;
 - ob der Kanal aktiv ist. Sendungen über einen inaktiven Kanal schlagen fehl;
 - ob Kontakte ihn als eigenen Kanal wählen dürfen. Nur Kanäle der Typen telegram, webhook, ntfy, pushover und email lassen sich Kontakten anbieten, siehe [Abonnements](delivery.md#abonnements);
@@ -44,7 +44,7 @@ cv api4 Herald.getChannels
 cv api4 Herald.deleteChannel name=ops_bot
 ```
 
-Ein Kanal, den eine Topic-Route, eine Regelaktion, ein geplanter Job, eine wartende oder geparkte Meldung oder die Einstellung „E-Mail-Kanal für Kontakte“ noch nennt, lässt sich nicht löschen. Die Fehlermeldung listet sie auf. Kontakte, die einen gelöschten Kanal als ihren gewählt haben, werden bei Zustellungen an Abonnenten übersprungen und erhalten bei Zustellungen an Gruppen E-Mail, bis sie einen anderen wählen; die Rückfrage nennt ihre Zahl.
+Ein Kanal, den ein Thema, eine Regelaktion, ein geplanter Job, eine wartende oder geparkte Meldung oder die Einstellung „E-Mail-Kanal für Kontakte“ noch nennt, lässt sich nicht löschen. Die Fehlermeldung listet sie auf. Kontakte, die einen gelöschten Kanal als ihren gewählt haben, werden bei Zustellungen an Abonnenten übersprungen und erhalten bei Zustellungen an Gruppen E-Mail, bis sie einen anderen wählen; die Rückfrage nennt ihre Zahl.
 
 ![Die Liste der Kanäle](images/de/channels.png)
 
@@ -52,10 +52,10 @@ Ein Kanal, den eine Topic-Route, eine Regelaktion, ein geplanter Job, eine warte
 
 ### Kontofelder und Zustellfelder
 
-Jeder Typ hat zwei Arten von Schlüsseln. Kontofelder wie `bot_token` oder `ntfy_server` gehören nur zum Kanal. Eine Zustellung, die eines setzt, schlägt fehl: Eine Route oder Regelaktion wird nicht gespeichert („… gehören zum Kanal, nicht zu einer Zustellung; tragen Sie sie unter Kanäle ein.“), ein Aufruf scheitert mit „… belong to the channel configuration, not to a delivery“. Zustellfelder wie `chat_id` oder `ntfy_priority` lassen sich am Kanal als Standard und an jeder Zustellung setzen. Wo eine Zustellung sie setzt, hängt vom Aufrufer ab:
+Jeder Typ hat zwei Arten von Schlüsseln. Kontofelder wie `bot_token` oder `ntfy_server` gehören nur zum Kanal. Eine Zustellung, die eines setzt, schlägt fehl: Ein Thema oder eine Regelaktion wird nicht gespeichert („… gehören zum Kanal, nicht zu einer Zustellung; tragen Sie sie unter Kanäle ein.“), ein Aufruf scheitert mit „… belong to the channel configuration, not to a delivery“. Zustellfelder wie `chat_id` oder `ntfy_priority` lassen sich am Kanal als Standard und an jeder Zustellung setzen. Wo eine Zustellung sie setzt, hängt vom Aufrufer ab:
 
 - Eine CiviRules-Aktion zeigt die Zustellfelder des Typs des gewählten Kanals: die Empfänger im Formular, die Darstellungsfelder unter „Erweitert“. Ein leeres Feld oder ein Ja/Nein-Feld auf „- Vorgabe des Kanals -“ behält den Wert des Kanals; eine gewählte 0 oder „Nein“ überschreibt ihn.
-- Eine Topic-Route nimmt sie in ihrem Eintrag auf.
+- Ein Thema nimmt sie in seinem Eintrag auf.
 - `Herald.send` nimmt sie in `config` entgegen.
 
 So listen Sie die Schlüssel jedes Typs auf, mit Bezeichnungen, Typen und der Angabe, ob sie zum Konto gehören:
@@ -66,7 +66,7 @@ cv api4 Herald.getChannelTypes type=ntfy
 
 `Herald.send` reicht unbekannte Schlüssel unverändert durch und führt sie im Ergebnis unter `unknown_config_keys` auf. Ein Tippfehler zeigt sich dort und hält die Zustellung nicht auf.
 
-`Herald.send` nimmt außerdem einen Betreff und ein Format entgegen, die für jeden Kanal funktionieren. herald setzt den Betreff als E-Mail-Betreff, ntfy-Titel, Pushover-Titel oder Betreff der Aktivität ein. Das Format, text oder html, setzt herald als Format der E-Mail und der Aktivität ein. Kanäle ohne ein solches Feld ignorieren beides. Aktionen und Topic-Routen kennen `subject` und `format` nicht und verwenden die eigenen Schlüssel des Kanals, etwa `email_subject`.
+`Herald.send` nimmt außerdem einen Betreff und ein Format entgegen, die für jeden Kanal funktionieren. herald setzt den Betreff als E-Mail-Betreff, ntfy-Titel, Pushover-Titel oder Betreff der Aktivität ein. Das Format, text oder html, setzt herald als Format der E-Mail und der Aktivität ein. Kanäle ohne ein solches Feld ignorieren beides. Aktionen und Themen kennen `subject` und `format` nicht und verwenden die eigenen Schlüssel des Kanals, etwa `email_subject`.
 
 ## Nachrichtenformat
 
@@ -113,7 +113,7 @@ Meldungen, die auf das Sammeln warten, bleiben im Puffer, bis eine Sendung gelin
 
 ## Webhook
 
-Der Webhook-Kanal sendet eine HTTP-Anfrage an eine URL. Die URL ist ein Zustellfeld: Ein Kanal kann eine Standard-URL enthalten, und eine Aktion, eine Route oder ein:e Abonnent:in kann eine eigene nennen.
+Der Webhook-Kanal sendet eine HTTP-Anfrage an eine URL. Die URL ist ein Zustellfeld: Ein Kanal kann eine Standard-URL enthalten, und eine Aktion, ein Thema oder ein:e Abonnent:in kann eine eigene nennen.
 
 | Schlüssel | Bedeutung |
 |---|---|
@@ -199,7 +199,7 @@ Die Absenderadresse ist ein Kontofeld und hat die Form `Name <address>`. Ist sie
 | `email_from` | Konto: die Absenderadresse. |
 | `email_to` | Empfängeradresse. Ohne Angabe gilt der Standardwert des Kanals. |
 | `email_to_name` | Anzeigename zur Empfängeradresse. |
-| `email_subject` | Betreff. Ohne ihn verwenden Aktionen und Topics den Betreff der Vorlage. Reports verwenden immer ihren eigenen. Der letzte Ersatz ist „Notification“. |
+| `email_subject` | Betreff. Ohne ihn verwenden Aktionen und Themen den Betreff der Vorlage. Reports verwenden immer ihren eigenen. Der letzte Ersatz ist „Notification“. |
 | `email_format` | `html` ist der Standard und erhält die Zeilenumbrüche der Vorlage. `text` sendet Klartext. |
 | `email_cc` | Kommagetrennte CC-Adressen. |
 | `email_bcc` | Kommagetrennte BCC-Adressen. |
@@ -224,7 +224,7 @@ Typ und Status sind Optionsnamen, keine Zahlen, und müssen auf der Site aktiv s
 
 ## Testnachricht
 
-Die Seite Administrieren » Herald » Testnachricht sendet eine echte Nachricht. „Einen Kanal“ sendet über einen konfigurierten Kanal, mit dem Ziel und den Optionen, die Sie auf der Seite eintragen. Leere Felder übernehmen die Standardwerte des Kanals. „Eine Topic-Route“ schickt die Nachricht über eine Route, wie eine echte Meldung. Hat die Route ein Sammelfenster, bleibt die Nachricht bis zum nächsten Leeren im Puffer, und die Seite weist darauf hin.
+Die Seite Administrieren » Herald » Testnachricht sendet eine echte Nachricht. „Einen Kanal“ sendet über einen konfigurierten Kanal, mit dem Ziel und den Optionen, die Sie auf der Seite eintragen. Leere Felder übernehmen die Standardwerte des Kanals. „Ein Thema“ veröffentlicht die Nachricht in einem Thema, wie eine echte Meldung. Hat das Thema ein Sammelfenster, bleibt die Nachricht bis zum nächsten Leeren im Puffer, und die Seite weist darauf hin.
 
 Eingabefehler listet die Seite auf. Einen Zustellfehler des Kanals selbst sehen Benutzer:innen mit der Berechtigung „view debug output“ vollständig. Alle anderen sehen eine Fehler-ID, unter der das CiviCRM-Protokoll die Fehlermeldung enthält.
 
@@ -238,7 +238,7 @@ cv api4 Herald.publish topic=ops message='herald works'
 
 Die Seite Administrieren » Herald » Vorlagenvorschau rendert eine herald-Vorlage mit Beispielwerten als JSON-Objekt und sendet nichts, wie `Herald.renderTemplate`.
 
-![Eine Testnachricht an die Abonnent:innen eines Topics](images/de/test.png)
+![Eine Testnachricht an die Abonnent:innen eines Themas](images/de/test.png)
 
 ![Eine Vorlage mit Beispielwerten](images/de/preview.png)
 
@@ -250,9 +250,9 @@ Diese Konfigurationsfehler melden die Kanäle. Bei einer direkten Zustellung err
 |---|---|
 | there is no channel "…" | Die Zustellung nennt einen Kanal, den es nicht gibt. Prüfen Sie den Namen unter Administrieren » Herald » Kanäle. |
 | the channel "…" is switched off | Aktivieren Sie den Kanal oder nennen Sie einen anderen. |
-| the delivery names no channel | Wählen Sie einen Kanal an der Aktion, der Route oder im Aufruf. |
-| the route of topic "…" names no channel | Geben Sie der Route einen Kanal. |
-| … belong to the channel configuration, not to a delivery | Verschieben Sie den Schlüssel, etwa `bot_token`, von der Aktion, der Route oder dem Aufruf in den Kanal. |
+| the delivery names no channel | Wählen Sie einen Kanal an der Aktion, am Thema oder im Aufruf. |
+| the topic "…" names no channel | Geben Sie dem Thema oder dem Thema default einen Kanal. |
+| … belong to the channel configuration, not to a delivery | Verschieben Sie den Schlüssel, etwa `bot_token`, von der Aktion, dem Thema oder dem Aufruf in den Kanal. |
 | the Telegram channel has no bot_token | Setzen Sie das Bot-Token am Kanal. |
 | no chat_id, neither on the delivery nor on the channel | Setzen Sie eine Chat-ID an der Aktion oder einen Standard-Chat am Kanal. |
 | Telegram API returned HTTP 400 | Der Fehlertext nennt den Grund. Die üblichen Ursachen sind eine falsche Chat-ID, ein Bot, der nicht im Chat ist, und die [Umwandlung in eine Supergruppe](#wenn-aus-einer-gruppe-eine-supergruppe-wird). |
@@ -263,7 +263,7 @@ Diese Konfigurationsfehler melden die Kanäle. Bei einer direkten Zustellung err
 | webhook URL must not contain credentials | Entfernen Sie Benutzername und Passwort aus der URL. Verwenden Sie stattdessen `webhook_auth_token` oder `webhook_headers`. |
 | webhook_headers must map header names to text or numbers | Schreiben Sie die Header als JSON-Objekt aus Namen und Werten, zum Beispiel `{"X-Source": "civicrm"}`. `true`, `false`, `null`, Listen und verschachtelte Objekte sind keine Header-Werte. |
 | could not resolve webhook host | Prüfen Sie den Hostnamen und das DNS des Servers. |
-| no ntfy_topic, neither on the delivery nor on the channel | Setzen Sie ein Topic an der Aktion oder ein Standard-Topic am Kanal. |
+| no ntfy_topic, neither on the delivery nor on the channel | Setzen Sie ein ntfy-Topic an der Aktion oder ein Standard-Topic am Kanal. |
 | the Pushover channel has no pushover_app_token | Setzen Sie das App-Token am Kanal. |
 | no pushover_user_key, neither on the delivery nor on the channel | Setzen Sie einen Schlüssel an der Aktion oder einen Standardschlüssel am Kanal. |
 | no email_to, neither on the delivery nor on the channel | Setzen Sie eine Empfängeradresse an der Aktion oder einen Standardwert am Kanal. |

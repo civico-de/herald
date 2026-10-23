@@ -11,12 +11,12 @@ This page covers who receives a message, when it goes out, and what happens when
 
 ## Delivery modes
 
-Every herald CiviRules action has a delivery mode. Topic routes take the same parameter, `delivery_mode`. In the action form the modes are "Direct", "Subscribers", "Group" and "Address list".
+Every herald CiviRules action has a delivery mode. Topics take the same parameter, `delivery_mode`. In the action form the modes are "Direct", "Subscribers", "Group" and "Address list".
 
 | Mode | Recipients | Required parameter |
 |---|---|---|
 | `direct` | The recipient set on the action, or the channel's default. This is the default. | `channel` |
-| `subscribers` | Every contact who subscribed to a topic, each through their own channel | `subscribers_of`, the topic. A topic route reaches its own topic's subscribers without it. |
+| `subscribers` | Every contact who subscribed to a topic, each through their own channel | `subscribers_of`, the topic. A topic reaches its own subscribers without it. |
 | `group` | Every contact in a CiviCRM group, each through their own channel | `group_id` |
 | `addresses` | A list of email addresses, without any contact records, through an email channel | `channel`, `email_addresses` |
 
@@ -89,7 +89,7 @@ Recipients, CC and BCC are never passed on. The headers and token of a webhook c
 
 Contacts subscribe to [topics](#topics). A fresh install offers none. To offer one, tick "Contacts can subscribe to this topic" on the topic's form, or save it with `cv api4 Herald.saveTopic topic=news label=News subscribable=1 'route={"delivery_mode":"subscribers"}'`. The topic then appears in the field "Topics" under its label. herald keeps the option group `herald_subscribable_topic` in step with the topics of every domain, so do not edit its values by hand.
 
-A topic that a route, a rule action, a job or a waiting alert names in `subscribers_of` cannot stop offering itself. Neither can a topic whose route would then reach the subscribers that `default` names; to keep that, name them in the route's `subscribers_of`. Otherwise, when a topic stops offering itself, the subscriptions stay stored, but no delivery reaches them any more. A delivery to the subscribers of such a topic fails with "contacts cannot subscribe to the topic".
+A topic that an entry in `herald_topics`, a rule action, a job or a waiting alert names in `subscribers_of` cannot stop offering itself. Neither can a topic that would then reach the subscribers that `default` names; to keep that, name them in the topic's own `subscribers_of`. Otherwise, when a topic stops offering itself, the subscriptions stay stored, but no delivery reaches them any more. A delivery to the subscribers of such a topic fails with "contacts cannot subscribe to the topic".
 
 ![Notification subscriptions on a contact](images/contact-preferences.png)
 
@@ -105,13 +105,13 @@ A subscription without a scope receives everything on its topics. A scoped row r
 
 ## Topics
 
-With topics, a publisher names a topic and the setting `herald_topics` decides the channel, the recipient and the aggregation. A CiviRules action can name a topic too: set "Send" to "Through a topic". A script or another extension never needs to know a chat ID or a URL.
+A topic bundles messages of one kind. A publisher names the topic, and the topic's entry in the setting `herald_topics` decides the channel, the recipients and the aggregation. A CiviRules action can name a topic too: set "Send" to "Through a topic". A script or another extension never needs to know a chat ID or a URL.
 
-The routes are under Administer » Herald » Topic routes. The list shows each topic with its channel, its delivery mode and its aggregation window. "Add topic" and "Edit" open a form with the delivery fields and the options that the topic's channel declares. Keys without a field, such as options of another channel type, go into "Other parameters" as a JSON object. Saving checks the route and stores nothing when it finds a problem: a channel that is not configured, an account field such as `bot_token`, a value of the wrong type, a delivery mode without its required parameter or a topic name that is taken. Renaming a topic keeps its place in the list. The column "Used by" lists the rule actions, scheduled jobs, topic routes and the monitor that name the topic, as publisher or through "Subscribers of topic", and waiting alerts to its subscribers. Such a topic cannot be deleted or renamed. "Delete" asks first and says how many contacts subscribed, if any; scripts that still publish to a deleted topic then use the default route.
+The topics are under Administer » Herald » Topics. The list shows each topic with its channel, its delivery mode and its aggregation window. "Add topic" and "Edit" open a form with the delivery fields and the options that the topic's channel declares. Keys without a field, such as options of another channel type, go into "Other parameters" as a JSON object. Saving checks the topic's entry and stores nothing when it finds a problem: a channel that is not configured, an account field such as `bot_token`, a value of the wrong type, a delivery mode without its required parameter or a topic name that is taken. Renaming a topic keeps its place in the list. The column "Used by" lists the rule actions, scheduled jobs, topics and the monitor that name the topic, as publisher or through "Subscribers of topic", and waiting alerts to its subscribers. Such a topic cannot be deleted or renamed. "Delete" asks first and says how many contacts subscribed, if any; scripts that still publish to a deleted topic then use the default topic.
 
-A topic also has a label and can be offered for subscription. The label is the topic's name for contacts and on these screens; empty shows the topic name. The checkbox "Contacts can subscribe to this topic" offers it, see [Subscribers](#subscribers). The columns "Subscribable" and "Subscribers" show both. A topic with subscribers cannot be renamed, because their subscriptions name it. A route in subscriber mode reaches the subscribers of its own topic, which must then be offered, unless it names another topic in `subscribers_of`. An offered topic does not take `subscribers_of` from `default`, so its route reaches its own subscribers unless its own entry names others. `default` cannot be offered, and saving it checks every topic that uses it.
+A topic also has a label and can be offered for subscription. The label is the topic's name for contacts and on these screens; empty shows the topic name. The checkbox "Contacts can subscribe to this topic" offers it, see [Subscribers](#subscribers). The columns "Subscribable" and "Subscribers" show both. A topic with subscribers cannot be renamed, because their subscriptions name it. A topic in subscriber mode reaches its own subscribers and must then be offered, unless it names another topic in `subscribers_of`. An offered topic does not take `subscribers_of` from `default`, so it reaches its own subscribers unless its own entry names others. `default` cannot be offered, and saving it checks every topic that uses it.
 
-To set all routes at once with cv:
+To set all topics at once with cv:
 
 ```bash
 cv api4 --in=json Setting.set <<'JSON'
@@ -131,23 +131,23 @@ cv api4 Herald.publish topic=revenue template=herald_contribution_alert_complete
     vars='{"contribution":{"total_amount":50}}' amount=50
 ```
 
-A route entry takes the same parameters as an action, including `delivery_mode` and `aggregate_minutes`, but no account fields. herald merges the topic's entry over the default entry. A merged route without a channel fails with "the route of topic … names no channel". A topic without an entry and without a default entry fails with the error "no route for topic".
+A topic's entry takes the same parameters as an action, including `delivery_mode` and `aggregate_minutes`, but no account fields. herald merges the topic's entry over the entry of the default topic. A topic that has no channel after the merge fails with "the route of topic … names no channel". A topic without an entry fails with the error "there is no topic" when there is no default topic either.
 
 `Herald.publish` takes either `message` or a `template` with `vars`, never both. A message is HTML, like a rendered template. With `format=text` the message is plain text: characters such as `<` and `&` appear as they are, also on channels that render HTML. The format applies to messages only. `amount` adds to the total in the header of an aggregated message.
 
 The check monitor publishes to the topic named in `herald_monitor_topic`, which is ops by default.
 
-![A topic route with an aggregation window](images/topic-form.png)
+![A topic with an aggregation window](images/topic-form.png)
 
-![The list of topic routes](images/topics.png)
+![The list of topics](images/topics.png)
 
 ## Aggregation
 
-Alerts that come in bursts can be collected and sent as one message. Set `aggregate_minutes` on an action or a topic route; in the action form it is the field "Aggregate window in minutes" under "Advanced". The default 0 sends at once.
+Alerts that come in bursts can be collected and sent as one message. Set `aggregate_minutes` on an action or a topic; in the action form it is the field "Aggregate window in minutes" under "Advanced". The default 0 sends at once.
 
 A value above 0 stores the rendered alert in the table `civicrm_herald_buffer`. The scheduled job "Herald: Flush alert aggregation buffer" runs on every cron run. Once the oldest waiting alert of a group is older than its window, the whole group goes out as one message.
 
-- A group is one set of parameters. Rules whose actions carry identical parameters share a message. Changing a rule's parameters starts a new group. Topic routes form groups of their own.
+- A group is one set of parameters. Rules whose actions carry identical parameters share a message. Changing a rule's parameters starts a new group. Topics form groups of their own.
 - With a subscription scope set, alerts about different events, memberships or participants form separate groups.
 - A single waiting alert goes out unchanged. Aggregation only delayed it.
 - Several alerts get a header with their count, followed by the individual messages. When the alerts carry an amount, as contribution alerts do, the header also shows the sum, for example "📬 7 messages, total 385.00 € (collected over 5 min)". The amount uses the site's money format.
@@ -171,7 +171,7 @@ cv api4 Herald.reactivateParkedAlerts '{"ids": [12, 13]}'
 
 The list shows each alert's ID, the reason it was parked, the number of attempts, the last error and its dates. Without `ids`, `reactivateParkedAlerts` reactivates every parked alert.
 
-Reactivating an alert resets its attempt count. Reactivated alerts keep the parameters stored when they were buffered. Fixing the rule or the route therefore does not repair a wrong recipient that was set on the action. Subscriber and group recipients are looked up again at delivery, so fixing a contact's preferences does help.
+Reactivating an alert resets its attempt count. Reactivated alerts keep the parameters stored when they were buffered. Fixing the rule or the topic therefore does not repair a wrong recipient that was set on the action. Subscriber and group recipients are looked up again at delivery, so fixing a contact's preferences does help.
 
 The check monitor reports parked alerts and a stuck buffer, see [Built in checks](monitor.md#built-in-checks).
 

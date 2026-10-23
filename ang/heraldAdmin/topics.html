@@ -1,18 +1,18 @@
 <div id="bootstrap-theme" class="herald-admin">
-  <h1 crm-page-title>{{:: $ctrl.ts('Topic routes') }}</h1>
+  <h1 crm-page-title>{{:: $ctrl.ts('Topics') }}</h1>
   <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
   <p>
-    {{:: $ctrl.ts('Publishers name a topic; its route decides the channel and recipients. The topic entry is merged over the "default" entry, so a topic only needs what differs.') }}
+    {{:: $ctrl.ts('A topic bundles messages of one kind. Rules and other extensions send to a topic; its entry here decides the channel and the recipients. Each topic is merged over the "default" topic, so it only needs what differs.') }}
   </p>
   <div ng-include="'~/heraldAdmin/messages.html'"></div>
   <p class="messages warning" ng-if="$ctrl.loaded && !$ctrl.hasDefault">
-    {{:: $ctrl.ts('There is no "default" route: publishing to a topic without its own route fails.') }}
+    {{:: $ctrl.ts('There is no "default" topic: sending to a topic without its own entry fails.') }}
   </p>
   <p>
     <a class="btn btn-primary" href="#/topics/new"><i class="crm-i fa-plus" aria-hidden="true"></i> {{:: $ctrl.ts('Add topic') }}</a>
   </p>
   <table class="display" ng-if="$ctrl.loaded && $ctrl.rows.length">
-    <caption class="sr-only">{{:: $ctrl.ts('Topic routes') }}</caption>
+    <caption class="sr-only">{{:: $ctrl.ts('Topics') }}</caption>
     <thead>
       <tr>
         <th scope="col">{{:: $ctrl.ts('Topic') }}</th>
@@ -50,5 +50,5 @@
       </tr>
     </tbody>
   </table>
-  <p ng-if="$ctrl.loaded && !$ctrl.rows.length">{{:: $ctrl.ts('No topic routes yet.') }}</p>
+  <p ng-if="$ctrl.loaded && !$ctrl.rows.length">{{:: $ctrl.ts('No topics yet.') }}</p>
 </div>

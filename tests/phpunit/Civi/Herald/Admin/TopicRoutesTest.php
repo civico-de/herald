@@ -190,8 +190,8 @@ class TopicRoutesTest extends AdminTestCase {
       'saveTopic',
       ['topic' => 'news', 'route' => ['delivery_mode' => 'subscribers', 'label' => 'News']],
       [
-        'label belong to the topic, not to its route.',
-        'A route to subscribers reaches the contacts who subscribed to this topic',
+        'label belong to the topic itself, not to its delivery settings.',
+        'Delivery to subscribers reaches the contacts who subscribed to this topic',
       ],
     );
     $this->assertRejected(
@@ -248,7 +248,7 @@ class TopicRoutesTest extends AdminTestCase {
     $this->assertRejected(
       'saveTopic',
       ['topic' => 'alerts', 'route' => []],
-      ['A route to subscribers reaches the contacts who subscribed to this topic'],
+      ['Delivery to subscribers reaches the contacts who subscribed to this topic'],
     );
   }
 
@@ -256,7 +256,7 @@ class TopicRoutesTest extends AdminTestCase {
     $this->assertRejected(
       'saveTopic',
       ['topic' => 'default', 'route' => ['delivery_mode' => 'subscribers'], 'previousName' => 'default'],
-      ['Topic "hooks": A route to subscribers reaches the contacts who subscribed to this topic'],
+      ['Topic "hooks": Delivery to subscribers reaches the contacts who subscribed to this topic'],
     );
 
     self::call('saveTopic', ['topic' => 'news', 'route' => [], 'subscribable' => TRUE]);

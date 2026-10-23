@@ -50,7 +50,7 @@
           }).then((rows) =>
             rows[0].buffered
               ? ts(
-                  'Buffered for topic "%1": its route aggregates alerts, so the message goes out with the next flush.',
+                  'Buffered for topic "%1": it collects alerts, so the message goes out with the next flush.',
                   {
                     1: ctrl.topic,
                   },

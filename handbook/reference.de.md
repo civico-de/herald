@@ -15,8 +15,8 @@ routes:
 
 herald ergänzt CiviRules um zwei Aktionen. Ihre Formulare haben diese Felder gemeinsam:
 
-- Senden: „Mit eigener Zustellung“ oder „Über ein Topic“. Die Route eines Topics legt Kanal, Empfänger:innen und Sammeln fest, siehe [Topics](delivery.md#topics); die folgenden Zustellfelder sind dann ausgeblendet.
-- Zustellmodus, mit dem Topic, dessen Abonnent:innen erreicht werden, der Gruppe, den E-Mail-Adressen, der Option „Kommunikationssperren beachten“ und dem Adresstyp der E-Mail. Siehe [Zustellmodi](delivery.md#zustellmodi).
+- Senden: „Mit eigener Zustellung“ oder „Über ein Thema“. Der Eintrag des Themas legt Kanal, Empfänger:innen und Sammeln fest, siehe [Themen](delivery.md#themen); die folgenden Zustellfelder sind dann ausgeblendet.
+- Zustellmodus, mit dem Thema, dessen Abonnent:innen erreicht werden, der Gruppe, den E-Mail-Adressen, der Option „Kommunikationssperren beachten“ und dem Adresstyp der E-Mail. Siehe [Zustellmodi](delivery.md#zustellmodi).
 - Kanal, einer der aktiven Kanäle unter Administrieren » Herald » Kanäle. Direkt- und Adresslisten-Modus senden über ihn. Abonnent:innen und Gruppenmitglieder verwenden ihren eigenen Kanal.
 - Nachrichtenvorlage.
 - Die Empfängerfelder des Typs des gewählten Kanals, etwa die Telegram-Chat-ID. Leere Felder behalten die Standardwerte des Kanals.
@@ -111,7 +111,7 @@ Die Entität `Herald` bietet diese Aktionen. Die Aktionen erfordern die Berechti
 | Aktion | Parameter | Was sie tut |
 |---|---|---|
 | send | channel, message, subject, format, config | Stellt eine fertige Nachricht über einen konfigurierten Kanal zu, den `channel` nennt. Das ist der Einstiegspunkt für andere Extensions. Das Ergebnis listet `unknown_config_keys` auf. |
-| publish | topic, message oder template mit vars, format, amount | Stellt über die Route in `herald_topics` zu, siehe [Topics](delivery.md#topics). |
+| publish | topic, message oder template mit vars, format, amount | Stellt über den Eintrag des Themas in `herald_topics` zu, siehe [Themen](delivery.md#themen). |
 | notify | actionParams, triggerContext | Wird von „Send notification“ aufgerufen. |
 | notifyDigest | digest, actionParams, sendHour, daily, skipEmpty | Wird von „Send digest“ und von Skripten aufgerufen, siehe [Einen Report verschicken](digests.md#einen-report-verschicken). |
 | checkSchedule | ruleId, schedule | Wird von „Herald: Schedule“ aufgerufen. Gibt `due`, `slot`, `last_run` und `not_before` zurück. |
@@ -119,16 +119,16 @@ Die Entität `Herald` bietet diese Aktionen. Die Aktionen erfordern die Berechti
 | getChannelTypes | type, optional | Listet die Kanaltypen und die Schlüssel auf, die sie akzeptieren, mit den Angaben zu Geltungsbereich, Geheimnis und Ziel. |
 | getChannels | withUsage, optional | Listet die konfigurierten Kanäle auf. Geheimnisse erscheinen nur als gesetzt oder nicht gesetzt. withUsage ergänzt, wer jeden Kanal nennt. |
 | saveChannel | name, channel, isNew | Prüft einen Kanal und speichert ihn in `herald_channels`, seine Geheimnisse verschlüsselt. Ein ausgelassenes oder leeres Geheimnis behält seinen gespeicherten Wert, `null` löscht ihn. |
-| deleteChannel | name | Entfernt einen Kanal. Verweigert das, solange eine Route, eine Regelaktion, ein Job, eine gepufferte Meldung oder eine Einstellung ihn nennt. |
+| deleteChannel | name | Entfernt einen Kanal. Verweigert das, solange ein Thema, eine Regelaktion, ein Job, eine gepufferte Meldung oder eine Einstellung ihn nennt. |
 | getParkedAlerts | ids, optional | Listet [geparkte Meldungen](delivery.md#geparkte-meldungen) ohne ihre Nachrichtentexte auf. |
 | reactivateParkedAlerts | ids, optional | Legt geparkte Meldungen zurück in den Puffer. Ohne ids alle. |
 | renderTemplate | workflow, vars | Rendert eine Vorlage, ohne sie zu senden. |
 | previewDigest | digest, sources | Setzt einen Report aus ungespeicherten Werten mit den heutigen Daten zusammen und sendet nichts. Die Vorschau des Report-Formulars ruft sie auf. |
 | sendDigestTest | digest, sources | Setzt wie previewDigest zusammen und schickt das Ergebnis nur an die primäre E-Mail-Adresse des angemeldeten Benutzers. Gibt `sent`, `to` und `problems` zurück; solange es Probleme gibt, wird nichts verschickt. |
 | getDigestPlaceholders | source, digest | Die Platzhalter und der Textbaustein einer Quelle, wie das Report-Formular sie zeigt. |
-| saveTopic | topic, route, previousName | Prüft eine Route und speichert sie in `herald_topics`; mit previousName wird dieses Topic an seinem Platz umbenannt. Die Seite „Topic-Routen“ verwendet diese Aktion. |
-| deleteTopic | topic | Entfernt eine Route aus `herald_topics`. Verweigert das, solange eine Regelaktion, ein Job oder der Monitor sie nennt. |
-| getTopicUsage | keine | Listet die Regelaktionen, Jobs und den Monitor auf, die jedes Topic nennen. |
+| saveTopic | topic, route, previousName | Prüft den Eintrag eines Themas und speichert ihn in `herald_topics`; mit previousName wird dieses Thema an seinem Platz umbenannt. Die Seite „Themen“ verwendet diese Aktion. |
+| deleteTopic | topic | Entfernt ein Thema aus `herald_topics`. Verweigert das, solange eine Regelaktion, ein Job oder der Monitor es nennt. |
+| getTopicUsage | keine | Listet die Regelaktionen, Jobs und den Monitor auf, die jedes Thema nennen. |
 | saveCleanedFields | fields | Prüft und speichert `herald_cleaned_fields`. Fehler nennen das Feld und die Regel. |
 | saveAllowedHosts | hosts | Prüft und speichert `herald_webhook_allowed_hosts`. Leere Einträge werden übersprungen. |
 | getMonitorChecks | keine | Listet jeden angebotenen, erwarteten, stummgeschalteten oder verfolgten Check mit seinem gespeicherten Zustand, ohne Details und ohne die Checks auszuführen. |
@@ -234,18 +234,18 @@ Reports haben keine festen Variablen; ihre Quellen benennen sie, siehe [Platzhal
 
 ## Einstellungen
 
-Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'name=value'`. Einstellungen, die eine Liste oder eine Zuordnung enthalten, nehmen JSON auf. Die einfachen Einstellungen finden Sie auch auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen (`civicrm/admin/setting/herald`). Die Listen- und Zuordnungseinstellungen haben eigene Seiten unter `civicrm/admin/herald`: Kanäle, Topic-Routen, Bereinigte Felder, Erlaubte Webhook-Hosts und Monitor-Checks. Die Einstellungsseite zeigt die Schwellen und Grenzen unter „Erweitert“ und verlinkt die Übersicht aller Seiten. Alle erfordern „administer CiviCRM“.
+Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'name=value'`. Einstellungen, die eine Liste oder eine Zuordnung enthalten, nehmen JSON auf. Die einfachen Einstellungen finden Sie auch auf der Einstellungsseite von herald, Administrieren » Herald » Einstellungen (`civicrm/admin/setting/herald`). Die Listen- und Zuordnungseinstellungen haben eigene Seiten unter `civicrm/admin/herald`: Kanäle, Themen, Bereinigte Felder, Erlaubte Webhook-Hosts und Monitor-Checks. Die Einstellungsseite zeigt die Schwellen und Grenzen unter „Erweitert“ und verlinkt die Übersicht aller Seiten. Alle erfordern „administer CiviCRM“.
 
 | Einstellung | Standard | Bedeutung |
 |---|---|---|
 | `herald_channels` | ein Kanal `email`, bei der Installation angelegt | Die [Kanäle](channels.md#einen-kanal-konfigurieren), Geheimnisse verschlüsselt. Bearbeiten Sie sie auf der Seite „Kanäle“ oder mit `Herald.saveChannel`, nicht mit `Setting.set`. |
 | `herald_contact_email_channel` | email | Der E-Mail-Kanal, der Gruppenmitglieder ohne eigenen Kanal erreicht. |
 | `herald_webhook_allowed_hosts` | leer | Webhook-Hosts, die erreicht werden dürfen. Ist die Liste leer, ist jede öffentliche Adresse erlaubt und jede private gesperrt. |
-| `herald_topics` | leer | Die Routen der [Topics](delivery.md#topics). |
+| `herald_topics` | leer | Die [Themen](delivery.md#themen) mit ihren Zustelleinstellungen. |
 | `herald_buffer_max_attempts` | 5 | Fehlgeschlagene Zustellungen, bevor eine gesammelte Gruppe geparkt wird. |
 | `herald_buffer_max_items` | 25 | Ausgegebene Nachrichten in einer Sammelnachricht. 0 gibt alle aus. |
 | `herald_cleaned_fields` | leer | Textfelder, deren Werte Regeln unter einem Namen gruppieren, siehe [Felder bereinigen](digests.md#felder-bereinigen). |
-| `herald_monitor_topic` | ops | Das Topic für Meldungen des Monitors. |
+| `herald_monitor_topic` | ops | Das Thema für Meldungen des Monitors. |
 | `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours`, `herald_monitor_snooze`, `herald_monitor_expected` | siehe [Feinabstimmung](monitor.md#feinabstimmung) | Feinabstimmung des Monitors. |
 | `herald_monitor_state` | leer | Der eigene Zustand des Monitors. Nicht bearbeiten. |
 

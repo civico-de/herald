@@ -11,7 +11,7 @@ The check monitor tells you when something on the site breaks and when it works 
 
 herald alerts when a check starts failing and again when it recovers. While it keeps failing, a reminder goes out once a day.
 
-The scheduled job "Herald: Run check monitor" runs the checks. Each change goes out with the template "Herald: Monitor check transition" to the topic named in `herald_monitor_topic`, which is ops by default. Route that topic in `herald_topics` to decide where the alerts go, see [Topics](delivery.md#topics). A minimal route:
+The scheduled job "Herald: Run check monitor" runs the checks. Each change goes out with the template "Herald: Monitor check transition" to the topic named in `herald_monitor_topic`, which is ops by default. Give that topic an entry in `herald_topics` to decide where the alerts go, see [Topics](delivery.md#topics). A minimal entry:
 
 ```bash
 cv api4 Setting.set +v 'herald_topics={"ops": {"channel": "telegram", "chat_id": "-100…"}}'
@@ -107,7 +107,7 @@ The setting `herald_monitor_state` holds the last state of each check. herald ma
 - Each run takes a lock. A run that overlaps with another one skips instead of sending twice.
 - The state of each check is saved right after its alert is published. A crash halfway through a run does not repeat the alerts before it. Only a crash between publishing an alert and saving the check's state can send that one alert twice.
 - When a publish fails, the check keeps its old state, so the next run reports the change again. The job run then ends with the error "herald monitor: N transition(s) could not be published, see the CiviCRM log", and each failure is a warning in that log.
-- When the topic route aggregates, a published alert is only buffered. The flush job delivers it later.
+- When the topic aggregates, a published alert is only buffered. The flush job delivers it later.
 
 ## Limits
 

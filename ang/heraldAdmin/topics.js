@@ -66,7 +66,7 @@
         crmApi4("Herald", "deleteTopic", { topic: row.name })
           .then(() => {
             ctrl.errors = [];
-            ctrl.status = ts('Deleted the route of topic "%1".', { 1: row.name });
+            ctrl.status = ts('Deleted topic "%1".', { 1: row.name });
             return load();
           })
           .catch((failure) => {
@@ -78,10 +78,10 @@
           title: ts('Delete topic "%1"', { 1: row.name }),
           message: row.subscribers
             ? ts(
-                "Publishers of this topic then use the default route, if there is one. Contacts who subscribed to it: %1. Their subscriptions stay stored but no longer reach anyone.",
+                "Messages to this topic then use the default topic, if there is one. Contacts who subscribed to it: %1. Their subscriptions stay stored but no longer reach anyone.",
                 { 1: row.subscribers },
               )
-            : ts("Publishers of this topic then use the default route, if there is one."),
+            : ts("Messages to this topic then use the default topic, if there is one."),
         }).on("crmConfirm:yes", () => {
           // The dialog runs outside Angular's digest.
           $timeout(() => remove(row));

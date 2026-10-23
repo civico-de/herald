@@ -168,7 +168,7 @@
         }
         ctrl.saving = true;
         crmStatus(
-          { start: ts("Saving..."), success: ts("Topic route saved.") },
+          { start: ts("Saving..."), success: ts("Topic saved.") },
           crmApi4("Herald", "saveTopic", {
             topic: ctrl.name,
             route: built.route,

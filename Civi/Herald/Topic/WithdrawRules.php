@@ -51,7 +51,7 @@ final class WithdrawRules {
     return (
       ($merged['delivery_mode'] ?? NULL) === 'subscribers' && $reachedOwn && $to !== $topic
         ? [E::ts(
-          'Without subscriptions, "%1" would reach the subscribers of "%2"; name them in its route as subscribers_of to keep that.',
+          'Without subscriptions, "%1" would reach the subscribers of "%2"; name them on the topic as subscribers_of to keep that.',
           [1 => $topic, 2 => $to],
         )]
         : []

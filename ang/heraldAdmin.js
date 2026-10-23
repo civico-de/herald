@@ -212,7 +212,7 @@
         has: has,
         isEmpty: isEmpty,
         modes: [
-          { value: "direct", label: ts("Direct: the recipient set on the route or the channel") },
+          { value: "direct", label: ts("Direct: the recipient set on the topic or the channel") },
           { value: "subscribers", label: ts("Contacts who subscribed to this topic") },
           { value: "group", label: ts("Members of a group") },
           { value: "addresses", label: ts("A list of email addresses") },

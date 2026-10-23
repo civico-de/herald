@@ -17,7 +17,7 @@
       <div class="crm-af-field">
         <input type="text" id="herald-channel-name" class="form-control" ng-model="$ctrl.name" ng-disabled="!$ctrl.isNew" required aria-describedby="herald-channel-name-help" />
       </div>
-      <p class="crm-af-field-help-post" id="herald-channel-name-help">{{:: $ctrl.ts('What routes and rules store, for example ops_bot: lowercase letters, digits and _, starting with a letter. It cannot change later.') }}</p>
+      <p class="crm-af-field-help-post" id="herald-channel-name-help">{{:: $ctrl.ts('What topics and rules store, for example ops_bot: lowercase letters, digits and _, starting with a letter. It cannot change later.') }}</p>
     </div>
     <div class="form-group">
       <label class="crm-af-field-label" for="herald-channel-label">{{:: $ctrl.ts('Title') }}</label>
@@ -44,7 +44,7 @@
     </fieldset>
     <fieldset ng-if="$ctrl.typeOf()">
       <legend>{{:: $ctrl.ts('Defaults') }}</legend>
-      <p class="crm-af-field-help-post">{{:: $ctrl.ts('Used when a route or rule leaves the field empty, for example the recipient of direct deliveries.') }}</p>
+      <p class="crm-af-field-help-post">{{:: $ctrl.ts('Used when a topic or rule leaves the field empty, for example the recipient of direct deliveries.') }}</p>
       <herald-fields fields="$ctrl.defaultFields" inputs="$ctrl.inputs" prefix="herald-channel-"></herald-fields>
     </fieldset>
     <div class="crm-submit-buttons">

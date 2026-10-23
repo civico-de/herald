@@ -103,7 +103,7 @@ msgstr "Herald: Check-Monitor ausführen"
 
 #: managed/Job.mgd.php
 msgid "Runs checks contributed via hook_civicrm_heraldChecks and publishes ok/fail transitions to the herald_monitor_topic topic."
-msgstr "Führt die über hook_civicrm_heraldChecks bereitgestellten Checks aus und veröffentlicht ok/fail-Übergänge im Topic herald_monitor_topic."
+msgstr "Führt die über hook_civicrm_heraldChecks bereitgestellten Checks aus und veröffentlicht ok/fail-Übergänge im Thema herald_monitor_topic."
 
 #: managed/MessageTemplate.mgd.php
 msgid "Herald: New completed contribution"
@@ -346,20 +346,20 @@ msgid "How and when this contact wants to receive herald alerts and digests."
 msgstr "Wie und wann dieser Kontakt herald-Meldungen und -Reports erhalten möchte."
 
 #: settings/herald.setting.php
-msgid "Topic routing for Herald.publish: map of topic name to delivery params (channel, chat_id, aggregate_minutes, …). A \"default\" entry backs all topics."
-msgstr "Topic-Routing für Herald.publish: Zuordnung von Topic-Namen zu Zustellparametern (channel, chat_id, aggregate_minutes, …). Ein Eintrag \"default\" greift für alle Topics."
+msgid "Topics for Herald.publish: map of topic name to delivery params (channel, chat_id, aggregate_minutes, …). A \"default\" entry backs all topics."
+msgstr "Themen für Herald.publish: Zuordnung von Themennamen zu Zustellparametern (channel, chat_id, aggregate_minutes, …). Ein Eintrag „default“ greift für alle Themen."
 
 #: settings/herald.setting.php
-msgid "Topic Routes"
-msgstr "Topic-Routen"
+msgid "Topics"
+msgstr "Themen"
 
 #: settings/herald.setting.php
 msgid "Topic the check monitor publishes ok/fail transitions to."
-msgstr "Topic, in dem der Check-Monitor ok/fail-Übergänge veröffentlicht."
+msgstr "Thema, in dem der Check-Monitor ok/fail-Übergänge veröffentlicht."
 
 #: settings/herald.setting.php
 msgid "Monitor Topic"
-msgstr "Monitor-Topic"
+msgstr "Monitor-Thema"
 
 #: settings/herald.setting.php
 msgid "Internal: last observed status per monitor check (used to detect transitions). Not meant for manual editing."
@@ -700,10 +700,6 @@ msgstr "Leer lassen, um jeden Tag zu senden."
 msgid "In CiviCRM's timezone."
 msgstr "In der Zeitzone von CiviCRM."
 
-#: Civi/Herald/Admin/AdminScreens.php, ang/heraldAdmin/index.html, ang/heraldAdmin/topic.html, ang/heraldAdmin/topics.html, managed/Navigation.mgd.php
-msgid "Topic routes"
-msgstr "Topic-Routen"
-
 #: Civi/Herald/Admin/AdminScreens.php, ang/heraldAdmin/hosts.html, ang/heraldAdmin/index.html, managed/Navigation.mgd.php
 msgid "Webhook allowed hosts"
 msgstr "Erlaubte Webhook-Hosts"
@@ -802,15 +798,15 @@ msgstr "Regel %1: %2"
 
 #: Civi/Herald/Api4/Action/DeleteTopic.php, ang/heraldAdmin/topic.js
 msgid "The topic \"%1\" does not exist."
-msgstr "Das Topic „%1“ existiert nicht."
+msgstr "Das Thema „%1“ existiert nicht."
 
 #: Civi/Herald/Api4/Action/SaveTopic.php
 msgid "The topic \"%1\" no longer exists. Reload the page."
-msgstr "Das Topic „%1“ existiert nicht mehr. Die Seite neu laden."
+msgstr "Das Thema „%1“ existiert nicht mehr. Die Seite neu laden."
 
 #: Civi/Herald/Api4/Action/SaveTopic.php
 msgid "A topic named \"%1\" already exists."
-msgstr "Ein Topic namens „%1“ existiert bereits."
+msgstr "Ein Thema namens „%1“ existiert bereits."
 
 #: Civi/Herald/Channel/ActivityChannel.php
 msgid "Assignee contact ID"
@@ -874,7 +870,7 @@ msgstr "BCC (durch Kommas getrennt)"
 
 #: Civi/Api4/Herald.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Api4/Action/DeleteTopic.php, Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Api4/Action/SaveTopic.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Topic/RouteFields.php, Civi/Herald/Topic/RouteRules.php, Civi/Herald/Topic/RouteValidator.php, Civi/Herald/Topic/Router.php, Civi/Herald/Topic/ValueType.php, ang/heraldAdmin.js, ang/heraldAdmin/index.html, ang/heraldAdmin/test.html, ang/heraldAdmin/topic.html, ang/heraldAdmin/topic.js, ang/heraldAdmin/topics.html, ang/heraldAdmin/topics.js, managed/Navigation.mgd.php, settings/herald.setting.php
 msgid "Topic"
-msgstr "Topic"
+msgstr "Thema"
 
 #: CRM/Herald/CivirulesAdapter/Form/SendNotification.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PushoverChannel.php, managed/Digests.mgd.php, schema/HeraldDigest.entityType.php
 msgid "Title"
@@ -978,7 +974,7 @@ msgstr "Der Zustellmodus „%1“ braucht „%2“."
 
 #: Civi/Herald/Topic/RouteValidator.php
 msgid "Enter a topic name without leading or trailing spaces."
-msgstr "Einen Topic-Namen ohne Leerzeichen am Anfang oder Ende eingeben."
+msgstr "Einen Themennamen ohne Leerzeichen am Anfang oder Ende eingeben."
 
 #: Civi/Herald/Topic/ValueType.php
 msgid "\"%1\" must be a whole number."
@@ -1046,7 +1042,7 @@ msgstr "Die Liste ist leer: Webhooks dürfen jede öffentliche Adresse aufrufen.
 
 #: ang/heraldAdmin/index.html
 msgid "Channels, topics, digests and the other herald screens"
-msgstr "Kanäle, Topics, Reports und die übrigen herald-Seiten"
+msgstr "Kanäle, Themen, Reports und die übrigen herald-Seiten"
 
 #: Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Channel/EmailChannel.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PushoverChannel.php, Civi/Herald/Channel/WebhookChannel.php, ang/heraldAdmin.js, ang/heraldAdmin/index.html, ang/heraldDigest.ang.php, herald.civix.php, managed/Navigation.mgd.php, settings/herald.setting.php
 msgid "Settings"
@@ -1054,7 +1050,7 @@ msgstr "Einstellungen"
 
 #: ang/heraldAdmin/index.html
 msgid "Where each topic is delivered."
-msgstr "Wohin jedes Topic zugestellt wird."
+msgstr "Wohin jedes Thema zugestellt wird."
 
 #: ang/heraldAdmin/index.html
 msgid "Which hosts the webhook channel may call."
@@ -1066,7 +1062,7 @@ msgstr "Erwartete Checks und Stummschaltungen."
 
 #: ang/heraldAdmin/index.html
 msgid "Send a message through a channel or a topic."
-msgstr "Eine Nachricht über einen Kanal oder ein Topic senden."
+msgstr "Eine Nachricht über einen Kanal oder ein Thema senden."
 
 #: ang/heraldAdmin/index.html
 msgid "Render a herald template with sample values."
@@ -1293,8 +1289,8 @@ msgid "Rule moved to position %1."
 msgstr "Regel auf Position %1 verschoben."
 
 #: ang/heraldAdmin/test.html
-msgid "Sends a real message: through one channel with the recipient entered here, or through a topic route as an alert would go."
-msgstr "Sendet eine echte Nachricht: über einen Kanal an den hier eingetragenen Empfänger oder über eine Topic-Route, wie eine Meldung sie nehmen würde."
+msgid "Sends a real message: through one channel with the recipient entered here, or through a topic, as an alert would go."
+msgstr "Sendet eine echte Nachricht: über einen Kanal an den hier eingetragenen Empfänger oder über ein Thema, wie eine Meldung es nehmen würde."
 
 #: ang/heraldAdmin/test.html
 msgid "Send through"
@@ -1305,8 +1301,8 @@ msgid "A channel"
 msgstr "Einen Kanal"
 
 #: ang/heraldAdmin/test.html
-msgid "A topic route"
-msgstr "Eine Topic-Route"
+msgid "A topic"
+msgstr "Ein Thema"
 
 #: ang/heraldAdmin/test.html
 msgid "%1 options"
@@ -1338,15 +1334,15 @@ msgstr "Testnachricht von Herald."
 
 #: ang/heraldAdmin/test.js
 msgid "Choose a topic."
-msgstr "Ein Topic auswählen."
+msgstr "Ein Thema auswählen."
 
 #: ang/heraldAdmin/test.js
-msgid "Buffered for topic \"%1\": its route aggregates alerts, so the message goes out with the next flush."
-msgstr "Für das Topic „%1“ gepuffert: seine Route sammelt Meldungen, daher geht die Nachricht mit dem nächsten Flush hinaus."
+msgid "Buffered for topic \"%1\": it collects alerts, so the message goes out with the next flush."
+msgstr "Für das Thema „%1“ gepuffert: es sammelt Meldungen, daher geht die Nachricht mit dem nächsten Flush hinaus."
 
 #: ang/heraldAdmin/test.js
 msgid "Sent to topic \"%1\" through %2."
-msgstr "An das Topic „%1“ über %2 gesendet."
+msgstr "An das Thema „%1“ über %2 gesendet."
 
 #: ang/heraldAdmin/test.js
 msgid "Choose a channel."
@@ -1361,24 +1357,24 @@ msgid "Sending..."
 msgstr "Wird gesendet …"
 
 #: ang/heraldAdmin/topic.html
-msgid "Add topic route"
-msgstr "Topic-Route hinzufügen"
+msgid "Add topic"
+msgstr "Thema hinzufügen"
 
 #: ang/heraldAdmin/topic.html
-msgid "Edit topic route"
-msgstr "Topic-Route bearbeiten"
+msgid "Edit topic"
+msgstr "Thema bearbeiten"
 
 #: ang/heraldAdmin/topic.html
 msgid "The name publishers use, for example ops. The topic named default backs every other topic."
-msgstr "Der Name, den Absender verwenden, zum Beispiel ops. Das Topic default dient allen anderen Topics als Grundlage."
+msgstr "Der Name, den Absender verwenden, zum Beispiel ops. Das Thema default dient allen anderen Themen als Grundlage."
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Api4/Action/SaveTopic.php, Civi/Herald/Buffer/AggregateSummary.php, Civi/Herald/Buffer/AlertBuffer.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Subscribers/GroupRecipients.php, Civi/Herald/Subscribers/SubscriberLookup.php, Civi/Herald/Topic/RouteFields.php, Civi/Herald/Topic/Router.php, ang/heraldAdmin/topic.html, ang/heraldAdmin/topics.html, api/v3/Job/HeraldBufferFlush.php, schema/HeraldBufferedAlert.entityType.php
 msgid "Delivery"
 msgstr "Zustellung"
 
 #: ang/heraldAdmin/topic.html
-msgid "(from the default route)"
-msgstr "(aus der Route default)"
+msgid "(from the default topic)"
+msgstr "(aus dem Thema default)"
 
 #: ang/heraldAdmin/topic.html
 msgid "(not set: direct)"
@@ -1409,20 +1405,16 @@ msgid "Other parameters: \"%1\" is already set by a field above."
 msgstr "Weitere Parameter: „%1“ ist bereits durch ein Feld oben gesetzt."
 
 #: ang/heraldAdmin/topic.js
-msgid "Topic route saved."
-msgstr "Topic-Route gespeichert."
+msgid "Topic saved."
+msgstr "Thema gespeichert."
 
 #: ang/heraldAdmin/topics.html
-msgid "Publishers name a topic; its route decides the channel and recipients. The topic entry is merged over the \"default\" entry, so a topic only needs what differs."
-msgstr "Absender nennen ein Topic; seine Route bestimmt Kanal und Empfänger. Der Eintrag des Topics wird über den Eintrag „default“ gelegt, ein Topic braucht also nur, was abweicht."
+msgid "A topic bundles messages of one kind. Rules and other extensions send to a topic; its entry here decides the channel and the recipients. Each topic is merged over the \"default\" topic, so it only needs what differs."
+msgstr "Ein Thema bündelt Nachrichten einer Art. Regeln und andere Erweiterungen senden an ein Thema; sein Eintrag hier bestimmt Kanal und Empfänger. Jedes Thema wird über das Thema „default“ gelegt und braucht nur, was abweicht."
 
 #: ang/heraldAdmin/topics.html
-msgid "There is no \"default\" route: publishing to a topic without its own route fails."
-msgstr "Es gibt keine Route „default“: Veröffentlichen an ein Topic ohne eigene Route schlägt fehl."
-
-#: ang/heraldAdmin/topic.html, ang/heraldAdmin/topics.html
-msgid "Add topic"
-msgstr "Topic hinzufügen"
+msgid "There is no \"default\" topic: sending to a topic without its own entry fails."
+msgstr "Es gibt kein Thema „default“: Senden an ein Thema ohne eigenen Eintrag schlägt fehl."
 
 #: Civi/Herald/Api4/Action/CheckFieldTransition.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/PreEditSnapshot.php, Civi/Herald/StatusTransitionDispatcher.php, Civi/Herald/Trigger/ContributionVars.php, ang/heraldAdmin/topic.html, ang/heraldAdmin/topics.html, herald.php, managed/Digests.mgd.php
 msgid "Edit"
@@ -1433,24 +1425,24 @@ msgid "Delete"
 msgstr "Löschen"
 
 #: ang/heraldAdmin/topics.html
-msgid "No topic routes yet."
-msgstr "Noch keine Topic-Routen."
+msgid "No topics yet."
+msgstr "Noch keine Themen."
 
 #: ang/heraldAdmin/topics.js
 msgid "(from default)"
 msgstr "(aus default)"
 
 #: ang/heraldAdmin/topics.js
-msgid "Deleted the route of topic \"%1\"."
-msgstr "Die Route des Topics „%1“ wurde gelöscht."
+msgid "Deleted topic \"%1\"."
+msgstr "Das Thema „%1“ wurde gelöscht."
 
 #: ang/heraldAdmin/topics.js
 msgid "Delete topic \"%1\""
-msgstr "Topic „%1“ löschen"
+msgstr "Thema „%1“ löschen"
 
 #: ang/heraldAdmin/topics.js
-msgid "Publishers of this topic then use the default route, if there is one."
-msgstr "Absender dieses Topics nutzen dann die Route default, sofern es sie gibt."
+msgid "Messages to this topic then use the default topic, if there is one."
+msgstr "Nachrichten an dieses Thema nutzen dann das Thema „default“, sofern es es gibt."
 
 #: ang/heraldAdmin.js
 msgid "\"%1\" is not valid JSON: %2"
@@ -1461,8 +1453,8 @@ msgid "The request failed."
 msgstr "Die Anfrage ist fehlgeschlagen."
 
 #: ang/heraldAdmin.js
-msgid "Direct: the recipient set on the route or the channel"
-msgstr "Direkt: der in der Route oder im Kanal gesetzte Empfänger"
+msgid "Direct: the recipient set on the topic or the channel"
+msgstr "Direkt: der im Thema oder im Kanal gesetzte Empfänger"
 
 #: ang/heraldAdmin.js
 msgid "Members of a group"
@@ -2228,11 +2220,11 @@ msgstr "- Kanal wählen -"
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "- select topic -"
-msgstr "- Topic wählen -"
+msgstr "- Thema wählen -"
 
 #: ang/heraldAdmin/channels.html
-msgid "A channel is one account of a channel type: a Telegram bot, a Pushover application, an email sender. Topic routes and rules name a channel; its token, server and sender stay here. A type can have several channels."
-msgstr "Ein Kanal ist ein Konto eines Kanaltyps: ein Telegram-Bot, eine Pushover-Anwendung, ein E-Mail-Absender. Topic-Routen und Regeln nennen einen Kanal; Token, Server und Absender bleiben hier. Ein Typ kann mehrere Kanäle haben."
+msgid "A channel is one account of a channel type: a Telegram bot, a Pushover application, an email sender. Topics and rules name a channel; its token, server and sender stay here. A type can have several channels."
+msgstr "Ein Kanal ist ein Konto eines Kanaltyps: ein Telegram-Bot, eine Pushover-Anwendung, ein E-Mail-Absender. Themen und Regeln nennen einen Kanal; Token, Server und Absender bleiben hier. Ein Typ kann mehrere Kanäle haben."
 
 #: Civi/Herald/Channel/ChannelStore.php
 msgid "A channel name starts with a lowercase letter and holds only a-z, 0-9 and _."
@@ -2248,7 +2240,7 @@ msgstr "Ein ausgeschalteter Kanal sendet nichts; Zustellungen über ihn schlagen
 
 #: Civi/Herald/Topic/RouteValidator.php
 msgid "A send through a topic takes its delivery from the topic; remove %1."
-msgstr "Ein Versand über ein Topic übernimmt die Zustellung vom Topic; entfernen Sie %1."
+msgstr "Ein Versand über ein Thema übernimmt die Zustellung vom Thema; entfernen Sie %1."
 
 #: Civi/Herald/Channel/NtfyChannel.php
 msgid "Access token"
@@ -2336,11 +2328,11 @@ msgstr "Bietet den Kanal in den Benachrichtigungseinstellungen der Kontakte als 
 
 #: ang/heraldAdmin/topic.html
 msgid "One of the channels set up under Channels. The fields below follow the channel this topic ends up using; empty ones keep the channel's own values."
-msgstr "Einer der unter Kanäle eingerichteten Kanäle. Die Felder darunter richten sich nach dem Kanal, den dieses Topic am Ende nutzt; leere Felder behalten die Werte des Kanals."
+msgstr "Einer der unter Kanäle eingerichteten Kanäle. Die Felder darunter richten sich nach dem Kanal, den dieses Thema am Ende nutzt; leere Felder behalten die Werte des Kanals."
 
 #: Civi/Herald/Channel/NtfyChannel.php
 msgid "Only needed for protected topics."
-msgstr "Nur für geschützte Topics nötig."
+msgstr "Nur für geschützte Themen nötig."
 
 #: ang/heraldAdmin/topic.html
 msgid "Parameters without a field above, such as options of another channel type, as a JSON object."
@@ -2380,7 +2372,7 @@ msgstr "Sendet jedem Kontakt über seinen eigenen Kanal."
 
 #: CRM/Herald/CivirulesAdapter/Action/AbstractSend.php
 msgid "Sends via topic \"%1\"."
-msgstr "Sendet über das Topic „%1“."
+msgstr "Sendet über das Thema „%1“."
 
 #: Civi/Herald/Channel/NtfyChannel.php
 msgid "Server"
@@ -2432,11 +2424,11 @@ msgstr "%1 gepufferte oder geparkte Meldungen"
 
 #: Civi/Herald/Api4/Action/SaveTopic.php
 msgid "The topic \"%1\" cannot be renamed while in use:"
-msgstr "Das Topic „%1“ kann nicht umbenannt werden, solange es verwendet wird:"
+msgstr "Das Thema „%1“ kann nicht umbenannt werden, solange es verwendet wird:"
 
 #: Civi/Herald/Api4/Action/DeleteTopic.php
 msgid "The topic \"%1\" is still in use:"
-msgstr "Das Topic „%1“ wird noch verwendet:"
+msgstr "Das Thema „%1“ wird noch verwendet:"
 
 #: ang/heraldAdmin/channel.html
 msgid "The type cannot change later; add a new channel instead."
@@ -2451,8 +2443,8 @@ msgid "There is no channel \"%1\"."
 msgstr "Es gibt keinen Kanal „%1“."
 
 #: Civi/Herald/Topic/RouteValidator.php
-msgid "There is no topic \"%1\" and no \"default\" route."
-msgstr "Es gibt kein Topic „%1“ und keine Route „default“."
+msgid "There is no topic \"%1\" and no \"default\" topic."
+msgstr "Es gibt kein Thema „%1“ und kein Thema „default“."
 
 #: ang/heraldAdmin/channel.html
 msgid "This type needs no account settings."
@@ -2460,27 +2452,27 @@ msgstr "Dieser Typ braucht keine Kontoeinstellungen."
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "Through a topic"
-msgstr "Über ein Topic"
+msgstr "Über ein Thema"
 
 #: Civi/Herald/Admin/ParamsInUse.php
 msgid "Topic \"%1\""
-msgstr "Topic „%1“"
+msgstr "Thema „%1“"
 
 #: ang/heraldAdmin/channels.html, ang/heraldAdmin/topics.html
 msgid "Used by"
 msgstr "Verwendet von"
 
 #: ang/heraldAdmin/channel.html
-msgid "Used when a route or rule leaves the field empty, for example the recipient of direct deliveries."
-msgstr "Gilt, wenn eine Route oder Regel das Feld leer lässt, etwa für den Empfänger direkter Zustellungen."
+msgid "Used when a topic or rule leaves the field empty, for example the recipient of direct deliveries."
+msgstr "Gilt, wenn ein Thema oder eine Regel das Feld leer lässt, etwa für den Empfänger direkter Zustellungen."
 
 #: Civi/Herald/Channel/PushoverChannel.php
 msgid "User/group key"
 msgstr "Benutzer-/Gruppenschlüssel"
 
 #: ang/heraldAdmin/channel.html
-msgid "What routes and rules store, for example ops_bot: lowercase letters, digits and _, starting with a letter. It cannot change later."
-msgstr "Was Routen und Regeln speichern, etwa ops_bot: Kleinbuchstaben, Ziffern und _, beginnend mit einem Buchstaben. Er lässt sich später nicht ändern."
+msgid "What topics and rules store, for example ops_bot: lowercase letters, digits and _, starting with a letter. It cannot change later."
+msgstr "Was Themen und Regeln speichern, etwa ops_bot: Kleinbuchstaben, Ziffern und _, beginnend mit einem Buchstaben. Er lässt sich später nicht ändern."
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "With a delivery of its own"
@@ -2532,15 +2524,15 @@ msgstr "„%1“ wird nur an „%2“ des Kanals gesendet; tragen Sie auch „%2
 
 #: CRM/Herald/CivirulesAdapter/SendOptions.php
 msgid "Subscribers — fan out to all contacts subscribed to a topic"
-msgstr "Abonnent:innen — an alle Kontakte verteilen, die ein Topic abonniert haben"
+msgstr "Abonnent:innen — an alle Kontakte verteilen, die ein Thema abonniert haben"
 
 #: Civi/Herald/Topic/RouteFields.php
 msgid "Subscribers of topic"
-msgstr "Abonnent:innen des Topics"
+msgstr "Abonnent:innen des Themas"
 
 #: Civi/Herald/Topic/SubscriberRules.php
 msgid "Choose the topic whose subscribers to reach."
-msgstr "Wählen Sie das Topic, dessen Abonnent:innen erreicht werden sollen."
+msgstr "Wählen Sie das Thema, dessen Abonnent:innen erreicht werden sollen."
 
 #: Civi/Herald/Topic/WithdrawRules.php
 msgid "Contacts must be able to subscribe to \"%1\" while it is in use:"
@@ -2548,31 +2540,31 @@ msgstr "Kontakte müssen „%1“ abonnieren können, solange es verwendet wird:
 
 #: Civi/Herald/Topic/SubscriberRules.php
 msgid "Contacts cannot subscribe to the topic \"%1\"."
-msgstr "Kontakte können das Topic „%1“ nicht abonnieren."
+msgstr "Kontakte können das Thema „%1“ nicht abonnieren."
 
 #: Civi/Herald/Topic/TopicRules.php
-msgid "%1 belong to the topic, not to its route."
-msgstr "%1 gehören zum Topic, nicht zu seiner Route."
+msgid "%1 belong to the topic itself, not to its delivery settings."
+msgstr "%1 gehören zum Thema selbst, nicht zu seinen Zustelleinstellungen."
 
 #: Civi/Herald/Topic/TopicRules.php
-msgid "A route to subscribers reaches the contacts who subscribed to this topic; let contacts subscribe to it."
-msgstr "Eine Route an Abonnent:innen erreicht die Kontakte, die dieses Topic abonniert haben; erlauben Sie Kontakten, es zu abonnieren."
+msgid "Delivery to subscribers reaches the contacts who subscribed to this topic; let contacts subscribe to it."
+msgstr "Die Zustellung an Abonnent:innen erreicht die Kontakte, die dieses Thema abonniert haben; erlauben Sie Kontakten, es zu abonnieren."
 
 #: Civi/Herald/Topic/TopicRules.php
 msgid "Contacts cannot subscribe to \"default\"; it only backs the other topics."
-msgstr "Kontakte können „default“ nicht abonnieren; es ergänzt nur die anderen Topics."
+msgstr "Kontakte können „default“ nicht abonnieren; es ergänzt nur die anderen Themen."
 
 #: Civi/Herald/Topic/TopicRules.php
 msgid "The topic \"%1\" cannot be renamed while %2 contacts subscribe to it."
-msgstr "Das Topic „%1“ kann nicht umbenannt werden, solange %2 Kontakte es abonniert haben."
+msgstr "Das Thema „%1“ kann nicht umbenannt werden, solange %2 Kontakte es abonniert haben."
 
 #: ang/heraldAdmin.js
 msgid "Contacts who subscribed to this topic"
-msgstr "Kontakte, die dieses Topic abonniert haben"
+msgstr "Kontakte, die dieses Thema abonniert haben"
 
 #: ang/heraldAdmin/topic.html
 msgid "Contacts can subscribe to this topic"
-msgstr "Kontakte dürfen dieses Topic abonnieren"
+msgstr "Kontakte dürfen dieses Thema abonnieren"
 
 #: ang/heraldAdmin/topic.html, ang/heraldAdmin/topics.html
 msgid "Label"
@@ -2580,11 +2572,11 @@ msgstr "Bezeichnung"
 
 #: ang/heraldAdmin/topic.html
 msgid "Offers the topic in the notification preferences of contacts. The delivery mode \"Contacts who subscribed to this topic\" reaches them."
-msgstr "Bietet das Topic in den Benachrichtigungseinstellungen der Kontakte an. Der Zustellmodus „Kontakte, die dieses Topic abonniert haben“ erreicht sie."
+msgstr "Bietet das Thema in den Benachrichtigungseinstellungen der Kontakte an. Der Zustellmodus „Kontakte, die dieses Thema abonniert haben“ erreicht sie."
 
 #: ang/heraldAdmin/topic.html
 msgid "Shown to contacts and on these screens; empty shows the topic name."
-msgstr "Wird Kontakten und auf diesen Seiten angezeigt; leer zeigt den Namen des Topics."
+msgstr "Wird Kontakten und auf diesen Seiten angezeigt; leer zeigt den Namen des Themas."
 
 #: ang/heraldAdmin/topic.js
 msgid "Other parameters: \"%1\" is set by a field above."
@@ -2599,32 +2591,32 @@ msgid "Subscribers"
 msgstr "Abonnent:innen"
 
 #: ang/heraldAdmin/topics.js
-msgid "Publishers of this topic then use the default route, if there is one. Contacts who subscribed to it: %1. Their subscriptions stay stored but no longer reach anyone."
-msgstr "Wer an dieses Topic publiziert, nutzt dann die Route „default“, sofern es sie gibt. Kontakte, die es abonniert haben: %1. Ihre Abos bleiben gespeichert, erreichen aber niemanden mehr."
+msgid "Messages to this topic then use the default topic, if there is one. Contacts who subscribed to it: %1. Their subscriptions stay stored but no longer reach anyone."
+msgstr "Nachrichten an dieses Thema nutzen dann das Thema „default“, sofern es es gibt. Kontakte, die es abonniert haben: %1. Ihre Abos bleiben gespeichert, erreichen aber niemanden mehr."
 
 #: managed/SubscriberPreferences.mgd.php
 msgid "Herald: Subscribable topic"
-msgstr "Herald: Abonnierbares Topic"
+msgstr "Herald: Abonnierbares Thema"
 
 #: managed/SubscriberPreferences.mgd.php
 msgid "The topics a contact can subscribe to; herald keeps them in step with its topics."
-msgstr "Die Topics, die ein Kontakt abonnieren kann; herald gleicht sie mit seinen Topics ab."
+msgstr "Die Themen, die ein Kontakt abonnieren kann; herald gleicht sie mit seinen Themen ab."
 
 #: managed/SubscriberPreferences.mgd.php
 msgid "Tick the topics you want to receive notifications about on your preferred channel."
-msgstr "Die Topics ankreuzen, zu denen Benachrichtigungen über den bevorzugten Kanal ankommen sollen."
+msgstr "Die Themen ankreuzen, zu denen Benachrichtigungen über den bevorzugten Kanal ankommen sollen."
 
 #: Civi/Herald/Topic/DefaultRules.php
 msgid "Topic \"%1\": %2"
-msgstr "Topic „%1“: %2"
+msgstr "Thema „%1“: %2"
 
 #: ang/heraldAdmin/test.js
 msgid "Sent to topic \"%1\"; each recipient gets it on their own channel."
-msgstr "An das Topic „%1“ gesendet; alle Empfänger:innen erhalten es über ihren eigenen Kanal."
+msgstr "An das Thema „%1“ gesendet; alle Empfänger:innen erhalten es über ihren eigenen Kanal."
 
 #: Civi/Herald/Topic/WithdrawRules.php
-msgid "Without subscriptions, \"%1\" would reach the subscribers of \"%2\"; name them in its route as subscribers_of to keep that."
-msgstr "Ohne Abonnements würde „%1“ die Abonnent:innen von „%2“ erreichen; nennen Sie diese in seiner Route als subscribers_of, um das beizubehalten."
+msgid "Without subscriptions, \"%1\" would reach the subscribers of \"%2\"; name them on the topic as subscribers_of to keep that."
+msgstr "Ohne Abonnements würde „%1“ die Abonnent:innen von „%2“ erreichen; nennen Sie diese im Thema als subscribers_of, um das beizubehalten."
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "Subscription scope"
@@ -2635,8 +2627,8 @@ msgid "Variables"
 msgstr "Variablen"
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "Its route sets the channel, the recipients and the aggregation."
-msgstr "Seine Route legt Kanal, Empfänger:innen und Bündelung fest."
+msgid "The topic sets the channel, the recipients and the aggregation."
+msgstr "Das Thema legt Kanal, Empfänger:innen und Bündelung fest."
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "Separated by commas or new lines. The addresses are not linked to contacts."
@@ -2664,7 +2656,7 @@ msgstr "Ein JSON-Objekt, das an die Vorlage übergeben wird."
 
 #: Civi/Herald/Admin/AdminScreens.php
 msgid "Single values such as the monitor topic, its thresholds and the retry limits."
-msgstr "Einzelwerte wie das Monitor-Topic, seine Schwellen und die Wiederholungsgrenzen."
+msgstr "Einzelwerte wie das Monitor-Thema, seine Schwellen und die Wiederholungsgrenzen."
 
 msgid "Set up"
 msgstr "Einrichten"
@@ -2677,7 +2669,7 @@ msgstr "Erweitert"
 
 #: Civi/Herald/Subscribers/SubscriptionRules.php
 msgid "Pick at least one topic."
-msgstr "Wählen Sie mindestens ein Topic."
+msgstr "Wählen Sie mindestens ein Thema."
 
 #: Civi/Herald/Subscribers/SubscriptionRules.php
 msgid "Enter the ID of the record, or clear the entity type."
@@ -2701,7 +2693,7 @@ msgstr "Bietet den Kanal in den Benachrichtigungs-Abos von Kontakten an."
 
 #: ang/heraldAdmin/topic.html
 msgid "Offers the topic in the notification subscriptions of contacts. The delivery mode \"Contacts who subscribed to this topic\" reaches them."
-msgstr "Bietet das Topic in den Benachrichtigungs-Abos von Kontakten an. Der Zustellmodus „Kontakte, die dieses Topic abonniert haben“ erreicht sie."
+msgstr "Bietet das Thema in den Benachrichtigungs-Abos von Kontakten an. Der Zustellmodus „Kontakte, die dieses Thema abonniert haben“ erreicht sie."
 
 #: ang/heraldAdmin/topic.html
 msgid "In the subscriber and group modes, recipients come from the subscriptions of each contact; only presentation options are used from here."
@@ -2716,12 +2708,8 @@ msgid "Where the channel delivers to: a Telegram chat ID, a Pushover user or gro
 msgstr "Wohin der Kanal zustellt: eine Telegram-Chat-ID, ein Pushover-Benutzer- oder Gruppenschlüssel, ein ntfy-Topic oder eine Webhook-URL. Bei einem E-Mail-Kanal leer lassen, um Ihre Hauptadresse zu verwenden."
 
 #: managed/SubscriberPreferences.mgd.php
-msgid "Topics"
-msgstr "Topics"
-
-#: managed/SubscriberPreferences.mgd.php
 msgid "The topics you want to receive notifications about through this channel."
-msgstr "Die Topics, zu denen Sie über diesen Kanal Benachrichtigungen erhalten möchten."
+msgstr "Die Themen, zu denen Sie über diesen Kanal Benachrichtigungen erhalten möchten."
 
 
 #: managed/SubscriberPreferences.mgd.php
@@ -2754,4 +2742,4 @@ msgstr "Leer lassen, um Nachrichten an Ihre Gruppen per E-Mail zu erhalten."
 
 #: managed/SubscriberPreferences.mgd.php
 msgid "The channels this contact receives herald notifications through, and on which topics."
-msgstr "Die Kanäle, über die dieser Kontakt herald-Benachrichtigungen erhält, und zu welchen Topics."
+msgstr "Die Kanäle, über die dieser Kontakt herald-Benachrichtigungen erhält, und zu welchen Themen."

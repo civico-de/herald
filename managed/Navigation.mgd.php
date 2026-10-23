@@ -35,7 +35,7 @@ $items = [
 // Literal so the file evaluates without the class loader; AdminScreensTest pins it to AdminScreens::screens().
 $screens = [
   'channels' => E::ts('Channels'),
-  'topics' => E::ts('Topic routes'),
+  'topics' => E::ts('Topics'),
   'cleaning' => E::ts('Cleaned fields'),
   'hosts' => E::ts('Webhook allowed hosts'),
   'monitor' => E::ts('Monitor checks'),
