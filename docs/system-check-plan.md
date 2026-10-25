@@ -63,7 +63,7 @@ Was Core nicht kann:
 | `System.check` gefiltert auf einen Core-Methodennamen | 85–120 ms |
 | Debug-Modus aus statt an | kein messbarer Unterschied |
 
-**Woher die 2 Sekunden kommen.** `LegacyEntityScanner::check` ruft `ClassScanner::get()` für alle APIv4-Entitäten auf. In 6.19 fehlt in `ClassScanner::cache()` ein `break`, sodass der persistente Index-Cache sofort durch einen `ArrayCache` ersetzt wird. Der Index wird deshalb in jedem PHP-Prozess neu gebaut. Upstream ist das in `b56a068918` behoben („Make the classscanner cache work“, 30.09.2026). Der Fix ist im Zweig 6.20 enthalten, nicht in 6.19. Mit 6.20 gemessen ist das noch nicht. Mit Bind-Mounts ist die Zahl ein oberer Wert für das Scannen selbst.
+**Woher die 2 Sekunden kommen.** `LegacyEntityScanner::check` ruft `ClassScanner::get()` für alle APIv4-Entitäten auf. In 6.19 fehlt in `ClassScanner::cache()` ein `break`, sodass der persistente Index-Cache sofort durch einen `ArrayCache` ersetzt wird. Der Index wird deshalb in jedem PHP-Prozess neu gebaut. Upstream ist das in `b56a068918` behoben („Make the classscanner cache work“, 30.09.2026). Der Fix ist im Zweig 6.20 enthalten, nicht in 6.19. Mit Bind-Mounts ist die Zahl ein oberer Wert für das Scannen selbst.
 
 **Laufzeit pro Monitor-Lauf.** Auf 6.19 kostet ein Monitor-Lauf etwa 2 s zusätzlich, im Cron-Prozess und nicht bei einem Seitenaufruf. Bei einem Cron-Lauf alle 5 Minuten sind das etwa 10 Minuten am Tag. Ab 6.20 sollte nur noch ein kalter oder abgelaufener Cache den Index neu bauen.
 
@@ -229,5 +229,4 @@ Jede Extension bekommt einen Release. Bis eine Extension umgestellt ist, fehlen 
 
 - **Statusseite:** Wie teuer werden die Statusseite und der Status-Indikator in der Menüleiste, wenn mehr Extensions Core-Checks liefern? Kosten entstehen durch sentinel-Regeln (APIv4-Zählungen), signet (startet typst) und matomo (HTTP).
 - **Ausblenden per Managed Entity:** Lässt sich die `StatusPreference` für `checkExtensionsUpdates` als Managed Entity ausliefern, die nur bei aktivem Check deklariert ist (Abschnitt 4)?
-- **Messung auf 6.20:** Die Laufzeit von `System.check` in einem frischen Prozess muss nachgemessen werden, sobald ein civikitchen-Image dafür vorliegt.
 - **Name mit Liste:** `checkExtensionsRequired:<liste>` trägt die fehlenden Extensions im Namen. Ändert sich die Liste, meldet der Monitor eine Erholung und einen neuen Fehler. Das ist richtig, aber zwei Meldungen statt einer.
