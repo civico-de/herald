@@ -68,8 +68,8 @@ abstract class CRM_Herald_Upgrader_Steps extends CRM_Herald_Upgrader_EarlySteps 
   }
 
   /**
-   * Formerly opened the profile as a standalone form; upgrade_1017 does that
-   * once the subscription rows exist.
+   * Formerly opened the self-service profile as a standalone form; the
+   * "My notifications" form replaces the profile.
    */
   public function upgrade_1016(): bool {
     return TRUE;
@@ -77,7 +77,7 @@ abstract class CRM_Herald_Upgrader_Steps extends CRM_Herald_Upgrader_EarlySteps 
 
   /**
    * The one preference record per contact becomes a subscription row and the
-   * group channel; the profile switches to them and the old group goes.
+   * group channel; the old group and the self-service profile go.
    */
   public function upgrade_1017(): bool {
     CRM_Herald_Upgrader_Reconcile::run();
@@ -91,7 +91,7 @@ abstract class CRM_Herald_Upgrader_Steps extends CRM_Herald_Upgrader_EarlySteps 
       );
     }
     CRM_Herald_Upgrader_SubscriptionRows::retire();
-    CRM_Herald_Upgrader_PreferencesProfile::ensure();
+    CRM_Herald_Upgrader_PreferencesProfile::remove();
     return TRUE;
   }
 

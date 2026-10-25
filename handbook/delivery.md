@@ -58,7 +58,7 @@ Saving a row checks it: a channel other than email needs a recipient, an entered
 
 ### Messages to groups
 
-A message to a group goes to its members whatever their topics; an admin decides who is in the group. Each contact chooses once how such messages reach them, in the fields "Messages to groups" on the contact summary:
+A message to a group goes to its members whatever their topics; an admin decides who is in the group. Each contact chooses once how such messages reach them, under "Messages to groups" on the contact's tab "Notifications":
 
 | Field | Meaning |
 |---|---|
@@ -69,13 +69,15 @@ Saving checks the recipient as for a subscription.
 
 ### Managing subscriptions
 
-Admins add and edit the rows on the contact's tab "Notification subscriptions". For self-service, herald installs the profile "My notifications". Look up its ID under Administer » Customize Data and Screens » Profiles, and send staff this link:
+Admins edit both on the contact's tab "Notifications": "Messages to groups" at the top, the subscriptions below, with "Add subscription" and a button to remove each row. One "Save" stores everything, and stores nothing while an entry has a problem. The tab needs the permission to edit the contact.
+
+For self-service, send staff this link to the form "My notifications":
 
 ```
-/civicrm/profile/edit?gid=<id>&reset=1
+/civicrm/herald/my-notifications
 ```
 
-The profile shows the logged-in contact's "Messages to groups" as a form, and below it lists their own rows, with "Add New Record" and links to view, edit and delete each; nobody reaches another contact's rows. Staff need the permissions "profile edit" and "access all custom data": without the latter, CiviCRM shows the profile without any of its fields.
+It is the same form for the logged-in contact, without the scope fields; nobody reaches another contact's entries. Staff need the permission "access CiviCRM".
 
 To use the subscriptions, set an action's delivery mode to "Subscribers" and choose the topic under "Subscribers of topic". The action's own recipient is ignored in this mode. Each subscriber's message goes through the channel they chose, with that channel's account, such as its bot. Only presentation options are passed from the rule; the action form lists them under "Advanced":
 
@@ -91,9 +93,9 @@ Contacts subscribe to [topics](#topics). A fresh install offers none. To offer o
 
 A topic that an entry in `herald_topics`, a rule action, a job or a waiting alert names in `subscribers_of` cannot stop offering itself. Neither can a topic that would then reach the subscribers that `default` names; to keep that, name them in the topic's own `subscribers_of`. Otherwise, when a topic stops offering itself, the subscriptions stay stored, but no delivery reaches them any more. A delivery to the subscribers of such a topic fails with "contacts cannot subscribe to the topic".
 
-![Notification subscriptions on a contact](images/contact-preferences.png)
+![The tab "Notifications" on a contact](images/contact-preferences.png)
 
-![The self-service profile](images/profile.png)
+![The self-service form](images/my-notifications.png)
 
 ### Scoped subscriptions
 
@@ -101,7 +103,7 @@ A subscription can be limited to one record, such as the event with ID 42. Pick 
 
 A rule says which record it is about with the field "Subscription scope entity" on the action "Herald: Send notification (generic)". The choices are Event, Membership and Participant, and herald takes the ID from the trigger. Event also works on participant triggers, through the participant's event.
 
-A subscription without a scope receives everything on its topics. A scoped row receives no notifications without a scope, such as contribution alerts, and no digests, because the digest action has no scope; the contact's other rows are not affected. The self-service profile does not include the scope fields, so admins set them on the contact.
+A subscription without a scope receives everything on its topics. A scoped row receives no notifications without a scope, such as contribution alerts, and no digests, because the digest action has no scope; the contact's other rows are not affected. The self-service form does not include the scope fields, so admins set them on the contact.
 
 ## Topics
 

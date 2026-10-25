@@ -61,7 +61,6 @@ class CRM_Herald_Upgrader_SubscriptionRowsTest extends TestCase implements Headl
     \Civi::settings()->set(Router::SETTING, $this->topics);
     SubscribableTopics::sync();
     LegacyPreferencesFixture::remove();
-    CRM_Herald_Upgrader_PreferencesProfile::ensure();
     parent::tearDown();
   }
 
@@ -150,6 +149,10 @@ class CRM_Herald_Upgrader_SubscriptionRowsTest extends TestCase implements Headl
       ['rows' => 2, 'group_channels' => 3, 'without_channel' => 1, 'unused' => ['pushover_user_key' => 1]],
       $counts,
     );
+    \Civi\Api4\UFGroup::create(checkPermissions: FALSE)
+      ->addValue('name', CRM_Herald_Upgrader_PreferencesProfile::NAME)
+      ->addValue('title', 'My notifications')
+      ->execute();
     self::upgrade();
 
     $this->assertEquals(
@@ -182,6 +185,13 @@ class CRM_Herald_Upgrader_SubscriptionRowsTest extends TestCase implements Headl
     $this->assertArrayNotHasKey($noChannel, $this->rows());
     $this->assertFalse(LegacyPreferences::pending());
     $this->assertSame([], $this->foreignProfileFields());
+    $this->assertSame(
+      0,
+      \Civi\Api4\UFGroup::get(checkPermissions: FALSE)
+        ->addWhere('name', '=', CRM_Herald_Upgrader_PreferencesProfile::NAME)
+        ->execute()
+        ->count(),
+    );
   }
 
   public function testAContactInTheTrashKeepsItsSubscription(): void {

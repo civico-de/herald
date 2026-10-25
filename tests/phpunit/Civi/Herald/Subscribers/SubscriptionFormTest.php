@@ -10,9 +10,9 @@ use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
- * The tab and the profile submit a row's fields under different element
- * names; each row and the group channel are checked on their own and the
- * error lands on its element.
+ * Core's custom data form names each record's fields apart; each row and
+ * the group channel are checked on their own and the error lands on its
+ * element.
  *
  * @group headless
  */
@@ -96,41 +96,32 @@ class SubscriptionFormTest extends TestCase implements HeadlessInterface, Transa
     );
   }
 
-  public function testTheProfileNamesFieldsWithoutARow(): void {
-    $fields = $this->fields(['channel' => 'ops_bot', 'recipient' => ' ', 'topics' => ['news' => 1]], '');
+  public function testANewGroupChannelIsChecked(): void {
+    $healthy = $this->fields(['channel' => 'ops_bot', 'recipient' => '111'], '_-1', $this->groupIds);
+    $this->assertSame([], self::validate('CRM_Contact_Form_CustomData', $healthy));
 
+    $fields = $this->fields(['channel' => 'ops_bot', 'recipient' => ''], '_-1', $this->groupIds);
     $this->assertSame(
-      ['custom_' . $this->ids['recipient']],
-      array_keys(self::validate('CRM_Profile_Form_Edit', $fields)),
+      ['custom_' . $this->groupIds['recipient'] . '_-1'],
+      array_keys(self::validate('CRM_Contact_Form_CustomData', $fields)),
     );
   }
 
-  public function testTheProfileChecksTheGroupChannelApartFromTheRow(): void {
-    $fields =
-      $this->fields(['channel' => 'ops_bot', 'recipient' => ''], '', $this->groupIds)
-      + $this->fields(['channel' => 'email', 'recipient' => '', 'topics' => ['news' => 1]], '');
-
-    $this->assertSame(
-      ['custom_' . $this->groupIds['recipient']],
-      array_keys(self::validate('CRM_Profile_Form_Edit', $fields)),
-    );
-  }
-
-  public function testTheInlineGroupChannelIsChecked(): void {
+  public function testTheGroupChannelIsCheckedOnItsTab(): void {
     $healthy = $this->fields(['channel' => 'ops_bot', 'recipient' => '111'], '_7', $this->groupIds);
-    $this->assertSame([], self::validate('CRM_Contact_Form_Inline_CustomData', $healthy));
+    $this->assertSame([], self::validate('CRM_Contact_Form_CustomData', $healthy));
 
     $fields = $this->fields(['channel' => 'ops_bot', 'recipient' => ''], '_7', $this->groupIds);
     $this->assertSame(
       ['custom_' . $this->groupIds['recipient'] . '_7'],
-      array_keys(self::validate('CRM_Contact_Form_Inline_CustomData', $fields)),
+      array_keys(self::validate('CRM_Contact_Form_CustomData', $fields)),
     );
   }
 
   public function testOtherFormsAreLeftAlone(): void {
-    $fields = $this->fields(['channel' => 'ops_bot', 'recipient' => '', 'topics' => []], '');
+    $fields = $this->fields(['channel' => 'ops_bot', 'recipient' => '', 'topics' => []], '_-1');
 
-    $this->assertSame([], self::validate('CRM_Event_Form_Participant', $fields));
+    $this->assertSame([], self::validate('CRM_Contact_Form_Contact', $fields));
   }
 
 }

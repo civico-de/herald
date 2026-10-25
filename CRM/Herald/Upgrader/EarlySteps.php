@@ -67,8 +67,8 @@ abstract class CRM_Herald_Upgrader_EarlySteps extends \CRM_Extension_Upgrader_Ba
   }
 
   /**
-   * Formerly created the self-service profile; upgrade_1017 does that on the
-   * subscription rows, which do not exist yet at this point.
+   * Formerly created the self-service profile; the "My notifications" form
+   * replaces it, and upgrade_1017 removes it.
    */
   public function upgrade_1009(): bool {
     return TRUE;

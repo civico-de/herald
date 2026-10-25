@@ -1,0 +1,19 @@
+<af-form ctrl="afform">
+  <af-entity type="Contact" name="Contact1" label="Contact" actions="{create: false, update: true}" security="RBAC" autofill="entity_id" />
+  <fieldset af-fieldset="Contact1" class="af-container">
+    <fieldset class="af-container" af-title="Messages to groups">
+      <af-field name="herald_group_delivery.channel" defn="{label: 'Channel'}" />
+      <af-field name="herald_group_delivery.recipient" defn="{label: 'Recipient'}" />
+    </fieldset>
+    <fieldset class="af-container" af-title="Subscriptions">
+      <div af-join="Custom_herald_subscription" actions="{update: true, delete: true}" af-repeat="Add subscription" class="af-container">
+        <af-field name="channel" defn="{label: 'Channel'}" />
+        <af-field name="recipient" defn="{label: 'Recipient'}" />
+        <af-field name="topics" defn="{label: 'Topics'}" />
+        <af-field name="source_entity_type" defn="{label: 'Scope: entity type'}" />
+        <af-field name="source_entity_id" defn="{label: 'Scope: entity ID'}" />
+      </div>
+    </fieldset>
+  </fieldset>
+  <button class="af-button btn btn-primary" crm-icon="fa-check" ng-click="afform.submit()">Save</button>
+</af-form>

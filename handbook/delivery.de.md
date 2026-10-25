@@ -58,7 +58,7 @@ Beim Speichern prüft herald die Zeile: Ein Kanal außer E-Mail braucht ein Ziel
 
 ### Nachrichten an Gruppen
 
-Eine Nachricht an eine Gruppe erreicht deren Mitglieder unabhängig von ihren Themen; wer in der Gruppe ist, entscheiden Admins. Wie solche Nachrichten ankommen, wählt jeder Kontakt einmal, in den Feldern „Nachrichten an Gruppen“ auf der Kontaktübersicht:
+Eine Nachricht an eine Gruppe erreicht deren Mitglieder unabhängig von ihren Themen; wer in der Gruppe ist, entscheiden Admins. Wie solche Nachrichten ankommen, wählt jeder Kontakt einmal, unter „Nachrichten an Gruppen“ im Tab „Benachrichtigungen“ des Kontakts:
 
 | Feld | Bedeutung |
 |---|---|
@@ -69,13 +69,15 @@ Beim Speichern prüft herald das Ziel wie bei einem Abo.
 
 ### Abos verwalten
 
-Admins legen die Zeilen im Tab „Benachrichtigungs-Abos“ des Kontakts an und bearbeiten sie dort. Zur Selbstverwaltung installiert herald das Profil „My notifications“ (meine Benachrichtigungen). Schlagen Sie seine ID unter Administrieren » Daten und Masken anpassen » Profile (englisch: Administer » Customize Data and Screens » Profiles) nach und schicken Sie den Mitarbeitenden diesen Link:
+Admins bearbeiten beides im Tab „Benachrichtigungen“ des Kontakts: oben „Nachrichten an Gruppen“, darunter die Abos, mit „Abo hinzufügen“ und einem Knopf zum Entfernen jeder Zeile. Ein „Speichern“ speichert alles, und nichts, solange ein Eintrag ein Problem hat. Der Tab setzt das Recht voraus, den Kontakt zu bearbeiten.
+
+Zur Selbstverwaltung schicken Sie den Mitarbeitenden diesen Link auf das Formular „Meine Benachrichtigungen“:
 
 ```
-/civicrm/profile/edit?gid=<id>&reset=1
+/civicrm/herald/my-notifications
 ```
 
-Das Profil zeigt die „Nachrichten an Gruppen“ des angemeldeten Kontakts als Formular und listet darunter seine eigenen Zeilen, mit „Add New Record“ (neuer Datensatz) und Links zum Ansehen, Bearbeiten und Löschen; die Zeilen anderer Kontakte erreicht niemand. Die Mitarbeitenden brauchen die Rechte „profile edit“ und „access all custom data“: Ohne das zweite zeigt CiviCRM das Profil ohne jedes seiner Felder.
+Es ist dasselbe Formular für den angemeldeten Kontakt, ohne die Bezugsfelder; die Einträge anderer Kontakte erreicht niemand. Die Mitarbeitenden brauchen das Recht „access CiviCRM“.
 
 Um die Abonnements zu nutzen, setzen Sie den Zustellmodus einer Aktion auf „Abonnent:innen“ und wählen das Thema unter „Abonnent:innen des Themas“. Das an der Aktion eingetragene Ziel wird in diesem Modus ignoriert. Die Nachricht an jede:n Abonnent:in geht über den Kanal, den die Person gewählt hat, mit dem Konto dieses Kanals, etwa seinem Bot. Von der Regel gelangen nur Darstellungsoptionen dorthin; das Aktionsformular führt sie unter „Erweitert“:
 
@@ -91,9 +93,9 @@ Kontakte abonnieren [Themen](#themen). Eine neue Installation bietet keines an. 
 
 Ein Thema, das ein Eintrag in `herald_topics`, eine Regelaktion, ein Job oder eine wartende Meldung in `subscribers_of` nennt, lässt sich nicht zurückziehen. Ebenso wenig ein Thema, das danach die Abonnent:innen erreichen würde, die `default` nennt; soll es das, nennen Sie diese in seinem eigenen `subscribers_of`. Sonst gilt: Bietet sich ein Thema nicht mehr an, bleiben die Abonnements gespeichert, aber keine Zustellung erreicht sie mehr. Eine Zustellung an die Abonnent:innen eines solchen Themas scheitert mit „contacts cannot subscribe to the topic“.
 
-![Benachrichtigungs-Abos an einem Kontakt](images/de/contact-preferences.png)
+![Der Tab „Benachrichtigungen“ an einem Kontakt](images/de/contact-preferences.png)
 
-![Das Profil zum Selbsteintragen](images/de/profile.png)
+![Das Formular zur Selbstverwaltung](images/de/my-notifications.png)
 
 ### Abos mit Bezug
 
@@ -101,7 +103,7 @@ Ein Abo lässt sich auf einen einzelnen Datensatz beschränken, etwa auf das Eve
 
 Auf welchen Datensatz sich eine Regel bezieht, legt das Feld „Abo-Bezug“ an der Aktion „Herald: Send notification (generic)“ fest. Zur Auswahl stehen Event, Mitgliedschaft und Teilnehmer:in, und herald übernimmt die ID aus dem Trigger. Event funktioniert auch bei Triggern auf Teilnahmen, über das Event der Teilnahme.
 
-Ein Abo ohne Bezug erhält alles zu seinen Themen. Eine Zeile mit Bezug erhält keine Benachrichtigungen ohne Bezug, etwa Beitragsmeldungen, und auch keine Reports, denn die Report-Aktion hat keinen Bezug; die übrigen Zeilen des Kontakts betrifft das nicht. Das Profil zur Selbstverwaltung enthält die Bezugsfelder nicht, Admins setzen sie also am Kontakt.
+Ein Abo ohne Bezug erhält alles zu seinen Themen. Eine Zeile mit Bezug erhält keine Benachrichtigungen ohne Bezug, etwa Beitragsmeldungen, und auch keine Reports, denn die Report-Aktion hat keinen Bezug; die übrigen Zeilen des Kontakts betrifft das nicht. Das Formular zur Selbstverwaltung enthält die Bezugsfelder nicht, Admins setzen sie also am Kontakt.
 
 ## Themen
 

@@ -8,38 +8,31 @@ use Civi\Herald\Api4\Rows;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * Checks subscription rows and the group channel on the contact screens and
- * the self-service profile against what their channel needs, so a bad entry
- * fails on save, not on send.
+ * Checks subscription rows and the group channel on core's custom data form,
+ * still reachable by URL behind the "Notifications" tab, against what their
+ * channel needs, so a bad entry fails on save, not on send.
  */
 final class SubscriptionForm {
 
-  private const FORMS = [
-    'CRM_Contact_Form_CustomData',
-    'CRM_Contact_Form_Inline_CustomData',
-    'CRM_Contact_Form_Contact',
-    'CRM_Profile_Form_Edit',
-  ];
-
   /**
-   * The tab names a row's elements custom_<field>_<row>, the profile custom_<field>.
+   * The form names an element custom_<field>_<record>, -1 for a new record.
    *
    * @param array<array-key, mixed> $fields
    * @param array<array-key, mixed> $errors
    */
   public static function validate(string $formName, array $fields, array &$errors): void {
-    if (!in_array($formName, self::FORMS, TRUE)) {
+    if ($formName !== 'CRM_Contact_Form_CustomData') {
       return;
     }
     $names = self::fieldNames();
     $records = [];
     foreach ($fields as $element => $value) {
-      if (preg_match('/^custom_(\d+)(_-?\d+)?$/', (string) $element, $match) !== 1) {
+      if (preg_match('/^custom_(\d+)(_-?\d+)$/', (string) $element, $match) !== 1) {
         continue;
       }
       [$group, $name] = $names[(int) $match[1]] ?? [NULL, NULL];
       if ($name !== NULL) {
-        $records[$group . ($match[2] ?? '')][$name] = [(string) $element, $value];
+        $records[$group . $match[2]][$name] = [(string) $element, $value];
       }
     }
     foreach ($records as $record) {

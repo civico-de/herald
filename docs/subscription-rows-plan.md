@@ -71,16 +71,9 @@ Kanalliste (Abonnenten pro Kanal, `ang/heraldAdmin/channels.js`) und Topic-Liste
 
 ## Selbstverwaltung
 
-Das Profil `herald_my_preferences` bleibt, mit den Feldern der neuen Gruppen statt der alten. Im Bearbeiten-Modus zeigt Core einzeilige Felder als Formular und mehrzeilige darunter als Liste (`CRM_Profile_Form::preProcess()`, `shiftMultiRecordFields()`), mit einem gemeinsamen Speichern-Knopf. Core-Profile können mehrzeilige Feldgruppen: Im Bearbeiten-Modus listen sie die Zeilen des Kontakts mit Ansehen, Bearbeiten und Löschen und bieten „Add New Record“ im Dialog an (`CRM_Profile_Page_MultipleRecordFieldsListing`, `multiRecord=add|update|delete` in `CRM_Profile_Form_Edit`). Der Link `/civicrm/profile/edit?gid=<id>&reset=1` bleibt damit gültig. Die Prüfung des Empfängers läuft über denselben Hook wie im Tab.
+Gruppenkanal und Abo-Zeilen stehen in einem Formular: dem Afform-Tab „Notifications“ am Kontakt (`afformHeraldNotifications`, `autofill="entity_id"`, RBAC) und derselben Form für den angemeldeten Kontakt unter `/civicrm/herald/my-notifications` (`afformHeraldMyNotifications`, `autofill="user"`, FBAC, ohne Bezugsfelder). Die Zeilen sind ein `af-join` mit `actions="{update: true, delete: true}"`; Afform speichert sie per APIv4 `replace`, eine entfernte Zeile wird gelöscht. Beide Gruppen haben den Stil „Tab“, `NotificationsForm` entfernt ihre Core-Tabs aus `civicrm/contact/view`; so steht „Nachrichten an Gruppen“ nicht mehr auf der Übersicht. Die Prüfung läuft in `civi.afform.validate` (`NotificationsRules`) mit denselben `SubscriptionRules` wie das Core-Formular `CRM_Contact_Form_CustomData`, das per URL erreichbar bleibt.
 
-Gemessen am 23.10.2026 im Dev-Stack mit einer mehrzeiligen Wegwerf-Gruppe (Kanal, Empfänger, Topics) und einem Nutzer mit „profile edit“, „edit my contact“, aber ohne „edit all contacts“:
-
-- `profile/edit?gid=<id>&reset=1` ohne `id` listet die eigenen Zeilen mit Ansehen, Bearbeiten, Löschen und „Add New Record“. Anlegen, Bearbeiten und Löschen eigener Zeilen funktionieren.
-- Die Liste zeigt nur Profilfelder mit `is_multi_summary`; ohne das Flag meldet sie „No records“, obwohl Zeilen bestehen. `PreferencesProfile::ensure()` setzt es.
-- Ohne „access all custom data“ zeigt das Profil keine benutzerdefinierten Felder, die Seite bleibt leer. Das gilt für das heutige Profil genauso; das Handbuch nennt das Recht bisher nicht.
-- Eine fremde `id` leitet auf die Startseite um. Eine fremde `recordId` mit eigener `id` findet die Zeile nicht („Record doesnot exist“, beim Speichern entstünde eine neue eigene Zeile), Löschen bietet keinen Knopf an. Fremde Zeilen sind also nicht erreichbar; die Seite wirft dabei PHP-Notices im Template, ein Core-Bug für `upstream-bugs.md`.
-
-Der Link im Handbuch bleibt `/civicrm/profile/edit?gid=<id>&reset=1`; ein fester Pfad bräuchte eine eigene Route für eine Seite, die Core schon hat.
+Das frühere Profil `herald_my_preferences` (Core-Profil mit mehrzeiliger Liste und „Add New Record“-Dialog) entfällt: zwei Bedienkonzepte für dieselben Daten, und es brauchte „profile edit“ und „access all custom data“. `upgrade_1017` löscht es samt Feldern und Join.
 
 ## Upgrade
 
@@ -89,7 +82,7 @@ Für jeden Kontakt mit einem Datensatz in `herald_preferences`, in SQL über die
 1. **Feldgruppe anlegen.** Die mgd-Datei deklariert `herald_subscription` neben `herald_preferences`; der Reconcile vor dem Upgrade-Schritt legt sie an.
 2. **Zeilen und Gruppenkanal schreiben.** Hat der Kontakt `preferred_channel`, werden Kanal und der Empfänger aus der Spalte des Kanaltyps sein Gruppenkanal in `herald_group_delivery`, damit der Gruppenmodus ihn weiter auf demselben Weg erreicht. Hat er außerdem mindestens ein Topic, wird eine Zeile: Kanal, Empfänger, die Topics, der Bezug.
 3. **Übrige Empfänger.** Werte in den Spalten anderer Typen als dem gewählten wurden bisher nie benutzt. Sie werden nicht übernommen; das Upgrade schreibt ihre Zahl pro Spalte ins Log (eine Zahl, keine Werte).
-4. **Alte Feldgruppe entfernen, Profil umstellen.** `SubscriptionRows::retire()` löscht die Profilfelder auf die alten Felder und dann `herald_preferences` samt Tabelle; danach legt `PreferencesProfile::ensure()` die Felder der neuen Gruppen im Profil an.
+4. **Alte Feldgruppe und Profil entfernen.** `SubscriptionRows::retire()` löscht die Profilfelder auf die alten Felder und dann `herald_preferences` samt Tabelle; danach löscht `PreferencesProfile::remove()` das Profil `herald_my_preferences`.
 5. **Zweiter Lauf.** Ein wiederholter Schritt legt nichts doppelt an: Er schreibt keine Zeile für Kontakte, die schon eine haben, und keinen Gruppenkanal für Kontakte, die schon einen haben.
 
 Bis zum Upgrade-Schritt lesen Lookup und Zählungen weiter `herald_preferences` als eine Zeile pro Kontakt (`LegacyPreferences`), damit zwischen dem Austausch des Codes und `cv updb` keine Meldung verloren geht. Der Schalter ist `LegacyPreferences::pending()`: ob die alte Feldgruppe noch existiert. Die Schema-Version taugt nicht, weil ein abgebrochener Schritt sie stehen lässt, die Gruppe aber schon weg sein kann. Solange sie existiert, deklariert die mgd-Datei sie weiter (`CRM_Herald_Upgrader_PreferencesGroup`), damit der Reconcile sie nicht vorzeitig löscht.
@@ -105,9 +98,10 @@ Die Migration liest auch Kontakte im Papierkorb: Wer wiederhergestellt wird, hat
 | `ContactRows`, `SubscriberLookup`, `GroupRecipients`, `SubscriptionScope` | Zeilen statt Kontakt, `RECIPIENT_FIELDS` weg |
 | `SubscribableTopics`, `channels.js` | Zählungen über die neue Gruppe |
 | `hook_civicrm_validateForm` (`SubscriptionForm`, `SubscriptionRules`) | Empfänger und Pflicht-Topics prüfen |
-| `CRM_Herald_Upgrader_PreferencesProfile` | Felder der neuen Gruppen |
+| `afformHeraldNotifications`, `afformHeraldMyNotifications`, `NotificationsForm`, `NotificationsRules` | ein Formular für Gruppenkanal und Zeilen, Core-Tabs ausgeblendet, Prüfung beim Absenden |
+| `CRM_Herald_Upgrader_PreferencesProfile` | altes Profil löschen |
 | Upgrade-Schritt | Migration wie oben, mit Tests (zweite Domain, zweiter Lauf, Kontakt ohne Topics, Kontakt mit Bezug) |
-| Handbuch | `delivery.md` (Subscribers, Scoped subscriptions, Group mode, nötiges Recht „access all custom data“ für das Profil), `deploy.md` (Upgrade), Screenshots |
+| Handbuch | `delivery.md` (Subscribers, Scoped subscriptions, Group mode, Tab „Notifications“ und Selbstverwaltungsformular), `deploy.md` (Upgrade), Screenshots |
 | Tour (`extension-tours`) | Tab mit zwei Zeilen, Profil mit Zeilenliste |
 
 ## Vor dem Bau messen

@@ -17,8 +17,8 @@ use CRM_Herald_ExtensionUtil as E;
  *   - Custom group `herald_group_delivery` on Contact: the channel and
  *     recipient for messages to the contact's groups.
  *
- * The self-service profile is not shipped here: its UFFields name custom
- * fields by id (CRM_Herald_Upgrader_PreferencesProfile).
+ * Both groups are tabs so the summary stays clear; the "Notifications" forms
+ * replace those tabs (NotificationsForm).
  */
 
 /**
@@ -199,7 +199,7 @@ $managed[] = [
       'name' => Subscriptions::GROUP_DELIVERY,
       'title' => E::ts('Messages to groups'),
       'extends' => 'Contact',
-      'style' => 'Inline',
+      'style' => 'Tab',
       'is_multiple' => FALSE,
       'collapse_display' => FALSE,
       'is_active' => TRUE,
