@@ -129,7 +129,7 @@ Für Updates heißt das:
   - `hush_until` = NULL. Mit einem abgelaufenen Datum würde die Meldung wieder sichtbar.
   - Besteht schon eine Preference für den Namen, wird sie überschrieben.
 - **Nicht die ganze Methode:** Die Methode `checkExtensions` darf pulse nicht abschalten, sonst gehen auch `checkExtensionsRequired` und `checkExtensionsError` verloren.
-- **Nur zusammen:** Ausblenden und Ersatz gehören zusammen. Die Preference existiert genau dann, wenn der Update-Check von pulse aktiv ist, also nicht mit `pulse_updates_min_severity = off`. Beim Abschalten des Checks und beim Deaktivieren oder Deinstallieren von pulse verschwindet sie. Sonst meldet niemand mehr Extension-Updates.
+- **Nur zusammen:** Ausblenden und Ersatz gehören zusammen. Die Preference existiert genau dann, wenn der Update-Check von pulse aktiv ist, also nicht mit `pulse_updates_min_severity = off`. Beim Abschalten des Checks und beim Deinstallieren von pulse verschwindet sie, beim Deaktivieren gibt sie die Meldung frei. Sonst meldet niemand mehr Extension-Updates.
 - **Mechanismus:** eine Managed Entity für `StatusPreference`, die das `.mgd.php` nur deklariert, wenn `pulse_updates_min_severity` nicht `off` ist. Parameter: `match: [domain_id, name]`, `update: always`, `cleanup: always`, und in `values` ausdrücklich `is_active: TRUE`. Ein `post_change`-Callback der Einstellung ruft `Managed.reconcile` für pulse auf. `on_change` taugt dafür nicht, es läuft vor dem Speichern und sähe den alten Wert. Im Stack geprüft (6.19.2), Sichtbarkeit jeweils über `CRM_Utils_Check_Message::isVisible()`:
 
   | Schritt | Preference | Core-Meldung |
@@ -137,9 +137,11 @@ Für Updates heißt das:
   | pulse aktivieren, eine Admin-Preference besteht | übernommen und überschrieben (`ignore_severity` 3, `hush_until` NULL) | stumm |
   | Einstellung `off` | gelöscht | sichtbar |
   | Einstellung wieder `warning` | neu angelegt | stumm |
-  | pulse deaktivieren | `is_active` 0, `ignore_severity` 0 | sichtbar |
+  | pulse deaktivieren | `is_active` 0; `ignore_severity` 0 setzt `pulse_civicrm_disable` | sichtbar |
   | pulse wieder aktivieren | `ignore_severity` 3, `is_active` 1 | stumm |
   | pulse deinstallieren | gelöscht | sichtbar |
+
+  Beim Deaktivieren schreibt Core nur `is_active` 0, und die Sichtbarkeit wertet `is_active` nicht aus. Dass im Stack trotzdem `ignore_severity` 0 stand, lag an einem Core-Fehler: Ein Update ohne `ignore_severity` setzte den Wert zurück (civicrm-core PR 37698). Deshalb setzt pulse den Wert beim Deaktivieren selbst auf 0.
 
   Ohne `is_active: TRUE` in `values` bleibt die Preference nach Deaktivieren und Aktivieren auf `is_active` 0 stehen. Für einen Namen, der keine Check-Methode ist, wertet Core `is_active` nicht aus, sauber ist es trotzdem. `post_change` vergleicht alten und neuen Wert mit `!=`: Eine Boolean-Einstellung mit Standard `TRUE`, die nie gespeichert war, löst beim ersten Setzen auf `FALSE` keinen Callback aus (`0 == NULL`). Die String-Einstellung von pulse ist davon nicht betroffen.
 - **Core-Updates:** Updates von CiviCRM selbst (`checkVersion_*`) bleiben Core-Meldungen. Es gibt nur ein Core, da braucht es keine einzelnen Punkte, und Core stuft Sicherheitsupdates selbst höher ein.
