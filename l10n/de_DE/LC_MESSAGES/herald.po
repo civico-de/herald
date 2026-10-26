@@ -2750,16 +2750,12 @@ msgid "Check keys"
 msgstr "Check-Schlüssel"
 
 #: ang/heraldAdmin/monitor.html
-msgid "Every key the status checks report now, and every key the monitor still tracks."
-msgstr "Jeder Schlüssel, den die Statusprüfungen gerade melden, und jeder Schlüssel, den der Monitor noch verfolgt."
+msgid "Every key the status checks report now, and every key the monitor still tracks. A message hidden on the status page is muted in the monitor as well."
+msgstr "Jeder Schlüssel, den die Statusprüfungen gerade melden, und jeder Schlüssel, den der Monitor noch verfolgt. Eine auf der Statusseite ausgeblendete Meldung ist auch im Monitor stummgeschaltet."
 
 #: ang/heraldAdmin/monitor.html
-msgid "Hide a message on the status page"
-msgstr "Blenden Sie eine Meldung auf der Statusseite aus,"
-
-#: ang/heraldAdmin/monitor.html
-msgid "to mute it there and in the monitor."
-msgstr "um sie dort und im Monitor stummzuschalten."
+msgid "Open the status page"
+msgstr "Statusseite öffnen"
 
 #: ang/heraldAdmin/monitor.html
 msgid "Check key"

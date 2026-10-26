@@ -8,10 +8,9 @@
   <form name="monitorForm" ng-if="$ctrl.loaded" ng-submit="$ctrl.save(monitorForm)" novalidate>
     <h2>{{:: $ctrl.ts('Check keys') }}</h2>
     <p>
-      {{:: $ctrl.ts('Every key the status checks report now, and every key the monitor still tracks.') }}
-      <a ng-href="{{ $ctrl.statusUrl }}">{{:: $ctrl.ts('Hide a message on the status page') }}</a>
-      {{:: $ctrl.ts('to mute it there and in the monitor.') }}
+      {{:: $ctrl.ts('Every key the status checks report now, and every key the monitor still tracks. A message hidden on the status page is muted in the monitor as well.') }}
     </p>
+    <p><a ng-href="{{ $ctrl.statusUrl }}">{{:: $ctrl.ts('Open the status page') }}</a></p>
     <table class="display" ng-if="$ctrl.checks.length">
       <caption class="sr-only">{{:: $ctrl.ts('Check keys') }}</caption>
       <thead>
@@ -55,8 +54,9 @@
       </div>
       <p class="crm-af-field-help-post" id="herald-min-severity-help">{{:: $ctrl.ts('Notice is the lowest level: info and debug messages report healthy states.') }}</p>
     </div>
+    <h3>{{:: $ctrl.ts('Exceptions for single keys or prefixes') }}</h3>
     <table class="display" ng-if="$ctrl.exceptions.length">
-      <caption>{{:: $ctrl.ts('Exceptions for single keys or prefixes') }}</caption>
+      <caption class="sr-only">{{:: $ctrl.ts('Exceptions for single keys or prefixes') }}</caption>
       <thead>
         <tr>
           <th scope="col">{{:: $ctrl.ts('Check key or prefix*') }}</th>
