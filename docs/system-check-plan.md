@@ -27,7 +27,7 @@ Extensions liefern Checks nur noch über `hook_civicrm_check`, und der Monitor b
 | Liste der Checks | `hook_civicrm_heraldChecks` | `hook_civicrm_check` (Core) |
 | Ergebnis | `ok`, `fail` oder `skipped` und ein Detailtext | Core-Meldung mit Name, Stufe, Titel und HTML-Text |
 | Granularität | ein herald-Check fasst oft mehrere Meldungen zusammen | eine Meldung ist ein Check |
-| ganzen Check stummschalten | `herald_monitor_snooze` | Core-`StatusPreference` (Statusseite) |
+| ganzen Check stummschalten | `herald_monitor_snooze` | Core-`StatusPreference` (Statusseite und herald) oder `herald_monitor_snooze` (nur herald) |
 | einzelnen Punkt stummschalten | nur in pulse | im Check, der die Punkte kennt |
 | Statusseite | nur Checks, die beide Hooks haben | alle Checks |
 
@@ -82,21 +82,26 @@ Der Collector ruft `System.check` ohne Filter auf. Jede Meldung wird eine Beobac
 
 Ein Name, der im gespeicherten Zustand steht, aber in diesem Lauf keine Meldung liefert, gilt als ok. So meldet der Monitor die Erholung von Checks, die im gesunden Zustand schweigen. Zustand führt herald nur für Namen, die schon einmal gescheitert sind.
 
+**Schlüssel und Detail.** Manche Namen tragen hinter einem Doppelpunkt ein Detail, das sich ändern kann, ohne dass es ein anderer Befund wird. Core baut so `checkExtensionsRequired:<fehlende Extensions>`. herald teilt jeden Namen am ersten `:`. Der Teil davor ist der Schlüssel, der Rest das Detail; ein Name ohne Doppelpunkt ist sein eigener Schlüssel. Zustand, Schwellen und Stummschalten hängen am Schlüssel. Ändert sich nur das Detail eines gemeldeten Fehlers, geht eine Meldung „geändert“ mit dem neuen Inhalt raus statt einer Entwarnung und eines neuen Fehlers. Liefert ein Lauf mehrere Meldungen mit demselben Schlüssel, zählt die höchste Stufe, und das Detail ist die sortierte Liste ihrer Details.
+
+Den Meldungstext vergleicht herald nicht. Texte wie der von `checkLastCron` enthalten Zeitangaben, das ergäbe in jedem Lauf eine Meldung.
+
 Wird eine Extension deinstalliert oder eine Check-Methode über `is_active = 0` abgeschaltet, kommt höchstens eine Entwarnung für ihre offenen Fehler. Das ist hinnehmbar.
 
 **Regeln für die eigenen Extensions:**
 
 - **Nicht prüfen können ist ein Fehler.** Ein Check, der nicht prüfen konnte, liefert eine Meldung auf Stufe error („konnte nicht prüfen: …“). Er schweigt nicht und verschluckt keine Exception. warden verschluckt heute Exceptions einzelner Prüfungen (`Civi/Warden/StatusCheck.php`) und wird dabei umgestellt.
+- **Befund vor dem Doppelpunkt.** Was den Befund benennt, steht im Namen vor dem Doppelpunkt, was sich an ihm ändert, dahinter. Eine ID, die einen eigenen Befund bezeichnet, bleibt Teil des Schlüssels (`warden_discovery_<id>`).
 - **Letztes Ergebnis behalten.** Hängt ein Check von einem Abruf ab, etwa dem Extension-Feed, liefert er bei einem gescheiterten Abruf das letzte bekannte Ergebnis weiter, unter demselben Namen. Den gescheiterten Abruf meldet er als eigene Meldung. Sonst würde ein Ausfall des Abrufs einen offenen Fehler als erholt melden.
 
 Core-Checks halten sich nicht an diese Regeln. Fällt ein Abruf von Core aus, kann eine Meldung verschwinden. Der Monitor meldet dann eine Erholung und später denselben Fehler neu. Das sind zwei überflüssige Meldungen pro Ausfall, das ist hinnehmbar. Die wichtigste Meldung dieser Art, `checkExtensionsUpdates`, ersetzt ohnehin pulse (Abschnitt 4).
 
-Die Zustandsmaschine (`TransitionPlanner`) bleibt, mit einer Erweiterung: **Eine sichtbare Eskalation wird sofort gemeldet.** Steigt die Stufe eines schon gemeldeten Fehlers, etwa von warning auf error, und ist die Meldung sichtbar (`is_visible = 1`), geht eine Meldung raus, ohne auf die Erinnerung zu warten. Eine stummgeschaltete Meldung bleibt auch bei steigender Stufe still, solange Core sie verbirgt. Dafür merkt sich der Zustand die zuletzt gemeldete Stufe.
+Die Zustandsmaschine (`TransitionPlanner`) bleibt, mit einer Erweiterung: **Eine sichtbare Eskalation oder Änderung wird sofort gemeldet.** Steigt die Stufe eines schon gemeldeten Fehlers, etwa von warning auf error, oder ändert sich sein Detail, und ist die Meldung sichtbar (`is_visible = 1`), geht eine Meldung raus, ohne auf die Erinnerung zu warten. Eine stummgeschaltete Meldung bleibt still, solange Core sie verbirgt oder herald sie stummschaltet (Abschnitt 3). Dafür merkt sich der Zustand Stufe und Detail der letzten Meldung; verglichen wird immer mit diesen.
 
 ### 2. Schwelle
 
 - `herald_monitor_min_severity`: globale Schwelle, Standard `warning`.
-- `herald_monitor_severity`: Ausnahmen als Map Name → Stufe. Ein `*` am Ende passt auf ein Präfix, weil manche Namen eine ID tragen (`warden_discovery_<id>`, `sunset_stuck_<policy>`). Der längste passende Eintrag gewinnt.
+- `herald_monitor_severity`: Ausnahmen als Map Schlüssel → Stufe (Abschnitt 1). Ein `*` am Ende passt auf ein Präfix, weil manche Namen eine ID tragen (`warden_discovery_<id>`, `sunset_stuck_<policy>`). Der längste passende Eintrag gewinnt.
 
 Die niedrigste erlaubte Schwelle ist `notice`. Meldungen auf info und debug zeigen gesunde Zustände an („PHP Up-to-Date“), lassen sich nicht stummschalten und wären sonst Dauerfehler. Beim Speichern lehnt herald niedrigere Werte ab.
 
@@ -104,9 +109,12 @@ Heute gelten die Schwellen pro Extension: warden ab error, outpost, shuttle, sig
 
 ### 3. Ganze Checks stummschalten
 
-Das macht Core. Eine Meldung mit `is_visible = 0` behandelt herald wie heute einen Check mit Snooze: Der Zustand wechselt, aber ohne Meldung. Läuft das Stummschalten ab, wird der Fehler gemeldet. Eine Erholung nach einem nie gemeldeten Fehler bleibt still. Eine Erholung nach einem gemeldeten Fehler wird auch dann gemeldet, wenn der Check inzwischen stummgeschaltet ist. Die Entwarnung schließt die Meldung, die schon draußen ist.
+Es gibt zwei Ebenen:
 
-`herald_monitor_snooze` fällt weg. Stummgeschaltet wird dann an einem Ort, auf der Statusseite.
+- **Core (Statusseite und herald):** Eine `StatusPreference` blendet die Meldung auf der Statusseite aus, `System.check` liefert sie mit `is_visible = 0`.
+- **Nur herald:** `herald_monitor_snooze` schaltet einen Namen nur für den Monitor stumm. Die Statusseite zeigt die Meldung weiter. Die Einstellung bleibt, verwendet aber die Schlüssel der Core-Namen: Schlüssel → Datum, ohne Datum dauerhaft. Ein Snooze gilt also für jedes Detail. Ein `*` am Ende passt auf ein Präfix wie in Abschnitt 2. Abgelaufene Einträge räumt der Lauf weg.
+
+Für herald ist eine Meldung stumm, wenn eine der beiden Ebenen sie stummschaltet. Dann wechselt der Zustand, aber ohne Meldung. Läuft das Stummschalten ab, wird der Fehler gemeldet. Eine Erholung nach einem nie gemeldeten Fehler bleibt still. Eine Erholung nach einem gemeldeten Fehler wird auch dann gemeldet, wenn der Check inzwischen stummgeschaltet ist. Die Entwarnung schließt die Meldung, die schon draußen ist.
 
 ### 4. Einzelne Punkte stummschalten
 
@@ -121,7 +129,19 @@ Für Updates heißt das:
   - `hush_until` = NULL. Mit einem abgelaufenen Datum würde die Meldung wieder sichtbar.
   - Besteht schon eine Preference für den Namen, wird sie überschrieben.
 - **Nicht die ganze Methode:** Die Methode `checkExtensions` darf pulse nicht abschalten, sonst gehen auch `checkExtensionsRequired` und `checkExtensionsError` verloren.
-- **Nur zusammen:** Ausblenden und Ersatz gehören zusammen. Die Preference existiert genau dann, wenn der Update-Check von pulse aktiv ist, also nicht mit `pulse_updates_min_severity = off`. Beim Abschalten des Checks und beim Deaktivieren oder Deinstallieren von pulse verschwindet sie. Sonst meldet niemand mehr Extension-Updates. Den Mechanismus legt der Umbau fest, naheliegend ist eine Managed Entity, die nur bei aktivem Check deklariert ist.
+- **Nur zusammen:** Ausblenden und Ersatz gehören zusammen. Die Preference existiert genau dann, wenn der Update-Check von pulse aktiv ist, also nicht mit `pulse_updates_min_severity = off`. Beim Abschalten des Checks und beim Deaktivieren oder Deinstallieren von pulse verschwindet sie. Sonst meldet niemand mehr Extension-Updates.
+- **Mechanismus:** eine Managed Entity für `StatusPreference`, die das `.mgd.php` nur deklariert, wenn `pulse_updates_min_severity` nicht `off` ist. Parameter: `match: [domain_id, name]`, `update: always`, `cleanup: always`, und in `values` ausdrücklich `is_active: TRUE`. Ein `post_change`-Callback der Einstellung ruft `Managed.reconcile` für pulse auf. `on_change` taugt dafür nicht, es läuft vor dem Speichern und sähe den alten Wert. Im Stack geprüft (6.19.2), Sichtbarkeit jeweils über `CRM_Utils_Check_Message::isVisible()`:
+
+  | Schritt | Preference | Core-Meldung |
+  |---|---|---|
+  | pulse aktivieren, eine Admin-Preference besteht | übernommen und überschrieben (`ignore_severity` 3, `hush_until` NULL) | stumm |
+  | Einstellung `off` | gelöscht | sichtbar |
+  | Einstellung wieder `warning` | neu angelegt | stumm |
+  | pulse deaktivieren | `is_active` 0, `ignore_severity` 0 | sichtbar |
+  | pulse wieder aktivieren | `ignore_severity` 3, `is_active` 1 | stumm |
+  | pulse deinstallieren | gelöscht | sichtbar |
+
+  Ohne `is_active: TRUE` in `values` bleibt die Preference nach Deaktivieren und Aktivieren auf `is_active` 0 stehen. Für einen Namen, der keine Check-Methode ist, wertet Core `is_active` nicht aus, sauber ist es trotzdem. `post_change` vergleicht alten und neuen Wert mit `!=`: Eine Boolean-Einstellung mit Standard `TRUE`, die nie gespeichert war, löst beim ersten Setzen auf `FALSE` keinen Callback aus (`0 == NULL`). Die String-Einstellung von pulse ist davon nicht betroffen.
 - **Core-Updates:** Updates von CiviCRM selbst (`checkVersion_*`) bleiben Core-Meldungen. Es gibt nur ein Core, da braucht es keine einzelnen Punkte, und Core stuft Sicherheitsupdates selbst höher ein.
 
 ### 5. Sprache
@@ -146,23 +166,23 @@ Den Titel der Meldung führt der Planner als eigenes Feld mit. Die Vorlage `hera
 
 Beim ersten Lauf mit der neuen Quelle gilt jeder bestehende Fehler als neu und geht als Meldung raus. Auf einer gewachsenen Seite können das ein Dutzend längst bekannter Warnungen sein.
 
-Die API-Action `Herald.monitorPreview` zeigt deshalb, welche Namen der nächste Lauf melden würde, mit Stufe und Titel. Sie sendet nichts und schreibt keinen Monitor-Zustand. `System.check` selbst kann schreiben: `checkLastCron` legt zum Beispiel eine `StatusPreference` an. Das ist Core-Verhalten und harmlos.
+Die API-Action `Herald.monitorPreview` zeigt deshalb, welche Schlüssel der nächste Lauf melden würde, mit Detail, Stufe und Titel. Sie sendet nichts und schreibt keinen Monitor-Zustand. `System.check` selbst kann schreiben: `checkLastCron` legt zum Beispiel eine `StatusPreference` an. Das ist Core-Verhalten und harmlos.
 
-Der Betreiber schaltet bekannte Warnungen auf der Statusseite stumm und aktiviert erst danach die neue Version.
+Der Betreiber schaltet bekannte Warnungen auf der Statusseite oder nur in herald stumm und aktiviert erst danach die neue Version.
 
 ### 9. Upgrade
 
 Ein Upgrade-Schritt von herald:
 
 - **Zustand:** `herald_monitor_state` wird geleert. Die alten Namen (`pulse.updates`, `signet.config`) gibt es nicht mehr. Ohne das Leeren kämen Entwarnungen für Checks, die nur umbenannt wurden.
-- **Snoozes:** `herald_monitor_snooze` wird gelöscht. Alte Snoozes lassen sich nicht übertragen, weil die Namen nicht zueinander passen. Die Vorschau zeigt, was stattdessen auf der Statusseite stummzuschalten ist.
+- **Snoozes:** `herald_monitor_snooze` wird geleert. Alte Snoozes lassen sich nicht übertragen, weil die Namen nicht zueinander passen. Die Vorschau zeigt die neuen Namen, unter denen neu stummgeschaltet wird.
 - **Erwartete Checks:** Die alten Namen in `herald_monitor_expected` werden in Extension-Schlüssel übersetzt. Dafür gibt es eine feste Tabelle der bekannten Präfixe: `pulse.` → `pulse`, `matomo.` → `matomo`, `warden.` → `warden` und so weiter für die neun Extensions. Ein unbekanntes Präfix wird unverändert als Extension-Schlüssel übernommen. Ist es keine installierte Extension, meldet der Monitor es als fehlend. Der Eintrag fällt also nicht still weg, und der Betreiber korrigiert ihn sichtbar.
 
 Ablauf auf einer Seite:
 
 1. Den Job „Herald: Run check monitor“ deaktivieren.
 2. herald, pulse, sentinel, matomo, signet und warden gemeinsam aktualisieren, danach die übrigen Extensions.
-3. `Herald.monitorPreview` ausführen und bekannte Warnungen auf der Statusseite stummschalten.
+3. `Herald.monitorPreview` ausführen und bekannte Warnungen auf der Statusseite oder nur in herald stummschalten.
 4. Den Job wieder aktivieren.
 
 Ohne Schritt 1 kann der Monitor zwischen Upgrade und Vorschau mit leerem Zustand alle bestehenden Fehler melden.
@@ -171,17 +191,15 @@ Ohne Schritt 1 kann der Monitor zwischen Upgrade und Vorschau mit leerem Zustand
 
 Die Monitor-Seite von herald bearbeitet heute Check-Namen und Snoozes. Betroffen sind `Civi/Herald/Admin/MonitorChecks.php`, `MonitorSettings.php`, die Actions `getMonitorChecks`/`saveMonitorChecks` und `ang/heraldAdmin/monitor.js`. Künftig zeigt sie:
 
-- die Namen, die `System.check` liefert, und die Namen im Zustand, mit Stufe, Sichtbarkeit und Monitor-Zustand;
+- die Schlüssel, die `System.check` liefert, und die Schlüssel im Zustand, mit Detail, Stufe, Sichtbarkeit und Monitor-Zustand;
 - die Schwelle und die Ausnahmen (Abschnitt 2);
+- das Stummschalten nur in herald pro Schlüssel oder Präfix, mit Datum oder dauerhaft (Abschnitt 3);
 - die erwarteten Extensions;
-- einen Link auf die Statusseite zum Stummschalten.
-
-Das Bearbeiten von Snoozes entfällt.
+- einen Link auf die Statusseite zum Stummschalten in Core.
 
 ## Was wegfällt
 
 - `hook_civicrm_heraldChecks`, ohne Übergangsweg;
-- `herald_monitor_snooze`;
 - die Adapter in neun Extensions und die Einträge `known_hooks: heraldChecks` in deren `civikitchen.yaml`;
 - `pulse.system`, das ist `System.check` selbst;
 - `pulse.cron` im Monitor. Der Monitor läuft im Cron, er kann einen stehenden Cron nicht melden. Diese Aufgabe hat der Endpunkt von pulse, der den Check weiter nutzt. `checkLastCron` von Core ist kein Ersatz: Es läuft nur in der Umgebung `Production` und kennt keine einstellbare Grenze.
@@ -202,7 +220,7 @@ Mit dem Code ändern sich auch die Doku-Stellen:
 | matomo | `matomo.reachable`, nur im Monitor | als Core-Check; macht einen HTTP-Aufruf, daher Ergebnis cachen, sonst kostet jeder Aufruf der Statusseite eine Anfrage an Matomo |
 | signet | `signet.config`, `signet.queue`, `signet.jobs` | Adapter löschen; die Queue-Tiefe (über 500) als eigene Core-Meldung |
 | warden | `warden.config` ab error, dazu `warden.provider.<name>` mit JWKS-Abruf | Adapter löschen; JWKS-Abruf und Schlüsselprüfung als Core-Meldungen; Ausnahme `warden_*: error`; verschluckte Exceptions als error-Meldung (Abschnitt 1) |
-| outpost, shuttle, sunset | Adapter fasst eigene Core-Meldungen zusammen | Adapter löschen |
+| outpost, shuttle, sunset | Adapter fasst eigene Core-Meldungen zusammen | Adapter löschen; shuttle prüft Profil-Maschinennamen auf `^[a-z0-9_]+$` wie sunset, damit kein Name einen Doppelpunkt trägt (Abschnitt 1) |
 | flare, logpolicy, mailrouter | nur über `pulse.system` ab critical | nichts zu tun |
 
 Dazu kommen die Tests, die die Adapter direkt aufrufen. Etwa `sentinel/tests/phpunit/Civi/Sentinel/HeraldChecksHeadlessTest.php`, `pulse/tests/phpunit/CRM/Pulse/Check/ChecksHeadlessTest.php`, `shuttle/tests/phpunit/DemoScenarioHeadlessTest.php` und `warden/tests/phpunit/Civi/Warden/StatusCheckHeadlessTest.php`. Sie prüfen künftig die Core-Meldungen.
@@ -215,7 +233,12 @@ Jede Extension bekommt einen Release. Bis eine Extension umgestellt ist, fehlen 
 - **Gesund mit info-Meldungen:** „PHP Up-to-Date“ und andere info-Meldungen erzeugen auch bei der niedrigsten Schwelle keinen Fehler.
 - Eine Meldung oberhalb der Schwelle führt zu fail. Ihr Verschwinden führt zu ok.
 - Eine stummgeschaltete Meldung (`is_visible = 0`) ändert den Zustand ohne Meldung.
+- Ein Snooze nur in herald (Name, Präfix, dauerhaft) ändert den Zustand ohne Meldung; `System.check` liefert die Meldung weiter sichtbar.
 - Eine sichtbare Eskalation von warning auf error bei gemeldetem Fehler meldet sofort. Eine stummgeschaltete meldet nicht.
+- **Gesund mit Detail:** Ein gemeldeter Fehler mit gleichem Namen erzeugt über mehrere Läufe keine weitere Meldung, auch wenn sich sein Meldungstext ändert.
+- Ändert sich das Detail eines gemeldeten Fehlers (`checkExtensionsRequired:a` → `checkExtensionsRequired:a,b`), geht genau eine Meldung „geändert“ raus, keine Entwarnung. Stummgeschaltet geht keine raus.
+- Zwei Meldungen mit demselben Schlüssel ergeben die höchste Stufe und dasselbe Detail, unabhängig von ihrer Reihenfolge.
+- Ein Snooze auf `checkExtensionsRequired` gilt für jedes Detail.
 - pulse: Scheitert der Abruf des Extension-Feeds, bleibt die Update-Meldung mit dem letzten Ergebnis stehen, und der Abruf wird gesondert gemeldet.
 - pulse: Die `StatusPreference` für `checkExtensionsUpdates` existiert genau dann, wenn der Update-Check aktiv ist.
 - Präfix-Ausnahme: `warden_*: error` lässt eine warning von warden still.
@@ -228,5 +251,3 @@ Jede Extension bekommt einen Release. Bis eine Extension umgestellt ist, fehlen 
 ## Offene Fragen
 
 - **Statusseite:** Wie teuer werden die Statusseite und der Status-Indikator in der Menüleiste, wenn mehr Extensions Core-Checks liefern? Kosten entstehen durch sentinel-Regeln (APIv4-Zählungen), signet (startet typst) und matomo (HTTP).
-- **Ausblenden per Managed Entity:** Lässt sich die `StatusPreference` für `checkExtensionsUpdates` als Managed Entity ausliefern, die nur bei aktivem Check deklariert ist (Abschnitt 4)?
-- **Name mit Liste:** `checkExtensionsRequired:<liste>` trägt die fehlenden Extensions im Namen. Ändert sich die Liste, meldet der Monitor eine Erholung und einen neuen Fehler. Das ist richtig, aber zwei Meldungen statt einer.
