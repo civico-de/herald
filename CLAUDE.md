@@ -9,10 +9,17 @@ them in step with code changes.
 Lint, phpat and the contract tests enforce most structure. These are the rules
 they cannot see:
 
-- **Scope:** herald is transport and monitor, not a source of checks. Other
-  extensions contribute via `hook_civicrm_heraldChecks` and
-  `hook_civicrm_heraldDigestSections`. The monitor publishes only ok↔fail
-  transitions.
+- **Scope:** herald is transport and monitor, not a source of checks. The
+  monitor reads core's `System.check`; extensions contribute checks via
+  `hook_civicrm_check` and digest sections via
+  `hook_civicrm_heraldDigestSections`. A check message name is
+  `<key>` or `<key>:<detail>`; the monitor never compares message texts.
+  herald's own checks (`herald_buffer_*`) are core checks too.
+- **Monitor:** it publishes ok↔fail transitions, plus a visible escalation or
+  detail change of a reported failure. A check muted in core (`is_visible=0`)
+  or in `herald_monitor_snooze` changes state silently (a key's hidden messages
+  count only when all its failing ones are hidden); a reported failure still
+  failing when muting ends is announced again, and its recovery is always sent. `Herald.monitorPreview` sends and writes nothing.
 - **Channels:** `getConfigSchema()` is the only list of a channel's keys, and
   `getSemanticFields()` maps `subject`/`format` onto them. Never hardcode a
   per-channel key name: a rendered subject travels as `ChannelSubject::KEY`

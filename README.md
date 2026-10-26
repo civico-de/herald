@@ -2,7 +2,7 @@
 
 herald is a CiviCRM extension that sends notifications and digests. CiviRules rules, scheduled jobs, other extensions and scripts hand it a message or a template. herald renders it and delivers it to Telegram, a webhook such as Slack or Discord, ntfy, Pushover, email or an assigned CiviCRM activity.
 
-It ships templates for contributions, ticket sales, events, memberships and group signups. It adds CiviRules actions to send notifications and digests, a trigger that fires at a set hour on chosen weekdays, and a condition that compares a field before and after an edit. Notifications can go to one recipient, to subscribed contacts on their own channels, to a group or to a list of addresses, and bursts can be collected into one message. A check monitor reports when the health checks of your extensions start failing and when they recover.
+It ships templates for contributions, ticket sales, events, memberships and group signups. It adds CiviRules actions to send notifications and digests, a trigger that fires at a set hour on chosen weekdays, and a condition that compares a field before and after an edit. Notifications can go to one recipient, to subscribed contacts on their own channels, to a group or to a list of addresses, and bursts can be collected into one message. A check monitor reports when the checks of the CiviCRM status page start failing, get worse and recover.
 
 Documentation: https://civico-de.github.io/herald/
 
@@ -85,7 +85,7 @@ cv api4 Herald.publish topic=ops message='Import finished'
 - [Channels](https://civico-de.github.io/herald/channels/): named channels, the options and limits of each type
 - [Delivery](https://civico-de.github.io/herald/delivery/): recipients, subscriptions, topics, aggregation and parked alerts
 - [Digests](https://civico-de.github.io/herald/digests/): templates filled from SearchKit displays and extension sections
-- [Check monitor](https://civico-de.github.io/herald/monitor/): contributing health checks and tuning the alerts
+- [Check monitor](https://civico-de.github.io/herald/monitor/): status checks as alerts, threshold, muting and upgrading
 - [Reference](https://civico-de.github.io/herald/reference/): CiviRules actions and conditions, API, jobs, templates, settings and hooks
 - [Deployment](https://civico-de.github.io/herald/deploy/): updating herald without breaking the writes its rules run in
 

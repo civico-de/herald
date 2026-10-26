@@ -58,23 +58,60 @@ class TemplateRendererTest extends TestCase implements HeadlessInterface, HookIn
   }
 
   /**
-   * Check names and details are plain text; Telegram (parse_mode=HTML) rejects
-   * the whole message on a stray "<" or "&".
+   * Check keys, titles and texts are plain text; Telegram (parse_mode=HTML)
+   * rejects the whole message on a stray "<" or "&".
    */
   public function testHtmlBodyEscapesPlainTextVarsAndKeepsTemplateMarkup(): void {
     $parts = $this->renderer->renderParts('herald_monitor_alert', [
       'check' => 'a&b<c>',
       'status' => 'fail',
-      'detail' => 'backup failed: <lock/1311aa4feb> & 1 > 0',
+      'title' => 'Backup <offsite>',
+      'detail' => 'lock',
+      'text' => 'backup failed: <lock/1311aa4feb> & 1 > 0',
+      'severity' => 'Error',
       'renotify' => FALSE,
     ]);
 
-    $this->assertStringContainsString('Check <b>a&amp;b&lt;c&gt;</b> failed', $parts['body']);
-    $this->assertStringContainsString(': backup failed: &lt;lock/1311aa4feb&gt; &amp; 1 &gt; 0', $parts['body']);
+    $this->assertStringContainsString('Check <b>a&amp;b&lt;c&gt;</b> failed (Error)', $parts['body']);
+    $this->assertStringContainsString(
+      "\nBackup &lt;offsite&gt;\nbackup failed: &lt;lock/1311aa4feb&gt; &amp; 1 &gt; 0",
+      $parts['body'],
+    );
     preg_match_all('#</?([a-zA-Z][^\s>]*)#', $parts['body'], $tags);
     $this->assertSame(['b', 'b'], $tags[1], 'only template markup remains as tags');
     // The subject is plain text (email header), not HTML.
-    $this->assertStringContainsString('a&b<c>', (string) $parts['subject']);
+    $this->assertStringContainsString('Backup <offsite>', (string) $parts['subject']);
+  }
+
+  public function testMonitorAlertNamesEachTransition(): void {
+    $vars = [
+      'check' => 'disk',
+      'title' => 'Disk',
+      'detail' => '/var',
+      'text' => 'full',
+      'severity' => 'Critical',
+      'renotify' => FALSE,
+    ];
+    $changed = $this->renderer->renderParts('herald_monitor_alert', ['status' => 'changed'] + $vars);
+    $this->assertStringContainsString('Check <b>disk</b> changed (Critical)', $changed['body']);
+    $this->assertStringStartsWith('🟠 Disk', (string) $changed['subject']);
+
+    $ok = $this->renderer->renderParts('herald_monitor_alert', ['status' => 'ok'] + $vars);
+    $this->assertStringContainsString('Check <b>disk</b> ok again', $ok['body']);
+    $this->assertStringNotContainsString('full', $ok['body'], 'a recovery carries no stale message text');
+    $this->assertStringNotContainsString('Critical', $ok['body']);
+
+    $renotify = $this->renderer->renderParts('herald_monitor_alert', [
+      'status' => 'fail',
+      'renotify' => TRUE,
+      'title' => '',
+    ] + $vars);
+    $this->assertStringContainsString('still failing', $renotify['body']);
+    $this->assertStringStartsWith(
+      '⏰ disk',
+      (string) $renotify['subject'],
+      'without a title the subject names the key',
+    );
   }
 
   public function testNestedVarsAreEscapedAndNonStringsKept(): void {

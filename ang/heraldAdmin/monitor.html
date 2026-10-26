@@ -2,55 +2,140 @@
   <h1 crm-page-title>{{:: $ctrl.ts('Monitor checks') }}</h1>
   <p><a href="#/">{{:: $ctrl.ts('Herald administration') }}</a></p>
   <p>
-    {{:: $ctrl.ts('Extensions contribute these checks; the monitor job reports when one starts failing or recovers. An expected check that disappears counts as failing. A snoozed check sends no failure alerts until the time set.') }}
+    {{:: $ctrl.ts('The monitor job reads the system status checks and reports when a check key starts failing, changes or recovers. A message from the threshold level up counts as failing.') }}
   </p>
   <div ng-include="'~/heraldAdmin/messages.html'"></div>
   <form name="monitorForm" ng-if="$ctrl.loaded" ng-submit="$ctrl.save(monitorForm)" novalidate>
-    <table class="display" ng-if="$ctrl.rows.length">
-      <caption class="sr-only">{{:: $ctrl.ts('Monitor checks') }}</caption>
+    <h2>{{:: $ctrl.ts('Check keys') }}</h2>
+    <p>
+      {{:: $ctrl.ts('Every key the status checks report now, and every key the monitor still tracks.') }}
+      <a ng-href="{{ $ctrl.statusUrl }}">{{:: $ctrl.ts('Hide a message on the status page') }}</a>
+      {{:: $ctrl.ts('to mute it there and in the monitor.') }}
+    </p>
+    <table class="display" ng-if="$ctrl.checks.length">
+      <caption class="sr-only">{{:: $ctrl.ts('Check keys') }}</caption>
       <thead>
         <tr>
-          <th scope="col">{{:: $ctrl.ts('Check') }}</th>
-          <th scope="col">{{:: $ctrl.ts('Last reported status') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Check key') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Detail') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Level') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Threshold') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Status page') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Snoozed in herald') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Monitor state') }}</th>
           <th scope="col">{{:: $ctrl.ts('Failed / ok runs in a row') }}</th>
           <th scope="col">{{:: $ctrl.ts('Last failure alert') }}</th>
-          <th scope="col">{{:: $ctrl.ts('Expected') }}</th>
-          <th scope="col">{{:: $ctrl.ts('Snoozed until') }}</th>
         </tr>
       </thead>
       <tbody>
-        <tr ng-repeat="row in $ctrl.rows">
+        <tr ng-repeat="row in $ctrl.checks">
           <th scope="row">
-            <code>{{ row.name }}</code>
-            <span ng-if="!row.provided" class="description"><br />{{:: $ctrl.ts('not offered by any enabled extension') }}</span>
+            <code>{{ row.key }}</code>
+            <span ng-if="row.title"><br />{{ row.title }}</span>
           </th>
-          <td>{{ $ctrl.statusText(row) }}</td>
+          <td>{{ row.detail }}</td>
+          <td>{{ row.severity_label }}</td>
+          <td>{{ row.threshold }}</td>
+          <td>{{ $ctrl.visibleText(row) }}</td>
+          <td>{{ row.snoozed ? $ctrl.ts('Yes') : $ctrl.ts('No') }}</td>
+          <td>{{ $ctrl.monitorText(row) }}</td>
           <td>{{ row.status ? row.consecutive_fails + ' / ' + row.consecutive_oks : '' }}</td>
           <td>{{ row.lastNotifiedDate ? (row.lastNotifiedDate | date:'medium') : '' }}</td>
+        </tr>
+      </tbody>
+    </table>
+    <p ng-if="!$ctrl.checks.length">{{:: $ctrl.ts('The status checks report nothing, and the monitor tracks no key.') }}</p>
+
+    <h2>{{:: $ctrl.ts('Threshold') }}</h2>
+    <div class="form-group">
+      <label class="crm-af-field-label" for="herald-min-severity">{{:: $ctrl.ts('Report messages from this level up') }}</label>
+      <div class="crm-af-field">
+        <select id="herald-min-severity" class="form-control" ng-model="$ctrl.minSeverity" aria-describedby="herald-min-severity-help"
+          ng-options="level.name as level.label for level in $ctrl.levels"></select>
+      </div>
+      <p class="crm-af-field-help-post" id="herald-min-severity-help">{{:: $ctrl.ts('Notice is the lowest level: info and debug messages report healthy states.') }}</p>
+    </div>
+    <table class="display" ng-if="$ctrl.exceptions.length">
+      <caption>{{:: $ctrl.ts('Exceptions for single keys or prefixes') }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{:: $ctrl.ts('Check key or prefix*') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Report from') }}</th>
+          <th scope="col"><span class="sr-only">{{:: $ctrl.ts('Actions') }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="row in $ctrl.exceptions">
           <td>
-            <input type="checkbox" id="herald-expected-{{ $index }}" ng-model="row.expected" />
-            <label for="herald-expected-{{ $index }}"><span class="sr-only">{{ row.name }}: </span>{{:: $ctrl.ts('Expected') }}</label>
+            <label class="sr-only" for="herald-exception-pattern-{{ $index }}">{{ $ctrl.ts('Check key or prefix of exception %1', {1: $index + 1}) }}</label>
+            <input type="text" class="form-control" id="herald-exception-pattern-{{ $index }}" ng-model="row.pattern" />
           </td>
           <td>
-            <label class="sr-only" for="herald-snooze-{{ $index }}">{{ $ctrl.ts('Snooze %1 until', {1: row.name}) }}</label>
-            <input type="datetime-local" class="form-control" id="herald-snooze-{{ $index }}" name="snooze{{ $index }}" ng-model="row.snoozeInput" />
-            <button type="button" class="btn btn-xs btn-secondary" ng-if="row.snoozeInput" ng-click="$ctrl.clearSnooze(row, $index)">
-              {{:: $ctrl.ts('Clear') }}<span class="sr-only"> {{ $ctrl.ts('snooze of %1', {1: row.name}) }}</span>
+            <label class="sr-only" for="herald-exception-level-{{ $index }}">{{ $ctrl.ts('Level of %1', {1: row.pattern || ($index + 1)}) }}</label>
+            <select class="form-control" id="herald-exception-level-{{ $index }}" ng-model="row.level"
+              ng-options="level.name as level.label for level in $ctrl.levels"></select>
+          </td>
+          <td>
+            <button type="button" class="btn btn-xs btn-secondary" ng-click="$ctrl.remove($ctrl.exceptions, $index, row.pattern, 'herald-exception-add')">
+              {{:: $ctrl.ts('Remove') }}<span class="sr-only"> {{ $ctrl.ts('exception %1', {1: row.pattern || ($index + 1)}) }}</span>
             </button>
           </td>
         </tr>
       </tbody>
     </table>
-    <p ng-if="!$ctrl.rows.length">{{:: $ctrl.ts('No extension offers a check, and none is expected.') }}</p>
-    <div class="form-group">
-      <label class="crm-af-field-label" for="herald-expected-new">{{:: $ctrl.ts('Expect another check by name') }}</label>
-      <div class="crm-af-field input-group">
-        <input type="text" class="form-control" id="herald-expected-new" ng-model="$ctrl.newName" aria-describedby="herald-expected-new-help" />
-        <span class="input-group-btn"><button type="button" class="btn btn-secondary" ng-click="$ctrl.addExpected()">{{:: $ctrl.ts('Add') }}</button></span>
-      </div>
-      <p class="crm-af-field-help-post" id="herald-expected-new-help">{{:: $ctrl.ts('For a check whose extension is not enabled yet.') }}</p>
-    </div>
+    <p><button type="button" id="herald-exception-add" class="btn btn-secondary" ng-click="$ctrl.addException()">{{:: $ctrl.ts('Add exception') }}</button></p>
+    <p class="crm-af-field-help-post">{{:: $ctrl.ts('A key ending in * matches every key with that prefix, such as warden_*. The longest matching entry wins.') }}</p>
+
+    <h2>{{:: $ctrl.ts('Snoozed in herald only') }}</h2>
+    <p>{{:: $ctrl.ts('A snoozed key sends no failure alerts and no reminders, for every detail. The status page keeps showing it. A recovery is still sent for a failure that was reported.') }}</p>
+    <table class="display" ng-if="$ctrl.snoozes.length">
+      <caption class="sr-only">{{:: $ctrl.ts('Snoozed in herald only') }}</caption>
+      <thead>
+        <tr>
+          <th scope="col">{{:: $ctrl.ts('Check key or prefix*') }}</th>
+          <th scope="col">{{:: $ctrl.ts('Snoozed until') }}</th>
+          <th scope="col">{{:: $ctrl.ts('No end') }}</th>
+          <th scope="col"><span class="sr-only">{{:: $ctrl.ts('Actions') }}</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr ng-repeat="row in $ctrl.snoozes">
+          <td>
+            <label class="sr-only" for="herald-snooze-pattern-{{ $index }}">{{ $ctrl.ts('Check key or prefix of snooze %1', {1: $index + 1}) }}</label>
+            <input type="text" class="form-control" id="herald-snooze-pattern-{{ $index }}" ng-model="row.pattern" />
+          </td>
+          <td>
+            <label class="sr-only" for="herald-snooze-until-{{ $index }}">{{ $ctrl.ts('Snooze %1 until', {1: row.pattern || ($index + 1)}) }}</label>
+            <input type="datetime-local" class="form-control" id="herald-snooze-until-{{ $index }}" name="snooze{{ $index }}" ng-model="row.input" ng-disabled="row.permanent" />
+          </td>
+          <td>
+            <input type="checkbox" id="herald-snooze-permanent-{{ $index }}" ng-model="row.permanent" />
+            <label for="herald-snooze-permanent-{{ $index }}"><span class="sr-only">{{ row.pattern }}: </span>{{:: $ctrl.ts('No end') }}</label>
+          </td>
+          <td>
+            <button type="button" class="btn btn-xs btn-secondary" ng-click="$ctrl.remove($ctrl.snoozes, $index, row.pattern, 'herald-snooze-add')">
+              {{:: $ctrl.ts('Remove') }}<span class="sr-only"> {{ $ctrl.ts('snooze of %1', {1: row.pattern || ($index + 1)}) }}</span>
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p><button type="button" id="herald-snooze-add" class="btn btn-secondary" ng-click="$ctrl.addSnooze()">{{:: $ctrl.ts('Add snooze') }}</button></p>
     <p class="crm-af-field-help-post">{{:: $ctrl.ts('Times are shown and entered in the time zone of this browser.') }}</p>
+
+    <h2>{{:: $ctrl.ts('Expected extensions') }}</h2>
+    <p>{{:: $ctrl.ts('An expected extension that is not installed and enabled is reported as the failing check herald_expected_ followed by its key.') }}</p>
+    <ul class="herald-admin-plain" ng-if="$ctrl.expected.length">
+      <li ng-repeat="row in $ctrl.expected">
+        <label class="sr-only" for="herald-expected-{{ $index }}">{{ $ctrl.ts('Extension key %1', {1: $index + 1}) }}</label>
+        <input type="text" class="form-control" id="herald-expected-{{ $index }}" ng-model="row.key" />
+        <button type="button" class="btn btn-xs btn-secondary" ng-click="$ctrl.remove($ctrl.expected, $index, row.key, 'herald-expected-add')">
+          {{:: $ctrl.ts('Remove') }}<span class="sr-only"> {{ row.key || ($index + 1) }}</span>
+        </button>
+      </li>
+    </ul>
+    <p><button type="button" id="herald-expected-add" class="btn btn-secondary" ng-click="$ctrl.addExpected()">{{:: $ctrl.ts('Add expected extension') }}</button></p>
+
     <button type="submit" class="btn btn-primary" ng-disabled="$ctrl.saving">{{:: $ctrl.ts('Save') }}</button>
   </form>
 </div>

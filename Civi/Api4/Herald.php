@@ -32,6 +32,9 @@ namespace Civi\Api4;
  *   cv api4 Herald.saveTopic / deleteTopic / saveCleanedFields / saveAllowedHosts
  *   cv api4 Herald.getMonitorChecks / saveMonitorChecks
  *
+ * Check monitor — what the next run would announce, without sending:
+ *   cv api4 Herald.monitorPreview
+ *
  * Diagnostics:
  *   cv api4 Herald.renderTemplate — render a workflow template with sample vars
  *   cv api4 Herald.getTopicUsage  — the rules, jobs and monitor naming each topic
@@ -162,6 +165,11 @@ class Herald extends \Civi\Api4\Generic\AbstractEntity {
 
   public static function saveMonitorChecks(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\SaveMonitorChecks {
     return (new \Civi\Herald\Api4\Action\SaveMonitorChecks(__CLASS__, 'saveMonitorChecks'))
+      ->setCheckPermissions($checkPermissions);
+  }
+
+  public static function monitorPreview(bool $checkPermissions = TRUE): \Civi\Herald\Api4\Action\MonitorPreview {
+    return (new \Civi\Herald\Api4\Action\MonitorPreview(__CLASS__, 'monitorPreview'))
       ->setCheckPermissions($checkPermissions);
   }
 

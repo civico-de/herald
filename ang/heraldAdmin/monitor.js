@@ -36,82 +36,118 @@
       ctrl.ts = ts;
       ctrl.errors = [];
       ctrl.status = "";
-      ctrl.newName = "";
 
-      ctrl.statusText = (row) => {
+      const focus = (id) => $timeout(() => document.getElementById(id).focus());
+
+      ctrl.monitorText = (row) => {
         if (row.status === "fail") {
-          return ts("Failing");
+          return row.notified ? ts("Failing, reported") : ts("Failing, muted");
         }
-        return row.status === "ok" ? ts("OK") : ts("Not observed yet");
+        return row.failing ? ts("Failing, not reported yet") : ts("OK");
       };
 
-      const toRow = (row) =>
-        Object.assign({}, row, {
-          snoozeInput: row.snoozed_until_ts ? new Date(row.snoozed_until_ts * 1000) : null,
-          lastNotifiedDate: row.last_notified ? new Date(row.last_notified * 1000) : null,
-        });
+      ctrl.visibleText = (row) => {
+        if (row.visible === null) {
+          return ts("No message");
+        }
+        return row.visible ? ts("Shown") : ts("Hidden");
+      };
+
+      const toSnooze = (row) => ({
+        pattern: row.pattern,
+        until: row.until,
+        untilTs: row.until_ts,
+        permanent: row.until === "",
+        input: row.until_ts ? new Date(row.until_ts * 1000) : null,
+      });
 
       const load = () =>
         crmApi4("Herald", "getMonitorChecks")
-          .then((rows) => {
-            ctrl.rows = rows.map(toRow);
+          .then((result) => {
+            const screen = result[0];
+            ctrl.checks = screen.checks.map((row) =>
+              Object.assign({}, row, {
+                lastNotifiedDate: row.last_notified ? new Date(row.last_notified * 1000) : null,
+              }),
+            );
+            ctrl.levels = screen.levels;
+            ctrl.statusUrl = screen.status_url;
+            ctrl.minSeverity = screen.min_severity;
+            ctrl.exceptions = Object.keys(screen.severity).map((pattern) => ({
+              pattern: pattern,
+              level: screen.severity[pattern],
+            }));
+            ctrl.snoozes = screen.snooze.map(toSnooze);
+            ctrl.expected = screen.expected.map((key) => ({ key: key }));
             ctrl.loaded = true;
-            return ctrl.rows;
+            return ctrl.checks;
           })
           .catch((failure) => {
             ctrl.errors = heraldAdmin.errorList(failure);
           });
 
-      ctrl.clearSnooze = (row, index) => {
-        row.snoozeInput = null;
-        ctrl.status = ts('Snooze of "%1" cleared; save to apply.', { 1: row.name });
-        $timeout(() => document.getElementById("herald-snooze-" + index).focus());
+      ctrl.addException = () => {
+        ctrl.exceptions.push({ pattern: "", level: "error" });
+        ctrl.status = ts("Exception added; enter its key and save to apply.");
+        focus("herald-exception-pattern-" + (ctrl.exceptions.length - 1));
+      };
+
+      ctrl.addSnooze = () => {
+        ctrl.snoozes.push({ pattern: "", until: "", untilTs: null, permanent: false, input: null });
+        ctrl.status = ts("Snooze added; enter its key and save to apply.");
+        focus("herald-snooze-pattern-" + (ctrl.snoozes.length - 1));
       };
 
       ctrl.addExpected = () => {
-        const name = ctrl.newName.trim();
-        if (name === "") {
-          ctrl.errors = [ts("Enter the name of the check to expect.")];
-          return;
-        }
-        const existing = ctrl.rows.find((row) => row.name === name);
-        if (existing) {
-          existing.expected = true;
-        } else {
-          ctrl.rows.push(
-            toRow({ name: name, provided: false, expected: true, status: "", snoozed_until: "" }),
-          );
-        }
-        ctrl.errors = [];
-        ctrl.newName = "";
-        ctrl.status = ts('"%1" is marked as expected; save to apply.', { 1: name });
+        ctrl.expected.push({ key: "" });
+        ctrl.status = ts("Expected extension added; enter its key and save to apply.");
+        focus("herald-expected-" + (ctrl.expected.length - 1));
       };
 
-      ctrl.save = (form) => {
-        if (form.$invalid) {
-          ctrl.errors = [ts("Enter each snooze as a complete date and time, or clear it.")];
-          return;
-        }
-        const expected = ctrl.rows.filter((row) => row.expected).map((row) => row.name);
-        const snooze = {};
-        ctrl.rows.forEach((row) => {
-          if (!row.snoozeInput) {
+      // Focus moves to the add button of the list, which always exists.
+      ctrl.remove = (list, index, label, addButtonId) => {
+        list.splice(index, 1);
+        ctrl.status = ts('"%1" removed; save to apply.', { 1: label || ts("Empty row") });
+        focus(addButtonId);
+      };
+
+      const snoozeMap = () => {
+        const map = {};
+        ctrl.snoozes.forEach((row) => {
+          if (row.permanent) {
+            map[row.pattern] = "";
             return;
           }
           // An untouched snooze goes back as stored.
-          const unchanged =
-            row.snoozed_until_ts && row.snoozeInput.getTime() === row.snoozed_until_ts * 1000;
-          snooze[row.name] = unchanged ? row.snoozed_until : isoLocal(row.snoozeInput);
+          const unchanged = row.untilTs && row.input.getTime() === row.untilTs * 1000;
+          map[row.pattern] = unchanged ? row.until : isoLocal(row.input);
+        });
+        return map;
+      };
+
+      ctrl.save = (form) => {
+        if (form.$invalid || ctrl.snoozes.some((row) => !row.permanent && !row.input)) {
+          ctrl.errors = [ts("Enter each snooze end as a complete date and time, or tick No end.")];
+          return;
+        }
+        const severity = {};
+        ctrl.exceptions.forEach((row) => {
+          severity[row.pattern] = row.level;
         });
         ctrl.saving = true;
         crmStatus(
-          { start: ts("Saving..."), success: ts("Monitor checks saved.") },
-          crmApi4("Herald", "saveMonitorChecks", { expected: expected, snooze: snooze }),
+          { start: ts("Saving..."), success: ts("Monitor settings saved.") },
+          crmApi4("Herald", "saveMonitorChecks", {
+            minSeverity: ctrl.minSeverity,
+            severity: severity,
+            snooze: snoozeMap(),
+            expected: ctrl.expected.map((row) => row.key.trim()),
+          }),
         )
           .then(() => {
             ctrl.saving = false;
             ctrl.errors = [];
-            ctrl.status = ts("Monitor checks saved.");
+            ctrl.status = ts("Monitor settings saved.");
             return load();
           })
           .catch((failure) => {

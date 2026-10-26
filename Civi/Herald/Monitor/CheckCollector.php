@@ -4,99 +4,120 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Monitor;
 
-use Civi\Core\Event\GenericHookEvent;
-use CRM_Herald_ExtensionUtil as E;
+use Civi\Herald\Channel\PlainText;
+use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * Collects hook_civicrm_heraldChecks observations; an expected check that is
- * not offered becomes a failure of its own.
+ * Turns core's status messages into one observation per check key, plus a
+ * failing pseudo-check for each expected extension that is not enabled.
+ *
+ * @phpstan-type Message array{key: string, detail: string, severity: int, title: string, text: string, visible: bool}
+ * @phpstan-type ObservationArray array{status: string, severity: int, detail: list<string>, title: string, text: string, visible: bool}
  */
-class CheckCollector {
+final class CheckCollector {
 
   /**
-   * @return array<string, array{status: string, detail: string}> Observations by check name.
+   * @var \Closure(): list<array<array-key, mixed>>
    */
-  public function observe(): array {
-    $observations = array_map($this->observeOne(...), $this->checks());
-    $this->addMissingExpected($observations);
+  private \Closure $source;
 
+  /**
+   * @param (\Closure(): list<array<array-key, mixed>>)|null $source System.check rows; core's by default.
+   */
+  public function __construct(?\Closure $source = NULL) {
+    $this->source = $source ?? SystemCheck::messages(...);
+  }
+
+  /**
+   * Reads and translates in the site language.
+   *
+   * @return array<string, ObservationArray> Observations by check key.
+   */
+  public function observe(Threshold $threshold): array {
+    return SystemCheck::inSiteLocale(fn (): array => $this->collect($threshold));
+  }
+
+  /**
+   * @return array<string, ObservationArray>
+   */
+  private function collect(Threshold $threshold): array {
+    $byKey = [];
+    foreach (($this->source)() as $row) {
+      $message = self::message($row);
+      $byKey[$message['key']][] = $message;
+    }
+    $observations = [];
+    foreach ($byKey as $key => $messages) {
+      $observations[(string) $key] = self::merge((string) $key, $messages, $threshold);
+    }
+    $observations = ExpectedExtensions::observations() + $observations;
+    ksort($observations, SORT_STRING);
     return $observations;
   }
 
   /**
-   * Names of the checks the hook offers, without running any of them.
+   * A name splits at its first colon into the key and the detail.
    *
-   * @return list<string>
+   * @return array{0: string, 1: string}
    */
-  public function names(): array {
-    return array_map('strval', array_keys($this->checks()));
+  public static function split(string $name): array {
+    $parts = explode(':', $name, 2);
+    return [$parts[0], $parts[1] ?? ''];
   }
 
   /**
-   * @return array<string, callable>
+   * @param array<array-key, mixed> $row
+   * @return Message
    */
-  private function checks(): array {
-    $checks = [];
-    foreach ($this->contributedChecks() as $name => $check) {
-      if (!is_string($name) || !is_callable($check)) {
-        continue;
-      }
-      $checks[$name] = $check;
-    }
-    return $checks;
+  private static function message(array $row): array {
+    [$key, $detail] = self::split(Cast::toString($row['name'] ?? NULL));
+    return [
+      'key' => $key,
+      'detail' => $detail,
+      'severity' => Cast::toInt($row['severity_id'] ?? NULL),
+      'title' => Cast::toString($row['title'] ?? NULL),
+      'text' => PlainText::fromHtml(Cast::toString($row['message'] ?? NULL)),
+      'visible' => !empty($row['is_visible']),
+    ];
   }
 
   /**
-   * Nothing enforces name => callable on hook implementors, hence the loose type.
+   * Highest severity, sorted details; independent of the order core reports
+   * them in. Hidden messages count only when core hides every failing one.
    *
-   * @return array<array-key, mixed>
+   * @param non-empty-list<Message> $messages
+   * @return ObservationArray
    */
-  private function contributedChecks(): array {
-    /** @var array<array-key, mixed> $checks */
-    $checks = [];
-    \Civi::dispatcher()->dispatch('hook_civicrm_heraldChecks', GenericHookEvent::create(['checks' => &$checks]));
+  private static function merge(string $key, array $messages, Threshold $threshold): array {
+    $failing = array_filter($messages, static fn (array $m): bool => $threshold->fails($key, $m['severity']));
+    $visibleFailing = array_filter($failing, static fn (array $m): bool => $m['visible']);
+    $basis = $visibleFailing !== [] ? array_filter($messages, static fn (array $m): bool => $m['visible']) : $messages;
+    usort(
+      $basis,
+      static fn (array $a, array $b): int => (
+        [$b['severity'], $a['detail'], $a['title'], $a['text']] <=> [
+          $a['severity'],
+          $b['detail'],
+          $b['title'],
+          $b['text'],
+        ]
+      ),
+    );
+    $details = array_values(array_unique(array_filter(array_column($basis, 'detail'), self::notEmpty(...))));
+    sort($details, SORT_STRING);
 
-    return is_array($checks) ? $checks : [];
+    return [
+      'status' => $failing !== [] ? 'fail' : 'ok',
+      'severity' => $basis[0]['severity'],
+      'detail' => $details,
+      'title' => $basis[0]['title'],
+      'text' => implode("\n\n", array_unique(array_filter(array_column($basis, 'text'), self::notEmpty(...)))),
+      'visible' => $failing !== [] ? $visibleFailing !== [] : in_array(TRUE, array_column($messages, 'visible'), TRUE),
+    ];
   }
 
-  /**
-   * A throwing callable counts as a fail.
-   *
-   * @return array{status: string, detail: string}
-   */
-  private function observeOne(callable $callable): array {
-    try {
-      $r = $callable();
-      // 'skipped' (check disabled by config) is not an outage.
-      $status = is_array($r) ? $r['status'] ?? NULL : NULL;
-
-      return [
-        'status' => in_array($status, ['ok', 'skipped'], TRUE) ? 'ok' : 'fail',
-        'detail' => is_array($r) && is_scalar($r['detail'] ?? NULL) ? (string) $r['detail'] : '',
-      ];
-    }
-    catch (\Throwable $e) {
-      return ['status' => 'fail', 'detail' => $e->getMessage()];
-    }
-  }
-
-  /**
-   * An expected check the hook does not offer means its extension is probably disabled.
-   *
-   * @param array<string, array{status: string, detail: string}> $observations
-   */
-  private function addMissingExpected(array &$observations): void {
-    $expected = \Civi::settings()->get('herald_monitor_expected');
-    foreach (is_array($expected) ? $expected : [] as $name) {
-      if (!(is_string($name) && !isset($observations[$name]))) {
-        continue;
-      }
-
-      $observations[$name] = [
-        'status' => 'fail',
-        'detail' => E::ts('check missing — extension disabled?'),
-      ];
-    }
+  private static function notEmpty(string $value): bool {
+    return $value !== '';
   }
 
 }

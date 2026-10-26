@@ -53,7 +53,7 @@ final class AdminScreens extends AutoService implements HookInterface {
       'herald_topics' => E::ts('Where each topic is delivered.'),
       'herald_cleaning' => E::ts('Rules that turn free text into clean groups for searches and notifications.'),
       'herald_hosts' => E::ts('Which hosts the webhook channel may call.'),
-      'herald_monitor' => E::ts('Expected checks and snoozes.'),
+      'herald_monitor' => E::ts('Check keys, threshold, snoozes and expected extensions.'),
       'herald_test' => E::ts('Send a message through a channel or a topic.'),
       'herald_preview' => E::ts('Render a herald template with sample values.'),
       'herald_digests' => E::ts('Summaries from searches and sections, sent on a schedule.'),

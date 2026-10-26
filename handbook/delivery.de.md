@@ -175,7 +175,7 @@ Die Liste zeigt für jede Meldung die ID, den Grund des Parkens, die Anzahl der 
 
 Für wieder aktivierte Meldungen beginnt die Zählung der Versuche von vorn. Sie behalten die Parameter, die beim Puffern gespeichert wurden. Eine Korrektur an der Regel oder am Thema korrigiert daher kein falsches Ziel, das an der Aktion eingetragen war. Empfänger:innen von Abonnements und Gruppen werden bei der Zustellung neu ermittelt, eine Korrektur an den Einstellungen eines Kontakts hilft also.
 
-Der Check-Monitor meldet geparkte Meldungen und einen hängenden Puffer, siehe [Eingebaute Checks](monitor.md#eingebaute-checks).
+Die Systemstatus-Seite, und mit ihr der Check-Monitor, meldet geparkte Meldungen und einen hängenden Puffer, siehe [Eingebaute Checks](monitor.md#eingebaute-checks).
 
 Wenn Sie herald deinstallieren, wird die Puffertabelle samt geparkter Meldungen gelöscht. Beim Deaktivieren von herald bleibt sie erhalten.
 

@@ -155,7 +155,7 @@ class AdminScreensTest extends AdminTestCase {
       $sections[$setting['settings_pages']['herald']['section'] ?? 'default'][] = $name;
     }
     $this->assertSame(['herald_contact_email_channel', 'herald_monitor_topic'], $sections['default']);
-    $this->assertCount(5, $sections['advanced']);
+    $this->assertCount(6, $sections['advanced']);
   }
 
   public function testTheParkedAlertsDisplayOffersOnlyReactivation(): void {

@@ -131,8 +131,9 @@ The entity `Herald` offers these actions. The actions need the permission "admin
 | getTopicUsage | none | Lists the rule actions, jobs and the monitor that name each topic. |
 | saveCleanedFields | fields | Validates and stores `herald_cleaned_fields`. Errors name the field and the rule. |
 | saveAllowedHosts | hosts | Validates and stores `herald_webhook_allowed_hosts`. Blank entries are skipped. |
-| getMonitorChecks | none | Lists every offered, expected, snoozed or tracked check with its stored state, without details and without running the checks. |
-| saveMonitorChecks | expected, snooze | Validates and stores `herald_monitor_expected` and `herald_monitor_snooze`. A snooze must end in the future unless it is unchanged. |
+| getMonitorChecks | none | Returns the monitor screen as one record: every key System.check reports or the monitor tracks, with title, detail, severity, visibility and stored state, plus the threshold, snooze and expected settings. Runs System.check, returns no message text and writes nothing. |
+| saveMonitorChecks | minSeverity, severity, snooze, expected | Validates and stores `herald_monitor_min_severity`, `herald_monitor_severity`, `herald_monitor_snooze` and `herald_monitor_expected`. A dated snooze must end in the future unless it is unchanged. |
+| monitorPreview | none | Lists the keys the next monitor run would announce, with status, title, detail, text and severity. Sends nothing and writes no monitor state, see [Preview](monitor.md#preview). |
 
 The save actions store exactly the shape `Setting.set` takes. `Setting.set` still works, but it does not validate. The save actions reject invalid input with a list of every problem and then store nothing.
 
@@ -162,7 +163,7 @@ if (class_exists(\Civi\Api4\Herald::class)) {
 | Job | Comes with herald | Frequency | What it does |
 |---|---|---|---|
 | Herald: Flush alert aggregation buffer | yes | Always | Sends the aggregated groups whose window has passed. |
-| Herald: Run check monitor | yes | Always | Runs the [Check monitor](monitor.md). |
+| Herald: Run check monitor | yes | Always | Reads the system status checks for the [Check monitor](monitor.md). |
 | Herald.notifyDigest | no, create it yourself | Hourly with sendHour, or Always with sendHour and daily | Sends a digest without a rule, see [Without a rule](digests.md#without-a-rule). |
 
 Both shipped jobs take a lock, so a run that overlaps with another one does not send twice.
@@ -186,7 +187,7 @@ herald's templates are CiviCRM message templates. Edit them under Mailings, Mess
 | Herald: Event registration cancelled | herald_event_cancellation_alert | A cancelled registration, with a masked contact |
 | Herald: New membership signup | herald_membership_signup_alert | A new membership, with a masked contact |
 | Herald: New group/newsletter subscription | herald_group_subscription_alert | A contact added to a group, with a masked contact |
-| Herald: Monitor check transition | herald_monitor_alert | A change in the check monitor. Variables: check, status, detail, renotify |
+| Herald: Monitor check transition | herald_monitor_alert | A change in the check monitor. Variables: check, status (fail, changed or ok), title, detail, text, severity, renotify |
 
 The titles appear in the language CiviCRM used when it created or last updated the templates. On a German site, "Herald: New completed contribution" reads "Herald: Neuer abgeschlossener Beitrag", for example. The workflow name is the same in every language.
 
@@ -246,7 +247,11 @@ Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value
 | `herald_buffer_max_items` | 25 | Messages printed in one aggregated message. 0 prints all. |
 | `herald_cleaned_fields` | empty | Text fields whose values rules group under one name, see [Cleaned fields](digests.md#cleaned-fields). |
 | `herald_monitor_topic` | ops | The topic for monitor alerts. |
-| `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours`, `herald_monitor_snooze`, `herald_monitor_expected` | see [Tuning](monitor.md#tuning) | Monitor tuning. |
+| `herald_monitor_min_severity` | warning | The level from which a status message counts as failing, see [Threshold](monitor.md#threshold). notice at the lowest. |
+| `herald_monitor_severity` | `{"warden_*": "error"}` | Thresholds for single check keys or prefixes. |
+| `herald_monitor_snooze` | empty | Keys or prefixes muted in herald only, see [Muting](monitor.md#muting). |
+| `herald_monitor_expected` | empty | Extension keys that must be installed and enabled, see [Expected extensions](monitor.md#expected-extensions). |
+| `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours` | 1, 1, 24 | Hysteresis and reminders, see [The monitor screen](monitor.md#the-monitor-screen). |
 | `herald_monitor_state` | empty | The monitor's own state. Do not edit it. |
 
 ![The Herald settings](images/settings.png)
@@ -255,9 +260,11 @@ Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value
 
 | Hook | Signature | Purpose |
 |---|---|---|
-| `hook_civicrm_heraldChecks` | `(array &$checks)` | Add checks to the monitor, see [Contributing a check](monitor.md#contributing-a-check). |
+| `hook_civicrm_check` (core) | `(array &$messages)` | Add checks to the status page and with it to the monitor, see [Contributing a check](monitor.md#contributing-a-check). |
 | `hook_civicrm_heraldDigestSections` | `(array $keys, array $context, array &$sections)` | Provide the values of a digest's section sources, see [Sections from other extensions](digests.md#sections-from-other-extensions). |
 
 ## System status
 
 While a deploy has left herald's rules switched off, CiviCRM's system status shows the warning "Herald: rules disabled by a deploy". It names the IDs of the rules and the command that switches them back on. See [Deployment](deploy.md).
+
+The system status also shows herald_buffer_backlog and herald_buffer_dead_letter, see [Built in checks](monitor.md#built-in-checks).

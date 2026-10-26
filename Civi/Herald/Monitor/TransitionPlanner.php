@@ -6,7 +6,13 @@ namespace Civi\Herald\Monitor;
 
 /**
  * Pure state machine (no Civi calls; now/thresholds/snooze come via $config).
- * A check seen for the first time baselines to reported-ok.
+ *
+ * A key seen for the first time baselines to reported-ok. A key in the state
+ * without an observation this run counts as ok. A key is muted while core
+ * hides its message or herald snoozes it; muted failures change the state
+ * without an alert, while a recovery after an announced failure is always sent.
+ *
+ * @phpstan-type Plan array{check: string, state: ?array<string, mixed>, publish: ?array<string, mixed>}
  */
 class TransitionPlanner {
 
@@ -20,26 +26,29 @@ class TransitionPlanner {
   }
 
   /**
+   * A plan's state is NULL when the key has nothing left to remember.
+   *
    * @param array<string, array<string, mixed>> $prev
-   * @param array<string, array{status: string, detail?: string}> $observations
-   * @return list<array{check: string, state: array<string, mixed>, publish: ?array<string, mixed>}>
+   * @param array<string, array<string, mixed>> $observations
+   * @return list<Plan>
    */
   public function plan(array $prev, array $observations): array {
+    $failing = array_filter($observations, static fn (array $obs): bool => ($obs['status'] ?? 'ok') === 'fail');
     $plans = [];
-    foreach ($observations as $name => $obs) {
-      $plans[] = $this->planCheck($name, $obs, $prev[$name] ?? []);
+    foreach (array_keys($failing + $prev) as $key) {
+      $plans[] = $this->planCheck((string) $key, $observations[$key] ?? ['status' => 'ok'], $prev[$key] ?? []);
     }
 
     return $plans;
   }
 
   /**
-   * @param array{status: string, detail?: string} $obs
+   * @param array<string, mixed> $obs
    * @param array<string, mixed> $prevEntry
-   * @return array{check: string, state: array<string, mixed>, publish: ?array<string, mixed>}
+   * @return Plan
    */
-  private function planCheck(string $name, array $obs, array $prevEntry): array {
-    $observation = Observation::fromArray($name, $obs);
+  private function planCheck(string $key, array $obs, array $prevEntry): array {
+    $observation = Observation::fromArray($key, $obs);
     $state = CheckState::fromArray($prevEntry, $this->config->now);
 
     // Counters advance before the decision; the reported status does not, so
@@ -47,7 +56,7 @@ class TransitionPlanner {
     $observation->failed ? $state->countFail() : $state->countOk();
     $publish = $this->decide($state, $observation);
 
-    return ['check' => $name, 'state' => $state->toArray(), 'publish' => $publish];
+    return ['check' => $key, 'state' => $state->persisted(), 'publish' => $publish];
   }
 
   /**
@@ -65,7 +74,7 @@ class TransitionPlanner {
   }
 
   /**
-   * Snoozed: state flips but stays unannounced, so a later recovery cannot
+   * Muted: state flips but stays unannounced, so a later recovery cannot
    * fire a fail→ok for a fail nobody saw.
    *
    * @return array<string, mixed>|null The message to publish, if any.
@@ -76,73 +85,68 @@ class TransitionPlanner {
     }
 
     $state->status = 'fail';
-    $state->detail = $obs->detail;
 
-    if ($this->config->isSnoozed($obs->name)) {
+    if ($this->config->mutes($obs)) {
       $state->clearNotified();
       return NULL;
     }
 
-    $state->markNotified($this->config->now);
-    return $this->message($obs->name, 'fail', $obs->detail, renotify: FALSE);
+    return $this->report($state, $obs, 'fail', renotify: FALSE);
   }
 
   /**
-   * Recovery is announced only if the fail was.
+   * Recovery is announced only if the fail was, muted or not.
    *
    * @return array<string, mixed>|null The message to publish, if any.
    */
   private function close(CheckState $state, Observation $obs): ?array {
     $wasNotified = $state->notified;
+    $title = $obs->finding->titleOr($state->title);
     $state->status = 'ok';
-    $state->detail = $obs->detail;
     $state->clearNotified();
 
-    return $wasNotified ? $this->message($obs->name, 'ok', $obs->detail, renotify: FALSE) : NULL;
+    return $wasNotified ? $obs->message('ok', $title, renotify: FALSE) : NULL;
   }
 
   /**
-   * Alerts only on a currently failing observation: during close_after
-   * hysteresis the incident may already be over.
+   * Alerts only on a currently failing, unmuted observation: during
+   * close_after hysteresis the incident may already be over.
    *
    * @return array<string, mixed>|null The message to publish, if any.
    */
   private function whileFailing(CheckState $state, Observation $obs): ?array {
-    if ($obs->failed) {
-      $state->detail = $obs->detail;
+    if (!$obs->failed) {
+      return NULL;
     }
 
-    if (!$obs->failed || $this->config->isSnoozed($obs->name)) {
+    if ($this->config->mutes($obs)) {
+      $state->muted = TRUE;
       return NULL;
     }
 
     if (!$state->notified) {
-      // Snooze lapsed before the fail was ever announced.
-      $state->markNotified($this->config->now);
-      return $this->message($obs->name, 'fail', $state->detail, renotify: FALSE);
+      // Muting ended before the fail was ever announced.
+      return $this->report($state, $obs, 'fail', renotify: FALSE);
     }
 
-    if (!$this->renotifyDue($state)) {
+    $update = $obs->finding->updateOver($state);
+    if ($update !== NULL) {
+      return $this->report($state, $obs, $update, renotify: FALSE);
+    }
+
+    if (!$this->config->renotifyDue($state->lastNotified)) {
       return NULL;
     }
 
-    $state->markNotified($this->config->now);
-    return $this->message($obs->name, 'fail', $state->detail, renotify: TRUE);
-  }
-
-  private function renotifyDue(CheckState $state): bool {
-    return (
-      $this->config->renotifySeconds > 0
-      && $state->lastNotified !== NULL
-      && ($this->config->now - $state->lastNotified) >= $this->config->renotifySeconds
-    );
+    return $this->report($state, $obs, 'fail', renotify: TRUE);
   }
 
   /**
    * @return array<string, mixed>
    */
-  private function message(string $name, string $status, string $detail, bool $renotify): array {
-    return ['check' => $name, 'status' => $status, 'detail' => $detail, 'renotify' => $renotify];
+  private function report(CheckState $state, Observation $obs, string $status, bool $renotify): array {
+    $state->markNotified($this->config->now, $obs->finding);
+    return $obs->message($status, $obs->finding->title, $renotify);
   }
 
 }

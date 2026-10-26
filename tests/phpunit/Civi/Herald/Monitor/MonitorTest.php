@@ -9,21 +9,25 @@ use PHPUnit\Framework\TestCase;
 /**
  * Pure-logic tests for Monitor::computeTransitions (the injectable test-seam).
  *
- * computeTransitions returns, per observed check, a plan
- *   ['check' => …, 'state' => <persist>, 'publish' => <vars>|NULL].
+ * computeTransitions returns a plan per key that is failing or has state:
+ *   ['check' => …, 'state' => <persist>|NULL (forget), 'publish' => <vars>|NULL].
  * The Civi wrapper threads state + publishes; these tests do the same in-memory
- * so the whole state machine — hysteresis, renotify, snooze, missing — is
+ * so the whole state machine — hysteresis, renotify, muting, changes — is
  * covered without a booted CiviCRM.
  *
  * @group unit
  */
 class MonitorTest extends TestCase {
 
+  private const WARNING = 3;
+
+  private const ERROR = 4;
+
   /**
    * Feed one observation set, return [newState, publishes].
    *
    * @param array<string, array<string, mixed>> $state
-   * @param array<string, array{status: string, detail?: string}> $obs
+   * @param array<string, array<string, mixed>> $obs
    * @param array<string, mixed> $config
    * @return array{0: array<string, array<string,mixed>>, 1: list<array<string,mixed>>}
    */
@@ -31,28 +35,57 @@ class MonitorTest extends TestCase {
     $plans = Monitor::computeTransitions($state, $obs, $config);
     $publishes = [];
     foreach ($plans as $p) {
-      $state[$p['check']] = $p['state'];
+      unset($state[$p['check']]);
+      if ($p['state'] !== NULL) {
+        $state[$p['check']] = $p['state'];
+      }
       if ($p['publish'] !== NULL) {
         $publishes[] = $p['publish'];
       }
     }
-    // Mirror the wrapper: drop state for checks no longer observed.
-    foreach (array_keys($state) as $name) {
-      if (isset($obs[$name])) {
-        continue;
-      }
-
-      unset($state[$name]);
-    }
     return [$state, $publishes];
   }
 
-  private function obsOk(string $detail = ''): array {
-    return ['status' => 'ok', 'detail' => $detail];
+  private function obsOk(): array {
+    return ['status' => 'ok'];
   }
 
-  private function obsFail(string $detail = ''): array {
-    return ['status' => 'fail', 'detail' => $detail];
+  /**
+   * @param string $detail The key's details, joined by ', '.
+   */
+  private function obsFail(
+    string $detail = '',
+    int $severity = self::WARNING,
+    bool $visible = TRUE,
+    string $text = '',
+  ): array {
+    return [
+      'status' => 'fail',
+      'severity' => $severity,
+      'detail' => $detail === '' ? [] : explode(', ', $detail),
+      'title' => 'Title',
+      'text' => $text,
+      'visible' => $visible,
+    ];
+  }
+
+  /**
+   * The publish vars the planner hands to the template.
+   *
+   * @param array{severity?: int, title?: string} $extra
+   * @return array<string, mixed>
+   */
+  private function msg(string $check, string $status, string $detail, bool $renotify, array $extra = []): array {
+    $ok = $status === 'ok';
+    return [
+      'check' => $check,
+      'status' => $status,
+      'title' => $extra['title'] ?? 'Title',
+      'detail' => $ok ? '' : $detail,
+      'text' => '',
+      'severity' => $extra['severity'] ?? ($ok ? 0 : self::WARNING),
+      'renotify' => $renotify,
+    ];
   }
 
   // --- classic behaviour (defaults: open=1, close=1, renotify off) ----------
@@ -60,13 +93,13 @@ class MonitorTest extends TestCase {
   public function testOkToFailAndBackAlert(): void {
     [$state, $pub] = $this->step([], ['a' => $this->obsFail('boom')], []);
     $this->assertSame(
-      [['check' => 'a', 'status' => 'fail', 'detail' => 'boom', 'renotify' => FALSE]],
+      [$this->msg('a', 'fail', 'boom', FALSE)],
       $pub,
     );
     // Recovery closes the loop.
     [, $pub] = $this->step($state, ['a' => $this->obsOk()], []);
     $this->assertSame(
-      [['check' => 'a', 'status' => 'ok', 'detail' => '', 'renotify' => FALSE]],
+      [$this->msg('a', 'ok', '', FALSE)],
       $pub,
     );
   }
@@ -82,7 +115,7 @@ class MonitorTest extends TestCase {
   public function testNewCheckAlertsOnlyWhenFailing(): void {
     [, $pub] = $this->step([], ['new_ok' => $this->obsOk(), 'new_fail' => $this->obsFail()], []);
     $this->assertSame(
-      [['check' => 'new_fail', 'status' => 'fail', 'detail' => '', 'renotify' => FALSE]],
+      [$this->msg('new_fail', 'fail', '', FALSE)],
       $pub,
     );
   }
@@ -99,7 +132,7 @@ class MonitorTest extends TestCase {
     $this->assertSame([], $pub);
     // Third consecutive fail: now report, with the freshest detail.
     [$state, $pub] = $this->step($state, ['a' => $this->obsFail('z')], $cfg);
-    $this->assertSame([['check' => 'a', 'status' => 'fail', 'detail' => 'z', 'renotify' => FALSE]], $pub);
+    $this->assertSame([$this->msg('a', 'fail', 'z', FALSE)], $pub);
   }
 
   public function testOpenAfterCounterResetsOnRecovery(): void {
@@ -125,7 +158,7 @@ class MonitorTest extends TestCase {
     $this->assertSame([], $pub);
     // Second consecutive ok: recovery reported.
     [$state, $pub] = $this->step($state, ['a' => $this->obsOk()], $cfg);
-    $this->assertSame([['check' => 'a', 'status' => 'ok', 'detail' => '', 'renotify' => FALSE]], $pub);
+    $this->assertSame([$this->msg('a', 'ok', '', FALSE)], $pub);
   }
 
   // --- renotify -------------------------------------------------------------
@@ -134,19 +167,19 @@ class MonitorTest extends TestCase {
     $hour = 3600;
     $cfg = static fn (int $now) => ['renotify_seconds' => 4 * $hour, 'now' => $now];
     [$state, $pub] = $this->step([], ['a' => $this->obsFail('down')], $cfg(0));
-    $this->assertSame([['check' => 'a', 'status' => 'fail', 'detail' => 'down', 'renotify' => FALSE]], $pub);
+    $this->assertSame([$this->msg('a', 'fail', 'down', FALSE)], $pub);
     // 3h later: within window, silent.
     [$state, $pub] = $this->step($state, ['a' => $this->obsFail('down')], $cfg(3 * $hour));
     $this->assertSame([], $pub);
     // 5h: past 4h window → renotify.
-    [$state, $pub] = $this->step($state, ['a' => $this->obsFail('still')], $cfg(5 * $hour));
-    $this->assertSame([['check' => 'a', 'status' => 'fail', 'detail' => 'still', 'renotify' => TRUE]], $pub);
+    [$state, $pub] = $this->step($state, ['a' => $this->obsFail('down')], $cfg(5 * $hour));
+    $this->assertSame([$this->msg('a', 'fail', 'down', TRUE)], $pub);
     // Window restarts from the last notification; 6h alone is < 4h since 5h.
-    [$state, $pub] = $this->step($state, ['a' => $this->obsFail('still')], $cfg(6 * $hour));
+    [$state, $pub] = $this->step($state, ['a' => $this->obsFail('down')], $cfg(6 * $hour));
     $this->assertSame([], $pub);
     // 9h+: past 4h since the 5h renotify.
-    [, $pub] = $this->step($state, ['a' => $this->obsFail('still')], $cfg(10 * $hour));
-    $this->assertSame([['check' => 'a', 'status' => 'fail', 'detail' => 'still', 'renotify' => TRUE]], $pub);
+    [, $pub] = $this->step($state, ['a' => $this->obsFail('down')], $cfg(10 * $hour));
+    $this->assertSame([$this->msg('a', 'fail', 'down', TRUE)], $pub);
   }
 
   public function testRenotifyOffByDefault(): void {
@@ -183,7 +216,7 @@ class MonitorTest extends TestCase {
     // Snooze lapsed, still failing → delayed first alert.
     $after = ['snooze' => ['a' => '2026-01-01T01:00:00Z'], 'now' => $t0 + 7200];
     [, $pub] = $this->step($state, ['a' => $this->obsFail('boom')], $after);
-    $this->assertSame([['check' => 'a', 'status' => 'fail', 'detail' => 'boom', 'renotify' => FALSE]], $pub);
+    $this->assertSame([$this->msg('a', 'fail', 'boom', FALSE)], $pub);
   }
 
   public function testSnoozeStillClosesLoopIfPreviouslyNotified(): void {
@@ -194,7 +227,7 @@ class MonitorTest extends TestCase {
     // Now snoozed and recovers: fail→ok still fires because a fail was announced.
     $cfg = ['snooze' => ['a' => '2099-01-01T00:00:00Z'], 'now' => 100];
     [, $pub] = $this->step($state, ['a' => $this->obsOk()], $cfg);
-    $this->assertSame([['check' => 'a', 'status' => 'ok', 'detail' => '', 'renotify' => FALSE]], $pub);
+    $this->assertSame([$this->msg('a', 'ok', '', FALSE)], $pub);
   }
 
   public function testSnoozedFailThatRecoversWithoutNotifyStaysSilent(): void {
@@ -210,32 +243,29 @@ class MonitorTest extends TestCase {
 
   // --- missing / vanished ---------------------------------------------------
 
-  public function testVanishedCheckIsDropped(): void {
-    // Prev has a check; nothing observed this run → no plan, and wrapper drops it.
-    [$state, $pub] = $this->step(
-      ['gone' => ['status' => 'fail', 'notified' => TRUE]],
-      [],
-      [],
-    );
-    $this->assertSame([], $pub);
+  /**
+   * Checks that are healthy say nothing, so a key in the state without a
+   * message this run has recovered; the entry is then forgotten.
+   */
+  public function testKeyWithoutMessageRecoversAndIsForgotten(): void {
+    [$state] = $this->step([], ['gone' => $this->obsFail('x')], []);
+    [$state, $pub] = $this->step($state, [], []);
+    $this->assertSame([$this->msg('gone', 'ok', '', FALSE)], $pub);
     $this->assertArrayNotHasKey('gone', $state);
   }
 
-  public function testExpectedMissingIsReportedByWrapperInjection(): void {
-    // The wrapper injects a synthetic fail observation for expected-but-absent
-    // checks; here we simulate that injected observation reaching the planner.
-    [, $pub] = $this->step(
-      [],
-      ['ext.check' => $this->obsFail('check missing — extension disabled?')],
-      [],
-    );
-    $expected = [
-      'check' => 'ext.check',
-      'status' => 'fail',
-      'detail' => 'check missing — extension disabled?',
-      'renotify' => FALSE,
-    ];
-    $this->assertSame([$expected], $pub);
+  public function testHealthyKeysWithoutStateGetNoPlanAndNoState(): void {
+    $plans = Monitor::computeTransitions([], ['info' => ['status' => 'ok', 'severity' => 1]], []);
+    $this->assertSame([], $plans);
+  }
+
+  public function testUnreportedFailureThatRecoversIsForgottenSilently(): void {
+    [$state, $pub] = $this->step([], ['a' => $this->obsFail()], ['open_after' => 2]);
+    $this->assertSame([], $pub);
+    $this->assertSame(1, $state['a']['consecutive_fails']);
+    [$state, $pub] = $this->step($state, ['a' => $this->obsOk()], ['open_after' => 2]);
+    $this->assertSame([], $pub);
+    $this->assertSame([], $state);
   }
 
   // --- migration: old state entries without the new keys --------------------
@@ -245,14 +275,13 @@ class MonitorTest extends TestCase {
     $legacy = ['a' => ['status' => 'fail', 'detail' => 'old']];
     [$state, $pub] = $this->step($legacy, ['a' => $this->obsOk()], []);
     // A bare reported-fail counts as notified: recovery fires.
-    $this->assertSame([['check' => 'a', 'status' => 'ok', 'detail' => '', 'renotify' => FALSE]], $pub);
-    $this->assertSame(0, $state['a']['consecutive_fails']);
-    $this->assertSame(1, $state['a']['consecutive_oks']);
+    $this->assertSame([$this->msg('a', 'ok', '', FALSE, ['title' => ''])], $pub);
+    $this->assertArrayNotHasKey('a', $state);
   }
 
   public function testMigratesLegacyStateEntryFailStaysSilentWhenStillFailing(): void {
-    $legacy = ['a' => ['status' => 'fail', 'detail' => 'old']];
-    [, $pub] = $this->step($legacy, ['a' => $this->obsFail('new')], []);
+    $legacy = ['a' => ['status' => 'fail', 'detail' => 'old', 'severity' => self::WARNING]];
+    [, $pub] = $this->step($legacy, ['a' => $this->obsFail('old')], []);
     // Already reported-fail → no duplicate alert.
     $this->assertSame([], $pub);
   }
@@ -260,7 +289,7 @@ class MonitorTest extends TestCase {
   public function testMigratesLegacyOkEntry(): void {
     $legacy = ['a' => ['status' => 'ok']];
     [, $pub] = $this->step($legacy, ['a' => $this->obsFail('boom')], []);
-    $this->assertSame([['check' => 'a', 'status' => 'fail', 'detail' => 'boom', 'renotify' => FALSE]], $pub);
+    $this->assertSame([$this->msg('a', 'fail', 'boom', FALSE)], $pub);
   }
 
   // --- regression: no fail alerts while the current observation is ok -------
@@ -364,13 +393,13 @@ class MonitorTest extends TestCase {
     $this->assertSame(1, $state['a']['consecutive_oks']);
 
     [, $pub] = $this->step($state, ['a' => $this->obsOk()], $cfg);
-    $this->assertSame([['check' => 'a', 'status' => 'ok', 'detail' => '', 'renotify' => FALSE]], $pub);
+    $this->assertSame([$this->msg('a', 'ok', '', FALSE, ['title' => ''])], $pub);
   }
 
   public function testLegacyFailGetsRenotifyAnchor(): void {
-    // Bare {status: fail, detail} entry: inferred notified=true has no
+    // Entry without notified/last_notified: inferred notified=true has no
     // last_notified, so renotify anchors to now and fires one window later.
-    $legacy = ['a' => ['status' => 'fail', 'detail' => 'old']];
+    $legacy = ['a' => ['status' => 'fail', 'detail' => 'old', 'severity' => self::WARNING]];
     [$state, $pub] = $this->step(
       $legacy,
       ['a' => $this->obsFail('old')],
@@ -391,6 +420,183 @@ class MonitorTest extends TestCase {
     );
     $this->assertCount(1, $pub);
     $this->assertTrue($pub[0]['renotify']);
+  }
+
+  // --- muting, escalation and detail changes --------------------------------
+
+  public function testFailureHiddenByCoreChangesStateWithoutAlert(): void {
+    [$state, $pub] = $this->step([], ['a' => $this->obsFail(visible: FALSE)], []);
+    $this->assertSame([], $pub);
+    $this->assertSame('fail', $state['a']['status']);
+    $this->assertFalse($state['a']['notified']);
+    // Core shows it again (its hush lapsed): the failure is reported then.
+    [, $pub] = $this->step($state, ['a' => $this->obsFail()], []);
+    $this->assertSame([$this->msg('a', 'fail', '', FALSE)], $pub);
+  }
+
+  public function testVisibleEscalationOfAReportedFailureIsReportedAtOnce(): void {
+    [$state] = $this->step([], ['a' => $this->obsFail()], ['renotify_seconds' => 86_400, 'now' => 0]);
+    [$state, $pub] = $this->step(
+      $state,
+      ['a' => $this->obsFail(severity: self::ERROR)],
+      ['renotify_seconds' => 86_400, 'now' => 60],
+    );
+    $this->assertSame([$this->msg('a', 'changed', '', FALSE, ['severity' => self::ERROR])], $pub);
+    $this->assertSame(self::ERROR, $state['a']['severity']);
+    // Steady at error: silent again.
+    [, $pub] = $this->step(
+      $state,
+      ['a' => $this->obsFail(severity: self::ERROR)],
+      ['renotify_seconds' => 86_400, 'now' => 120],
+    );
+    $this->assertSame([], $pub);
+  }
+
+  public function testMutedEscalationStaysSilentUntilTheMutingEnds(): void {
+    [$state] = $this->step([], ['a' => $this->obsFail()], []);
+    [$state, $pub] = $this->step($state, ['a' => $this->obsFail(severity: self::ERROR, visible: FALSE)], []);
+    $this->assertSame([], $pub);
+    $snoozed = ['snooze' => ['a' => ''], 'now' => 0];
+    [$state, $pub] = $this->step($state, ['a' => $this->obsFail(severity: self::ERROR)], $snoozed);
+    $this->assertSame([], $pub);
+    // Compared with the last report (warning), so the escalation goes out once unmuted.
+    [, $pub] = $this->step($state, ['a' => $this->obsFail(severity: self::ERROR)], []);
+    $this->assertSame([$this->msg('a', 'changed', '', FALSE, ['severity' => self::ERROR])], $pub);
+  }
+
+  public function testFallingSeverityIsNoChange(): void {
+    [$state] = $this->step([], ['a' => $this->obsFail(severity: self::ERROR)], []);
+    [, $pub] = $this->step($state, ['a' => $this->obsFail()], []);
+    $this->assertSame([], $pub);
+  }
+
+  public function testDetailChangeSendsExactlyOneChangedAndNoRecovery(): void {
+    [$state, $pub] = $this->step([], ['checkExtensionsRequired' => $this->obsFail('a')], []);
+    $this->assertSame([$this->msg('checkExtensionsRequired', 'fail', 'a', FALSE)], $pub);
+    [$state, $pub] = $this->step($state, ['checkExtensionsRequired' => $this->obsFail('a, b')], []);
+    $this->assertSame([$this->msg('checkExtensionsRequired', 'changed', 'a, b', FALSE)], $pub);
+    [, $pub] = $this->step($state, ['checkExtensionsRequired' => $this->obsFail('a, b')], []);
+    $this->assertSame([], $pub);
+  }
+
+  public function testAStringDetailInTheStateReadsAsOneDetail(): void {
+    $prev = [
+      'checkExtensionsRequired' => [
+        'status' => 'fail',
+        'severity' => self::WARNING,
+        'detail' => 'a',
+        'notified' => TRUE,
+        'last_notified' => 0,
+      ],
+    ];
+    [$state, $pub] = $this->step($prev, ['checkExtensionsRequired' => $this->obsFail('a')], []);
+    $this->assertSame([], $pub);
+    $this->assertSame(['a'], $state['checkExtensionsRequired']['detail']);
+  }
+
+  public function testMutedDetailChangeSendsNothing(): void {
+    [$state] = $this->step([], ['checkExtensionsRequired' => $this->obsFail('a')], []);
+    [, $pub] = $this->step($state, ['checkExtensionsRequired' => $this->obsFail('a, b', visible: FALSE)], []);
+    $this->assertSame([], $pub);
+  }
+
+  /**
+   * Message texts carry timestamps and counts; only key, severity and detail are compared.
+   */
+  public function testChangingMessageTextOfAReportedFailureSendsNothing(): void {
+    [$state] = $this->step([], ['checkLastCron' => $this->obsFail(text: 'Last run 10:00')], []);
+    foreach (['Last run 10:05', 'Last run 10:10', 'Last run 10:15'] as $text) {
+      [$state, $pub] = $this->step($state, ['checkLastCron' => $this->obsFail(text: $text)], []);
+      $this->assertSame([], $pub);
+    }
+  }
+
+  public function testMutedFailureGetsNoReminder(): void {
+    [$state] = $this->step([], ['a' => $this->obsFail()], ['renotify_seconds' => 60, 'now' => 0]);
+    [, $pub] = $this->step($state, ['a' => $this->obsFail(visible: FALSE)], ['renotify_seconds' => 60, 'now' => 1000]);
+    $this->assertSame([], $pub);
+  }
+
+  public function testRecoveryAfterAReportedFailureIsSentWhileHiddenByCore(): void {
+    [$state] = $this->step([], ['a' => $this->obsFail()], []);
+    [$state] = $this->step($state, ['a' => $this->obsFail(visible: FALSE)], []);
+    [, $pub] = $this->step($state, [], []);
+    $this->assertSame([$this->msg('a', 'ok', '', FALSE)], $pub);
+  }
+
+  public function testSnoozeByPrefixAndWithoutEnd(): void {
+    $cfg = ['snooze' => ['warden_*' => '', 'checkExtensionsRequired' => '2099-01-01T00:00:00Z'], 'now' => 0];
+    [$state, $pub] = $this->step(
+      [],
+      [
+        'warden_discovery_1' => $this->obsFail(),
+        'checkExtensionsRequired' => $this->obsFail('a'),
+        'other' => $this->obsFail(),
+      ],
+      $cfg,
+    );
+    $this->assertSame([$this->msg('other', 'fail', '', FALSE)], $pub);
+    $this->assertSame('fail', $state['warden_discovery_1']['status']);
+    // A snooze on the key holds for every detail.
+    [, $pub] = $this->step(
+      $state,
+      [
+        'checkExtensionsRequired' => $this->obsFail('b'),
+        'warden_discovery_1' => $this->obsFail(),
+        'other' => $this->obsFail(),
+      ],
+      $cfg,
+    );
+    $this->assertSame([], $pub);
+  }
+
+  public function testAReportedFailureIsAnnouncedAgainWhenItsSnoozeEnds(): void {
+    $snoozed = ['snooze' => ['a' => ''], 'now' => 1000];
+    [$state, $pub] = $this->step([], ['a' => $this->obsFail('x')], ['now' => 1000]);
+    $this->assertCount(1, $pub);
+    [$state, $pub] = $this->step($state, ['a' => $this->obsFail('x')], $snoozed);
+    $this->assertSame([], $pub, 'snoozed: silent');
+    [$state, $pub] = $this->step($state, ['a' => $this->obsFail('x')], $snoozed);
+    $this->assertSame([], $pub);
+
+    // Snooze removed, reminders off, severity and detail unchanged.
+    [$state, $pub] = $this->step($state, ['a' => $this->obsFail('x')], ['now' => 2000]);
+    $this->assertSame([$this->msg('a', 'fail', 'x', FALSE)], $pub);
+    [, $pub] = $this->step($state, ['a' => $this->obsFail('x')], ['now' => 3000]);
+    $this->assertSame([], $pub, 'announced once');
+  }
+
+  public function testAReportedFailureIsAnnouncedAgainWhenCoreShowsItAgain(): void {
+    [$state] = $this->step([], ['a' => $this->obsFail('x')], []);
+    [$state, $pub] = $this->step($state, ['a' => $this->obsFail('x', visible: FALSE)], []);
+    $this->assertSame([], $pub);
+    [, $pub] = $this->step($state, ['a' => $this->obsFail('x')], []);
+    $this->assertSame([$this->msg('a', 'fail', 'x', FALSE)], $pub);
+  }
+
+  public function testARecoveryWhileMutedAfterAReportedFailureIsStillSent(): void {
+    [$state] = $this->step([], ['a' => $this->obsFail('x')], []);
+    [$state] = $this->step($state, ['a' => $this->obsFail('x', visible: FALSE)], []);
+    [, $pub] = $this->step($state, ['a' => $this->obsOk()], ['snooze' => ['a' => '']]);
+    $this->assertSame([$this->msg('a', 'ok', '', FALSE)], $pub);
+  }
+
+  public function testLiveSnoozeKeepsEntriesWithoutEndAndDropsLapsedAndMalformedOnes(): void {
+    $this->assertSame(
+      ['a*' => '', 'b' => '2099-01-01T00:00:00Z'],
+      Snooze::live(
+        [
+          'a*' => '',
+          'b' => '2099-01-01T00:00:00Z',
+          'c' => '2000-01-01T00:00:00Z',
+          'd' => 'soon',
+          'e:detail' => '',
+          'f' => 5,
+          3 => '',
+        ],
+        (int) strtotime('2026-01-01T00:00:00Z'),
+      ),
+    );
   }
 
 }

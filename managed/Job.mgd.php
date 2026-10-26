@@ -40,7 +40,7 @@ return [
       'values' => [
         'name' => E::ts('Herald: Run check monitor'),
         'description' => E::ts(
-          'Runs checks contributed via hook_civicrm_heraldChecks and publishes ok/fail transitions to the herald_monitor_topic topic.',
+          'Reads the system status checks and publishes ok/fail transitions and changes to the herald_monitor_topic topic.',
         ),
         'run_frequency' => 'Always',
         'api_entity' => 'Job',

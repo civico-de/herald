@@ -69,10 +69,6 @@ msgstr "Stille Nachricht"
 msgid "Disable link previews"
 msgstr "Link-Vorschauen deaktivieren"
 
-#: Civi/Herald/Monitor/CheckCollector.php
-msgid "check missing — extension disabled?"
-msgstr "Check fehlt — Extension deaktiviert?"
-
 #: Civi/Herald/Preflight/DisabledRulesCheck.php
 msgid "A deploy switched off the Herald CiviRules rules %1 and did not switch them back on, so they send no alerts. Fix what failed the deploy gate, then run: %2"
 msgstr "Ein Deploy hat die Herald-CiviRules-Regeln %1 abgeschaltet und nicht wieder eingeschaltet, sie senden daher keine Meldungen. Den Fehler im Deploy-Gate beheben, dann ausführen: %2"
@@ -100,10 +96,6 @@ msgstr "Sendet die über aggregate_minutes gesammelten Meldungen als eine zusamm
 #: managed/Job.mgd.php
 msgid "Herald: Run check monitor"
 msgstr "Herald: Check-Monitor ausführen"
-
-#: managed/Job.mgd.php
-msgid "Runs checks contributed via hook_civicrm_heraldChecks and publishes ok/fail transitions to the herald_monitor_topic topic."
-msgstr "Führt die über hook_civicrm_heraldChecks bereitgestellten Checks aus und veröffentlicht ok/fail-Übergänge im Thema herald_monitor_topic."
 
 #: managed/MessageTemplate.mgd.php
 msgid "Herald: New completed contribution"
@@ -402,24 +394,8 @@ msgid "Monitor Renotify Hours"
 msgstr "Monitor-Erinnerungsintervall (Stunden)"
 
 #: settings/herald.setting.php
-msgid "Map of check-name to ISO datetime: the check produces no fail/renotify alerts until then. Expired entries are pruned on each run."
-msgstr "Zuordnung von Check-Name zu ISO-Zeitstempel: Bis dahin erzeugt der Check keine fail- und keine Erinnerungsmeldungen. Abgelaufene Einträge werden bei jedem Lauf entfernt."
-
-#: settings/herald.setting.php
-msgid "A fail→ok recovery still fires after the snooze lapses if a failure had already been announced before it was set."
-msgstr "Eine fail→ok-Erholung wird nach Ablauf der Stummschaltung trotzdem gemeldet, wenn vorher bereits ein Fehler gemeldet wurde."
-
-#: settings/herald.setting.php
 msgid "Monitor Snooze"
 msgstr "Monitor-Stummschaltung"
-
-#: settings/herald.setting.php
-msgid "List of check names that must always be present. A listed check missing from the hook is reported as failing (extension disabled?). Empty keeps the default of silently dropping vanished checks."
-msgstr "Liste von Check-Namen, die immer vorhanden sein müssen. Ein gelisteter Check, der im Hook fehlt, wird als fehlgeschlagen gemeldet (Extension deaktiviert?). Leer behält das Standardverhalten bei, verschwundene Checks stillschweigend zu ignorieren."
-
-#: settings/herald.setting.php
-msgid "Monitor Expected Checks"
-msgstr "Erwartete Monitor-Checks"
 
 #: templates/CRM/Herald/CivirulesAdapter/Form/SendNotification.tpl
 msgid "herald: Send Notification"
@@ -765,10 +741,6 @@ msgid "\"%1\" is not a valid host name."
 msgstr "„%1“ ist kein gültiger Hostname."
 
 #: Civi/Herald/Admin/MonitorSettings.php
-msgid "Enter every expected check name without leading or trailing spaces."
-msgstr "Jeden erwarteten Check-Namen ohne Leerzeichen am Anfang oder Ende eingeben."
-
-#: Civi/Herald/Admin/MonitorSettings.php
 msgid "The snooze of \"%1\" is not a date and time."
 msgstr "Die Stummschaltung von „%1“ ist kein Datum mit Uhrzeit."
 
@@ -1057,10 +1029,6 @@ msgid "Which hosts the webhook channel may call."
 msgstr "Welche Hosts der Webhook-Kanal aufrufen darf."
 
 #: ang/heraldAdmin/index.html
-msgid "Expected checks and snoozes."
-msgstr "Erwartete Checks und Stummschaltungen."
-
-#: ang/heraldAdmin/index.html
 msgid "Send a message through a channel or a topic."
 msgstr "Eine Nachricht über einen Kanal oder ein Thema senden."
 
@@ -1076,17 +1044,9 @@ msgstr "Meldungen, die der Flush-Job nicht zustellen konnte, und ihre Reaktivier
 msgid "That did not work:"
 msgstr "Das hat nicht geklappt:"
 
-#: ang/heraldAdmin/monitor.html
-msgid "Extensions contribute these checks; the monitor job reports when one starts failing or recovers. An expected check that disappears counts as failing. A snoozed check sends no failure alerts until the time set."
-msgstr "Extensions stellen diese Checks bereit; der Monitor-Job meldet, wenn einer zu scheitern beginnt oder sich erholt. Ein erwarteter Check, der verschwindet, gilt als gescheitert. Ein stummgeschalteter Check sendet bis zum gesetzten Zeitpunkt keine Fehlermeldungen."
-
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, Civi/Api4/Herald.php, Civi/Api4/HeraldBufferedAlert.php, Civi/Herald/Admin/AllowedHosts.php, Civi/Herald/Admin/MonitorChecks.php, Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Admin/RegexCheck.php, Civi/Herald/Cleaning/Rule.php, Civi/Herald/Cleaning/CleanedFieldsInput.php, Civi/Herald/Api4/Action/CheckFieldTransition.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Api4/Action/GetMonitorChecks.php, Civi/Herald/Api4/Action/ReactivateBufferedAlerts.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Channel/EmailChannel.php, Civi/Herald/Monitor/CheckCollector.php, Civi/Herald/Monitor/CheckState.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Monitor/TransitionPlanner.php, Civi/Herald/Preflight/DeployGate.php, Civi/Herald/Preflight/DisabledRulesCheck.php, Civi/Herald/Topic/RouteValidator.php, ang/heraldAdmin/monitor.html, ang/heraldAdmin/monitor.js, api/v3/Job/HeraldMonitor.php, herald.php, managed/Job.mgd.php, managed/MessageTemplate.mgd.php, managed/SubscriberPreferences.mgd.php, settings/herald.setting.php
 msgid "Check"
 msgstr "Check"
-
-#: ang/heraldAdmin/monitor.html
-msgid "Last reported status"
-msgstr "Zuletzt gemeldeter Status"
 
 #: ang/heraldAdmin/monitor.html
 msgid "Failed / ok runs in a row"
@@ -1105,10 +1065,6 @@ msgid "Snoozed until"
 msgstr "Stumm bis"
 
 #: ang/heraldAdmin/monitor.html
-msgid "not offered by any enabled extension"
-msgstr "von keiner aktivierten Extension angeboten"
-
-#: ang/heraldAdmin/monitor.html
 msgid "Snooze %1 until"
 msgstr "%1 stummschalten bis"
 
@@ -1120,21 +1076,9 @@ msgstr "Leeren"
 msgid "snooze of %1"
 msgstr "Stummschaltung von %1"
 
-#: ang/heraldAdmin/monitor.html
-msgid "No extension offers a check, and none is expected."
-msgstr "Keine Extension bietet einen Check an, und keiner wird erwartet."
-
-#: ang/heraldAdmin/monitor.html
-msgid "Expect another check by name"
-msgstr "Einen weiteren Check per Name erwarten"
-
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/Upgrader/BufferTable.php, Civi/Herald/Channel/ActivityChannel.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Subscribers/SubscriberLookup.php, ang/afformHeraldDigest.aff.html, ang/heraldAdmin/monitor.html, ang/heraldAdmin/cleaning.html, ang/heraldAdmin/topic.html, ang/heraldAdmin/topics.html, managed/Digests.mgd.php, settings/herald.setting.php
 msgid "Add"
 msgstr "Hinzufügen"
-
-#: ang/heraldAdmin/monitor.html
-msgid "For a check whose extension is not enabled yet."
-msgstr "Für einen Check, dessen Extension noch nicht aktiviert ist."
 
 #: ang/heraldAdmin/monitor.html
 msgid "Times are shown and entered in the time zone of this browser."
@@ -1147,30 +1091,6 @@ msgstr "Gestört"
 #: Civi/Herald/Digest/ExtraSections.php, ang/heraldAdmin/monitor.js, bin/preflight-rules.php, bin/test-telegram.php
 msgid "OK"
 msgstr "OK"
-
-#: ang/heraldAdmin/monitor.js
-msgid "Not observed yet"
-msgstr "Noch nicht beobachtet"
-
-#: ang/heraldAdmin/monitor.js
-msgid "Snooze of \"%1\" cleared; save to apply."
-msgstr "Stummschaltung von „%1“ geleert; zum Übernehmen speichern."
-
-#: ang/heraldAdmin/monitor.js
-msgid "Enter the name of the check to expect."
-msgstr "Den Namen des zu erwartenden Checks eingeben."
-
-#: ang/heraldAdmin/monitor.js
-msgid "\"%1\" is marked as expected; save to apply."
-msgstr "„%1“ ist als erwartet markiert; zum Übernehmen speichern."
-
-#: ang/heraldAdmin/monitor.js
-msgid "Enter each snooze as a complete date and time, or clear it."
-msgstr "Jede Stummschaltung als vollständiges Datum mit Uhrzeit eingeben oder leeren."
-
-#: ang/heraldAdmin/monitor.js
-msgid "Monitor checks saved."
-msgstr "Monitor-Checks gespeichert."
 
 #: ang/heraldAdmin/preview.html
 msgid "Renders a herald message template with sample values. Nothing is sent."
@@ -2763,3 +2683,284 @@ msgstr "Nachrichten an Gruppen: %1"
 #: Civi/Herald/Subscribers/NotificationsRules.php
 msgid "Subscription %1: %2"
 msgstr "Abo %1: %2"
+
+
+#: Civi/Herald/Admin/AdminScreens.php
+msgid "Check keys, threshold, snoozes and expected extensions."
+msgstr "Check-Schlüssel, Schwelle, Stummschaltungen und erwartete Extensions."
+
+#: Civi/Herald/Admin/MonitorSettings.php
+msgid "Enter every expected extension by its key, such as org.example.myext, without spaces."
+msgstr "Geben Sie jede erwartete Extension mit ihrem Schlüssel ein, etwa org.example.myext, ohne Leerzeichen."
+
+#: Civi/Herald/Buffer/BufferChecks.php
+msgid "Could not check: %1"
+msgstr "Konnte nicht prüfen: %1"
+
+#: Civi/Herald/Buffer/BufferChecks.php
+msgid "Herald: buffer check failed"
+msgstr "Herald: Prüfung des Puffers fehlgeschlagen"
+
+#: Civi/Herald/Buffer/BufferChecks.php
+msgid "%1 buffered alert(s) are older than three times their window. The job \"Herald: Flush alert aggregation buffer\" is not delivering them."
+msgstr "%1 gepufferte Meldung(en) sind älter als das Dreifache ihres Fensters. Der Job „Herald: Sammelpuffer für Meldungen leeren“ stellt sie nicht zu."
+
+#: Civi/Herald/Buffer/BufferChecks.php
+msgid "Herald: buffered alerts not delivered"
+msgstr "Herald: gepufferte Meldungen nicht zugestellt"
+
+#: Civi/Herald/Buffer/BufferChecks.php
+msgid "%1 alert(s) are parked in the dead letter. Inspect them under Administer » Herald » Parked alerts or with Herald.getParkedAlerts."
+msgstr "%1 Meldung(en) sind geparkt. Prüfen Sie sie unter Administrieren » Herald » Geparkte Meldungen oder mit Herald.getParkedAlerts."
+
+#: Civi/Herald/Buffer/BufferChecks.php
+msgid "Herald: parked alerts"
+msgstr "Herald: geparkte Meldungen"
+
+#: Civi/Herald/Monitor/CheckCollector.php
+msgid "Herald: expected extension missing"
+msgstr "Herald: erwartete Extension fehlt"
+
+#: Civi/Herald/Monitor/CheckCollector.php
+msgid "The extension %1 is not installed and enabled."
+msgstr "Die Extension %1 ist nicht installiert und aktiviert."
+
+#: Civi/Herald/Monitor/Threshold.php
+msgid "The monitor threshold must be one of %1."
+msgstr "Die Monitor-Schwelle muss eine dieser Stufen sein: %1."
+
+#: Civi/Herald/Monitor/Threshold.php
+msgid "The monitor threshold exceptions must map check keys to levels."
+msgstr "Die Ausnahmen von der Monitor-Schwelle müssen Check-Schlüssel auf Stufen abbilden."
+
+#: Civi/Herald/Monitor/Threshold.php, Civi/Herald/Admin/MonitorSettings.php
+msgid "\"%1\" is not a check key or a prefix ending in *."
+msgstr "„%1“ ist kein Check-Schlüssel und kein Präfix mit * am Ende."
+
+#: Civi/Herald/Monitor/Threshold.php
+msgid "The threshold of \"%1\" must be one of %2."
+msgstr "Die Schwelle von „%1“ muss eine dieser Stufen sein: %2."
+
+#: ang/heraldAdmin/monitor.html
+msgid "The monitor job reads the system status checks and reports when a check key starts failing, changes or recovers. A message from the threshold level up counts as failing."
+msgstr "Der Monitor-Job liest die Systemstatus-Prüfungen und meldet, wenn ein Check-Schlüssel zu scheitern beginnt, sich ändert oder sich erholt. Eine Meldung ab der Schwelle gilt als gescheitert."
+
+#: ang/heraldAdmin/monitor.html
+msgid "Check keys"
+msgstr "Check-Schlüssel"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Every key the status checks report now, and every key the monitor still tracks."
+msgstr "Jeder Schlüssel, den die Statusprüfungen gerade melden, und jeder Schlüssel, den der Monitor noch verfolgt."
+
+#: ang/heraldAdmin/monitor.html
+msgid "Hide a message on the status page"
+msgstr "Blenden Sie eine Meldung auf der Statusseite aus,"
+
+#: ang/heraldAdmin/monitor.html
+msgid "to mute it there and in the monitor."
+msgstr "um sie dort und im Monitor stummzuschalten."
+
+#: ang/heraldAdmin/monitor.html
+msgid "Check key"
+msgstr "Check-Schlüssel"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Detail"
+msgstr "Detail"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Level"
+msgstr "Stufe"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Threshold"
+msgstr "Schwelle"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Status page"
+msgstr "Statusseite"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Snoozed in herald"
+msgstr "In herald stumm"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Monitor state"
+msgstr "Monitor-Zustand"
+
+#: ang/heraldAdmin/monitor.html
+msgid "The status checks report nothing, and the monitor tracks no key."
+msgstr "Die Statusprüfungen melden nichts, und der Monitor verfolgt keinen Schlüssel."
+
+#: ang/heraldAdmin/monitor.html
+msgid "Report messages from this level up"
+msgstr "Meldungen ab dieser Stufe melden"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Notice is the lowest level: info and debug messages report healthy states."
+msgstr "Notice ist die niedrigste Stufe: Meldungen auf info und debug zeigen gesunde Zustände an."
+
+#: ang/heraldAdmin/monitor.html
+msgid "Exceptions for single keys or prefixes"
+msgstr "Ausnahmen für einzelne Schlüssel oder Präfixe"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Check key or prefix*"
+msgstr "Check-Schlüssel oder Präfix*"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Report from"
+msgstr "Melden ab"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Check key or prefix of exception %1"
+msgstr "Check-Schlüssel oder Präfix der Ausnahme %1"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Level of %1"
+msgstr "Stufe von %1"
+
+#: ang/heraldAdmin/monitor.html
+msgid "exception %1"
+msgstr "Ausnahme %1"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Add exception"
+msgstr "Ausnahme hinzufügen"
+
+#: ang/heraldAdmin/monitor.html
+msgid "A key ending in * matches every key with that prefix, such as warden_*. The longest matching entry wins."
+msgstr "Ein Schlüssel mit * am Ende passt auf jeden Schlüssel mit diesem Präfix, etwa warden_*. Der längste passende Eintrag gewinnt."
+
+#: ang/heraldAdmin/monitor.html
+msgid "Snoozed in herald only"
+msgstr "Nur in herald stummgeschaltet"
+
+#: ang/heraldAdmin/monitor.html
+msgid "A snoozed key sends no failure alerts and no reminders, for every detail. The status page keeps showing it. A recovery is still sent for a failure that was reported."
+msgstr "Ein stummgeschalteter Schlüssel sendet für kein Detail Fehlermeldungen oder Erinnerungen. Die Statusseite zeigt ihn weiter an. Für einen gemeldeten Fehler wird die Entwarnung trotzdem gesendet."
+
+#: ang/heraldAdmin/monitor.html
+msgid "No end"
+msgstr "Ohne Ende"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Check key or prefix of snooze %1"
+msgstr "Check-Schlüssel oder Präfix der Stummschaltung %1"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Add snooze"
+msgstr "Stummschaltung hinzufügen"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Expected extensions"
+msgstr "Erwartete Extensions"
+
+#: ang/heraldAdmin/monitor.html
+msgid "An expected extension that is not installed and enabled is reported as the failing check herald_expected_ followed by its key."
+msgstr "Eine erwartete Extension, die nicht installiert und aktiviert ist, meldet der Monitor als gescheiterten Check herald_expected_ gefolgt von ihrem Schlüssel."
+
+#: ang/heraldAdmin/monitor.html
+msgid "Extension key %1"
+msgstr "Extension-Schlüssel %1"
+
+#: ang/heraldAdmin/monitor.html
+msgid "Add expected extension"
+msgstr "Erwartete Extension hinzufügen"
+
+#: ang/heraldAdmin/monitor.js
+msgid "\"%1\" removed; save to apply."
+msgstr "„%1“ entfernt; speichern Sie, um die Änderung zu übernehmen."
+
+#: ang/heraldAdmin/monitor.js
+msgid "Failing, reported"
+msgstr "Gescheitert, gemeldet"
+
+#: ang/heraldAdmin/monitor.js
+msgid "Failing, muted"
+msgstr "Gescheitert, stumm"
+
+#: ang/heraldAdmin/monitor.js
+msgid "Failing, not reported yet"
+msgstr "Gescheitert, noch nicht gemeldet"
+
+#: ang/heraldAdmin/monitor.js
+msgid "No message"
+msgstr "Keine Meldung"
+
+#: ang/heraldAdmin/monitor.js
+msgid "Shown"
+msgstr "Angezeigt"
+
+#: ang/heraldAdmin/monitor.js
+msgid "Hidden"
+msgstr "Ausgeblendet"
+
+#: ang/heraldAdmin/monitor.js
+msgid "Exception added; enter its key and save to apply."
+msgstr "Ausnahme hinzugefügt; geben Sie ihren Schlüssel ein und speichern Sie."
+
+#: ang/heraldAdmin/monitor.js
+msgid "Snooze added; enter its key and save to apply."
+msgstr "Stummschaltung hinzugefügt; geben Sie ihren Schlüssel ein und speichern Sie."
+
+#: ang/heraldAdmin/monitor.js
+msgid "Expected extension added; enter its key and save to apply."
+msgstr "Erwartete Extension hinzugefügt; geben Sie ihren Schlüssel ein und speichern Sie."
+
+#: ang/heraldAdmin/monitor.js
+msgid "Empty row"
+msgstr "Leere Zeile"
+
+#: ang/heraldAdmin/monitor.js
+msgid "Enter each snooze end as a complete date and time, or tick No end."
+msgstr "Geben Sie das Ende jeder Stummschaltung als vollständiges Datum mit Uhrzeit ein, oder kreuzen Sie „Ohne Ende“ an."
+
+#: ang/heraldAdmin/monitor.js
+msgid "Monitor settings saved."
+msgstr "Monitor-Einstellungen gespeichert."
+
+#: managed/Job.mgd.php
+msgid "Reads the system status checks and publishes ok/fail transitions and changes to the herald_monitor_topic topic."
+msgstr "Liest die Systemstatus-Prüfungen und veröffentlicht ok/fail-Übergänge und Änderungen im Thema herald_monitor_topic."
+
+#: managed/MessageTemplate.mgd.php
+msgid "Check <b>%1</b> changed"
+msgstr "Check <b>%1</b> geändert"
+
+#: managed/MessageTemplate.mgd.php
+msgid "Check %1 changed"
+msgstr "Check %1 geändert"
+
+#: settings/herald.setting.php
+msgid "A status message from this level up counts as a failing check. The lowest allowed level is notice, because info and debug messages report healthy states."
+msgstr "Eine Statusmeldung ab dieser Stufe gilt als gescheiterter Check. Die niedrigste erlaubte Stufe ist notice, weil Meldungen auf info und debug gesunde Zustände anzeigen."
+
+#: settings/herald.setting.php
+msgid "Monitor Threshold"
+msgstr "Monitor-Schwelle"
+
+#: settings/herald.setting.php
+msgid "Exceptions to the monitor threshold: map of check key to level. A key ending in * matches every key with that prefix; the longest matching entry wins."
+msgstr "Ausnahmen von der Monitor-Schwelle: Abbildung von Check-Schlüssel auf Stufe. Ein Schlüssel mit * am Ende passt auf jeden Schlüssel mit diesem Präfix; der längste passende Eintrag gewinnt."
+
+#: settings/herald.setting.php
+msgid "Monitor Threshold Exceptions"
+msgstr "Ausnahmen von der Monitor-Schwelle"
+
+#: settings/herald.setting.php
+msgid "Map of check key to ISO datetime, or to an empty string for no end: the monitor sends no failure alerts and no reminders for it. A key ending in * matches every key with that prefix. The status page keeps showing the message. Lapsed entries are removed on each run."
+msgstr "Abbildung von Check-Schlüssel auf ISO-Zeitpunkt oder auf einen leeren Text für kein Ende: Der Monitor sendet dafür keine Fehlermeldungen und keine Erinnerungen. Ein Schlüssel mit * am Ende passt auf jeden Schlüssel mit diesem Präfix. Die Statusseite zeigt die Meldung weiter an. Abgelaufene Einträge entfernt jeder Lauf."
+
+#: settings/herald.setting.php
+msgid "A recovery is still announced for a failure that was announced before the snooze was set."
+msgstr "Für einen Fehler, der vor der Stummschaltung gemeldet wurde, wird die Entwarnung trotzdem gemeldet."
+
+#: settings/herald.setting.php
+msgid "List of extension keys that must be installed and enabled. A listed extension that is not is reported as the failing check herald_expected_<key>."
+msgstr "Liste von Extension-Schlüsseln, die installiert und aktiviert sein müssen. Eine aufgeführte Extension, für die das nicht gilt, meldet der Monitor als gescheiterten Check herald_expected_<key>."
+
+#: settings/herald.setting.php
+msgid "Monitor Expected Extensions"
+msgstr "Erwartete Monitor-Extensions"

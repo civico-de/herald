@@ -176,6 +176,40 @@ return [
     'title' => E::ts('Monitor Renotify Hours'),
     'settings_pages' => ['herald' => ['section' => 'advanced', 'weight' => 73]],
   ],
+  'herald_monitor_min_severity' => [
+    'group_name' => 'Herald Settings',
+    'group' => 'herald',
+    'name' => 'herald_monitor_min_severity',
+    'type' => 'String',
+    'html_type' => 'select',
+    'pseudoconstant' => ['callback' => 'Civi\\Herald\\Monitor\\Severity::thresholdOptions'],
+    'validate_callback' => 'Civi\\Herald\\Monitor\\Threshold::validateMin',
+    'default' => 'warning',
+    'add' => '5.81',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => E::ts(
+      'A status message from this level up counts as a failing check. The lowest allowed level is notice, because info and debug messages report healthy states.',
+    ),
+    'title' => E::ts('Monitor Threshold'),
+    'settings_pages' => ['herald' => ['section' => 'advanced', 'weight' => 74]],
+  ],
+  'herald_monitor_severity' => [
+    'group_name' => 'Herald Settings',
+    'group' => 'herald',
+    'name' => 'herald_monitor_severity',
+    'type' => 'Array',
+    // warden's warnings are setup hints for the status page, not outages.
+    'default' => ['warden_*' => 'error'],
+    'validate_callback' => 'Civi\\Herald\\Monitor\\Threshold::validateExceptions',
+    'add' => '5.81',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => E::ts(
+      'Exceptions to the monitor threshold: map of check key to level. A key ending in * matches every key with that prefix; the longest matching entry wins.',
+    ),
+    'title' => E::ts('Monitor Threshold Exceptions'),
+  ],
   'herald_monitor_snooze' => [
     'group_name' => 'Herald Settings',
     'group' => 'herald',
@@ -186,10 +220,10 @@ return [
     'is_domain' => 1,
     'is_contact' => 0,
     'description' => E::ts(
-      'Map of check-name to ISO datetime: the check produces no fail/renotify alerts until then. Expired entries are pruned on each run.',
+      'Map of check key to ISO datetime, or to an empty string for no end: the monitor sends no failure alerts and no reminders for it. A key ending in * matches every key with that prefix. The status page keeps showing the message. Lapsed entries are removed on each run.',
     ),
     'help_text' => E::ts(
-      'A fail→ok recovery still fires after the snooze lapses if a failure had already been announced before it was set.',
+      'A recovery is still announced for a failure that was announced before the snooze was set.',
     ),
     'title' => E::ts('Monitor Snooze'),
   ],
@@ -203,9 +237,9 @@ return [
     'is_domain' => 1,
     'is_contact' => 0,
     'description' => E::ts(
-      'List of check names that must always be present. A listed check missing from the hook is reported as failing (extension disabled?). Empty keeps the default of silently dropping vanished checks.',
+      'List of extension keys that must be installed and enabled. A listed extension that is not is reported as the failing check herald_expected_<key>.',
     ),
-    'title' => E::ts('Monitor Expected Checks'),
+    'title' => E::ts('Monitor Expected Extensions'),
   ],
   'herald_buffer_max_attempts' => [
     'group_name' => 'Herald Settings',

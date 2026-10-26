@@ -5,73 +5,68 @@ declare(strict_types = 1);
 namespace Civi\Herald\Admin;
 
 use Civi\Herald\Monitor\CheckCollector;
+use Civi\Herald\Monitor\ExpectedExtensions;
 use Civi\Herald\Monitor\Monitor;
+use Civi\Herald\Monitor\Severity;
+use Civi\Herald\Monitor\Snooze;
+use Civi\Herald\Monitor\Threshold;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 
 /**
- * The monitor's checks for the admin screen. The state setting is only read,
- * and never its detail text.
+ * The monitor screen: the keys System.check reports and the keys in the
+ * monitor state, plus the threshold, snooze and expected settings. Runs
+ * System.check and writes nothing; message texts are not returned.
  */
 final class MonitorChecks {
 
-  public const EXPECTED = 'herald_monitor_expected';
+  public const EXPECTED = ExpectedExtensions::SETTING;
 
-  public const SNOOZE = 'herald_monitor_snooze';
+  public const SNOOZE = Snooze::SETTING;
 
   /**
-   * Every check that is provided, expected, snoozed or has state; times are
-   * Unix timestamps so the browser shows them in its own time zone.
+   * Times are Unix timestamps so the browser shows them in its own time zone.
    *
-   * @return list<array<string, mixed>>
+   * @return array<string, mixed>
    */
-  public static function rows(): array {
-    $provided = (new CheckCollector())->names();
-    $expected = array_values(array_filter(self::array(self::EXPECTED), 'is_string'));
-    $snooze = StringMap::of(self::array(self::SNOOZE));
+  public static function screen(?CheckCollector $collector = NULL): array {
+    $threshold = Threshold::fromSettings();
+    $observations = ($collector ?? new CheckCollector())->observe($threshold);
     $state = self::array(Monitor::STATE_SETTING);
     $now = \CRM_Utils_Time::time();
+    $snooze = new Snooze(Snooze::live(self::array(self::SNOOZE), $now), $now);
 
-    $names = array_merge($provided, $expected, array_keys($snooze), array_keys($state));
-    $names = array_values(array_unique(array_map('strval', $names)));
-    natcasesort($names);
-
-    $rows = [];
-    foreach ($names as $name) {
-      $until = $snooze[$name] ?? '';
-      $untilTs = $until !== '' ? strtotime($until) : FALSE;
-      $rows[] =
+    $keys = array_values(array_unique(array_map('strval', [...array_keys($observations), ...array_keys($state)])));
+    natcasesort($keys);
+    $checks = [];
+    foreach ($keys as $key) {
+      $obs = $observations[$key] ?? NULL;
+      $checks[] =
         [
-          'name' => $name,
-          'provided' => in_array($name, $provided, TRUE),
-          'expected' => in_array($name, $expected, TRUE),
-          'snoozed' => $untilTs !== FALSE && $untilTs > $now,
-          'snoozed_until' => $until,
-          'snoozed_until_ts' => $untilTs !== FALSE ? $untilTs : NULL,
-        ] + self::stateColumns(is_array($state[$name] ?? NULL) ? $state[$name] : NULL);
+          'key' => $key,
+          'reported' => $obs !== NULL,
+          'title' => $obs['title'] ?? '',
+          'detail' => implode(', ', $obs['detail'] ?? []),
+          'severity' => $obs !== NULL ? Severity::name($obs['severity']) : '',
+          'severity_label' => $obs !== NULL ? Severity::label($obs['severity']) : '',
+          'visible' => $obs['visible'] ?? NULL,
+          'failing' => ($obs['status'] ?? 'ok') === 'fail',
+          'threshold' => Severity::name($threshold->minFor($key)),
+          'snoozed' => $snooze->covers($key),
+        ] + MonitorRows::state(is_array($state[$key] ?? NULL) ? $state[$key] : NULL);
     }
-    return $rows;
-  }
 
-  /**
-   * @param array<array-key, mixed>|null $entry
-   * @return array{status: string, consecutive_fails: int, consecutive_oks: int, notified: bool, last_notified: ?int}
-   */
-  private static function stateColumns(?array $entry): array {
-    if ($entry === NULL) {
-      return [
-        'status' => '',
-        'consecutive_fails' => 0,
-        'consecutive_oks' => 0,
-        'notified' => FALSE,
-        'last_notified' => NULL,
-      ];
-    }
     return [
-      'status' => ($entry['status'] ?? 'ok') === 'fail' ? 'fail' : 'ok',
-      'consecutive_fails' => max(0, Cast::toInt($entry['consecutive_fails'] ?? 0)),
-      'consecutive_oks' => max(0, Cast::toInt($entry['consecutive_oks'] ?? 0)),
-      'notified' => !empty($entry['notified']),
-      'last_notified' => is_numeric($entry['last_notified'] ?? NULL) ? (int) $entry['last_notified'] : NULL,
+      'checks' => $checks,
+      'min_severity' => Cast::toString(\Civi::settings()->get(Threshold::MIN_SETTING)),
+      'severity' => StringMap::of(\Civi::settings()->get(Threshold::EXCEPTIONS_SETTING)),
+      'snooze' => MonitorRows::snooze(StringMap::of(self::array(self::SNOOZE))),
+      'expected' => array_values(array_filter(self::array(self::EXPECTED), 'is_string')),
+      'levels' => array_map(
+        static fn (string $name, string $label): array => ['name' => $name, 'label' => $label],
+        array_keys(Severity::thresholdOptions()),
+        Severity::thresholdOptions(),
+      ),
+      'status_url' => \CRM_Utils_System::url('civicrm/a/', '', FALSE, '/status'),
     ];
   }
 

@@ -131,8 +131,9 @@ Die Entität `Herald` bietet diese Aktionen. Die Aktionen erfordern die Berechti
 | getTopicUsage | keine | Listet die Regelaktionen, Jobs und den Monitor auf, die jedes Thema nennen. |
 | saveCleanedFields | fields | Prüft und speichert `herald_cleaned_fields`. Fehler nennen das Feld und die Regel. |
 | saveAllowedHosts | hosts | Prüft und speichert `herald_webhook_allowed_hosts`. Leere Einträge werden übersprungen. |
-| getMonitorChecks | keine | Listet jeden angebotenen, erwarteten, stummgeschalteten oder verfolgten Check mit seinem gespeicherten Zustand, ohne Details und ohne die Checks auszuführen. |
-| saveMonitorChecks | expected, snooze | Prüft und speichert `herald_monitor_expected` und `herald_monitor_snooze`. Eine Stummschaltung muss in der Zukunft enden, sofern sie nicht unverändert ist. |
+| getMonitorChecks | keine | Liefert die Monitor-Seite als einen Datensatz: jeden Schlüssel, den System.check meldet oder der Monitor verfolgt, mit Titel, Detail, Stufe, Sichtbarkeit und gespeichertem Zustand, dazu die Einstellungen für Schwelle, Stummschaltung und erwartete Extensions. Führt System.check aus, liefert keine Meldungstexte und schreibt nichts. |
+| saveMonitorChecks | minSeverity, severity, snooze, expected | Prüft und speichert `herald_monitor_min_severity`, `herald_monitor_severity`, `herald_monitor_snooze` und `herald_monitor_expected`. Eine Stummschaltung mit Datum muss in der Zukunft enden, sofern sie nicht unverändert ist. |
+| monitorPreview | keine | Listet die Schlüssel, die der nächste Monitor-Lauf melden würde, mit Status, Titel, Detail, Text und Stufe. Sendet nichts und schreibt keinen Monitor-Zustand, siehe [Vorschau](monitor.md#vorschau). |
 
 Die Speicheraktionen speichern genau die Form, die `Setting.set` erwartet. `Setting.set` funktioniert weiterhin, prüft aber nichts. Ungültige Eingaben lehnen die Speicheraktionen mit einer Liste aller Probleme ab und speichern dann nichts.
 
@@ -162,7 +163,7 @@ if (class_exists(\Civi\Api4\Herald::class)) {
 | Job | Mit herald ausgeliefert | Häufigkeit | Was er tut |
 |---|---|---|---|
 | Herald: Sammelpuffer für Meldungen leeren | ja | Always (bei jedem Cron-Lauf) | Sendet die gesammelten Gruppen, deren Fenster abgelaufen ist. |
-| Herald: Check-Monitor ausführen | ja | Always (bei jedem Cron-Lauf) | Führt den [Check-Monitor](monitor.md) aus. |
+| Herald: Check-Monitor ausführen | ja | Always (bei jedem Cron-Lauf) | Liest die Systemstatus-Prüfungen für den [Check-Monitor](monitor.md). |
 | Herald.notifyDigest | nein, legen Sie ihn selbst an | Hourly mit sendHour, oder Always mit sendHour und daily | Verschickt einen Report ohne Regel, siehe [Ohne Regel](digests.md#ohne-regel). |
 
 Beide mitgelieferten Jobs setzen eine Sperre. Ein Lauf, der sich mit einem anderen überschneidet, sendet daher nicht doppelt.
@@ -186,7 +187,7 @@ Die Vorlagen von herald sind CiviCRM-Nachrichtenvorlagen. Sie bearbeiten sie unt
 | Herald: Event-Registrierung storniert | herald_event_cancellation_alert | Eine stornierte Registrierung, mit maskiertem Kontakt |
 | Herald: Neue Mitgliedschaftsanmeldung | herald_membership_signup_alert | Eine neue Mitgliedschaft, mit maskiertem Kontakt |
 | Herald: Neue Gruppen-/Newsletter-Anmeldung | herald_group_subscription_alert | Einen Kontakt, der einer Gruppe hinzugefügt wurde, mit maskiertem Kontakt |
-| Herald: Statuswechsel eines Monitor-Checks | herald_monitor_alert | Einen Wechsel im Check-Monitor. Variablen: check, status, detail, renotify |
+| Herald: Statuswechsel eines Monitor-Checks | herald_monitor_alert | Einen Wechsel im Check-Monitor. Variablen: check, status (fail, changed oder ok), title, detail, text, severity, renotify |
 
 Die Titel erscheinen in der Sprache, in der CiviCRM die Vorlagen angelegt oder zuletzt aktualisiert hat. Auf einer englischsprachigen Site heißt „Herald: Neuer abgeschlossener Beitrag“ zum Beispiel „Herald: New completed contribution“. Der Workflow-Name ist in jeder Sprache gleich.
 
@@ -246,7 +247,11 @@ Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'nam
 | `herald_buffer_max_items` | 25 | Ausgegebene Nachrichten in einer Sammelnachricht. 0 gibt alle aus. |
 | `herald_cleaned_fields` | leer | Textfelder, deren Werte Regeln unter einem Namen gruppieren, siehe [Felder bereinigen](digests.md#felder-bereinigen). |
 | `herald_monitor_topic` | ops | Das Thema für Meldungen des Monitors. |
-| `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours`, `herald_monitor_snooze`, `herald_monitor_expected` | siehe [Feinabstimmung](monitor.md#feinabstimmung) | Feinabstimmung des Monitors. |
+| `herald_monitor_min_severity` | warning | Die Stufe, ab der eine Statusmeldung als Fehler zählt, siehe [Schwelle](monitor.md#schwelle). Mindestens notice. |
+| `herald_monitor_severity` | `{"warden_*": "error"}` | Schwellen für einzelne Check-Schlüssel oder Präfixe. |
+| `herald_monitor_snooze` | leer | Schlüssel oder Präfixe, die nur in herald stummgeschaltet sind, siehe [Stummschalten](monitor.md#stummschalten). |
+| `herald_monitor_expected` | leer | Extension-Schlüssel, die installiert und aktiviert sein müssen, siehe [Erwartete Extensions](monitor.md#erwartete-extensions). |
+| `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours` | 1, 1, 24 | Hysterese und Erinnerungen, siehe [Die Monitor-Seite](monitor.md#die-monitor-seite). |
 | `herald_monitor_state` | leer | Der eigene Zustand des Monitors. Nicht bearbeiten. |
 
 ![Die Herald-Einstellungen](images/de/settings.png)
@@ -255,9 +260,11 @@ Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'nam
 
 | Hook | Signatur | Zweck |
 |---|---|---|
-| `hook_civicrm_heraldChecks` | `(array &$checks)` | Checks zum Monitor hinzufügen, siehe [Eigene Checks bereitstellen](monitor.md#eigene-checks-bereitstellen). |
+| `hook_civicrm_check` (Core) | `(array &$messages)` | Checks zur Statusseite und damit zum Monitor hinzufügen, siehe [Eigene Checks bereitstellen](monitor.md#eigene-checks-bereitstellen). |
 | `hook_civicrm_heraldDigestSections` | `(array $keys, array $context, array &$sections)` | Die Werte für die Abschnittsquellen eines Reports liefern, siehe [Abschnitte aus anderen Extensions](digests.md#abschnitte-aus-anderen-extensions). |
 
 ## Systemstatus
 
 Solange ein Deploy die Regeln von herald abgeschaltet hat, zeigt der Systemstatus von CiviCRM die Warnung „Herald: Regeln durch einen Deploy abgeschaltet“. Sie nennt die IDs der Regeln und den Befehl, mit dem Sie sie wieder einschalten. Siehe [Deployment](deploy.md).
+
+Der Systemstatus zeigt außerdem herald_buffer_backlog und herald_buffer_dead_letter, siehe [Eingebaute Checks](monitor.md#eingebaute-checks).

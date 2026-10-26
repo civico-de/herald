@@ -9,8 +9,10 @@ use Civi\Api4\Generic\Result;
 use Civi\Herald\Admin\MonitorChecks;
 
 /**
- * The monitor's checks: provided by the hook, expected, snoozed, and their
- * stored counters. Calls no check and returns no detail text.
+ * The monitor screen in one record: the check keys System.check reports and
+ * the keys in the monitor state, with detail, severity, visibility and
+ * monitor state, plus the threshold, snooze and expected settings. Runs
+ * System.check, returns no message text and writes nothing.
  *
  * Example:
  *   cv api4 Herald.getMonitorChecks
@@ -18,7 +20,7 @@ use Civi\Herald\Admin\MonitorChecks;
 class GetMonitorChecks extends AbstractAction {
 
   public function _run(Result $result): void {
-    $result->exchangeArray(MonitorChecks::rows());
+    $result[] = MonitorChecks::screen();
   }
 
 }

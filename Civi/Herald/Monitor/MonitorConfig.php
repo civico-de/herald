@@ -17,10 +17,7 @@ class MonitorConfig {
 
   public int $now;
 
-  /**
-   * @var array<string, string>
-   */
-  private array $snooze;
+  private Snooze $snooze;
 
   /**
    * @param array{open_after?: int, close_after?: int, renotify_seconds?: int, snooze?: array<string,string>, now?: int} $config
@@ -29,40 +26,23 @@ class MonitorConfig {
     $this->openAfter = max(1, (int) ($config['open_after'] ?? 1));
     $this->closeAfter = max(1, (int) ($config['close_after'] ?? 1));
     $this->renotifySeconds = max(0, (int) ($config['renotify_seconds'] ?? 0));
-    $this->snooze = $config['snooze'] ?? [];
     $this->now = (int) ($config['now'] ?? 0);
+    $this->snooze = new Snooze($config['snooze'] ?? [], $this->now);
   }
 
   /**
-   * The entries of an admin-edited snooze map that are well-formed and not yet lapsed.
-   *
-   * @param array<array-key, mixed> $snooze
-   * @return array<string, string>
+   * Muted while core hides the message or herald snoozes its key.
    */
-  public static function liveSnooze(array $snooze, int $now): array {
-    $live = [];
-    foreach ($snooze as $name => $iso) {
-      if (!is_string($name) || !is_string($iso)) {
-        continue;
-      }
-      $until = strtotime($iso);
-      if ($until === FALSE || $until <= $now) {
-        continue;
-      }
-      $live[$name] = $iso;
-    }
-    return $live;
+  public function mutes(Observation $obs): bool {
+    return !$obs->visible || $this->snooze->covers($obs->key);
   }
 
-  /**
-   * Unparseable or past snooze timestamps count as not snoozed.
-   */
-  public function isSnoozed(string $name): bool {
-    if (!isset($this->snooze[$name])) {
-      return FALSE;
-    }
-    $until = strtotime($this->snooze[$name]);
-    return $until !== FALSE && $this->now < $until;
+  public function renotifyDue(?int $lastNotified): bool {
+    return (
+      $this->renotifySeconds > 0
+      && $lastNotified !== NULL
+      && ($this->now - $lastNotified) >= $this->renotifySeconds
+    );
   }
 
 }

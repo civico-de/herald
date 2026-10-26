@@ -175,7 +175,7 @@ The list shows each alert's ID, the reason it was parked, the number of attempts
 
 Reactivating an alert resets its attempt count. Reactivated alerts keep the parameters stored when they were buffered. Fixing the rule or the topic therefore does not repair a wrong recipient that was set on the action. Subscriber and group recipients are looked up again at delivery, so fixing a contact's preferences does help.
 
-The check monitor reports parked alerts and a stuck buffer, see [Built in checks](monitor.md#built-in-checks).
+The system status, and with it the check monitor, reports parked alerts and a stuck buffer, see [Built in checks](monitor.md#built-in-checks).
 
 Uninstalling herald drops the buffer table, parked alerts included. Disabling herald keeps it.
 

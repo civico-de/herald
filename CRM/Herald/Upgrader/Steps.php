@@ -95,4 +95,14 @@ abstract class CRM_Herald_Upgrader_Steps extends CRM_Herald_Upgrader_EarlySteps 
     return TRUE;
   }
 
+  /**
+   * The check monitor reads System.check: its state and snoozes start empty,
+   * and the expected checks become extension keys.
+   */
+  public function upgrade_1018(): bool {
+    $keys = CRM_Herald_Upgrader_MonitorSource::migrate();
+    $this->ctx->log->info("herald: cleared the monitor state and snoozes and kept {$keys} expected extension key(s)");
+    return TRUE;
+  }
+
 }

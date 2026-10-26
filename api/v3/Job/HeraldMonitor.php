@@ -7,10 +7,9 @@ use Civi\Herald\Monitor\Monitor;
 /**
  * Job.herald_monitor
  *
- * Runs the generic check monitor (see Civi\Herald\Monitor\Monitor): collects
- * checks contributed via hook_civicrm_heraldChecks, publishes ok↔fail
- * transitions to the herald_monitor_topic topic. Scheduled "Always" via
- * managed/Job.mgd.php; a run with no registered checks is a cheap no-op.
+ * Runs the check monitor (see Civi\Herald\Monitor\Monitor): observes the
+ * System.check messages per key and publishes transitions to the
+ * herald_monitor_topic topic. Scheduled "Always" via managed/Job.mgd.php.
  * A run in which a publish failed returns an error.
  *
  * @param array<string, mixed> $spec
