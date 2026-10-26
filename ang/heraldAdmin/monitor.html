@@ -34,12 +34,12 @@
           </th>
           <td>{{ row.detail }}</td>
           <td>{{ row.severity_label }}</td>
-          <td>{{ row.threshold }}</td>
+          <td>{{ row.thresholdLabel }}</td>
           <td>{{ $ctrl.visibleText(row) }}</td>
           <td>{{ row.snoozed ? $ctrl.ts('Yes') : $ctrl.ts('No') }}</td>
           <td>{{ $ctrl.monitorText(row) }}</td>
           <td>{{ row.status ? row.consecutive_fails + ' / ' + row.consecutive_oks : '' }}</td>
-          <td>{{ row.lastNotifiedDate ? (row.lastNotifiedDate | date:'medium') : '' }}</td>
+          <td>{{ row.lastNotifiedText }}</td>
         </tr>
       </tbody>
     </table>

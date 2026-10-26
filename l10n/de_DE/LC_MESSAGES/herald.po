@@ -2795,7 +2795,7 @@ msgstr "Meldungen ab dieser Stufe melden"
 
 #: ang/heraldAdmin/monitor.html
 msgid "Notice is the lowest level: info and debug messages report healthy states."
-msgstr "Notice ist die niedrigste Stufe: Meldungen auf info und debug zeigen gesunde Zustände an."
+msgstr "Hinweis ist die niedrigste Stufe: Info- und Debug-Meldungen zeigen gesunde Zustände an."
 
 #: ang/heraldAdmin/monitor.html
 msgid "Exceptions for single keys or prefixes"
@@ -2931,7 +2931,7 @@ msgstr "Check %1 geändert"
 
 #: settings/herald.setting.php
 msgid "A status message from this level up counts as a failing check. The lowest allowed level is notice, because info and debug messages report healthy states."
-msgstr "Eine Statusmeldung ab dieser Stufe gilt als gescheiterter Check. Die niedrigste erlaubte Stufe ist notice, weil Meldungen auf info und debug gesunde Zustände anzeigen."
+msgstr "Eine Statusmeldung ab dieser Stufe gilt als gescheiterter Check. Die niedrigste erlaubte Stufe ist Hinweis, weil Info- und Debug-Meldungen gesunde Zustände anzeigen."
 
 #: settings/herald.setting.php
 msgid "Monitor Threshold"

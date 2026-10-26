@@ -65,9 +65,15 @@
         crmApi4("Herald", "getMonitorChecks")
           .then((result) => {
             const screen = result[0];
+            const labels = Object.fromEntries(
+              screen.levels.map((level) => [level.name, level.label]),
+            );
             ctrl.checks = screen.checks.map((row) =>
               Object.assign({}, row, {
-                lastNotifiedDate: row.last_notified ? new Date(row.last_notified * 1000) : null,
+                thresholdLabel: labels[row.threshold],
+                lastNotifiedText: row.last_notified
+                  ? CRM.utils.formatDate(new Date(row.last_notified * 1000), null, true)
+                  : "",
               }),
             );
             ctrl.levels = screen.levels;
