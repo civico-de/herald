@@ -212,7 +212,8 @@ The activity channel records a notification in CiviCRM as an activity and assign
 
 | Key | Meaning |
 |---|---|
-| `activity_assignee_contact_id` | Assignee. Required. |
+| `activity_assignee_contact_id` | Assignee. Required unless the external identifier is set. |
+| `activity_assignee_external_identifier` | Assignee by the contact's external identifier, for a contact whose ID differs between sites. Used only when no contact ID is set. A send fails when no contact outside the trash has it. |
 | `activity_source_contact_id` | The "Added by" contact. Defaults to the assignee. |
 | `activity_target_contact_id` | The contact the activity is about. Optional. |
 | `activity_type` | Activity type name. The default `herald_notification` ships with herald. |
@@ -269,7 +270,8 @@ These are the configuration errors the channels raise. In a direct delivery they
 | no email_to, neither on the delivery nor on the channel | Set a recipient address on the action or a default on the channel. |
 | address lists go through an email channel | The delivery mode "addresses" needs a channel of type email. |
 | email delivery failed | CiviCRM's mailer refused the message. Check the outbound mail settings. |
-| activity channel requires activity_assignee_contact_id | Set an assignee. |
+| activity channel requires activity_assignee_contact_id or activity_assignee_external_identifier | Set an assignee. |
+| no contact outside the trash has the external identifier | Create the contact or fix the identifier. |
 | activity channel option does not exist | The activity type or status name is wrong or disabled. |
 | activity_format must be "html" or "text" | Fix the format. |
 | Channel "…" is not registered | The channel's type is no longer available, for example after code was removed. |

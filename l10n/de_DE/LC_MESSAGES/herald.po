@@ -793,6 +793,18 @@ msgid "Defaults to the assignee contact."
 msgstr "Standard ist der zugewiesene Kontakt."
 
 #: Civi/Herald/Channel/ActivityChannel.php
+msgid "Or set the assignee external identifier."
+msgstr "Oder die externe Kennung der zugewiesenen Person setzen."
+
+#: Civi/Herald/Channel/ActivityChannel.php
+msgid "Assignee external identifier"
+msgstr "Externe Kennung der zugewiesenen Person"
+
+#: Civi/Herald/Channel/ActivityChannel.php
+msgid "Used when no assignee contact ID is set; the contact must exist."
+msgstr "Gilt, wenn keine Kontakt-ID gesetzt ist; der Kontakt muss existieren."
+
+#: Civi/Herald/Channel/ActivityChannel.php
 msgid "Related contact ID"
 msgstr "Kontakt-ID des Bezugskontakts"
 

@@ -212,7 +212,8 @@ Der Aktivitätskanal legt eine Benachrichtigung in CiviCRM als Aktivität an und
 
 | Schlüssel | Bedeutung |
 |---|---|
-| `activity_assignee_contact_id` | Zugewiesener Kontakt. Pflicht. |
+| `activity_assignee_contact_id` | Zugewiesener Kontakt. Pflicht, außer die externe Kennung ist gesetzt. |
+| `activity_assignee_external_identifier` | Zugewiesener Kontakt über seine externe Kennung, für einen Kontakt, dessen ID von Site zu Site verschieden ist. Gilt nur, wenn keine Kontakt-ID gesetzt ist. Der Versand scheitert, wenn kein Kontakt außerhalb des Papierkorbs sie hat. |
 | `activity_source_contact_id` | Der Kontakt unter „Added by“ (hinzugefügt von). Standard ist der zugewiesene Kontakt. |
 | `activity_target_contact_id` | Der Kontakt, um den es in der Aktivität geht. Optional. |
 | `activity_type` | Name des Aktivitätstyps. Der Standard `herald_notification` wird mit herald ausgeliefert. |
@@ -269,7 +270,8 @@ Diese Konfigurationsfehler melden die Kanäle. Bei einer direkten Zustellung err
 | no email_to, neither on the delivery nor on the channel | Setzen Sie eine Empfängeradresse an der Aktion oder einen Standardwert am Kanal. |
 | address lists go through an email channel | Der Zustellmodus „Adressliste“ braucht einen Kanal vom Typ email. |
 | email delivery failed | Der Mailversand von CiviCRM hat die Nachricht abgelehnt. Prüfen Sie die Einstellungen für ausgehende Mails. |
-| activity channel requires activity_assignee_contact_id | Setzen Sie einen zugewiesenen Kontakt. |
+| activity channel requires activity_assignee_contact_id or activity_assignee_external_identifier | Setzen Sie einen zugewiesenen Kontakt. |
+| no contact outside the trash has the external identifier | Legen Sie den Kontakt an oder korrigieren Sie die Kennung. |
 | activity channel option does not exist | Der Name des Aktivitätstyps oder -status ist falsch oder deaktiviert. |
 | activity_format must be "html" or "text" | Korrigieren Sie das Format. |
 | Channel "…" is not registered | Der Typ des Kanals ist nicht mehr verfügbar, zum Beispiel weil Code entfernt wurde. |

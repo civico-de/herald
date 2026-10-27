@@ -122,6 +122,73 @@ class ActivityChannelTest extends TestCase implements HeadlessInterface, HookInt
     ActivityChannel::buildActivityValues('message', ['activity_assignee_contact_id' => 0]);
   }
 
+  public function testResolvesAssigneeByExternalIdentifier(): void {
+    $opsId = self::organisation('herald-ops');
+
+    $values = ActivityChannel::buildActivityValues(
+      'Check failed',
+      [
+        'activity_assignee_external_identifier' => ' herald-ops ',
+      ],
+      static fn (string $group, string $name): int => 1,
+    );
+
+    $this->assertSame([$opsId], $values['assignee_contact_id']);
+    $this->assertSame($opsId, $values['source_contact_id']);
+  }
+
+  public function testAssigneeContactIdBeatsExternalIdentifier(): void {
+    $values = ActivityChannel::buildActivityValues(
+      'Check failed',
+      [
+        'activity_assignee_contact_id' => 42,
+        'activity_assignee_external_identifier' => 'nobody-has-this',
+      ],
+      static fn (string $group, string $name): int => 1,
+    );
+
+    $this->assertSame([42], $values['assignee_contact_id']);
+  }
+
+  public function testUnknownExternalIdentifierFails(): void {
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessage('no contact outside the trash has the external identifier "nobody-has-this"');
+    ActivityChannel::buildActivityValues(
+      'Check failed',
+      [
+        'activity_assignee_external_identifier' => 'nobody-has-this',
+      ],
+      static fn (string $group, string $name): int => 1,
+    );
+  }
+
+  public function testTrashedContactIsNoAssignee(): void {
+    $opsId = self::organisation('herald-ops');
+    \Civi\Api4\Contact::update(checkPermissions: FALSE)
+      ->addWhere('id', '=', $opsId)
+      ->addValue('is_deleted', TRUE)
+      ->execute();
+
+    $this->expectException(\CRM_Core_Exception::class);
+    $this->expectExceptionMessage('external identifier "herald-ops"');
+    ActivityChannel::buildActivityValues(
+      'Check failed',
+      [
+        'activity_assignee_external_identifier' => 'herald-ops',
+      ],
+      static fn (string $group, string $name): int => 1,
+    );
+  }
+
+  private static function organisation(string $externalIdentifier): int {
+    return (int) \Civi\Api4\Contact::create(checkPermissions: FALSE)
+      ->addValue('contact_type', 'Organization')
+      ->addValue('organization_name', 'Ops')
+      ->addValue('external_identifier', $externalIdentifier)
+      ->execute()
+      ->single()['id'];
+  }
+
   public function testRejectsUnknownBodyFormat(): void {
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/activity_format/');

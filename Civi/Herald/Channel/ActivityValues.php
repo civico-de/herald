@@ -19,10 +19,12 @@ final class ActivityValues {
    * @return array<string, mixed>
    */
   public static function build(string $body, array $config, ?callable $optionResolver = NULL): array {
-    $assigneeId = ActivityContactId::optional($config['activity_assignee_contact_id'] ?? NULL);
+    $assigneeId = ActivityContactId::optional(
+      $config['activity_assignee_contact_id'] ?? NULL,
+    ) ?? ActivityContactId::byExternalIdentifier($config['activity_assignee_external_identifier'] ?? NULL);
     if ($assigneeId === NULL) {
       throw new \CRM_Core_Exception(
-        'herald: activity channel requires activity_assignee_contact_id.',
+        'herald: activity channel requires activity_assignee_contact_id or activity_assignee_external_identifier.',
       );
     }
 

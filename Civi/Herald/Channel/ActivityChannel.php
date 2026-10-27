@@ -15,7 +15,9 @@ use CRM_Herald_ExtensionUtil as E;
  * configured.
  *
  * Per-call config:
- *   activity_assignee_contact_id  int     Assignee (required)
+ *   activity_assignee_contact_id  int     Assignee
+ *   activity_assignee_external_identifier
+ *                                 string  Assignee by external identifier, when no ID is set
  *   activity_source_contact_id    int     Added-by contact (defaults to assignee)
  *   activity_target_contact_id    int     Optional contact the activity concerns
  *   activity_type                 string  Activity type option name
@@ -83,9 +85,17 @@ class ActivityChannel implements ChannelInterface {
     return [
       'activity_assignee_contact_id' => [
         'label' => E::ts('Assignee contact ID'),
-        'required' => TRUE,
+        'required' => FALSE,
         'type' => 'int',
         'recipient' => TRUE,
+        'help' => E::ts('Or set the assignee external identifier.'),
+      ],
+      'activity_assignee_external_identifier' => [
+        'label' => E::ts('Assignee external identifier'),
+        'required' => FALSE,
+        'type' => 'string',
+        'recipient' => TRUE,
+        'help' => E::ts('Used when no assignee contact ID is set; the contact must exist.'),
       ],
       'activity_source_contact_id' => [
         'label' => E::ts('Added-by contact ID'),
