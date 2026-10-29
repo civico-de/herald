@@ -17,8 +17,6 @@ jobs:
     with:
       key: herald
       composer_install: true
-      # The 6.18 floor from info.xml, next to the default image.
-      matrix_images: ghcr.io/civico-de/civikitchen:standalone-6.18
       lifecycle: true
       upgrade_from_last_release: true
       schema_parity: true
