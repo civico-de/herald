@@ -92,7 +92,7 @@ class SubscriberLookup {
       [$config, $reason] =
         $reason === NULL && $rows !== NULL
           ? SubscriptionConfig::of($types[$channel], $subscription, $rows, $options)
-          : [NULL, $reason ?? 'no_recipient'];
+          : [NULL, $reason];
       if ($config === NULL) {
         $skipped[$reason] = ($skipped[$reason] ?? 0) + 1;
         continue;

@@ -28,7 +28,8 @@ final class Placeholders {
   public static function slug(string $label): string {
     $text = strtr(mb_strtolower(trim($label)), ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'ß' => 'ss']);
     // Other accents lose their mark: é → e. Invalid UTF-8 does not decompose and keeps its marks.
-    $text = (string) preg_replace('/\p{Mn}+/u', '', \Normalizer::normalize($text, \Normalizer::FORM_D) ?: $text);
+    $decomposed = \Normalizer::normalize($text, \Normalizer::FORM_D);
+    $text = (string) preg_replace('/\p{Mn}+/u', '', is_string($decomposed) ? $decomposed : $text);
     return trim((string) preg_replace('/[^a-z0-9]+/', '_', $text), '_');
   }
 
