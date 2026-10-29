@@ -151,17 +151,19 @@ auth_header() { # auth_header [header] — a curl config line sending $TOKEN as 
 }
 
 # ── maildev ──────────────────────────────────────────────────────────────
+# Filtered by the app container's jq, so the host needs no JSON tool. An empty
+# or broken answer from maildev is an error, never zero mails.
+ck_mails_to() { # ck_mails_to <recipient> <jq filter> — the filter over the mails addressed To: the recipient
+  curl -s "$MAILDEV_URL/email" | app "jq -nr --arg to $(printf %q "$1") \
+    '[(try input catch error(\"maildev sent no mail list\"))[] | select(any(.to[]; .address == \$to))] | $2'"
+}
+
 mail_count() { # mail_count <recipient> — mails addressed To: the recipient
-  curl -s "$MAILDEV_URL/email" | python3 -c "
-import json, sys
-print(sum(1 for m in json.load(sys.stdin) if any(t['address'] == sys.argv[1] for t in m['to'])))" "$1"
+  ck_mails_to "$1" length
 }
 
 newest_mail_text() { # newest_mail_text <recipient> — body text of the newest mail
-  curl -s "$MAILDEV_URL/email" | python3 -c "
-import json, sys
-mails = [m for m in json.load(sys.stdin) if any(t['address'] == sys.argv[1] for t in m['to'])]
-print(mails[-1].get('text') or '' if mails else '')" "$1"
+  ck_mails_to "$1" 'last | .text // ""'
 }
 
 mail_clear() { curl -s -X DELETE "$MAILDEV_URL/email/all" >/dev/null; }
