@@ -109,7 +109,7 @@ A listed extension that is not installed and enabled fails as the check `herald_
 
 ## The monitor screen
 
-Administer » Herald » Monitor checks shows every key System.check returns and every key the monitor has a state for. Each row shows the title, detail, severity and visibility of the message, whether it fails at its threshold, whether it is snoozed, and the monitor state: the last reported status, the failing and healthy runs in a row, and when a failure was last reported. The screen runs System.check but does not show message texts and writes nothing.
+Administer » Herald » Monitor checks shows every key System.check returns and every key the monitor has a state for. Each row shows the title, detail, severity and visibility of the message, whether it fails at its threshold, whether it is snoozed, and the monitor state: the last reported status, the failing and healthy runs in a row (counted up to `herald_monitor_open_after` and `herald_monitor_close_after`), and when a failure was last reported. The screen runs System.check but does not show message texts and writes nothing.
 
 Below the table you set the threshold and its exceptions, the snoozes and the expected extensions. Times are shown and entered in the browser's time zone and stored with their offset. "No end" makes a snooze permanent. A new end that is not in the future is rejected. A link leads to the status page, where messages are hidden in core.
 

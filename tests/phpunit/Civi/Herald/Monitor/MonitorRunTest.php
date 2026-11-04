@@ -107,6 +107,38 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, Transactiona
     $this->assertSame([], $this->state(), 'healthy keys leave no state');
   }
 
+  /**
+   * With logging on, each write of the setting copies its whole value into
+   * log_civicrm_setting, so a steady run must not write it at all.
+   */
+  public function testARunWithoutTransitionsLeavesTheStateSettingUntouched(): void {
+    $this->message('checkOutboundMail', self::WARNING);
+    $this->message('checkLastCron', self::ERROR);
+    $written = static fn (): string => (string) \CRM_Core_DAO::singleValueQuery(
+      'SELECT created_date FROM civicrm_setting WHERE name = %1 AND domain_id = %2',
+      [1 => [Monitor::STATE_SETTING, 'String'], 2 => [\CRM_Core_Config::domainID(), 'Integer']],
+    );
+    try {
+      \CRM_Utils_Time::setTime('2030-01-07 08:00:00');
+      $this->assertSame(2, $this->monitor()->run()['transitions']);
+      $this->assertSame('2030-01-07 08:00:00', $written());
+
+      \CRM_Utils_Time::setTime('2030-01-07 08:15:00');
+      $this->assertSame(0, $this->monitor()->run()['transitions']);
+      $this->assertSame('2030-01-07 08:00:00', $written());
+
+      \CRM_Utils_Time::setTime('2030-01-07 08:30:00');
+      $this->rows = [];
+      $this->message('checkOutboundMail', self::WARNING);
+      $this->assertSame(1, $this->monitor()->run()['transitions']);
+      $this->assertSame('2030-01-07 08:30:00', $written());
+      $this->assertSame(['checkOutboundMail'], array_keys($this->state()));
+    }
+    finally {
+      \CRM_Utils_Time::resetTime();
+    }
+  }
+
   public function testInfoMessagesStayHealthyAtTheLowestThreshold(): void {
     \Civi::settings()->set(Threshold::MIN_SETTING, 'notice');
     $this->message('checkPhpVersion', self::INFO, 'PHP Up-to-Date');

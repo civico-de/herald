@@ -109,7 +109,7 @@ Eine aufgeführte Extension, die nicht installiert und aktiviert ist, schlägt a
 
 ## Die Monitor-Seite
 
-Administrieren » Herald » Monitor-Checks zeigt jeden Schlüssel, den System.check liefert, und jeden Schlüssel, für den der Monitor einen Zustand hat. Jede Zeile zeigt Titel, Detail, Stufe und Sichtbarkeit der Meldung, ob sie an ihrer Schwelle fehlschlägt, ob sie stummgeschaltet ist, und den Monitor-Zustand: den zuletzt gemeldeten Status, die fehlgeschlagenen und gesunden Läufe in Folge und wann zuletzt ein Fehler gemeldet wurde. Die Seite führt System.check aus, zeigt aber keine Meldungstexte und schreibt nichts.
+Administrieren » Herald » Monitor-Checks zeigt jeden Schlüssel, den System.check liefert, und jeden Schlüssel, für den der Monitor einen Zustand hat. Jede Zeile zeigt Titel, Detail, Stufe und Sichtbarkeit der Meldung, ob sie an ihrer Schwelle fehlschlägt, ob sie stummgeschaltet ist, und den Monitor-Zustand: den zuletzt gemeldeten Status, die fehlgeschlagenen und gesunden Läufe in Folge (gezählt bis `herald_monitor_open_after` bzw. `herald_monitor_close_after`) und wann zuletzt ein Fehler gemeldet wurde. Die Seite führt System.check aus, zeigt aber keine Meldungstexte und schreibt nichts.
 
 Unter der Tabelle stellen Sie die Schwelle und ihre Ausnahmen, die Stummschaltungen und die erwarteten Extensions ein. Zeiten werden in der Zeitzone des Browsers angezeigt und eingegeben und mit Zeitzonenangabe gespeichert. „Ohne Ende“ macht eine Stummschaltung dauerhaft. Ein neues Ende, das nicht in der Zukunft liegt, wird abgelehnt. Ein Link führt zur Statusseite, auf der Meldungen in Core ausgeblendet werden.
 

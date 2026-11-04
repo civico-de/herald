@@ -135,6 +135,7 @@ class Monitor {
   private function publishPlans(array $plans): array {
     $topic = Cast::toString(\Civi::settings()->get(self::TOPIC_SETTING) ?: 'ops', 'ops');
     $state = self::state();
+    $stored = $state;
     $transitions = 0;
     $failures = 0;
 
@@ -159,11 +160,13 @@ class Monitor {
           continue;
         }
       }
-      unset($state[$key]);
-      if ($plan['state'] !== NULL) {
-        $state[$key] = $plan['state'];
+      // A NULL state drops the key; the others keep their position for the comparison below.
+      $state = array_filter(array_replace($state, [$key => $plan['state']]), 'is_array');
+      // Every set() is a new row in the setting's log table, even for an unchanged value.
+      if ($state !== $stored) {
+        \Civi::settings()->set(self::STATE_SETTING, $state);
+        $stored = $state;
       }
-      \Civi::settings()->set(self::STATE_SETTING, $state);
     }
 
     return [$transitions, $failures];

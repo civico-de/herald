@@ -135,6 +135,16 @@ class MonitorTest extends TestCase {
     $this->assertSame([$this->msg('a', 'fail', 'z', FALSE)], $pub);
   }
 
+  public function testAnOngoingFailureKeepsItsStateUnchanged(): void {
+    $cfg = ['open_after' => 2, 'close_after' => 1];
+    [$state] = $this->step([], ['a' => $this->obsFail()], $cfg);
+    [$state] = $this->step($state, ['a' => $this->obsFail()], $cfg);
+    [$next, $pub] = $this->step($state, ['a' => $this->obsFail()], $cfg);
+    $this->assertSame([], $pub);
+    $this->assertSame($state, $next);
+    $this->assertSame(2, $next['a']['consecutive_fails'], 'capped at open_after');
+  }
+
   public function testOpenAfterCounterResetsOnRecovery(): void {
     $cfg = ['open_after' => 2, 'close_after' => 1];
     $state = [];

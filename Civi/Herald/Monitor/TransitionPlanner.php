@@ -53,7 +53,9 @@ class TransitionPlanner {
 
     // Counters advance before the decision; the reported status does not, so
     // decide() can still read the episode we were in.
-    $observation->failed ? $state->countFail() : $state->countOk();
+    $observation->failed
+      ? $state->countFail($this->config->openAfter)
+      : $state->countOk($this->config->closeAfter);
     $publish = $this->decide($state, $observation);
 
     return ['check' => $key, 'state' => $state->persisted(), 'publish' => $publish];

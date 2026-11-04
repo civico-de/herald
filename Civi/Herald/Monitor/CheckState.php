@@ -12,7 +12,7 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  * Schema (entries lacking keys get status 'ok', counters 0, notified inferred):
  *   status: 'ok'|'fail'  — last REPORTED state (the edge we alerted on)
  *   severity / detail / title: what the last alert reported; changes are compared to these
- *   consecutive_fails / consecutive_oks: int  — raw observation run-lengths
+ *   consecutive_fails / consecutive_oks: int  — run-lengths, capped at their threshold
  *   notified: bool        — did we actually send a fail alert this episode
  *   last_notified: int|null — timestamp of the last fail alert (for renotify)
  *   muted: bool           — the failure was muted in its last failing run since the last alert
@@ -93,13 +93,16 @@ class CheckState {
     return $this->status === 'ok' && $this->consecutiveFails === 0 ? NULL : $this->toArray();
   }
 
-  public function countFail(): void {
-    $this->consecutiveFails++;
+  /**
+   * Capped, so an ongoing failure leaves the persisted state unchanged.
+   */
+  public function countFail(int $cap): void {
+    $this->consecutiveFails = min($this->consecutiveFails + 1, $cap);
     $this->consecutiveOks = 0;
   }
 
-  public function countOk(): void {
-    $this->consecutiveOks++;
+  public function countOk(int $cap): void {
+    $this->consecutiveOks = min($this->consecutiveOks + 1, $cap);
     $this->consecutiveFails = 0;
   }
 
