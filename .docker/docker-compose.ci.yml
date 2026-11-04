@@ -58,6 +58,10 @@ services:
     # Civi\Test's schema rebuild creates triggers as the app user; with binary
     # logging the server refuses that unless it trusts non-SUPER creators.
     command: --log-bin-trust-function-creators=1
+    # The test database is thrown away with the stack; in RAM no commit waits
+    # for an fsync, which slow CI disks charge for every CiviCRM request.
+    tmpfs:
+      - /var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: civicrm
