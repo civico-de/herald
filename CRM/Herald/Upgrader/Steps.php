@@ -105,4 +105,13 @@ abstract class CRM_Herald_Upgrader_Steps extends CRM_Herald_Upgrader_EarlySteps 
     return TRUE;
   }
 
+  /**
+   * Log copies of the monitor state, written on every run before 0.15, go.
+   */
+  public function upgrade_1019(): bool {
+    $rows = CRM_Herald_Upgrader_MonitorLog::purge();
+    $this->ctx->log->info("herald: deleted {$rows} logged copies of the monitor state");
+    return TRUE;
+  }
+
 }
