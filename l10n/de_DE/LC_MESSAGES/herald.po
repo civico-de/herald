@@ -2710,8 +2710,8 @@ msgid "Could not check: %1"
 msgstr "Konnte nicht prüfen: %1"
 
 #: Civi/Herald/Buffer/BufferChecks.php
-msgid "Herald: buffer check failed"
-msgstr "Herald: Prüfung des Puffers fehlgeschlagen"
+msgid "Herald: check failed"
+msgstr "Herald: Prüfung fehlgeschlagen"
 
 #: Civi/Herald/Buffer/BufferChecks.php
 msgid "%1 buffered alert(s) are older than three times their window. The job \"Herald: Flush alert aggregation buffer\" is not delivering them."
@@ -2972,3 +2972,19 @@ msgstr "Liste von Extension-Schlüsseln, die installiert und aktiviert sein müs
 #: settings/herald.setting.php
 msgid "Monitor Expected Extensions"
 msgstr "Erwartete Monitor-Extensions"
+
+#: Civi/Herald/Digest/DigestJobsCheck.php
+msgid "These scheduled jobs cannot send their digest and fail on every run: %1. Give each one an existing digest and a configured topic, or disable it."
+msgstr "Diese geplanten Jobs können ihren Digest nicht verschicken und scheitern bei jedem Lauf: %1. Geben Sie jedem einen vorhandenen Digest und ein eingerichtetes Topic, oder schalten Sie ihn ab."
+
+#: Civi/Herald/Digest/DigestJobsCheck.php
+msgid "Herald: digest jobs that cannot run"
+msgstr "Herald: Digest-Jobs, die nicht laufen können"
+
+#: Civi/Herald/Digest/DigestJobsCheck.php
+msgid "no digest"
+msgstr "kein Digest"
+
+#: Civi/Herald/Digest/DigestJobsCheck.php
+msgid "digest \"%1\" does not exist"
+msgstr "Digest „%1“ gibt es nicht"

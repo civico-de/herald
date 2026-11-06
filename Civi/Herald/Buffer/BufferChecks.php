@@ -47,7 +47,7 @@ final class BufferChecks extends AutoService implements HookInterface {
       return new \CRM_Utils_Check_Message(
         $name,
         E::ts('Could not check: %1', [1 => htmlspecialchars($e->getMessage())]),
-        E::ts('Herald: buffer check failed'),
+        E::ts('Herald: check failed'),
         // PSR-3 level; Psr\Log\LogLevel is only a transitive dependency here.
         'error',
         'fa-exclamation-triangle',

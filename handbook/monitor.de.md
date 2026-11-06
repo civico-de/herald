@@ -65,14 +65,15 @@ Benennen Sie jeden Check nach seiner Extension, etwa myext_queue, damit eine Mel
 
 ## Eingebaute Checks
 
-herald bringt zwei eigene Checks auf die Statusseite:
+herald bringt drei eigene Checks auf die Statusseite:
 
 | Check | Stufe | Meldet, wenn |
 |---|---|---|
 | herald_buffer_backlog | error | Meldungen, die auf das Sammeln warten, älter sind als das Dreifache ihres Fensters. Der Job zum Leeren des Puffers stellt nicht zu. |
 | herald_buffer_dead_letter | warning | Der Puffer [geparkte Meldungen](delivery.md#geparkte-meldungen) enthält. |
+| herald_digest_jobs | error | ein aktiver geplanter Job von Herald.notifyDigest keinen Digest nennt, einen, den es nicht gibt, oder ein Topic, das die Zustellung keinem Kanal zuordnen kann. Ein solcher Job scheitert, bevor er seine Empfänger benachrichtigen kann. |
 
-Kann einer von beiden den Puffer nicht lesen, meldet er unter seinem eigenen Namen einen Fehler „Konnte nicht prüfen“.
+Kann einer dieser Checks nicht laufen, etwa weil er den Puffer nicht lesen kann, meldet er unter seinem eigenen Namen einen Fehler „Konnte nicht prüfen“.
 
 ## Schwelle
 

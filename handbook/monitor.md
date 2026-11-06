@@ -65,14 +65,15 @@ Name each check after its extension, such as myext_queue, so an alert says where
 
 ## Built in checks
 
-herald contributes two checks of its own to the status page:
+herald contributes three checks of its own to the status page:
 
 | Check | Severity | Reported when |
 |---|---|---|
 | herald_buffer_backlog | error | Alerts waiting for aggregation are older than three times their window. The flush job is not delivering. |
 | herald_buffer_dead_letter | warning | The buffer holds [parked alerts](delivery.md#parked-alerts). |
+| herald_digest_jobs | error | An active scheduled job of Herald.notifyDigest names no digest, one that does not exist, or a topic that delivery cannot resolve to a channel. Such a job fails before it can tell its recipients. |
 
-When one of them cannot read the buffer, it reports an error "Could not check" under its own name.
+When one of these checks cannot run, for example because it cannot read the buffer, it reports an error "Could not check" under its own name.
 
 ## Threshold
 
