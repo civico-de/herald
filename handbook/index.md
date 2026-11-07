@@ -27,7 +27,7 @@ Scripts and other extensions can publish to a named topic such as ops. A topic b
 
 A digest is a subject and a text filled from SearchKit displays, such as yesterday's contributions, and from numbers another extension provides. You set them up under Administer » Herald » Digests, and they usually go out daily or weekly, from a rule on the trigger "Herald: Schedule". See [Digests](digests.md).
 
-The check monitor runs health checks that extensions contribute. It reports when a check starts failing and when it recovers, and reminds you about checks that keep failing. See [Check monitor](monitor.md).
+The check monitor reads the checks on CiviCRM's status page, those of core and of every extension. It reports when a check starts failing and when it recovers, and reminds you about checks that keep failing. See [Check monitor](monitor.md).
 
 ## Requirements
 

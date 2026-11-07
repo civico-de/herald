@@ -27,7 +27,7 @@ Skripte und andere Extensions können Nachrichten an ein benanntes Thema wie ops
 
 Ein Report ist ein Betreff und ein Text, die aus SearchKit-Anzeigen gefüllt werden, etwa mit den Beiträgen von gestern, und aus Zahlen, die eine andere Extension liefert. Reports richten Sie unter Administrieren » Herald » Reports ein. Meist werden sie täglich oder wöchentlich verschickt, ausgelöst von einer Regel mit dem Trigger „Herald: Schedule“. Siehe [Reports](digests.md).
 
-Der Check-Monitor führt Health-Checks aus, die Extensions beisteuern. Er meldet, wenn ein Check fehlschlägt und wenn er wieder in Ordnung ist, und erinnert an Checks, die weiter fehlschlagen. Siehe [Check-Monitor](monitor.md).
+Der Check-Monitor liest die Checks der CiviCRM-Statusseite, die von Core und von jeder Extension. Er meldet, wenn ein Check fehlschlägt und wenn er wieder in Ordnung ist, und erinnert an Checks, die weiter fehlschlagen. Siehe [Check-Monitor](monitor.md).
 
 ## Voraussetzungen
 

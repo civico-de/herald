@@ -253,6 +253,7 @@ Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'nam
 | `herald_monitor_expected` | leer | Extension-Schlüssel, die installiert und aktiviert sein müssen, siehe [Erwartete Extensions](monitor.md#erwartete-extensions). |
 | `herald_monitor_open_after`, `herald_monitor_close_after`, `herald_monitor_renotify_hours` | 1, 1, 24 | Hysterese und Erinnerungen, siehe [Die Monitor-Seite](monitor.md#die-monitor-seite). |
 | `herald_monitor_state` | leer | Der eigene Zustand des Monitors. Nicht bearbeiten. |
+| `herald_digest_sent_days` | leer | Der Tag, an dem jeder tägliche Digest zuletzt verschickt wurde. Nicht bearbeiten; ein entfernter Eintrag lässt den Digest heute noch einmal los. |
 
 ![Die Herald-Einstellungen](images/de/settings.png)
 
