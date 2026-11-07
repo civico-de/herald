@@ -106,6 +106,6 @@ The first boot installs CiviCRM, CiviRules and herald. The tests install themsel
 
 [docs/upstream-bugs.md](docs/upstream-bugs.md) lists the CiviCRM and CiviRules behaviour herald works around, with the code and test for each workaround.
 
-## License
+## License and support
 
-AGPL-3.0-or-later. © civico GmbH. See [LICENSE.txt](LICENSE.txt).
+AGPL-3.0-or-later. © civico GmbH. See [LICENSE.txt](LICENSE.txt). Report bugs in the [issue tracker](https://github.com/civico-de/herald/issues). Report security issues by email to security@civico.de, not in a public issue; see [SECURITY.md](SECURITY.md).
