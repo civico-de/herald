@@ -7,6 +7,7 @@ namespace Civi\Herald\Digest;
 use Civi\Api4\Contact;
 use Civi\Api4\SavedSearch;
 use Civi\Api4\SearchDisplay;
+use Civi\Api4\WordReplacement;
 use Civi\Test\HeadlessInterface;
 use Civi\Test\TransactionalInterface;
 use PHPUnit\Framework\TestCase;
@@ -175,9 +176,17 @@ class SearchSourceTest extends TestCase implements HeadlessInterface, Transactio
     $auto = $this->display($count, [], ['columnMode' => 'auto']);
     $english = [SearchSource::placeholders($named), SearchSource::placeholders($auto)];
     // A word replacement translates without a German .mo file on the site.
-    \CRM_Core_BAO_WordReplacement::setLocaleCustomStrings('de_DE', [
-      'enabled' => ['exactMatch' => ['Count' => 'Anzahl']],
-    ]);
+    // Core 6.20 stores a replacement's language on the record; older cores keep them per domain.
+    if (method_exists(\CRM_Core_BAO_WordReplacement::class, 'setLocaleCustomStrings')) {
+      \CRM_Core_BAO_WordReplacement::setLocaleCustomStrings('de_DE', [
+        'enabled' => ['exactMatch' => ['Count' => 'Anzahl']],
+      ]);
+    }
+    else {
+      WordReplacement::create(checkPermissions: FALSE)
+        ->setValues(['find_word' => 'Count', 'replace_word' => 'Anzahl', 'match_type' => 'exactMatch', 'language' => 'de_DE'])
+        ->execute();
+    }
     unset(\Civi::$statics['CRM_Core_I18n']);
 
     // Built directly: negotiating German needs its .mo file.
