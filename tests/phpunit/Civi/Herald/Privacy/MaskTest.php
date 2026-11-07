@@ -24,7 +24,7 @@ class MaskTest extends TestCase {
 
   public function testEmailMasksBothSidesKeepingTld(): void {
     $this->assertSame('jo******@ex*****.org', Mask::email('johannes@example.org'));
-    $this->assertSame('hi@jf*****.de', Mask::email('hi@jfilter.de'));
+    $this->assertSame('ja@ex*****.de', Mask::email('ja@example.de'));
     $this->assertSame('jo**@ma**.gm*.net', Mask::email('jojo@mail.gmx.net'));
     $this->assertSame('', Mask::email(''));
   }

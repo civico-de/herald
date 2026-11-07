@@ -54,7 +54,7 @@ class CRM_Herald_Upgrader_DigestJobsTest extends TestCase implements HeadlessInt
       'chat_id=-100',
       'send_hour=8',
       'blocks=[{"title":"Donations","campaign_id":2,"goal":30000,"campaign_title":"Spring"}]',
-      'sections=lima.seats, other.queue',
+      'sections=acme.seats, other.queue',
     ]));
 
     self::assertSame(1, CRM_Herald_Upgrader_DigestJobs::migrate());
@@ -72,7 +72,7 @@ class CRM_Herald_Upgrader_DigestJobsTest extends TestCase implements HeadlessInt
             'chat_id' => '-100',
             'blocks' => [
               ['title' => 'Donations', 'campaign_id' => 2],
-              ['type' => 'section', 'key' => 'lima.seats'],
+              ['type' => 'section', 'key' => 'acme.seats'],
               ['type' => 'section', 'key' => 'other.queue'],
             ],
           ],
