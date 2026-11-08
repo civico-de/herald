@@ -176,17 +176,7 @@ class SearchSourceTest extends TestCase implements HeadlessInterface, Transactio
     $auto = $this->display($count, [], ['columnMode' => 'auto']);
     $english = [SearchSource::placeholders($named), SearchSource::placeholders($auto)];
     // A word replacement translates without a German .mo file on the site.
-    // Core 6.20 stores a replacement's language on the record; older cores keep them per domain.
-    if (method_exists(\CRM_Core_BAO_WordReplacement::class, 'setLocaleCustomStrings')) {
-      \CRM_Core_BAO_WordReplacement::setLocaleCustomStrings('de_DE', [
-        'enabled' => ['exactMatch' => ['Count' => 'Anzahl']],
-      ]);
-    }
-    else {
-      WordReplacement::create(checkPermissions: FALSE)
-        ->setValues(['find_word' => 'Count', 'replace_word' => 'Anzahl', 'match_type' => 'exactMatch', 'language' => 'de_DE'])
-        ->execute();
-    }
+    self::replaceInGerman('Count', 'Anzahl');
     unset(\Civi::$statics['CRM_Core_I18n']);
 
     // Built directly: negotiating German needs its .mo file.
@@ -205,6 +195,26 @@ class SearchSourceTest extends TestCase implements HeadlessInterface, Transactio
       \CRM_Core_I18n::singleton()->setLocale('en_US');
       unset(\Civi::$statics['CRM_Core_I18n']);
     }
+  }
+
+  /**
+   * Core 6.20 stores a replacement's language on the record; older cores keep them per domain.
+   */
+  private static function replaceInGerman(string $word, string $replacement): void {
+    if (method_exists(\CRM_Core_BAO_WordReplacement::class, 'setLocaleCustomStrings')) {
+      \CRM_Core_BAO_WordReplacement::setLocaleCustomStrings('de_DE', [
+        'enabled' => ['exactMatch' => [$word => $replacement]],
+      ]);
+      return;
+    }
+    WordReplacement::create(checkPermissions: FALSE)
+      ->setValues([
+        'find_word' => $word,
+        'replace_word' => $replacement,
+        'match_type' => 'exactMatch',
+        'language' => 'de_DE',
+      ])
+      ->execute();
   }
 
   /**
