@@ -4,6 +4,8 @@ declare(strict_types = 1);
 
 namespace Civi\Herald\Digest;
 
+use Civi\Api4\Service\Spec\SpecGatherer;
+use Civi\Core\Locale;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
 
@@ -48,12 +50,13 @@ final class DisplayColumns {
   public static function of(array $display): array {
     $settings = (array) ($display['settings'] ?? []);
     if (($settings['columnMode'] ?? NULL) === 'auto') {
-      $default = \Civi\Api4\SearchDisplay::getDefault(checkPermissions: FALSE)
-        ->setLanguage(self::NAMES_LANGUAGE)
-        ->setSavedSearch(Cast::toString($display['saved_search_id.name']))
-        ->setType(Cast::toString($display['type']))
-        ->execute()
-        ->single();
+      $default = self::inNamesLanguage(
+        static fn () => \Civi\Api4\SearchDisplay::getDefault(checkPermissions: FALSE)
+          ->setSavedSearch(Cast::toString($display['saved_search_id.name']))
+          ->setType(Cast::toString($display['type']))
+          ->execute()
+          ->single(),
+      );
       $settings = (array) ($default['settings'] ?? []);
     }
     $columns = [];
@@ -64,6 +67,29 @@ final class DisplayColumns {
       $columns[] = ['key' => Cast::toString($column['key'] ?? ''), 'label' => Cast::toString($column['label'] ?? '')];
     }
     return $columns;
+  }
+
+  /**
+   * getDefault ignores setLanguage(), and core's field spec cache keys on the site language rather than
+   * the active one, so the read runs in NAMES_LANGUAGE between two clears of that cache.
+   *
+   * @template T
+   * @param \Closure(): T $read
+   * @return T
+   */
+  private static function inNamesLanguage(\Closure $read): mixed {
+    $previous = Locale::detect();
+    $specs = \Civi::service('spec_gatherer');
+    assert($specs instanceof SpecGatherer, 'spec_gatherer is core\'s field spec service');
+    Locale::negotiate(self::NAMES_LANGUAGE)->apply();
+    $specs->onClearMetadata();
+    try {
+      return $read();
+    }
+    finally {
+      $specs->onClearMetadata();
+      $previous->apply();
+    }
   }
 
 }

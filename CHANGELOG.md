@@ -5,6 +5,11 @@ project uses Semantic Versioning.
 
 ## [Unreleased]
 
+### Fixed
+
+- A digest on a search display in automatic column mode names its placeholders after the English
+  column headers, also when another language was active earlier in the same request.
+
 ## [0.16.0] - 2026-11-06
 
 ### Added
