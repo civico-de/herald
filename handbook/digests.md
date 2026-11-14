@@ -60,7 +60,7 @@ JSON
 
 ## Placeholders
 
-A search source hands every value column of its display to the text, named after the column header. The name is the header in lowercase, with umlauts spelled out and every other character turned into `_`: "Plätze gesamt" becomes `{$source.plaetze_gesamt}`. The form refuses a header that would give the name `rows`, starts with a digit, or gives two columns the same name. Rename the header in SearchKit.
+A search source hands every value column of its display to the text, named after the column header. The name is the header in lowercase, with umlauts spelled out and every other character turned into `_`: "Plätze gesamt" becomes `{$source.plaetze_gesamt}`. The form refuses a header that would give the name `rows`, starts with a digit, or gives two columns the same name. Rename the header in SearchKit. A display whose columns SearchKit picks automatically has no headers of its own: its placeholders follow the English field labels, whatever language is active.
 
 - `{$source.sum}` and the other names hold the values of the first row. A search with one row, such as a total, needs nothing more.
 - `{$source.rows}` holds every row, each with the same names. Loop over it for a list:
