@@ -10,9 +10,9 @@ herald richtet sich an alle, die eine CiviCRM-Site betreiben und wissen möchten
 
 ## Was herald kann
 
-herald stellt über sechs Kanäle zu: Telegram, ntfy, Pushover, einen generischen Webhook (für Slack, Discord, Mattermost oder einen eigenen Endpunkt), E-Mail über den ausgehenden Mailversand von CiviCRM und zugewiesene CiviCRM-Aktivitäten. Neue Kanäle kommen im Code von herald hinzu. Siehe [Kanäle](channels.md).
+Der einfachste Fall ist eine E-Mail, an eine Adresse oder an alle Mitglieder einer CiviCRM-Gruppe. Sie funktioniert direkt nach der Installation: herald verschickt sie über den ausgehenden Mailversand von CiviCRM. herald kann außerdem in einen Chat oder auf ein Smartphone senden oder eine CiviCRM-Aktivität zuweisen, siehe [Kanäle](channels.md).
 
-Die Nachrichten stammen aus CiviCRM-Nachrichtenvorlagen, sodass Admins den Wortlaut unter „Mailings, Message Templates“ (Mailings, Nachrichtenvorlagen) anpassen können. herald bringt Vorlagen für Beiträge, Ticketverkäufe, Events, Mitgliedschaften, Gruppenanmeldungen und Health-Checks mit, dazu Suchen für Reports. Die Vorlagen sind auf Englisch geschrieben, eine deutsche Übersetzung liegt bei.
+Meldungen stammen aus CiviCRM-Nachrichtenvorlagen, sodass Admins den Wortlaut unter „Mailings, Message Templates“ (Mailings, Nachrichtenvorlagen) anpassen können. herald bringt Vorlagen für Beiträge, Ticketverkäufe, Events, Mitgliedschaften, Gruppenanmeldungen und Health-Checks mit, auf Englisch mit deutscher Übersetzung. Ein Report hat einen eigenen Betreff und Text, siehe unten.
 
 Ist CiviRules installiert, ergänzt herald es um vier Bausteine:
 
@@ -31,7 +31,7 @@ Der Check-Monitor liest die Checks der CiviCRM-Statusseite, die von Core und von
 
 ## Voraussetzungen
 
-herald benötigt SearchKit und Form Core, die Teil von CiviCRM sind. CiviRules ist optional; wenn Sie es nutzen, braucht herald Version 3.36 oder neuer, und der Systemstatus meldet eine ältere. herald registriert seine Regel-Bausteine, egal ob Sie CiviRules vor oder nach herald installieren. Ohne CiviRules funktionieren die API, die geplanten Jobs, die Themen und der Check-Monitor weiterhin. Die unterstützten Versionen von CiviCRM und PHP stehen in der `info.xml` der Extension.
+herald benötigt SearchKit und Afform, die Teil von CiviCRM sind; die Extension-Liste führt Afform als „Form Core“. FormBuilder wird nicht gebraucht. CiviRules ist optional; wenn Sie es nutzen, braucht herald Version 3.36 oder neuer, und der Systemstatus meldet eine ältere. herald registriert seine Regel-Bausteine, egal ob Sie CiviRules vor oder nach herald installieren. Ohne CiviRules funktionieren die API, die geplanten Jobs, die Themen und der Check-Monitor weiterhin. Die unterstützten Versionen von CiviCRM und PHP stehen in der `info.xml` der Extension.
 
 ## Installation
 
@@ -45,26 +45,22 @@ Ein Git-Checkout enthält kein Verzeichnis `vendor/`. Führen Sie darin `compose
 
 ## Erste Schritte
 
-Legen Sie mit @BotFather einen Telegram-Bot an, fügen Sie ihn einem Chat hinzu und notieren Sie die Chat-ID. Legen Sie dann unter Administrieren » Herald » Kanäle einen Kanal an: Typ Telegram, Name `telegram`, das Bot-Token und die Chat-ID als Standard-Chat. Oder mit cv:
+Die Installation legt den Kanal `email` an. Senden Sie eine Testnachricht unter Administrieren » Herald » Testnachricht: Wählen Sie „Einen Kanal“, dann `email`, tragen Sie Ihre Adresse als Empfängeradresse ein und senden Sie. Oder mit cv:
 
 ```bash
-cv api4 Herald.saveChannel name=telegram isNew=1 \
-  'channel={"type":"telegram","label":"Telegram","config":{"bot_token":"<bot-token>","chat_id":"<chat-id>"}}'
-```
-
-Senden Sie eine Testnachricht unter Administrieren » Herald » Testnachricht: Wählen Sie „Einen Kanal“, dann Telegram, und senden Sie. Oder mit cv:
-
-```bash
-cv api4 Herald.send channel=telegram message='<b>herald works</b>'
+cv api4 Herald.send channel=email subject='Test' message='<b>herald works</b>' \
+  'config={"email_to":"you@example.org"}'
 ```
 
 Richten Sie nun eine Regel ein, die jeden abgeschlossenen Beitrag meldet:
 
 1. Öffnen Sie Administrieren » CiviRules » Regeln verwalten (englisch: Administer » CiviRules » Manage Rules), legen Sie eine Regel an und wählen Sie den Trigger „Contribution is added“ (Beitrag wird angelegt).
 2. Fügen Sie die Bedingung „Contribution Status is (not) one of“ (Beitragsstatus ist (nicht) einer von) mit Completed hinzu.
-3. Fügen Sie die Aktion „Herald: Send notification (generic)“ hinzu. Wählen Sie die Vorlage „Herald: Neuer abgeschlossener Beitrag“ und den Kanal Telegram. Lassen Sie die Chat-ID leer, dann gilt der Standard-Chat des Kanals.
+3. Fügen Sie die Aktion „Herald: Send notification (generic)“ hinzu. Wählen Sie die Vorlage „Herald: Neuer abgeschlossener Beitrag“ und den Kanal `email`, und tragen Sie die Empfängeradresse ein.
 
-Kanäle der anderen Typen legen Sie genauso an. Ihre Felder finden Sie unter [Kanäle](channels.md).
+Soll statt einer Adresse ein Team die Meldung bekommen, stellen Sie den Zustellmodus der Aktion auf „Gruppe“ und wählen eine CiviCRM-Gruppe. Jedes Mitglied bekommt die Meldung an seine primäre E-Mail-Adresse, außer es hat einen anderen Kanal gewählt, siehe [Zustellung](delivery.md#zustellmodi).
+
+Für Telegram, ntfy, Pushover, einen Webhook zu Slack, Discord oder Mattermost oder CiviCRM-Aktivitäten legen Sie unter Administrieren » Herald » Kanäle einen Kanal an. [Kanäle](channels.md) listet die Felder jedes Typs auf.
 
 Die Administrationsseite gruppiert ihre Seiten: Einrichten, Testen und Betreiben sowie erweiterte Seiten, deren Standardwerte für die meisten Seiten passen.
 
