@@ -2,7 +2,7 @@
 
 Two scripts fill a demo or dev site with synthetic data. The dev stack's
 profile (`.docker/profiles/dev`) runs both on first boot, after civikitchen's
-`fundraising-data` profile.
+`fundraising` profile.
 
 ## Topics: `seed.php`
 
