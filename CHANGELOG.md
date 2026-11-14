@@ -5,6 +5,8 @@ project uses Semantic Versioning.
 
 ## [Unreleased]
 
+## [0.16.1] - 2026-11-14
+
 ### Fixed
 
 - A digest on a search display in automatic column mode names its placeholders after the English
@@ -263,7 +265,8 @@ project uses Semantic Versioning.
 - `Herald.send` APIv4 action for other extensions.
 - Optional contribution source normalisation for digests and alerts.
 
-[Unreleased]: https://github.com/civico-de/herald/compare/v0.16.0...HEAD
+[Unreleased]: https://github.com/civico-de/herald/compare/v0.16.1...HEAD
+[0.16.1]: https://github.com/civico-de/herald/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/civico-de/herald/compare/v0.15.1...v0.16.0
 [0.15.1]: https://github.com/civico-de/herald/compare/v0.15.0...v0.15.1
 [0.15.0]: https://github.com/civico-de/herald/compare/v0.14.0...v0.15.0
