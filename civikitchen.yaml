@@ -5,6 +5,8 @@ policy:
   # image; these values are ours).
   license: AGPL-3.0-or-later
   copyright: 'civico GmbH'
+  # Lowest CiviCRM minor info.xml may declare: the supported ESR.
+  civicrm_floor: "6.16"
 
   # herald's OWN invented hook: other extensions implement it to contribute
   # sections to digests. It is not a core hook, so ckconform cannot know it —
