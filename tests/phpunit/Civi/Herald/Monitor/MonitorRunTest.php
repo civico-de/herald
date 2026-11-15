@@ -119,6 +119,8 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, Transactiona
       [1 => [Monitor::STATE_SETTING, 'String'], 2 => [\CRM_Core_Config::domainID(), 'Integer']],
     );
     try {
+      // A moving clock crosses a second during a run and shifts the stamp.
+      putenv('TIME_FUNC=frozen');
       \CRM_Utils_Time::setTime('2030-01-07 08:00:00');
       $this->assertSame(2, $this->monitor()->run()['transitions']);
       $this->assertSame('2030-01-07 08:00:00', $written());
@@ -135,6 +137,7 @@ class MonitorRunTest extends TestCase implements HeadlessInterface, Transactiona
       $this->assertSame(['checkOutboundMail'], array_keys($this->state()));
     }
     finally {
+      putenv('TIME_FUNC');
       \CRM_Utils_Time::resetTime();
     }
   }
