@@ -85,7 +85,8 @@ function ck_install_in_order(array $keys): void {
  * Before 6.20, CoreSchemaStep::getSig() drops the core foreign keys
  * (civicrm-core#36980); re-running its cached SQL once per process puts them
  * back. On 6.20 and later the keys stay, and re-adding them fails.
- * Drop when the supported floor carries that fix.
+ * A database another core version built does not take this SQL, so it is
+ * rebuilt instead. Drop when the supported floor carries that fix.
  */
 function ck_restore_core_foreign_keys(): void {
   static $restored = FALSE;
@@ -100,10 +101,48 @@ function ck_restore_core_foreign_keys(): void {
     if (!is_string($database) || !is_string($content)) {
       throw new RuntimeException('ck_headless: no database name or no core schema SQL');
     }
+    $built = ck_test_database_version($database);
+    if ($built === NULL) {
+      return;
+    }
+    if ($built !== \CRM_Utils_System::version()) {
+      fwrite(
+        STDERR,
+        "ck_headless: {$database} was built by CiviCRM {$built}, running "
+        . \CRM_Utils_System::version()
+        . "; rebuilding it\n",
+      );
+      if (\Civi\Test::execute('DROP TABLE IF EXISTS `' . $database . '`.civitest_revs') === FALSE) {
+        throw new RuntimeException('ck_headless: could not forget the saved signature');
+      }
+      return;
+    }
     if (\Civi\Test::execute('USE `' . $database . '`;' . "\n" . $content) === FALSE) {
       throw new RuntimeException('ck_headless: could not restore the core foreign keys');
     }
   });
+}
+
+/**
+ * civicrm_domain.version of the scratch database; NULL while it has no schema,
+ * where there are no keys to restore.
+ */
+function ck_test_database_version(string $database): ?string {
+  $pdo = \Civi\Test::pdo();
+  $tables = $pdo->query(
+    'SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = '
+    . $pdo->quote($database)
+    . " AND TABLE_NAME = 'civicrm_domain'",
+  );
+  if ($tables === FALSE || (int) $tables->fetchColumn() === 0) {
+    return NULL;
+  }
+  $version = $pdo->query('SELECT version FROM `' . $database . '`.civicrm_domain ORDER BY id LIMIT 1');
+  $value = $version === FALSE ? FALSE : $version->fetchColumn();
+  if (!is_string($value) || $value === '') {
+    throw new RuntimeException("ck_headless: no core version in {$database}.civicrm_domain");
+  }
+  return $value;
 }
 
 /**

@@ -4,7 +4,7 @@ includes:
 	# which is also the only place a phpstan binary exists.
 	- /opt/civikitchen/toolbelt/phpstan-config/civicrm-disallowed.neon
 	# Opt in when the repo is ready; it is loud on older code:
-	# - /opt/civikitchen/toolbelt/phpstan-root/vendor/phpstan/phpstan-strict-rules/rules.neon
+	# - /opt/civikitchen/vendor/phpstan/phpstan-strict-rules/rules.neon
 
 parameters:
 	level: 10
