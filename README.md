@@ -29,7 +29,7 @@ The install creates the channel `email`, which sends through CiviCRM's outbound 
 
 ```bash
 cv api4 Herald.send channel=email subject='Test' message='<b>herald works</b>' \
-  'config={"email_to":"you@example.org"}'
+  'config={"email_to":"you@example.org"}' aggregateMinutes=0
 ```
 
 To get a message for every completed contribution, create a CiviRules rule:

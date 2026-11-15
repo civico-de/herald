@@ -21,7 +21,7 @@ Donations: {$donations.sum|crmMoney} ({$donations.count})
 
 herald renders subject and text with Smarty, as CiviCRM renders a message template.
 
-For news of every new contribution, no digest is needed: a rule sends each one as it comes in, or collects them into one message every few minutes, see [Aggregation](delivery.md#aggregation).
+For news of every new contribution, no digest is needed: a rule sends them as they come in, collected into one message per minute or per longer window, see [Aggregation](delivery.md#aggregation).
 
 ## Setting up a digest
 

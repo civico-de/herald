@@ -29,6 +29,7 @@ class TestMessageTest extends AdminTestCase {
       'subject' => 'herald test',
       'format' => 'text',
       'config' => ['email_to' => 'ops@example.org'],
+      'aggregateMinutes' => 0,
     ]);
     $this->assertTrue($rows[0]['sent']);
     $this->assertSame([], $rows[0]['unknown_config_keys']);
@@ -41,7 +42,12 @@ class TestMessageTest extends AdminTestCase {
       'topic' => 'default',
       'route' => ['channel' => 'email', 'email_to' => 'routes@example.org'],
     ]);
-    $rows = self::call('publish', ['topic' => 'smoke', 'message' => 'Routed test', 'format' => 'text']);
+    $rows = self::call('publish', [
+      'topic' => 'smoke',
+      'message' => 'Routed test',
+      'format' => 'text',
+      'aggregateMinutes' => 0,
+    ]);
     $this->assertSame([['topic' => 'smoke', 'buffered' => FALSE, 'channel' => 'email']], $rows);
     $this->assertSpooled('routes@example.org', NULL, 'Routed test');
   }
@@ -62,7 +68,12 @@ class TestMessageTest extends AdminTestCase {
         ->addValue('contact_id', '$id')
         ->addValue('email', 'subscriber@example.org'))
       ->execute();
-    $rows = self::call('publish', ['topic' => 'news', 'message' => 'Fanned out', 'format' => 'text']);
+    $rows = self::call('publish', [
+      'topic' => 'news',
+      'message' => 'Fanned out',
+      'format' => 'text',
+      'aggregateMinutes' => 0,
+    ]);
     $this->assertSame([['topic' => 'news', 'buffered' => FALSE, 'channel' => NULL]], $rows);
     $this->assertSpooled('subscriber@example.org', NULL, 'Fanned out');
   }

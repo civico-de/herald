@@ -38,6 +38,8 @@ class CRM_Herald_RuleContractTest extends TestCase implements HeadlessInterface,
 
   protected function setUp(): void {
     parent::setUp();
+    // These tests look at a delivery as it goes out, not at the buffer.
+    \Civi::settings()->set(\Civi\Herald\Buffer\Window::SETTING, 0);
     PreEditSnapshot::reset();
   }
 

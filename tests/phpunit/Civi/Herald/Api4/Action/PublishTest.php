@@ -91,10 +91,55 @@ class PublishTest extends TestCase implements HeadlessInterface, HookInterface, 
       'topic' => 'text_topic',
       'message' => 'Wert <5 erwartet, &amp; bleibt',
       'format' => 'text',
+      'aggregateMinutes' => 0,
     ]);
     $this->assertStringContainsString(
       'Wert <5 erwartet, &amp; bleibt',
       (string) \CRM_Core_DAO::singleValueQuery('SELECT body FROM civicrm_mailing_spool'),
+    );
+  }
+
+  public function testATopicWithoutAWindowCollectsForTheSiteDefault(): void {
+    \Civi::settings()->set(\Civi\Herald\Buffer\Window::SETTING, 3);
+    \Civi::settings()->set('herald_topics', [
+      'plain_topic' => ['channel' => 'email', 'email_to' => 'ops@example.org'],
+    ]);
+    civicrm_api4('Herald', 'publish', [
+      'checkPermissions' => FALSE,
+      'topic' => 'plain_topic',
+      'message' => 'first',
+    ]);
+    $this->assertSame(
+      3,
+      (int) \CRM_Core_DAO::singleValueQuery('SELECT window_minutes FROM civicrm_herald_buffer'),
+    );
+  }
+
+  public function testAWindowNamedAtTheCallWinsOverTheTopics(): void {
+    civicrm_api4('Herald', 'publish', [
+      'checkPermissions' => FALSE,
+      'topic' => 'test_topic',
+      'message' => 'first',
+      'aggregateMinutes' => 2,
+    ]);
+    $this->assertSame(
+      2,
+      (int) \CRM_Core_DAO::singleValueQuery('SELECT window_minutes FROM civicrm_herald_buffer'),
+    );
+  }
+
+  public function testAWindowNamedAtTheCallCollectsApartFromTheTopicsWindow(): void {
+    foreach ([NULL, 2] as $minutes) {
+      civicrm_api4('Herald', 'publish', [
+        'checkPermissions' => FALSE,
+        'topic' => 'test_topic',
+        'message' => 'x',
+        'aggregateMinutes' => $minutes,
+      ]);
+    }
+    $this->assertSame(
+      2,
+      (int) \CRM_Core_DAO::singleValueQuery('SELECT COUNT(DISTINCT group_hash) FROM civicrm_herald_buffer'),
     );
   }
 

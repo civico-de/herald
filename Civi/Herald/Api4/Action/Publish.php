@@ -7,6 +7,7 @@ namespace Civi\Herald\Api4\Action;
 use Civi\Api4\Generic\AbstractAction;
 use Civi\Api4\Generic\Result;
 use Civi\Herald\Buffer\AlertBuffer;
+use Civi\Herald\Buffer\Window;
 use Civi\Herald\Channel\PlainText;
 use Civi\Herald\Dispatch\ChannelSubject;
 use Civi\Herald\Dispatch\Delivery;
@@ -20,7 +21,8 @@ use Civi\Herald\Topic\Router;
  *
  * Body: `message` (pre-rendered HTML, or plain text with format=text) or
  * `template` (workflow_name) plus `vars`.
- * A route with aggregate_minutes > 0 goes through the alert buffer.
+ * The message collects in the alert buffer for the route's aggregation window,
+ * or the site's default one; `aggregateMinutes` overrides both, 0 sends at once.
  *
  * Example:
  *   cv api4 Herald.publish 'topic=ops' 'message="🔴 disk almost full"'
@@ -37,6 +39,8 @@ use Civi\Herald\Topic\Router;
  * @method string getTemplate()
  * @method $this setVars(array<string, mixed> $vars)
  * @method array<string, mixed> getVars()
+ * @method $this setAggregateMinutes(?int $aggregateMinutes)
+ * @method int|null getAggregateMinutes()
  * @method $this setAmount(?float $amount)
  * @method float|null getAmount()
  */
@@ -75,6 +79,12 @@ class Publish extends AbstractAction {
   protected array $vars = [];
 
   /**
+   * Aggregation window of this message in place of the topic's; 0 sends at once.
+   * @var int|null
+   */
+  protected ?int $aggregateMinutes = NULL;
+
+  /**
    * Optional monetary value summed into aggregate headers.
    * @var float|null
    */
@@ -96,7 +106,9 @@ class Publish extends AbstractAction {
 
     $params = (new Router())->resolve($this->topic);
     // Before a rendered subject enters $params, or every publish forms its own group.
-    $groupHash = Dispatcher::groupHash($params, 'topic:' . $this->topic . ':');
+    $aggregateMinutes = Window::of([Window::KEY => $this->aggregateMinutes ?? $params[Window::KEY] ?? NULL]);
+    // A window named at the call forms its own group, so it is not stretched by a longer one.
+    $groupHash = Dispatcher::groupHash($params, 'topic:' . $this->topic . ':' . $aggregateMinutes . ':');
 
     $body = $this->format === 'text' ? PlainText::toHtml($this->message) : $this->message;
     if ($this->template !== '') {
@@ -105,8 +117,6 @@ class Publish extends AbstractAction {
       $params = ChannelSubject::withSubject($params, $parts['subject']);
     }
 
-    $rawMinutes = $params['aggregate_minutes'] ?? 0;
-    $aggregateMinutes = is_scalar($rawMinutes) ? (int) $rawMinutes : 0;
     if ($aggregateMinutes > 0) {
       (new AlertBuffer())->add(
         $groupHash,

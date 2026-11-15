@@ -49,7 +49,9 @@
                 mode: route.delivery_mode ? modes[route.delivery_mode] || route.delivery_mode : "",
                 fallback: name === "default" ? ts("(not set)") : ts("(from default)"),
                 aggregate: heraldAdmin.isEmpty(route.aggregate_minutes)
-                  ? ""
+                  ? name === "default"
+                    ? ts("(site default)")
+                    : ts("(from default)")
                   : String(route.aggregate_minutes),
                 usedBy: used.used_by,
               };

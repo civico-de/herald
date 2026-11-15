@@ -21,7 +21,7 @@ Spenden: {$spenden.summe|crmMoney} ({$spenden.anzahl})
 
 herald setzt Betreff und Text mit Smarty zusammen, so wie CiviCRM eine Nachrichtenvorlage.
 
-Für eine Nachricht zu jedem neuen Beitrag braucht es keinen Report: Eine Regel verschickt jeden einzeln, sobald er eingeht, oder sammelt sie alle paar Minuten in einer Nachricht, siehe [Sammelnachrichten](delivery.md#sammelnachrichten).
+Für eine Nachricht zu jedem neuen Beitrag braucht es keinen Report: Eine Regel verschickt sie, sobald sie eingehen, gesammelt in einer Nachricht pro Minute oder pro längerem Fenster, siehe [Sammelnachrichten](delivery.md#sammelnachrichten).
 
 ## Einen Report einrichten
 

@@ -2,6 +2,7 @@
 
 declare(strict_types = 1);
 
+use Civi\Herald\Buffer\Window;
 use Civi\Herald\Subscribers\SubscriptionScope;
 use Civi\Herald\Vendor\Civico\Stdlib\Cast;
 use CRM_Herald_ExtensionUtil as E;
@@ -30,7 +31,7 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
      * Fields whose defaults suit most rules; the form lists them last, under Advanced,
      * followed by the channel types' keys that are no recipient.
      */
-    private const ADVANCED = ['respect_suspension', 'email_location_type', 'scope_entity', 'aggregate_minutes', 'vars'];
+    private const ADVANCED = ['respect_suspension', 'email_location_type', 'scope_entity', 'vars'];
 
     protected const JSON_FLAGS =
       JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR;
@@ -147,7 +148,8 @@ if (class_exists('CRM_CivirulesActions_Form_Form')) {
           'Reaches only the subscriptions scoped to the record that fired the rule, plus unscoped ones.',
         ),
         'aggregate_minutes' => E::ts(
-          '0 sends each alert at once; a window collects alerts and sends them as one message.',
+          'Alerts are collected for this long and sent as one message. 0 sends each at once; blank uses the site default of %1.',
+          [1 => \Civi::settings()->get(Window::SETTING)],
         ),
       ];
       $this->addExtraFields();

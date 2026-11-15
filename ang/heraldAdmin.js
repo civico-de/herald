@@ -244,7 +244,7 @@
             label: ts("Aggregate window in minutes"),
             type: "int",
             help: ts(
-              "0 sends each alert at once; a window collects alerts and sends them together.",
+              "Alerts are collected for this long and sent together. 0 sends each at once; blank uses the default topic's window or the site default.",
             ),
           },
         ],

@@ -50,12 +50,13 @@ final class CRM_Herald_CivirulesAdapter_SendParams {
       'email_addresses' => $text('email_addresses'),
       'respect_suspension' => !empty($values['respect_suspension']),
       'email_location_type' => $int('email_location_type'),
-      'aggregate_minutes' => $int('aggregate_minutes'),
     ];
     $params = array_filter(
       $params,
       static fn (mixed $value): bool => $value !== '' && $value !== FALSE && $value !== 0,
     );
+    // Blank keeps the site's default window; a chosen 0 sends at once.
+    $params['aggregate_minutes'] = $int('aggregate_minutes');
     // Blank keeps the channel's value; a chosen 0 or "no" overrides it. Hidden fields are not saved.
     foreach (CRM_Herald_CivirulesAdapter_ChannelFieldSpecs::shown(
       $text('delivery_mode'),

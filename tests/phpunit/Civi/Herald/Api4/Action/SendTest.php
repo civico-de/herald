@@ -27,6 +27,8 @@ class SendTest extends TestCase implements HeadlessInterface, HookInterface, Tra
 
   public function setUp(): void {
     parent::setUp();
+    // These tests look at a delivery as it goes out, not at the buffer.
+    \Civi::settings()->set(\Civi\Herald\Buffer\Window::SETTING, 0);
     // Spool outbound mail into the DB instead of handing it to an MTA.
     \Civi::settings()->set('mailing_backend', [
       'outBound_option' => \CRM_Mailing_Config::OUTBOUND_OPTION_REDIRECT_TO_DB,
@@ -79,6 +81,89 @@ class SendTest extends TestCase implements HeadlessInterface, HookInterface, Tra
    * The semantic params are the point of the action: a caller says "subject",
    * not "email_subject", and never learns the channel's key names.
    */
+  public function testWithoutAWindowOfItsOwnAMessageWaitsForTheSiteDefault(): void {
+    \Civi::settings()->set(\Civi\Herald\Buffer\Window::SETTING, 1);
+    \CRM_Core_DAO::executeQuery('DELETE FROM civicrm_herald_buffer');
+    $send = static fn (string $message): array => (array) civicrm_api4('Herald', 'send', [
+      'checkPermissions' => FALSE,
+      'channel' => 'email',
+      'message' => $message,
+      'subject' => '[ops] storage warning',
+      'format' => 'text',
+      'config' => ['email_to' => 'ops@example.org'],
+    ])->first();
+
+    $row = $send('disk usage at 94%');
+    $send('disk usage at 96%');
+
+    $this->assertFalse($row['sent']);
+    $this->assertTrue($row['buffered']);
+    $this->assertCount(0, $this->spooled(), 'nothing leaves before the window is over');
+    $this->assertSame(
+      1,
+      (int) \CRM_Core_DAO::singleValueQuery('SELECT COUNT(DISTINCT group_hash) FROM civicrm_herald_buffer'),
+      'two messages to one destination collect in one group',
+    );
+
+    \CRM_Core_DAO::executeQuery('UPDATE civicrm_herald_buffer SET created_date = DATE_SUB(NOW(), INTERVAL 2 MINUTE)');
+    civicrm_api3('Job', 'herald_buffer_flush', []);
+
+    $spooled = $this->spooled();
+    $this->assertCount(1, $spooled);
+    $this->assertSame('ops@example.org', $spooled[0]['recipient_email']);
+    $this->assertStringContainsString('disk usage at 94%', $spooled[0]['body']);
+    $this->assertStringContainsString('disk usage at 96%', $spooled[0]['body']);
+  }
+
+  public function testMessagesWithAnotherSubjectOrWindowCollectApart(): void {
+    \CRM_Core_DAO::executeQuery('DELETE FROM civicrm_herald_buffer');
+    $send = static fn (string $subject, int $minutes): mixed => civicrm_api4('Herald', 'send', [
+      'checkPermissions' => FALSE,
+      'channel' => 'email',
+      'message' => 'x',
+      'subject' => $subject,
+      'config' => ['email_to' => 'ops@example.org'],
+      'aggregateMinutes' => $minutes,
+    ]);
+    $send('[ops] disk', 1);
+    $send('[ops] disk', 1);
+    $send('[ops] mail', 1);
+    $send('[ops] disk', 30);
+    $this->assertSame(
+      3,
+      (int) \CRM_Core_DAO::singleValueQuery('SELECT COUNT(DISTINCT group_hash) FROM civicrm_herald_buffer'),
+    );
+  }
+
+  public function testABufferedMessageKeepsNoUnknownKeyForTheFlushToRouteBy(): void {
+    \CRM_Core_DAO::executeQuery('DELETE FROM civicrm_herald_buffer');
+    civicrm_api4('Herald', 'send', [
+      'checkPermissions' => FALSE,
+      'channel' => 'email',
+      'message' => 'x',
+      'config' => ['email_to' => 'ops@example.org', 'delivery_mode' => 'group'],
+      'aggregateMinutes' => 1,
+    ]);
+    $delivery = (string) \CRM_Core_DAO::singleValueQuery('SELECT delivery FROM civicrm_herald_buffer');
+    $this->assertStringContainsString('ops@example.org', $delivery);
+    $this->assertStringNotContainsString('delivery_mode', $delivery);
+  }
+
+  public function testAWindowOfZeroSendsAtOnceWhateverTheSiteDefault(): void {
+    \Civi::settings()->set(\Civi\Herald\Buffer\Window::SETTING, 5);
+    $row = civicrm_api4('Herald', 'send', [
+      'checkPermissions' => FALSE,
+      'channel' => 'email',
+      'message' => 'disk usage at 94%',
+      'config' => ['email_to' => 'ops@example.org'],
+      'aggregateMinutes' => 0,
+    ])->first();
+
+    $this->assertTrue($row['sent']);
+    $this->assertFalse($row['buffered']);
+    $this->assertCount(1, $this->spooled());
+  }
+
   public function testSubjectIsMappedOntoTheChannelsOwnConfigKey(): void {
     civicrm_api4('Herald', 'send', [
       'checkPermissions' => FALSE,
@@ -174,6 +259,24 @@ class SendTest extends TestCase implements HeadlessInterface, HookInterface, Tra
       'message' => 'x',
       'config' => ['email_to' => 'ops@example.org', 'email_from' => 'spoof@example.org'],
     ]);
+  }
+
+  public function testAnAccountKeyIsRefusedBeforeTheMessageIsBuffered(): void {
+    \Civi::settings()->set(\Civi\Herald\Buffer\Window::SETTING, 1);
+    \CRM_Core_DAO::executeQuery('DELETE FROM civicrm_herald_buffer');
+    try {
+      civicrm_api4('Herald', 'send', [
+        'checkPermissions' => FALSE,
+        'channel' => 'email',
+        'message' => 'x',
+        'config' => ['email_to' => 'ops@example.org', 'email_from' => 'spoof@example.org'],
+      ]);
+      $this->fail('the account key must be refused');
+    }
+    catch (\CRM_Core_Exception $e) {
+      $this->assertStringContainsString('belong to the channel configuration', $e->getMessage());
+    }
+    $this->assertSame(0, (int) \CRM_Core_DAO::singleValueQuery('SELECT COUNT(*) FROM civicrm_herald_buffer'));
   }
 
   public function testUnknownChannelThrows(): void {

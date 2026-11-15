@@ -344,6 +344,18 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     );
   }
 
+  public function testAChosenWindowOfZeroIsSavedAndABlankOneIsLeftToTheSiteDefault(): void {
+    $values = ['send_via' => 'own', 'channel' => 'email'];
+    $this->assertSame(
+      0,
+      CRM_Herald_CivirulesAdapter_SendParams::of($values + ['aggregate_minutes' => '0'])['aggregate_minutes'],
+    );
+    $this->assertArrayNotHasKey(
+      'aggregate_minutes',
+      CRM_Herald_CivirulesAdapter_SendParams::of($values + ['aggregate_minutes' => ' ']),
+    );
+  }
+
   public function testADeliveryOutsideSubscriberModeKeepsNoTopicOfSubscribers(): void {
     $values = ['send_via' => 'own', 'channel' => 'email', 'subscribers_of' => 'news'];
     $this->assertArrayNotHasKey(
@@ -531,7 +543,8 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     $heading = strpos($notification, $headingRow);
     $this->assertNotFalse($heading);
     $this->assertLessThan($heading, strpos($notification, 'name="template"'));
-    foreach (['respect_suspension', 'email_location_type', 'scope_entity', 'aggregate_minutes', 'vars'] as $field) {
+    $this->assertLessThan($heading, strpos($notification, 'name="aggregate_minutes"'));
+    foreach (['respect_suspension', 'email_location_type', 'scope_entity', 'vars'] as $field) {
       $this->assertGreaterThan($heading, strpos($notification, "name=\"{$field}\""), $field);
     }
     $this->assertSame(1, substr_count($notification, $headingRow));

@@ -445,6 +445,14 @@ msgstr "Wie viele Meldungen eine Sammelnachricht aufführt, bevor sie mit „…
 msgid "Buffer Aggregate Max Items"
 msgstr "Maximale Einträge pro Sammelnachricht"
 
+#: settings/herald.setting.php
+msgid "Aggregate Window in Minutes"
+msgstr "Sammelfenster in Minuten"
+
+#: settings/herald.setting.php
+msgid "How long alerts are collected and sent as one message, where a rule, a topic or a caller sets no window of its own. 0 sends each alert at once, without a retry when the delivery fails."
+msgstr "Wie lange Meldungen gesammelt und als eine Nachricht gesendet werden, wenn eine Regel, ein Thema oder ein Aufrufer kein eigenes Fenster festlegt. 0 sendet jede Meldung sofort, ohne weiteren Versuch, wenn die Zustellung fehlschlägt."
+
 #: CRM/Herald/CivirulesAdapter/Form/FieldTransition.php
 msgid "Entity (APIv4 name, e.g. Contribution)"
 msgstr "Entität (APIv4-Name, z. B. Contribution)"
@@ -1269,10 +1277,6 @@ msgid "Choose a topic."
 msgstr "Ein Thema auswählen."
 
 #: ang/heraldAdmin/test.js
-msgid "Buffered for topic \"%1\": it collects alerts, so the message goes out with the next flush."
-msgstr "Für das Thema „%1“ gepuffert: es sammelt Meldungen, daher geht die Nachricht mit dem nächsten Flush hinaus."
-
-#: ang/heraldAdmin/test.js
 msgid "Sent to topic \"%1\" through %2."
 msgstr "An das Thema „%1“ über %2 gesendet."
 
@@ -1365,6 +1369,10 @@ msgid "(from default)"
 msgstr "(aus default)"
 
 #: ang/heraldAdmin/topics.js
+msgid "(site default)"
+msgstr "(Standard der Installation)"
+
+#: ang/heraldAdmin/topics.js
 msgid "Deleted topic \"%1\"."
 msgstr "Das Thema „%1“ wurde gelöscht."
 
@@ -1409,8 +1417,8 @@ msgid "Email location type ID"
 msgstr "ID der Adressart der E-Mail"
 
 #: ang/heraldAdmin.js
-msgid "0 sends each alert at once; a window collects alerts and sends them together."
-msgstr "0 sendet jede Meldung sofort; ein Fenster sammelt Meldungen und sendet sie gemeinsam."
+msgid "Alerts are collected for this long and sent together. 0 sends each at once; blank uses the default topic's window or the site default."
+msgstr "So lange werden Meldungen gesammelt und gemeinsam gesendet. 0 sendet jede sofort; leer gilt das Fenster des Themas default oder der Standard der Installation."
 
 #: CRM/Herald/BAO/HeraldBufferedAlert.php, CRM/Herald/CivirulesAdapter/Action/AbstractSend.php, CRM/Herald/CivirulesAdapter/Action/Digest.php, CRM/Herald/CivirulesAdapter/Action/Notification.php, CRM/Herald/CivirulesAdapter/Availability.php, CRM/Herald/CivirulesAdapter/Condition/FieldTransition.php, CRM/Herald/CivirulesAdapter/DependentRules.php, CRM/Herald/CivirulesAdapter/Form/AbstractSend.php, CRM/Herald/CivirulesAdapter/Form/FieldTransition.php, CRM/Herald/CivirulesAdapter/Form/Schedule.php, CRM/Herald/CivirulesAdapter/Form/SendDigest.php, CRM/Herald/CivirulesAdapter/Form/SendNotification.php, CRM/Herald/CivirulesAdapter/OriginalData.php, CRM/Herald/CivirulesAdapter/Registrar.php, CRM/Herald/CivirulesAdapter/RetiredHandlers.php, CRM/Herald/CivirulesAdapter/Trigger/Schedule.php, CRM/Herald/DAO/HeraldBufferedAlert.php, CRM/Herald/DAO/HeraldDigest.php, CRM/Herald/Upgrader.php, CRM/Herald/Upgrader/BufferTable.php, CRM/Herald/Upgrader/DigestJobs.php, CRM/Herald/Upgrader/InlineContributionBlock.php, CRM/Herald/Upgrader/InlineDigest.php, CRM/Herald/Upgrader/InlineDigestBlocks.php, CRM/Herald/Upgrader/InlineDigestJobs.php, CRM/Herald/Upgrader/Reconcile.php, Civi/Api4/Herald.php, Civi/Api4/HeraldBufferedAlert.php, Civi/Api4/HeraldDigest.php, Civi/Herald/Admin/AdminScreens.php, Civi/Herald/Admin/AllowedHosts.php, Civi/Herald/Admin/InvalidInput.php, Civi/Herald/Admin/MonitorChecks.php, Civi/Herald/Admin/MonitorSettings.php, Civi/Herald/Admin/RegexCheck.php, Civi/Herald/Cleaning/Rule.php, Civi/Herald/Cleaning/CleanedFieldsInput.php, Civi/Herald/Admin/StringMap.php, Civi/Herald/Api4/Action/CheckFieldTransition.php, Civi/Herald/Api4/Action/CheckSchedule.php, Civi/Herald/Api4/Action/DeleteTopic.php, Civi/Herald/Api4/Action/GetChannels.php, Civi/Herald/Api4/Action/GetMonitorChecks.php, Civi/Herald/Api4/Action/GetParkedAlerts.php, Civi/Herald/Api4/Action/Notify.php, Civi/Herald/Api4/Action/NotifyDigest.php, Civi/Herald/Api4/Action/Publish.php, Civi/Herald/Api4/Action/ReactivateBufferedAlerts.php, Civi/Herald/Api4/Action/ReactivateParkedAlerts.php, Civi/Herald/Api4/Action/RenderTemplate.php, Civi/Herald/Api4/Action/SaveAllowedHosts.php, Civi/Herald/Api4/Action/SaveMonitorChecks.php, Civi/Herald/Api4/Action/SaveSourceRules.php, Civi/Herald/Api4/Action/SaveTopic.php, Civi/Herald/Api4/Action/Send.php, Civi/Herald/Api4/Action/TestTelegram.php, Civi/Herald/Buffer/AggregateSummary.php, Civi/Herald/Buffer/AlertBuffer.php, Civi/Herald/Buffer/DeadLetter.php, Civi/Herald/Channel/ActivityChannel.php, Civi/Herald/Channel/ActivityContactId.php, Civi/Herald/Channel/ActivityOptionResolver.php, Civi/Herald/Channel/ActivityText.php, Civi/Herald/Channel/ActivityValues.php, Civi/Herald/Channel/ChannelInterface.php, Civi/Herald/Channel/ChannelRegistry.php, Civi/Herald/Channel/EmailChannel.php, Civi/Herald/Channel/HtmlLineBreaks.php, Civi/Herald/Channel/HtmlPrefix.php, Civi/Herald/Channel/HtmlRepair.php, Civi/Herald/Channel/HtmlTokens.php, Civi/Herald/Channel/MessageLimit.php, Civi/Herald/Channel/NtfyChannel.php, Civi/Herald/Channel/PlainText.php, Civi/Herald/Channel/PlainTextWriter.php, Civi/Herald/Channel/PushoverChannel.php, Civi/Herald/Channel/TelegramChannel.php, Civi/Herald/Channel/TelegramText.php, Civi/Herald/Channel/Utf16Text.php, Civi/Herald/Channel/WebhookChannel.php, Civi/Herald/Condition/FieldTransition.php, Civi/Herald/Condition/FieldTransitionSnapshotter.php, Civi/Herald/Condition/FieldTransitionWatchList.php, Civi/Herald/Digest/BucketEdges.php, Civi/Herald/Digest/Composer.php, Civi/Herald/Digest/Definition.php, Civi/Herald/Digest/DigestRules.php, Civi/Herald/Digest/ExtraSections.php, Civi/Herald/Digest/FormValidator.php, Civi/Herald/Digest/HistogramFormatter.php, Civi/Herald/Digest/Validator.php, Civi/Herald/Dispatch/Dispatcher.php, Civi/Herald/Dispatch/NoRecipientsException.php, Civi/Herald/Monitor/CheckCollector.php, Civi/Herald/Monitor/CheckState.php, Civi/Herald/Monitor/Monitor.php, Civi/Herald/Monitor/MonitorConfig.php, Civi/Herald/Monitor/Observation.php, Civi/Herald/Monitor/TransitionPlanner.php, Civi/Herald/PreEditSnapshot.php, Civi/Herald/Preflight/DeployGate.php, Civi/Herald/Preflight/DisabledRulesCheck.php, Civi/Herald/Preflight/HandlerContract.php, Civi/Herald/Preflight/RuleHandlers.php, Civi/Herald/Privacy/Mask.php, Civi/Herald/Renderer/TemplateRenderer.php, Civi/Herald/Schedule/Clock.php, Civi/Herald/Schedule/Schedule.php, Civi/Herald/Schedule/ScheduleParams.php, Civi/Herald/Schedule/ScheduleText.php, Civi/Herald/StatusTransitionDispatcher.php, Civi/Herald/Subscribers/GroupRecipients.php, Civi/Herald/Subscribers/SubscriberLookup.php, Civi/Herald/Subscribers/SubscriptionScope.php, Civi/Herald/Topic/RouteFields.php, Civi/Herald/Topic/RouteRules.php, Civi/Herald/Topic/RouteValidator.php, Civi/Herald/Topic/Router.php, Civi/Herald/Topic/ValueType.php, Civi/Herald/Trigger/CampaignProgress.php, Civi/Herald/Trigger/ContextVars.php, Civi/Herald/Trigger/ContributionStatusName.php, Civi/Herald/Trigger/ContributionVars.php, Civi/Herald/Trigger/OriginalValues.php, Civi/Herald/Util/StoredFields.php, ang/afformHeraldDigest.aff.html, ang/afformHeraldDigest.aff.php, ang/afsearchHeraldDigests.aff.html, ang/afsearchHeraldDigests.aff.php, ang/heraldAdmin.ang.php, ang/heraldAdmin.js, ang/heraldAdmin/hosts.html, ang/heraldAdmin/hosts.js, ang/heraldAdmin/index.html, ang/heraldAdmin/monitor.html, ang/heraldAdmin/monitor.js, ang/heraldAdmin/preview.html, ang/heraldAdmin/preview.js, ang/heraldAdmin/cleaning.html, ang/heraldAdmin/cleaning.js, ang/heraldAdmin/test.html, ang/heraldAdmin/test.js, ang/heraldAdmin/topic.js, ang/heraldAdmin/topics.html, ang/heraldAdmin/topics.js, ang/heraldDigest.ang.php, api/v3/Job/HeraldBufferFlush.php, api/v3/Job/HeraldMonitor.php, bin/note-foreign-rules.php, bin/preflight-rules.php, bin/rules-disable.php, bin/rules-reenable.php, bin/test-telegram.php, demo/seed.php, herald.civix.php, herald.php, managed/ActivityType.mgd.php, managed/CiviRules.mgd.php, managed/Digests.mgd.php, managed/Job.mgd.php, managed/MessageTemplate.mgd.php, managed/Navigation.mgd.php, managed/ParkedAlerts.mgd.php, managed/SubscriberPreferences.mgd.php, schema/HeraldBufferedAlert.entityType.php, schema/HeraldDigest.entityType.php, settings/herald.setting.php, templates/CRM/Herald/CivirulesAdapter/Form/SendDigest.tpl
 msgid "Herald"
@@ -2579,8 +2587,8 @@ msgid "Reaches only the subscriptions scoped to the record that fired the rule, 
 msgstr "Erreicht nur die Abos, die auf den auslösenden Datensatz beschränkt sind, und Abos ohne Bezug."
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
-msgid "0 sends each alert at once; a window collects alerts and sends them as one message."
-msgstr "0 sendet jede Meldung sofort; ein Fenster sammelt Meldungen und sendet sie als eine Nachricht."
+msgid "Alerts are collected for this long and sent as one message. 0 sends each at once; blank uses the site default of %1."
+msgstr "So lange werden Meldungen gesammelt und als eine Nachricht gesendet. 0 sendet jede sofort; leer gilt der Standard der Installation von %1."
 
 #: CRM/Herald/CivirulesAdapter/Form/AbstractSend.php
 msgid "A JSON object passed to the template."

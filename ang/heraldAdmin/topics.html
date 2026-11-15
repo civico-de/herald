@@ -34,7 +34,7 @@
         <td>{{ row.subscribers }}</td>
         <td>{{ row.channel || row.fallback }}</td>
         <td>{{ row.mode || row.fallback }}</td>
-        <td>{{ row.aggregate || row.fallback }}</td>
+        <td>{{ row.aggregate }}</td>
         <td>
           <ul class="herald-admin-plain" ng-if="row.usedBy.length">
             <li ng-repeat="user in row.usedBy">{{ user }}</li>

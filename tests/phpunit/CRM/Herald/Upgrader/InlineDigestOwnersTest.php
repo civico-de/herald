@@ -276,6 +276,8 @@ class CRM_Herald_Upgrader_InlineDigestOwnersTest extends TestCase implements Hea
       'outBound_option' => \CRM_Mailing_Config::OUTBOUND_OPTION_REDIRECT_TO_DB,
     ]);
     \Civi::settings()->set('herald_email_from', '"Herald" <noreply@example.org>');
+    // The run is checked by the mail it sends.
+    \Civi::settings()->set(\Civi\Herald\Buffer\Window::SETTING, 0);
     CRM_Core_DAO::executeQuery('DELETE FROM civicrm_mailing_spool');
     $id = Job::create(checkPermissions: FALSE)
       ->setValues([

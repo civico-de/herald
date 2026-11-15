@@ -20,9 +20,9 @@ herald adds two CiviRules actions. Their forms share these fields:
 - Channel, one of the active channels under Administer » Herald » Channels. Direct and address mode send through it. Subscribers and group members use their own channel.
 - Message template.
 - The recipient fields of the chosen channel's type, such as the Telegram chat ID. Empty fields keep the channel's defaults.
-- Aggregate window in minutes. 0 sends at once, see [Aggregation](delivery.md#aggregation).
+- Aggregate window in minutes. Blank uses the site default, 0 sends at once, see [Aggregation](delivery.md#aggregation).
 
-The suspension option, the email location type, the subscription scope, the aggregate window and the variables sit under "Advanced" at the end of the form, followed by the presentation options of each channel type, such as the ntfy priority. Direct and address mode show those of the chosen channel's type; subscriber and group mode show every type's, each under its own heading, since each contact gets the message on their own channel. "Advanced" opens by itself when one of its fields holds a value.
+The suspension option, the email location type, the subscription scope and the variables sit under "Advanced" at the end of the form, followed by the presentation options of each channel type, such as the ntfy priority. Direct and address mode show those of the chosen channel's type; subscriber and group mode show every type's, each under its own heading, since each contact gets the message on their own channel. "Advanced" opens by itself when one of its fields holds a value.
 
 The forms need the permission "administer CiviCRM".
 
@@ -110,8 +110,8 @@ The entity `Herald` offers these actions. The actions need the permission "admin
 
 | Action | Parameters | What it does |
 |---|---|---|
-| send | channel, message, subject, format, config | Delivers a finished message through one configured channel, named in `channel`. This is the entry point for other extensions. The result lists `unknown_config_keys`. |
-| publish | topic, message or template with vars, format, amount | Delivers through the topic's entry in `herald_topics`, see [Topics](delivery.md#topics). |
+| send | channel, message, subject, format, config, aggregateMinutes | Delivers a finished message through one configured channel, named in `channel`. This is the entry point for other extensions. The result lists `unknown_config_keys` and says whether the message was `sent` or `buffered` for the [aggregation window](delivery.md#aggregation). |
+| publish | topic, message or template with vars, format, amount, aggregateMinutes | Delivers through the topic's entry in `herald_topics`, see [Topics](delivery.md#topics). |
 | notify | actionParams, triggerContext | What "Send notification" calls. |
 | notifyDigest | digest, actionParams, sendHour, daily, skipEmpty | What "Send digest" calls, and scripts, see [Sending a digest](digests.md#sending-a-digest). |
 | checkSchedule | ruleId, schedule | What "Herald: Schedule" calls. Returns `due`, `slot`, `last_run` and `not_before`. |
@@ -243,6 +243,7 @@ Set them with `cv setting:set name=value` or `cv api4 Setting.set +v 'name=value
 | `herald_contact_email_channel` | email | The email channel that reaches group members without a channel of their own. |
 | `herald_webhook_allowed_hosts` | empty | Webhook hosts that may be reached. Empty allows any public address and blocks private ones. |
 | `herald_topics` | empty | [Topics](delivery.md#topics) and their delivery settings. |
+| `herald_aggregate_minutes` | 1 | The [aggregation window](delivery.md#aggregation) of every delivery that sets none. 0 sends at once. |
 | `herald_buffer_max_attempts` | 5 | Failed deliveries before an aggregated group is parked. |
 | `herald_buffer_max_items` | 25 | Messages printed in one aggregated message. 0 prints all. |
 | `herald_cleaned_fields` | empty | Text fields whose values rules group under one name, see [Cleaned fields](digests.md#cleaned-fields). |

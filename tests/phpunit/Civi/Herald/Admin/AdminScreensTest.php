@@ -154,7 +154,10 @@ class AdminScreensTest extends AdminTestCase {
     foreach ($onPage as $name => $setting) {
       $sections[$setting['settings_pages']['herald']['section'] ?? 'default'][] = $name;
     }
-    $this->assertSame(['herald_contact_email_channel', 'herald_monitor_topic'], $sections['default']);
+    $this->assertSame(
+      ['herald_contact_email_channel', 'herald_aggregate_minutes', 'herald_monitor_topic'],
+      $sections['default'],
+    );
     $this->assertCount(6, $sections['advanced']);
   }
 

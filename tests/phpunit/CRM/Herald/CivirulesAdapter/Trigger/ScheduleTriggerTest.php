@@ -44,6 +44,8 @@ class CRM_Herald_CivirulesAdapter_Trigger_ScheduleTriggerTest extends TestCase i
 
   protected function setUp(): void {
     parent::setUp();
+    // These tests look at a delivery as it goes out, not at the buffer.
+    \Civi::settings()->set(\Civi\Herald\Buffer\Window::SETTING, 0);
     $this->channels = Civi::settings()->get('herald_channels');
     \Civi\Herald\ChannelFixture::add('activity', 'activity');
   }

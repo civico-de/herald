@@ -145,9 +145,11 @@ Der Check-Monitor veröffentlicht in das Thema, das in `herald_monitor_topic` st
 
 ## Sammelnachrichten
 
-Meldungen, die gehäuft auftreten, lassen sich sammeln und als eine Nachricht verschicken. Setzen Sie dazu `aggregate_minutes` an einer Aktion oder einem Thema; im Aktionsformular heißt das Feld „Sammelfenster in Minuten“ und steht unter „Erweitert“. Der Standard 0 sendet sofort.
+herald sammelt Meldungen für kurze Zeit und verschickt die einer Art als eine Nachricht. Das Fenster beträgt eine Minute, solange Sie nichts anderes festlegen: Die Einstellung `herald_aggregate_minutes` ist der Standard für die ganze Installation, und `aggregate_minutes` an einer Aktion oder einem Thema überschreibt ihn. In den Formularen heißt das Feld „Sammelfenster in Minuten“. Lassen Sie es leer, gilt der Standard; 0 sendet jede Meldung sofort.
 
-Ein Wert über 0 legt die gerenderte Meldung in der Tabelle `civicrm_herald_buffer` ab. Der geplante Job „Herald: Sammelpuffer für Meldungen leeren“ läuft bei jedem Cron-Lauf. Sobald die älteste wartende Meldung einer Gruppe älter ist als ihr Fenster, wird die ganze Gruppe als eine Nachricht verschickt.
+Das Fenster wird in dieser Reihenfolge bestimmt: der Wert am Aufruf oder an der Aktion, der Eintrag des Themas, der Eintrag des Themas default, der Standard der Installation. `Herald.send` und `Herald.publish` nehmen es als `aggregateMinutes` entgegen.
+
+Ein Fenster über 0 legt die gerenderte Meldung in der Tabelle `civicrm_herald_buffer` ab. Der geplante Job „Herald: Sammelpuffer für Meldungen leeren“ läuft bei jedem Cron-Lauf. Sobald die älteste wartende Meldung einer Gruppe älter ist als ihr Fenster, wird die ganze Gruppe als eine Nachricht verschickt.
 
 - Eine Gruppe entspricht einem Satz von Parametern. Regeln, deren Aktionen identische Parameter tragen, teilen sich eine Nachricht. Ändern Sie die Parameter einer Regel, beginnt eine neue Gruppe. Themen bilden eigene Gruppen.
 - Ist ein Abo-Bezug gesetzt, bilden Meldungen zu verschiedenen Events, Mitgliedschaften oder Teilnahmen getrennte Gruppen.
@@ -179,6 +181,6 @@ Die Systemstatus-Seite, und mit ihr der Check-Monitor, meldet geparkte Meldungen
 
 Wenn Sie herald deinstallieren, wird die Puffertabelle samt geparkter Meldungen gelöscht. Beim Deaktivieren von herald bleibt sie erhalten.
 
-Zustellungen ohne Sammeln werden nie gepuffert. Schlagen sie fehl, geht der Fehler an den Aufrufer zurück, also an das API-Ergebnis oder das CiviRules-Protokoll, und es gibt keinen weiteren Versuch.
+Zustellungen mit einem Fenster von 0 werden nie gepuffert. Schlagen sie fehl, geht der Fehler an den Aufrufer zurück, also an das API-Ergebnis oder das CiviRules-Protokoll, und es gibt keinen weiteren Versuch.
 
 ![Eine geparkte Meldung](images/de/parked.png)

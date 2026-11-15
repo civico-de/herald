@@ -20,9 +20,9 @@ herald ergänzt CiviRules um zwei Aktionen. Ihre Formulare haben diese Felder ge
 - Kanal, einer der aktiven Kanäle unter Administrieren » Herald » Kanäle. Direkt- und Adresslisten-Modus senden über ihn. Abonnent:innen und Gruppenmitglieder verwenden ihren eigenen Kanal.
 - Nachrichtenvorlage.
 - Die Empfängerfelder des Typs des gewählten Kanals, etwa die Telegram-Chat-ID. Leere Felder behalten die Standardwerte des Kanals.
-- Sammelfenster in Minuten. 0 sendet sofort, siehe [Sammelnachrichten](delivery.md#sammelnachrichten).
+- Sammelfenster in Minuten. Leer gilt der Standard der Installation, 0 sendet sofort, siehe [Sammelnachrichten](delivery.md#sammelnachrichten).
 
-Die Option „Kommunikationssperren beachten“, der Adresstyp der E-Mail, der Abo-Bezug, das Sammelfenster und die Variablen stehen unter „Erweitert“ am Ende des Formulars, danach die Darstellungsoptionen jedes Kanaltyps, etwa die ntfy-Priorität. Direkt- und Adresslisten-Modus zeigen die des Typs des gewählten Kanals; Abonnenten- und Gruppenmodus zeigen die aller Typen, jeweils unter eigener Überschrift, da jeder Kontakt die Nachricht über seinen eigenen Kanal erhält. „Erweitert“ öffnet sich von selbst, sobald eines seiner Felder einen Wert hat.
+Die Option „Kommunikationssperren beachten“, der Adresstyp der E-Mail, der Abo-Bezug und die Variablen stehen unter „Erweitert“ am Ende des Formulars, danach die Darstellungsoptionen jedes Kanaltyps, etwa die ntfy-Priorität. Direkt- und Adresslisten-Modus zeigen die des Typs des gewählten Kanals; Abonnenten- und Gruppenmodus zeigen die aller Typen, jeweils unter eigener Überschrift, da jeder Kontakt die Nachricht über seinen eigenen Kanal erhält. „Erweitert“ öffnet sich von selbst, sobald eines seiner Felder einen Wert hat.
 
 Die Formulare erfordern die Berechtigung „administer CiviCRM“ (CiviCRM administrieren).
 
@@ -110,8 +110,8 @@ Die Entität `Herald` bietet diese Aktionen. Die Aktionen erfordern die Berechti
 
 | Aktion | Parameter | Was sie tut |
 |---|---|---|
-| send | channel, message, subject, format, config | Stellt eine fertige Nachricht über einen konfigurierten Kanal zu, den `channel` nennt. Das ist der Einstiegspunkt für andere Extensions. Das Ergebnis listet `unknown_config_keys` auf. |
-| publish | topic, message oder template mit vars, format, amount | Stellt über den Eintrag des Themas in `herald_topics` zu, siehe [Themen](delivery.md#themen). |
+| send | channel, message, subject, format, config, aggregateMinutes | Stellt eine fertige Nachricht über einen konfigurierten Kanal zu, den `channel` nennt. Das ist der Einstiegspunkt für andere Extensions. Das Ergebnis listet `unknown_config_keys` auf und nennt, ob die Nachricht gesendet (`sent`) oder für das [Sammelfenster](delivery.md#sammelnachrichten) gepuffert wurde (`buffered`). |
+| publish | topic, message oder template mit vars, format, amount, aggregateMinutes | Stellt über den Eintrag des Themas in `herald_topics` zu, siehe [Themen](delivery.md#themen). |
 | notify | actionParams, triggerContext | Wird von „Send notification“ aufgerufen. |
 | notifyDigest | digest, actionParams, sendHour, daily, skipEmpty | Wird von „Send digest“ und von Skripten aufgerufen, siehe [Einen Report verschicken](digests.md#einen-report-verschicken). |
 | checkSchedule | ruleId, schedule | Wird von „Herald: Schedule“ aufgerufen. Gibt `due`, `slot`, `last_run` und `not_before` zurück. |
@@ -243,6 +243,7 @@ Setzen Sie sie mit `cv setting:set name=value` oder `cv api4 Setting.set +v 'nam
 | `herald_contact_email_channel` | email | Der E-Mail-Kanal, der Gruppenmitglieder ohne eigenen Kanal erreicht. |
 | `herald_webhook_allowed_hosts` | leer | Webhook-Hosts, die erreicht werden dürfen. Ist die Liste leer, ist jede öffentliche Adresse erlaubt und jede private gesperrt. |
 | `herald_topics` | leer | Die [Themen](delivery.md#themen) mit ihren Zustelleinstellungen. |
+| `herald_aggregate_minutes` | 1 | Das [Sammelfenster](delivery.md#sammelnachrichten) jeder Zustellung, die keines festlegt. 0 sendet sofort. |
 | `herald_buffer_max_attempts` | 5 | Fehlgeschlagene Zustellungen, bevor eine gesammelte Gruppe geparkt wird. |
 | `herald_buffer_max_items` | 25 | Ausgegebene Nachrichten in einer Sammelnachricht. 0 gibt alle aus. |
 | `herald_cleaned_fields` | leer | Textfelder, deren Werte Regeln unter einem Namen gruppieren, siehe [Felder bereinigen](digests.md#felder-bereinigen). |

@@ -6,7 +6,7 @@ use CRM_Herald_ExtensionUtil as E;
 
 /**
  * Scheduled job that drains the alert aggregation buffer on every cron run.
- * No-op (one cheap SELECT) while no rule uses aggregate_minutes.
+ * No-op (one cheap SELECT) while nothing waits in the buffer.
  */
 return [
   [

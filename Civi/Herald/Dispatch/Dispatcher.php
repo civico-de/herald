@@ -5,6 +5,7 @@ declare(strict_types = 1);
 namespace Civi\Herald\Dispatch;
 
 use Civi\Herald\Buffer\AlertBuffer;
+use Civi\Herald\Buffer\Window;
 use Civi\Herald\Channel\ChannelRegistry;
 use Civi\Herald\Renderer\TemplateRenderer;
 use Civi\Herald\Subscribers\SubscriberLookup;
@@ -43,8 +44,9 @@ use Civi\Herald\Vendor\Civico\Stdlib\Cast;
  *                         0/absent = primary address
  *   scope_entity_type / scope_entity_id — source-entity scope of this
  *                         notification; scoped subscriptions must match it
- *   aggregate_minutes   — int (default 0 = send immediately). When > 0, the
- *                         rendered body is parked in the alert buffer and
+ *   aggregate_minutes   — int; absent = the site's default window (Window),
+ *                         0 = send immediately. When > 0, the rendered body
+ *                         is parked in the alert buffer and
  *                         Job.herald_buffer_flush sends everything collected
  *                         within the window as ONE message.
  *   chat_id, parse_mode, disable_notification, … — delivery keys of the
@@ -98,7 +100,7 @@ class Dispatcher {
     // rendered subject into $params — see groupHash().
     $groupHash = self::groupHash($params);
     $params = ChannelSubject::withSubject($params, $subject);
-    $aggregateMinutes = Cast::toInt($params['aggregate_minutes'] ?? 0);
+    $aggregateMinutes = Window::of($params);
     if ($aggregateMinutes > 0) {
       ($this->buffer ?? new AlertBuffer())->add($groupHash, $aggregateMinutes, $body, $params, $amount);
       return 'buffered';

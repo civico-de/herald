@@ -225,16 +225,16 @@ Typ und Status sind Optionsnamen, keine Zahlen, und müssen auf der Site aktiv s
 
 ## Testnachricht
 
-Die Seite Administrieren » Herald » Testnachricht sendet eine echte Nachricht. „Einen Kanal“ sendet über einen konfigurierten Kanal, mit dem Ziel und den Optionen, die Sie auf der Seite eintragen. Leere Felder übernehmen die Standardwerte des Kanals. „Ein Thema“ veröffentlicht die Nachricht in einem Thema, wie eine echte Meldung. Hat das Thema ein Sammelfenster, bleibt die Nachricht bis zum nächsten Leeren im Puffer, und die Seite weist darauf hin.
+Die Seite Administrieren » Herald » Testnachricht sendet eine echte Nachricht. „Einen Kanal“ sendet über einen konfigurierten Kanal, mit dem Ziel und den Optionen, die Sie auf der Seite eintragen. Leere Felder übernehmen die Standardwerte des Kanals. „Ein Thema“ veröffentlicht die Nachricht in einem Thema, wie eine echte Meldung. Beide senden sofort, unabhängig vom Sammelfenster, damit ein Zustellfehler auf der Seite erscheint.
 
 Eingabefehler listet die Seite auf. Einen Zustellfehler des Kanals selbst sehen Benutzer:innen mit der Berechtigung „view debug output“ vollständig. Alle anderen sehen eine Fehler-ID, unter der das CiviCRM-Protokoll die Fehlermeldung enthält.
 
-Mit cv tun `Herald.send` und `Herald.publish` dasselbe:
+Mit cv tun `Herald.send` und `Herald.publish` dasselbe. `aggregateMinutes=0` sendet sofort; ohne die Angabe wartet die Nachricht das [Sammelfenster](delivery.md#sammelnachrichten) ab, und das Ergebnis meldet `buffered`:
 
 ```bash
-cv api4 Herald.send channel=ntfy message='herald works' config='{"ntfy_topic": "my-topic"}'
-cv api4 Herald.send channel=telegram message='<b>herald works</b>'
-cv api4 Herald.publish topic=ops message='herald works'
+cv api4 Herald.send channel=ntfy message='herald works' config='{"ntfy_topic": "my-topic"}' aggregateMinutes=0
+cv api4 Herald.send channel=telegram message='<b>herald works</b>' aggregateMinutes=0
+cv api4 Herald.publish topic=ops message='herald works' aggregateMinutes=0
 ```
 
 Die Seite Administrieren » Herald » Vorlagenvorschau rendert eine herald-Vorlage mit Beispielwerten als JSON-Objekt und sendet nichts, wie `Herald.renderTemplate`.

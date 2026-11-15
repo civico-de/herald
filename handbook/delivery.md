@@ -145,9 +145,11 @@ The check monitor publishes to the topic named in `herald_monitor_topic`, which 
 
 ## Aggregation
 
-Alerts that come in bursts can be collected and sent as one message. Set `aggregate_minutes` on an action or a topic; in the action form it is the field "Aggregate window in minutes" under "Advanced". The default 0 sends at once.
+herald collects alerts for a short time and sends those of one kind as one message. The window is one minute unless you set another: the setting `herald_aggregate_minutes` is the default for the whole site, and `aggregate_minutes` on an action or a topic overrides it. In the forms the field is "Aggregate window in minutes". Leave it blank for the default; 0 sends each alert at once.
 
-A value above 0 stores the rendered alert in the table `civicrm_herald_buffer`. The scheduled job "Herald: Flush alert aggregation buffer" runs on every cron run. Once the oldest waiting alert of a group is older than its window, the whole group goes out as one message.
+The window is looked up in this order: the value at the call or on the action, the topic's entry, the entry of the default topic, the site default. `Herald.send` and `Herald.publish` take it as `aggregateMinutes`.
+
+A window above 0 stores the rendered alert in the table `civicrm_herald_buffer`. The scheduled job "Herald: Flush alert aggregation buffer" runs on every cron run. Once the oldest waiting alert of a group is older than its window, the whole group goes out as one message.
 
 - A group is one set of parameters. Rules whose actions carry identical parameters share a message. Changing a rule's parameters starts a new group. Topics form groups of their own.
 - With a subscription scope set, alerts about different events, memberships or participants form separate groups.
@@ -179,6 +181,6 @@ The system status, and with it the check monitor, reports parked alerts and a st
 
 Uninstalling herald drops the buffer table, parked alerts included. Disabling herald keeps it.
 
-Deliveries without aggregation are never buffered. When they fail, the error goes back to the caller, which is the API result or the CiviRules log, and there is no retry.
+Deliveries with a window of 0 are never buffered. When they fail, the error goes back to the caller, which is the API result or the CiviRules log, and there is no retry.
 
 ![A parked alert](images/parked.png)

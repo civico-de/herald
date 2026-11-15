@@ -41,6 +41,8 @@ class NotifyDigestDailyTest extends TestCase implements HeadlessInterface, HookI
 
   public function setUp(): void {
     parent::setUp();
+    // These tests look at a delivery as it goes out, not at the buffer.
+    \Civi::settings()->set(\Civi\Herald\Buffer\Window::SETTING, 0);
     \Civi::settings()->set('mailing_backend', [
       'outBound_option' => \CRM_Mailing_Config::OUTBOUND_OPTION_REDIRECT_TO_DB,
     ]);

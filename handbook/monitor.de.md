@@ -151,7 +151,7 @@ Beim ersten Lauf nach dem Upgrade gilt jeder bestehende Fehler als neu. Auf eine
 - Jeder Lauf setzt eine Sperre. Ein Lauf, der sich mit einem anderen überschneidet, wird übersprungen, statt doppelt zu senden.
 - Der Zustand jedes Checks wird direkt nach dem Veröffentlichen seiner Meldung gespeichert. Ein Absturz mitten im Lauf wiederholt die Meldungen davor nicht. Nur ein Absturz genau zwischen dem Veröffentlichen einer Meldung und dem Speichern des Zustands kann diese eine Meldung doppelt senden.
 - Schlägt eine Veröffentlichung fehl, behält der Check seinen alten Zustand, und der nächste Lauf meldet den Wechsel erneut. Der Joblauf endet dann mit dem Fehler „herald monitor: N transition(s) could not be published, see the CiviCRM log“, und jeder Fehler steht als Warnung in diesem Protokoll.
-- Hat das Thema ein Sammelfenster, landet eine Meldung zunächst nur im Puffer. Der Job zum Leeren des Puffers stellt sie später zu.
+- Eine Meldung landet für das Sammelfenster des Themas im Puffer, standardmäßig eine Minute. Der Job zum Leeren des Puffers stellt sie zu.
 
 ## Grenzen
 

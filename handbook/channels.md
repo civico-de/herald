@@ -225,16 +225,16 @@ Type and status are option names, not numbers, and must be active on the site.
 
 ## Test message
 
-Administer » Herald » Test message sends a real message. "A channel" sends through one configured channel, with the target and options you enter on the screen. Empty fields fall back to the channel's defaults. "A topic" publishes to a topic, as a real alert would. If the topic aggregates, it buffers the message until the next flush, and the screen says so.
+Administer » Herald » Test message sends a real message. "A channel" sends through one configured channel, with the target and options you enter on the screen. Empty fields fall back to the channel's defaults. "A topic" publishes to a topic, as a real alert would. Both send at once, whatever the aggregation window, so a delivery error shows on the screen.
 
 Input errors are listed on the screen. A delivery error from the channel itself is shown in full to users with the permission "view debug output". Others see an error ID, and the CiviCRM log holds the message under that ID.
 
-With cv, `Herald.send` and `Herald.publish` do the same:
+With cv, `Herald.send` and `Herald.publish` do the same. `aggregateMinutes=0` sends at once; without it the message waits for the [aggregation window](delivery.md#aggregation) and the result says `buffered`:
 
 ```bash
-cv api4 Herald.send channel=ntfy message='herald works' config='{"ntfy_topic": "my-topic"}'
-cv api4 Herald.send channel=telegram message='<b>herald works</b>'
-cv api4 Herald.publish topic=ops message='herald works'
+cv api4 Herald.send channel=ntfy message='herald works' config='{"ntfy_topic": "my-topic"}' aggregateMinutes=0
+cv api4 Herald.send channel=telegram message='<b>herald works</b>' aggregateMinutes=0
+cv api4 Herald.publish topic=ops message='herald works' aggregateMinutes=0
 ```
 
 Administer » Herald » Template preview renders a herald template with sample values given as a JSON object and sends nothing, like `Herald.renderTemplate`.

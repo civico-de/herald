@@ -38,6 +38,7 @@
         ctrl.inputs = channel ? heraldAdmin.toInputs(channel.fields, {}) : {};
       };
 
+      // A test goes out at once, so its outcome shows here instead of in the buffer.
       const call = () => {
         if (ctrl.target === "topic") {
           if (!ctrl.topic) {
@@ -47,19 +48,13 @@
             topic: ctrl.topic,
             message: ctrl.message,
             format: ctrl.format,
+            aggregateMinutes: 0,
           }).then((rows) =>
-            rows[0].buffered
-              ? ts(
-                  'Buffered for topic "%1": it collects alerts, so the message goes out with the next flush.',
-                  {
-                    1: ctrl.topic,
-                  },
-                )
-              : rows[0].channel
-                ? ts('Sent to topic "%1" through %2.', { 1: ctrl.topic, 2: rows[0].channel })
-                : ts('Sent to topic "%1"; each recipient gets it on their own channel.', {
-                    1: ctrl.topic,
-                  }),
+            rows[0].channel
+              ? ts('Sent to topic "%1" through %2.', { 1: ctrl.topic, 2: rows[0].channel })
+              : ts('Sent to topic "%1"; each recipient gets it on their own channel.', {
+                  1: ctrl.topic,
+                }),
           );
         }
         const channel = ctrl.selected();
@@ -76,6 +71,7 @@
           subject: ctrl.subject,
           format: ctrl.format,
           config: built.values,
+          aggregateMinutes: 0,
         }).then(() => ts("Sent through %1.", { 1: channel.label }));
       };
 

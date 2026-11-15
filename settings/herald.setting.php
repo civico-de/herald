@@ -86,6 +86,22 @@ return [
     // Every write path keeps the subscription options in step.
     'post_change' => ['Civi\\Herald\\Subscribers\\SubscribableTopics::sync'],
   ],
+  'herald_aggregate_minutes' => [
+    'group_name' => 'Herald Settings',
+    'group' => 'herald',
+    'name' => 'herald_aggregate_minutes',
+    'type' => 'Integer',
+    'html_type' => 'text',
+    'default' => 1,
+    'add' => '5.81',
+    'is_domain' => 1,
+    'is_contact' => 0,
+    'description' => E::ts(
+      'How long alerts are collected and sent as one message, where a rule, a topic or a caller sets no window of its own. 0 sends each alert at once, without a retry when the delivery fails.',
+    ),
+    'title' => E::ts('Aggregate Window in Minutes'),
+    'settings_pages' => ['herald' => ['weight' => 69]],
+  ],
   'herald_monitor_topic' => [
     'group_name' => 'Herald Settings',
     'group' => 'herald',

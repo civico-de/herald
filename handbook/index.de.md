@@ -21,7 +21,7 @@ Ist CiviRules installiert, ergänzt herald es um vier Bausteine:
 - den Trigger „Herald: Schedule“, der an gewählten Wochentagen einmal zu einer festen Stunde auslöst
 - die Bedingung „Herald: Field transition“, die den Wert eines Feldes vor und nach einer Änderung vergleicht, etwa wenn ein Event deaktiviert wird. CiviRules bringt solche Bedingungen nur für wenige Felder mit, etwa für Status.
 
-Eine Benachrichtigung kann an ein einzelnes Ziel gehen, an alle Kontakte, die ihr Thema abonniert haben, an die Mitglieder einer Gruppe oder an eine Liste von E-Mail-Adressen. Jeder Kontakt kann seinen eigenen Kanal wählen. Meldungen, die gehäuft auftreten, lassen sich sammeln und als eine Nachricht pro Zeitfenster verschicken. Siehe [Zustellung](delivery.md).
+Eine Benachrichtigung kann an ein einzelnes Ziel gehen, an alle Kontakte, die ihr Thema abonniert haben, an die Mitglieder einer Gruppe oder an eine Liste von E-Mail-Adressen. Jeder Kontakt kann seinen eigenen Kanal wählen. Meldungen, die gehäuft auftreten, werden gesammelt und als eine Nachricht pro Zeitfenster verschickt, standardmäßig eine Minute. Siehe [Zustellung](delivery.md).
 
 Skripte und andere Extensions können Nachrichten an ein benanntes Thema wie ops schicken. Ein Thema bündelt Nachrichten einer Art, und sein Eintrag legt fest, welchen Kanal und welche Empfänger:innen sie erreichen. Wer eine Nachricht schickt, muss also nie eine Chat-ID oder eine URL kennen.
 
@@ -49,7 +49,7 @@ Die Installation legt den Kanal `email` an. Senden Sie eine Testnachricht unter 
 
 ```bash
 cv api4 Herald.send channel=email subject='Test' message='<b>herald works</b>' \
-  'config={"email_to":"you@example.org"}'
+  'config={"email_to":"you@example.org"}' aggregateMinutes=0
 ```
 
 Richten Sie nun eine Regel ein, die jeden abgeschlossenen Beitrag meldet:

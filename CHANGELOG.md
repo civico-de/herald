@@ -5,6 +5,22 @@ project uses Semantic Versioning.
 
 ## [Unreleased]
 
+### Added
+
+- Setting `herald_aggregate_minutes`, 1 by default: the aggregation window of every delivery that
+  sets none.
+- `Herald.send` and `Herald.publish` take `aggregateMinutes`. `Herald.send` can now collect
+  messages too and reports `buffered` in its result.
+
+### Changed
+
+- Deliveries without a window of their own wait for the site default instead of going out at once:
+  rule actions, topics, `Herald.send`, `Herald.publish` and digests. They are retried and parked
+  like every buffered alert. Set a window of 0 to send at once and get the error back.
+- A blank "Aggregate window in minutes" means the site default; a 0 is stored. The field moved out
+  of "Advanced" in the rule action forms.
+- The test message screen always sends at once.
+
 ## [0.16.1] - 2026-11-14
 
 ### Fixed

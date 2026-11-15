@@ -21,7 +21,7 @@ With CiviRules installed, herald adds four building blocks to it:
 - the trigger "Herald: Schedule", which fires once at a set hour on chosen weekdays
 - the condition "Herald: Field transition", which compares a field's value before and after an edit, such as an event being deactivated. CiviRules ships such conditions only for a few fields, such as statuses.
 
-A notification can go to one recipient, to every contact who subscribed to its topic, to the members of a group, or to a list of email addresses. Each contact can choose their own channel. Alerts that come in bursts can be collected and sent as one message per time window. See [Delivery](delivery.md).
+A notification can go to one recipient, to every contact who subscribed to its topic, to the members of a group, or to a list of email addresses. Each contact can choose their own channel. Alerts that come in bursts are collected and sent as one message per time window, one minute by default. See [Delivery](delivery.md).
 
 Scripts and other extensions can publish to a named topic such as ops. A topic bundles messages of one kind, and its entry decides which channel and recipients they reach, so the publisher never needs to know a chat ID or a URL.
 
@@ -49,7 +49,7 @@ The install creates the channel `email`. Send a test message from Administer » 
 
 ```bash
 cv api4 Herald.send channel=email subject='Test' message='<b>herald works</b>' \
-  'config={"email_to":"you@example.org"}'
+  'config={"email_to":"you@example.org"}' aggregateMinutes=0
 ```
 
 Now set up a rule that reports every completed contribution:

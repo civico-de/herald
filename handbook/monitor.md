@@ -151,7 +151,7 @@ On the first run after the upgrade, every existing failure counts as new. On a s
 - Each run takes a lock. A run that overlaps with another one skips instead of sending twice.
 - The state of each check is saved right after its alert is published. A crash halfway through a run does not repeat the alerts before it. Only a crash between publishing an alert and saving the check's state can send that one alert twice.
 - When a publish fails, the check keeps its old state, so the next run reports the change again. The job run then ends with the error "herald monitor: N transition(s) could not be published, see the CiviCRM log", and each failure is a warning in that log.
-- When the topic aggregates, a published alert is only buffered. The flush job delivers it later.
+- A published alert is buffered for the topic's aggregation window, one minute by default. The flush job delivers it.
 
 ## Limits
 
