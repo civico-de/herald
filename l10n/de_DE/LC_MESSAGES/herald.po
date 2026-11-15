@@ -454,12 +454,28 @@ msgid "How long alerts are collected and sent as one message, where a rule, a to
 msgstr "Wie lange Meldungen gesammelt und als eine Nachricht gesendet werden, wenn eine Regel, ein Thema oder ein Aufrufer kein eigenes Fenster festlegt. 0 sendet jede Meldung sofort, ohne weiteren Versuch, wenn die Zustellung fehlschlägt."
 
 #: CRM/Herald/CivirulesAdapter/Form/FieldTransition.php
-msgid "Entity (APIv4 name, e.g. Contribution)"
-msgstr "Entität (APIv4-Name, z. B. Contribution)"
+msgid "Entity"
+msgstr "Entität"
 
-#: CRM/Herald/CivirulesAdapter/Form/FieldTransition.php
-msgid "Field (APIv4 field name)"
-msgstr "Feld (APIv4-Feldname)"
+#: Civi/Herald/Condition/EntityOptions.php
+msgid "%1 (unknown entity)"
+msgstr "%1 (unbekannte Entität)"
+
+#: Civi/Herald/Monitor/TopicOptions.php
+msgid "%1 (through the default topic)"
+msgstr "%1 (über das Thema „default“)"
+
+#: Civi/Herald/Monitor/TopicOptions.php
+msgid "%1 (no such topic)"
+msgstr "%1 (kein solches Thema)"
+
+#: Civi/Herald/Monitor/ExpectedExtensions.php
+msgid "%1 (not on this site)"
+msgstr "%1 (auf dieser Site nicht vorhanden)"
+
+#: ang/heraldAdmin/monitor.html
+msgid "- select an extension -"
+msgstr "- Extension auswählen -"
 
 #: CRM/Herald/CivirulesAdapter/Form/FieldTransition.php
 msgid "- any value -"
@@ -2922,8 +2938,8 @@ msgid "Snooze added; enter its key and save to apply."
 msgstr "Stummschaltung hinzugefügt; geben Sie ihren Schlüssel ein und speichern Sie."
 
 #: ang/heraldAdmin/monitor.js
-msgid "Expected extension added; enter its key and save to apply."
-msgstr "Erwartete Extension hinzugefügt; geben Sie ihren Schlüssel ein und speichern Sie."
+msgid "Expected extension added; choose it and save to apply."
+msgstr "Erwartete Extension hinzugefügt; wählen Sie sie aus und speichern Sie."
 
 #: ang/heraldAdmin/monitor.js
 msgid "Empty row"

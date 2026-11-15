@@ -3,6 +3,7 @@
 declare(strict_types = 1);
 
 use Civi\Herald\Condition\EntityField;
+use Civi\Herald\Condition\EntityOptions;
 use Civi\Herald\Condition\FieldTransition;
 use Civi\Herald\Condition\FieldTransitionParams;
 use Civi\Herald\Condition\FieldTransitionWatchList;
@@ -19,8 +20,17 @@ if (class_exists('CRM_CivirulesConditions_Form_Form')) {
   class CRM_Herald_CivirulesAdapter_Form_FieldTransition extends CRM_CivirulesConditions_Form_Form {
 
     public function buildQuickForm(): void {
-      $this->add('text', 'entity', E::ts('Entity (APIv4 name, e.g. Contribution)'), ['size' => 30], required: TRUE);
-      $this->add('text', 'field', E::ts('Field (APIv4 field name)'), ['size' => 30], required: TRUE);
+      $stored = FieldTransitionParams::decode($this->ruleCondition->condition_params ?? NULL)['entity'];
+      $this->add(
+        'select',
+        'entity',
+        E::ts('Entity'),
+        ['' => E::ts('- select -')] + EntityOptions::forCondition($stored),
+        TRUE,
+        ['class' => 'crm-select2 huge'],
+      );
+      // A list of the entity's fields; joins such as contact_id.display_name and suffixes such as :name are typed.
+      $this->add('text', 'field', E::ts('Field'), ['size' => 40, 'list' => 'herald-transition-fields'], required: TRUE);
       $operators =
         ['' => E::ts('- any value -')] + array_combine(FieldTransition::OPERATORS, FieldTransition::OPERATORS);
       $this->add('select', 'from_operator', E::ts('Before: operator'), $operators, required: FALSE);

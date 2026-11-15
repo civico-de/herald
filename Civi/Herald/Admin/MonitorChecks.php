@@ -55,12 +55,18 @@ final class MonitorChecks {
         ] + MonitorRows::state(is_array($state[$key] ?? NULL) ? $state[$key] : NULL);
     }
 
+    $extensions = ExpectedExtensions::options();
     return [
       'checks' => $checks,
       'min_severity' => Cast::toString(\Civi::settings()->get(Threshold::MIN_SETTING)),
       'severity' => StringMap::of(\Civi::settings()->get(Threshold::EXCEPTIONS_SETTING)),
       'snooze' => MonitorRows::snooze(StringMap::of(self::array(self::SNOOZE))),
       'expected' => array_values(array_filter(self::array(self::EXPECTED), 'is_string')),
+      'extensions' => array_map(
+        static fn (string $key, string $label): array => ['key' => $key, 'label' => $label],
+        array_keys($extensions),
+        $extensions,
+      ),
       'levels' => array_map(
         static fn (string $name, string $label): array => ['name' => $name, 'label' => $label],
         array_keys(Severity::thresholdOptions()),

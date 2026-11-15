@@ -85,6 +85,7 @@
             }));
             ctrl.snoozes = screen.snooze.map(toSnooze);
             ctrl.expected = screen.expected.map((key) => ({ key: key }));
+            ctrl.extensions = screen.extensions;
             ctrl.loaded = true;
             return ctrl.checks;
           })
@@ -106,7 +107,7 @@
 
       ctrl.addExpected = () => {
         ctrl.expected.push({ key: "" });
-        ctrl.status = ts("Expected extension added; enter its key and save to apply.");
+        ctrl.status = ts("Expected extension added; choose it and save to apply.");
         focus("herald-expected-" + (ctrl.expected.length - 1));
       };
 
@@ -147,7 +148,7 @@
             minSeverity: ctrl.minSeverity,
             severity: severity,
             snooze: snoozeMap(),
-            expected: ctrl.expected.map((row) => row.key.trim()),
+            expected: ctrl.expected.map((row) => row.key || ""),
           }),
         )
           .then(() => {

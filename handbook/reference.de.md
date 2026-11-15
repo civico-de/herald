@@ -68,8 +68,8 @@ Die Bedingung „Herald: Field transition“ ist wahr, wenn der Wert eines Felde
 
 | Feld | Bedeutung |
 |---|---|
-| Entität | Der APIv4-Name der Entität, etwa Contribution. Kontakt-Untertypen zählen als Contact. |
-| Feld | Der APIv4-Feldname. Ein benutzerdefiniertes Feld schreiben Sie als group.field. Ein Feld eines verknüpften Datensatzes erreichen Sie über dessen Fremdschlüssel, etwa `contact_id.contact_type`. An ein Auswahlfeld können Sie ein Suffix wie `:name` anhängen. Dann vergleicht die Bedingung den Namen der Option statt ihrer ID, etwa bei `contribution_status_id:name`. Nehmen Sie `:name` statt `:label`, denn eine Bezeichnung kann sich mit der Sprache der Site ändern. |
+| Entität | Die Entität, ausgewählt aus denen, die in Tabellen gespeichert sind, etwa Contribution. Kontakt-Untertypen zählen als Contact. |
+| Feld | Der APIv4-Feldname; das Formular schlägt die Felder der gewählten Entität vor. Ein benutzerdefiniertes Feld schreiben Sie als group.field. Ein Feld eines verknüpften Datensatzes erreichen Sie über dessen Fremdschlüssel, etwa `contact_id.contact_type`. An ein Auswahlfeld können Sie ein Suffix wie `:name` anhängen. Dann vergleicht die Bedingung den Namen der Option statt ihrer ID, etwa bei `contribution_status_id:name`. Nehmen Sie `:name` statt `:label`, denn eine Bezeichnung kann sich mit der Sprache der Site ändern. |
 | Vorher: Operator, Vorher: Wert | Die Prüfung für den Wert vor der Änderung. |
 | Nachher: Operator, Nachher: Wert | Die Prüfung für den Wert nach der Änderung. |
 

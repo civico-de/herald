@@ -11,7 +11,7 @@ Der Check-Monitor meldet, wenn auf der Site etwas ausfällt und wenn es wieder f
 
 herald meldet, wenn ein Check anfängt fehlzuschlagen und wenn er wieder in Ordnung ist. Wird ein gemeldeter Fehler schlimmer oder ändert sich sein Detail, meldet herald das sofort. Solange ein Check weiter fehlschlägt, erinnert herald einmal am Tag daran.
 
-Der geplante Job „Herald: Check-Monitor ausführen“ liest die Checks. Jeder Wechsel geht mit der Vorlage „Herald: Statuswechsel eines Monitor-Checks“ an das Thema, das in `herald_monitor_topic` steht, standardmäßig ops. Wohin die Meldungen gehen, legen Sie fest, indem Sie für dieses Thema in `herald_topics` einen Eintrag anlegen, siehe [Themen](delivery.md#themen). Ein minimaler Eintrag:
+Der geplante Job „Herald: Check-Monitor ausführen“ liest die Checks. Jeder Wechsel geht mit der Vorlage „Herald: Statuswechsel eines Monitor-Checks“ an das Thema, das in `herald_monitor_topic` steht, standardmäßig ops; die Einstellungsseite bietet die eingerichteten Themen zur Auswahl an. Wohin die Meldungen gehen, legen Sie fest, indem Sie für dieses Thema in `herald_topics` einen Eintrag anlegen, siehe [Themen](delivery.md#themen). Ein minimaler Eintrag:
 
 ```bash
 cv api4 Setting.set +v 'herald_topics={"ops": {"channel": "telegram", "chat_id": "-100…"}}'
@@ -112,7 +112,7 @@ Eine aufgeführte Extension, die nicht installiert und aktiviert ist, schlägt a
 
 Administrieren » Herald » Monitor-Checks zeigt jeden Schlüssel, den System.check liefert, und jeden Schlüssel, für den der Monitor einen Zustand hat. Jede Zeile zeigt Titel, Detail, Stufe und Sichtbarkeit der Meldung, ob sie an ihrer Schwelle fehlschlägt, ob sie stummgeschaltet ist, und den Monitor-Zustand: den zuletzt gemeldeten Status, die fehlgeschlagenen und gesunden Läufe in Folge (gezählt bis `herald_monitor_open_after` bzw. `herald_monitor_close_after`) und wann zuletzt ein Fehler gemeldet wurde. Die Seite führt System.check aus, zeigt aber keine Meldungstexte und schreibt nichts.
 
-Unter der Tabelle stellen Sie die Schwelle und ihre Ausnahmen, die Stummschaltungen und die erwarteten Extensions ein. Zeiten werden in der Zeitzone des Browsers angezeigt und eingegeben und mit Zeitzonenangabe gespeichert. „Ohne Ende“ macht eine Stummschaltung dauerhaft. Ein neues Ende, das nicht in der Zukunft liegt, wird abgelehnt. Ein Link führt zur Statusseite, auf der Meldungen in Core ausgeblendet werden.
+Unter der Tabelle stellen Sie die Schwelle und ihre Ausnahmen, die Stummschaltungen und die erwarteten Extensions ein. Die Schlüsselfelder der Ausnahmen und Stummschaltungen schlagen die Schlüssel aus der Tabelle vor und nehmen weiterhin ein Präfix mit `*` am Ende; eine erwartete Extension wählen Sie aus den Extensions der Site. Zeiten werden in der Zeitzone des Browsers angezeigt und eingegeben und mit Zeitzonenangabe gespeichert. „Ohne Ende“ macht eine Stummschaltung dauerhaft. Ein neues Ende, das nicht in der Zukunft liegt, wird abgelehnt. Ein Link führt zur Statusseite, auf der Meldungen in Core ausgeblendet werden.
 
 ![Die Monitor-Checks](images/de/monitor.png)
 

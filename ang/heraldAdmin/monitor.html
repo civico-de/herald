@@ -45,6 +45,10 @@
     </table>
     <p ng-if="!$ctrl.checks.length">{{:: $ctrl.ts('The status checks report nothing, and the monitor tracks no key.') }}</p>
 
+    <datalist id="herald-check-keys">
+      <option ng-repeat="row in $ctrl.checks" value="{{ row.key }}"></option>
+    </datalist>
+
     <h2>{{:: $ctrl.ts('Threshold') }}</h2>
     <div class="form-group">
       <label class="crm-af-field-label" for="herald-min-severity">{{:: $ctrl.ts('Report messages from this level up') }}</label>
@@ -68,7 +72,7 @@
         <tr ng-repeat="row in $ctrl.exceptions">
           <td>
             <label class="sr-only" for="herald-exception-pattern-{{ $index }}">{{ $ctrl.ts('Check key or prefix of exception %1', {1: $index + 1}) }}</label>
-            <input type="text" class="form-control" id="herald-exception-pattern-{{ $index }}" ng-model="row.pattern" />
+            <input type="text" class="form-control" id="herald-exception-pattern-{{ $index }}" ng-model="row.pattern" list="herald-check-keys" />
           </td>
           <td>
             <label class="sr-only" for="herald-exception-level-{{ $index }}">{{ $ctrl.ts('Level of %1', {1: row.pattern || ($index + 1)}) }}</label>
@@ -102,7 +106,7 @@
         <tr ng-repeat="row in $ctrl.snoozes">
           <td>
             <label class="sr-only" for="herald-snooze-pattern-{{ $index }}">{{ $ctrl.ts('Check key or prefix of snooze %1', {1: $index + 1}) }}</label>
-            <input type="text" class="form-control" id="herald-snooze-pattern-{{ $index }}" ng-model="row.pattern" />
+            <input type="text" class="form-control" id="herald-snooze-pattern-{{ $index }}" ng-model="row.pattern" list="herald-check-keys" />
           </td>
           <td>
             <label class="sr-only" for="herald-snooze-until-{{ $index }}">{{ $ctrl.ts('Snooze %1 until', {1: row.pattern || ($index + 1)}) }}</label>
@@ -128,7 +132,10 @@
     <ul class="herald-admin-plain" ng-if="$ctrl.expected.length">
       <li ng-repeat="row in $ctrl.expected">
         <label class="sr-only" for="herald-expected-{{ $index }}">{{ $ctrl.ts('Extension key %1', {1: $index + 1}) }}</label>
-        <input type="text" class="form-control" id="herald-expected-{{ $index }}" ng-model="row.key" />
+        <select class="form-control" id="herald-expected-{{ $index }}" ng-model="row.key"
+          ng-options="extension.key as extension.label for extension in $ctrl.extensions">
+          <option value="">{{:: $ctrl.ts('- select an extension -') }}</option>
+        </select>
         <button type="button" class="btn btn-xs btn-secondary" ng-click="$ctrl.remove($ctrl.expected, $index, row.key, 'herald-expected-add')">
           {{:: $ctrl.ts('Remove') }}<span class="sr-only"> {{ row.key || ($index + 1) }}</span>
         </button>

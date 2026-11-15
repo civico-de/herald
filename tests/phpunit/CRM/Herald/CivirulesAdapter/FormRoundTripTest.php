@@ -537,6 +537,17 @@ class CRM_Herald_CivirulesAdapter_FormRoundTripTest extends TestCase implements
     $this->assertStringContainsString('name="from_operator"', $this->rendered($this->transitionForm()));
   }
 
+  public function testTheConditionFormOffersEntitiesAndSuggestsTheirFields(): void {
+    $html = $this->rendered($this->transitionForm());
+    $this->assertMatchesRegularExpression('/<select[^>]+name="entity"/', $html);
+    $this->assertStringContainsString('<option value="Membership">Membership</option>', $html);
+    $this->assertMatchesRegularExpression(
+      '/<input[^>]+list="herald-transition-fields"[^>]+name="field"|<input[^>]+name="field"[^>]+list="herald-transition-fields"/',
+      $html,
+    );
+    $this->assertStringContainsString('<datalist id="herald-transition-fields">', $html);
+  }
+
   public function testTheSendFormsListTheAdvancedAndPresentationFieldsLastUnderTheirHeading(): void {
     $notification = $this->rendered($this->sendForm());
     $headingRow = '<tr class="crm-herald-type-heading" data-herald-type="advanced">';

@@ -203,6 +203,14 @@ class MonitorChecksTest extends AdminTestCase implements HookInterface {
     $this->assertSame([], \Civi::settings()->get(MonitorChecks::EXPECTED));
   }
 
+  public function testTheScreenOffersTheSiteExtensionsAndKeepsAMissingExpectedOne(): void {
+    \Civi::settings()->set(MonitorChecks::EXPECTED, ['org.example.gone']);
+    $extensions = array_column(self::call('getMonitorChecks')[0]['extensions'], 'label', 'key');
+
+    $this->assertSame('Herald (herald)', $extensions['herald'] ?? NULL);
+    $this->assertSame('org.example.gone (not on this site)', $extensions['org.example.gone'] ?? NULL);
+  }
+
   public function testTheScreenListsTheStateKeyEvenWhenNothingReportsIt(): void {
     $this->assertArrayHasKey('herald_test_gone', self::checks());
   }

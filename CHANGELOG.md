@@ -20,6 +20,11 @@ project uses Semantic Versioning.
 - A blank "Aggregate window in minutes" means the site default; a 0 is stored. The field moved out
   of "Advanced" in the rule action forms.
 - The test message screen always sends at once.
+- Names are chosen instead of typed: the monitor topic on the settings page from the configured
+  topics, an expected extension on the monitor screen from the site's extensions, and the entity
+  of "Herald: Field transition" from the entities stored in tables. The key fields of monitor
+  exceptions and snoozes and the field of a field transition suggest the known values and still
+  take prefixes, joins and suffixes.
 
 ## [0.16.1] - 2026-11-14
 

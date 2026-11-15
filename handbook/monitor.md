@@ -11,7 +11,7 @@ The check monitor tells you when something on the site breaks and when it works 
 
 herald alerts when a check starts failing and again when it recovers. When a reported failure gets worse or its detail changes, herald alerts at once. While a check keeps failing, a reminder goes out once a day.
 
-The scheduled job "Herald: Run check monitor" reads the checks. Each change goes out with the template "Herald: Monitor check transition" to the topic named in `herald_monitor_topic`, which is ops by default. Give that topic an entry in `herald_topics` to decide where the alerts go, see [Topics](delivery.md#topics). A minimal entry:
+The scheduled job "Herald: Run check monitor" reads the checks. Each change goes out with the template "Herald: Monitor check transition" to the topic named in `herald_monitor_topic`, which is ops by default; the settings page offers the configured topics to choose from. Give that topic an entry in `herald_topics` to decide where the alerts go, see [Topics](delivery.md#topics). A minimal entry:
 
 ```bash
 cv api4 Setting.set +v 'herald_topics={"ops": {"channel": "telegram", "chat_id": "-100…"}}'
@@ -112,7 +112,7 @@ A listed extension that is not installed and enabled fails as the check `herald_
 
 Administer » Herald » Monitor checks shows every key System.check returns and every key the monitor has a state for. Each row shows the title, detail, severity and visibility of the message, whether it fails at its threshold, whether it is snoozed, and the monitor state: the last reported status, the failing and healthy runs in a row (counted up to `herald_monitor_open_after` and `herald_monitor_close_after`), and when a failure was last reported. The screen runs System.check but does not show message texts and writes nothing.
 
-Below the table you set the threshold and its exceptions, the snoozes and the expected extensions. Times are shown and entered in the browser's time zone and stored with their offset. "No end" makes a snooze permanent. A new end that is not in the future is rejected. A link leads to the status page, where messages are hidden in core.
+Below the table you set the threshold and its exceptions, the snoozes and the expected extensions. The key fields of exceptions and snoozes suggest the keys in the table and still take a prefix ending in `*`; an expected extension is chosen from the extensions on the site. Times are shown and entered in the browser's time zone and stored with their offset. "No end" makes a snooze permanent. A new end that is not in the future is rejected. A link leads to the status page, where messages are hidden in core.
 
 ![The monitor checks](images/monitor.png)
 
