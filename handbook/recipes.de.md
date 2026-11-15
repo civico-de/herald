@@ -13,6 +13,8 @@ Alle Rezepte senden über einen Telegram-Kanal, siehe [Einen Kanal konfigurieren
 
 Die Beitragsstatus heißen in CiviCRM unter anderem Completed (abgeschlossen), Pending (ausstehend) und Cancelled (storniert). Die Tabellen verwenden die englischen Bezeichnungen aus CiviRules.
 
+[![Video (englisch), Teil 1 von 6: Meldungen](images/video/herald-1-alerts.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-1-alerts.mp4)
+
 ## Spenden
 
 Drei Regeln begleiten eine Spende: sofort bezahlt, als Überweisung angekündigt, später eingegangen. Eine vierte verschickt jeden Morgen eine Zusammenfassung.

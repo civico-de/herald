@@ -19,6 +19,8 @@ Ein Kanal ist ein benannter, konfigurierter Weg, eine Nachricht zuzustellen: ein
 | `email` | Eine E-Mail-Adresse, über den ausgehenden Mailversand von CiviCRM | Absenderadresse |
 | `activity` | Eine zugewiesene CiviCRM-Aktivität | Nichts |
 
+[![Video (englisch), Teil 6 von 6: Einrichtung und Betrieb](images/video/herald-6-setup-and-operations.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-6-setup-and-operations.mp4)
+
 ## Einen Kanal konfigurieren
 
 Administrieren » Herald » Kanäle listet die Kanäle mit ihrem Typ und mit den Stellen, die sie verwenden. „Kanal hinzufügen“ fragt nach:

@@ -19,6 +19,8 @@ A channel is a named, configured way to deliver a message: one Telegram bot, one
 | `email` | An email address, through CiviCRM's outbound mailer | From address |
 | `activity` | An assigned CiviCRM activity | Nothing |
 
+[![Video, part 6 of 6: Setup and operations](images/video/herald-6-setup-and-operations.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-6-setup-and-operations.mp4)
+
 ## Configuring a channel
 
 Administer » Herald » Channels lists the channels, their type and who uses them. "Add channel" asks for:

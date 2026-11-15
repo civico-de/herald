@@ -26,6 +26,8 @@ Die Meldungen sehen auf einer deutschsprachigen Site so aus:
 
 Unter der ersten Zeile folgen Titel und Text der Statusmeldung. herald wandelt das HTML der Meldung in reinen Text um, Links gehen dabei verloren; die vollständige Meldung steht auf der Statusseite.
 
+[![Video (englisch), Teil 5 von 6: Check-Monitor](images/video/herald-5-check-monitor.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-5-check-monitor.mp4)
+
 ## Check-Schlüssel
 
 herald erkennt eine Statusmeldung an ihrem Namen. Manche Namen tragen hinter einem Doppelpunkt ein Detail, das sich ändern kann, ohne dass es ein anderer Befund wird. Core nennt zum Beispiel seine Meldung über fehlende benötigte Extensions `checkExtensionsRequired:<fehlende Extensions>`. herald teilt jeden Namen am ersten Doppelpunkt: Der Teil davor ist der Schlüssel, der Rest das Detail. Ein Name ohne Doppelpunkt ist sein eigener Schlüssel.

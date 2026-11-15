@@ -2,11 +2,17 @@
 title: herald
 ---
 
+![](images/logo.svg)
+
 # herald
 
 herald ist eine CiviCRM-Extension, die Benachrichtigungen und Reports verschickt. Eine CiviRules-Regel, ein geplanter Job, eine andere Extension oder ein Skript übergibt herald eine Nachricht oder eine Vorlage. herald rendert sie und stellt sie zu: in einem Chat, auf einem Smartphone, in einem Postfach oder als CiviCRM-Aktivität.
 
 herald richtet sich an alle, die eine CiviCRM-Site betreiben und wissen möchten, was darin passiert: Eine Spende ist eingegangen, eine Überweisung ist angekommen, ein Event ist ausgebucht, ein geplanter Job ist ausgefallen. Die Meldungen richten Sie in der CiviCRM-Oberfläche ein. Extension-Entwickler:innen können herald als Zustellschicht nutzen und dort Health-Checks melden.
+
+![herald: CiviRules, Systemstatus und SearchKit-Reports gehen hinein, Telegram, E-Mail, Webhook, ntfy und Pushover heraus](images/cover.png)
+
+[![Video (englisch): herald in unter zwei Minuten](images/video/herald-0-overview.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-0-overview.mp4)
 
 ## Was herald kann
 
@@ -69,6 +75,22 @@ Die Administrationsseite gruppiert ihre Seiten: Einrichten, Testen und Betreiben
 ## Deinstallation
 
 Beim Deinstallieren entfernt herald seine CiviRules-Bausteine, und CiviRules entfernt sie aus jeder Regel, die sie nutzt. Eine Regel ohne ihre herald-Bedingung würde danach öfter auslösen als vorher. Deshalb schaltet herald zuerst jede aktive Regel ab, die eine seiner Bedingungen oder Aktionen nutzt. Eine Regel, die auf einem herald-Trigger läuft, etwa dem Zeitplan eines Reports, funktioniert ohne ihn nicht. herald löscht sie deshalb. Das CiviCRM-Protokoll nennt die IDs der abgeschalteten Regeln und IDs und Namen der gelöschten. Beim Deinstallieren löscht herald außerdem seine Tabellen und damit die Reports und jede Meldung, die noch im Puffer wartet, auch die geparkten.
+
+## Videos
+
+Die Videos sind englisch gesprochen und untertitelt. Der Überblick oben fasst die sechs Teile zusammen.
+
+[![Video (englisch), Teil 1 von 6: Meldungen](images/video/herald-1-alerts.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-1-alerts.mp4)
+
+[![Video (englisch), Teil 2 von 6: Wer bekommt was](images/video/herald-2-who-gets-what.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-2-who-gets-what.mp4)
+
+[![Video (englisch), Teil 3 von 6: Reports: lesen und verschicken](images/video/herald-3-digests-read-and-send.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-3-digests-read-and-send.mp4)
+
+[![Video (englisch), Teil 4 von 6: Reports: einen bauen](images/video/herald-4-digests-build-one.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-4-digests-build-one.mp4)
+
+[![Video (englisch), Teil 5 von 6: Check-Monitor](images/video/herald-5-check-monitor.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-5-check-monitor.mp4)
+
+[![Video (englisch), Teil 6 von 6: Einrichtung und Betrieb](images/video/herald-6-setup-and-operations.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-6-setup-and-operations.mp4)
 
 ## Wie es weitergeht
 

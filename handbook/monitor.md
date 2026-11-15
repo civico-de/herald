@@ -26,6 +26,8 @@ The alerts look like this:
 
 Below the first line follow the title and the text of the status message. herald turns the message's HTML into plain text, so links are lost; the full message is on the status page.
 
+[![Video, part 5 of 6: Check monitor](images/video/herald-5-check-monitor.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-5-check-monitor.mp4)
+
 ## Check keys
 
 herald identifies a status message by its name. Some names carry a detail after a colon that may change without becoming a different problem. Core, for example, names its message about missing required extensions `checkExtensionsRequired:<missing extensions>`. herald splits every name at the first colon: the part before it is the key, the rest the detail. A name without a colon is its own key.

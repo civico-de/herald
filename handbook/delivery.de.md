@@ -9,6 +9,8 @@ routes:
 
 Diese Seite beschreibt, wer eine Nachricht erhält, wann sie verschickt wird und was passiert, wenn sie sich nicht zustellen lässt.
 
+[![Video (englisch), Teil 2 von 6: Wer bekommt was](images/video/herald-2-who-gets-what.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-2-who-gets-what.mp4)
+
 ## Zustellmodi
 
 Jede CiviRules-Aktion von herald hat einen Zustellmodus. Auch Themen kennen diesen Parameter, `delivery_mode`. Im Aktionsformular heißen die Modi „Direkt“, „Abonnent:innen“, „Gruppe“ und „Adressliste“.

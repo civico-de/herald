@@ -11,6 +11,8 @@ Rules live under Administer » CiviRules » Manage Rules. The trigger and condit
 
 Each recipe sends through a Telegram channel, see [Configuring a channel](channels.md#configuring-a-channel). Leave the chat ID empty to use the channel's default chat. Every recipe works with any other channel too: choose it in the form, and the form shows the fields of its type. To let a topic decide channel and recipient, set "Send" to "Through a topic" instead.
 
+[![Video, part 1 of 6: Alerts](images/video/herald-1-alerts.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-1-alerts.mp4)
+
 ## Donations
 
 Three rules follow a donation (paid at once, announced as a bank transfer, received later), and a fourth sends a summary each morning.

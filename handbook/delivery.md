@@ -9,6 +9,8 @@ routes:
 
 This page covers who receives a message, when it goes out, and what happens when it cannot be delivered.
 
+[![Video, part 2 of 6: Who gets what](images/video/herald-2-who-gets-what.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-2-who-gets-what.mp4)
+
 ## Delivery modes
 
 Every herald CiviRules action has a delivery mode. Topics take the same parameter, `delivery_mode`. In the action form the modes are "Direct", "Subscribers", "Group" and "Address list".

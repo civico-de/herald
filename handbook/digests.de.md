@@ -23,6 +23,10 @@ herald setzt Betreff und Text mit Smarty zusammen, so wie CiviCRM eine Nachricht
 
 Für eine Nachricht zu jedem neuen Beitrag braucht es keinen Report: Eine Regel verschickt sie, sobald sie eingehen, gesammelt in einer Nachricht pro Minute oder pro längerem Fenster, siehe [Sammelnachrichten](delivery.md#sammelnachrichten).
 
+[![Video (englisch), Teil 3 von 6: Reports: lesen und verschicken](images/video/herald-3-digests-read-and-send.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-3-digests-read-and-send.mp4)
+
+[![Video (englisch), Teil 4 von 6: Reports: einen bauen](images/video/herald-4-digests-build-one.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-4-digests-build-one.mp4)
+
 ## Einen Report einrichten
 
 1. Wählen Sie unter Administrieren » Herald » Reports „Report hinzufügen“. Geben Sie einen Titel und einen Namen an.

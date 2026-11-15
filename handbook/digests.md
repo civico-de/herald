@@ -23,6 +23,10 @@ herald renders subject and text with Smarty, as CiviCRM renders a message templa
 
 For news of every new contribution, no digest is needed: a rule sends them as they come in, collected into one message per minute or per longer window, see [Aggregation](delivery.md#aggregation).
 
+[![Video, part 3 of 6: Digests: read and send](images/video/herald-3-digests-read-and-send.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-3-digests-read-and-send.mp4)
+
+[![Video, part 4 of 6: Digests: build one](images/video/herald-4-digests-build-one.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-4-digests-build-one.mp4)
+
 ## Setting up a digest
 
 1. Under Administer » Herald » Digests, choose "Add digest". Give it a title and a name.
