@@ -207,7 +207,8 @@ class MonitorChecksTest extends AdminTestCase implements HookInterface {
     \Civi::settings()->set(MonitorChecks::EXPECTED, ['org.example.gone']);
     $extensions = array_column(self::call('getMonitorChecks')[0]['extensions'], 'label', 'key');
 
-    $this->assertSame('Herald (herald)', $extensions['herald'] ?? NULL);
+    $this->assertSame('SearchKit (org.civicrm.search_kit)', $extensions['org.civicrm.search_kit'] ?? NULL);
+    $this->assertSame('herald', $extensions['herald'] ?? NULL, 'a title equal to the key is not repeated');
     $this->assertSame('org.example.gone (not on this site)', $extensions['org.example.gone'] ?? NULL);
   }
 
