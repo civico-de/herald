@@ -4,11 +4,11 @@ title: herald
 
 # herald
 
+![herald: CiviRules, system status and SearchKit digests go in, Telegram, email, webhook, ntfy and Pushover come out](images/cover.png)
+
 herald is a CiviCRM extension that sends notifications and digests. A CiviRules rule, a scheduled job, another extension or a script hands herald a message or a template. herald renders it and delivers it to a chat, a phone, an inbox or a CiviCRM activity.
 
 It is meant for the people who run a CiviCRM site and want to know what happens in it: a donation came in, a bank transfer arrived, an event filled up, a scheduled job broke. They set up the alerts in the CiviCRM user interface. Extension developers can use herald as a delivery layer and as a place to report health checks.
-
-![herald: CiviRules, system status and SearchKit digests go in, Telegram, email, webhook, ntfy and Pushover come out](images/cover.png)
 
 [![Video: herald in under two minutes](images/video/herald-0-overview.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-0-overview.mp4)
 

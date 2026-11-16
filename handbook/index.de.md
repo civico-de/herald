@@ -4,11 +4,11 @@ title: herald
 
 # herald
 
+![herald: CiviRules, Systemstatus und SearchKit-Reports gehen hinein, Telegram, E-Mail, Webhook, ntfy und Pushover heraus](images/cover.png)
+
 herald ist eine CiviCRM-Extension, die Benachrichtigungen und Reports verschickt. Eine CiviRules-Regel, ein geplanter Job, eine andere Extension oder ein Skript übergibt herald eine Nachricht oder eine Vorlage. herald rendert sie und stellt sie zu: in einem Chat, auf einem Smartphone, in einem Postfach oder als CiviCRM-Aktivität.
 
 herald richtet sich an alle, die eine CiviCRM-Site betreiben und wissen möchten, was darin passiert: Eine Spende ist eingegangen, eine Überweisung ist angekommen, ein Event ist ausgebucht, ein geplanter Job ist ausgefallen. Die Meldungen richten Sie in der CiviCRM-Oberfläche ein. Extension-Entwickler:innen können herald als Zustellschicht nutzen und dort Health-Checks melden.
-
-![herald: CiviRules, Systemstatus und SearchKit-Reports gehen hinein, Telegram, E-Mail, Webhook, ntfy und Pushover heraus](images/cover.png)
 
 [![Video (englisch): herald in unter zwei Minuten](images/video/herald-0-overview.png)](https://civico-media.s3.de.io.cloud.ovh.net/herald/herald-0-overview.mp4)
 
