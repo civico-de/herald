@@ -5,6 +5,13 @@ project uses Semantic Versioning.
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-11-16
+
+### Changed
+
+- Marked stable.
+- The extension's display name is "herald", as in its documentation.
+
 ## [0.17.0] - 2026-11-15
 
 ### Added
@@ -288,7 +295,8 @@ project uses Semantic Versioning.
 - `Herald.send` APIv4 action for other extensions.
 - Optional contribution source normalisation for digests and alerts.
 
-[Unreleased]: https://github.com/civico-de/herald/compare/v0.17.0...HEAD
+[Unreleased]: https://github.com/civico-de/herald/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/civico-de/herald/compare/v0.17.0...v1.0.0
 [0.17.0]: https://github.com/civico-de/herald/compare/v0.16.1...v0.17.0
 [0.16.1]: https://github.com/civico-de/herald/compare/v0.16.0...v0.16.1
 [0.16.0]: https://github.com/civico-de/herald/compare/v0.15.1...v0.16.0
