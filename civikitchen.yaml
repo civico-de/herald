@@ -5,6 +5,9 @@ policy:
   # image; these values are ours).
   license: AGPL-3.0-or-later
   copyright: 'civico GmbH'
+  civicrm_floor_reasons:
+    - version: "6.18"
+      reason: "core's AbstractScheduledJob, which Herald.notifyDigest extends"
 
   # herald's OWN invented hook: other extensions implement it to contribute
   # sections to digests. It is not a core hook, so ckconform cannot know it —
