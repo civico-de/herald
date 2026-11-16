@@ -5,6 +5,13 @@ project uses Semantic Versioning.
 
 ## [Unreleased]
 
+## [1.0.2] - 2026-11-16
+
+### Changed
+
+- First release published to lab.civicrm.org; 1.0.1 reached GitHub only. The extension itself is
+  unchanged.
+
 ## [1.0.1] - 2026-11-16
 
 ### Changed
@@ -302,7 +309,8 @@ project uses Semantic Versioning.
 - `Herald.send` APIv4 action for other extensions.
 - Optional contribution source normalisation for digests and alerts.
 
-[Unreleased]: https://github.com/civico-de/herald/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/civico-de/herald/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/civico-de/herald/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/civico-de/herald/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/civico-de/herald/compare/v0.17.0...v1.0.0
 [0.17.0]: https://github.com/civico-de/herald/compare/v0.16.1...v0.17.0
