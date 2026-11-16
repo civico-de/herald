@@ -2,8 +2,6 @@
 title: herald
 ---
 
-![](images/logo.svg)
-
 # herald
 
 herald is a CiviCRM extension that sends notifications and digests. A CiviRules rule, a scheduled job, another extension or a script hands herald a message or a template. herald renders it and delivers it to a chat, a phone, an inbox or a CiviCRM activity.
