@@ -29,3 +29,7 @@ jobs:
       # vendor/ is not committed; the archive carries the prefixed production
       # tree herald.php loads.
       composer_install: true
+      # The CiviCRM extension directory reads this repository's tags.
+      mirror_url: https://lab.civicrm.org/extensions/herald.git
+    secrets:
+      mirror_token: ${{ secrets.MIRROR_TOKEN }}
