@@ -137,17 +137,6 @@ Die Einstellung `herald_monitor_state` enthält den zuletzt gemeldeten Zustand j
 cv api4 Herald.monitorPreview
 ```
 
-## Upgrade von Monitor-Checks über den herald-Hook
-
-Releases vor der Umstellung auf System.check führten Checks über einen eigenen Hook unter Namen wie `pulse.updates` aus. Der Upgrade-Schritt leert den Monitor-Zustand und die Stummschaltungen, weil es die alten Namen auf der Statusseite nicht gibt. Die Namen in `herald_monitor_expected` übersetzt er anhand ihres Präfixes in Extension-Schlüssel (aus `pulse.updates` wird `pulse`). Ein unbekanntes Präfix bleibt unverändert als Schlüssel stehen; ist es keine installierte Extension, meldet der Monitor es als fehlend, und Sie korrigieren es.
-
-Beim ersten Lauf nach dem Upgrade gilt jeder bestehende Fehler als neu. Auf einer gewachsenen Site können das ein Dutzend längst bekannter Warnungen sein. Aktualisieren Sie deshalb so:
-
-1. Den Job „Herald: Check-Monitor ausführen“ deaktivieren.
-2. herald zusammen mit den Extensions aktualisieren, die Checks geliefert haben, danach die übrigen.
-3. `Herald.monitorPreview` ausführen und bekannte Warnungen auf der Statusseite oder nur in herald stummschalten.
-4. Den Job wieder aktivieren.
-
 ## Garantien
 
 - Jeder Lauf setzt eine Sperre. Ein Lauf, der sich mit einem anderen überschneidet, wird übersprungen, statt doppelt zu senden.

@@ -5,80 +5,29 @@ order: 70
 
 # Deployment
 
-Diese Seite erklärt, wie Sie herald auf einer laufenden Site aktualisieren, ohne dass während des Codewechsels etwas kaputtgeht.
-
-Die CiviRules-Aktionen und -Bedingungen von herald laufen innerhalb des Speichervorgangs jedes Datensatzes, auf den ihre Regeln reagieren. Lässt sich eine ihrer Klassen nicht laden, schlägt dieser Speichervorgang fehl: Verloren geht dann der Beitrag, die Anmeldung oder die Änderung am Event, nicht nur die Meldung. Deshalb schalten die Skripte in `bin/` der Extension die herald-Regeln ab, solange der Code ausgetauscht wird. Sie schalten die Regeln erst wieder ein, wenn sich jeder Handler laden lässt. Auf einer Site ohne CiviRules vermerkt jedes Skript, dass es nichts zu prüfen gibt, und läuft erfolgreich durch.
+Die CiviRules-Aktionen und -Bedingungen von herald laufen im Speichervorgang des Datensatzes, auf den ihre Regel reagiert. Lässt sich eine ihrer Klassen nicht laden, schlägt das Speichern fehl, und mit der Meldung geht der Beitrag oder die Anmeldung verloren. Deshalb schalten die Skripte in `bin/` die herald-Regeln ab, solange der Code wechselt, und erst wieder ein, wenn sich jeder Handler laden lässt. Auf einer Site ohne CiviRules gibt es nichts zu tun, und sie laufen erfolgreich durch.
 
 ## Schritte
 
-Ein Git-Checkout enthält kein Verzeichnis vendor. Erzeugen Sie es mit `composer install --no-dev`, bevor Sie den Code austauschen. Das Release-Archiv enthält es bereits.
-
-Führen Sie die Skripte mit `cv scr` vor und nach dem Codewechsel aus und brechen Sie beim ersten fehlgeschlagenen Schritt ab:
-
-1. Vor dem Austausch: rules-disable.php, dann `cv flush`.
-2. Den Code der Extension austauschen.
-3. Ausstehende Extension-Upgrades mit `cv ext:upgrade-db` ausführen.
-4. preflight-rules.php.
-5. Nur nach erfolgreichem Preflight: rules-reenable.php.
-6. Zum Schluss: note-foreign-rules.php.
+Ein Git-Checkout braucht vor dem Austausch `composer install --no-dev`; das Release-Archiv enthält `vendor/` schon. Brechen Sie beim ersten fehlgeschlagenen Schritt ab:
 
 ```bash
 HERALD=/var/www/example.org/ext/herald
 cv scr $HERALD/bin/rules-disable.php && cv flush
-# … Code der Extension austauschen …
+# … Extension-Code austauschen …
 cv ext:upgrade-db \
   && cv scr $HERALD/bin/preflight-rules.php \
   && cv scr $HERALD/bin/rules-reenable.php \
   && cv scr $HERALD/bin/note-foreign-rules.php
 ```
 
-rules-reenable.php prüft nicht, ob der Preflight erfolgreich war. Führen Sie es also nie nach einem fehlgeschlagenen Preflight aus. Die Upgrades kommen vor dem Preflight, weil ein Upgrade Handler-Klassen umbenennen kann, die der Preflight anschließend lädt.
-
-Das Upgrade auf benannte Kanäle überführt die bisherigen Kanaleinstellungen, etwa das Telegram-Bot-Token, in Kanäle, die nach ihrem Typ benannt sind: `webhook`, `ntfy`, `email` und `activity`, dazu `telegram` und `pushover`, wo deren Token gesetzt war. Es richtet jede Regelaktion, jeden geplanten Job, jedes Thema und jede wartende Meldung, die sich auf eine Einstellung verlassen hat, auf diese Kanäle aus. Token und Header, die eine Regelaktion, ein Job, ein Thema oder eine wartende Meldung mitgebracht hat, werden zu einem eigenen Webhook-Kanal, benannt mit `webhook_` und einem Suffix; Zustellungen mit gleichen teilen ihn sich. Andere Kanaleinstellungen in einer Zustellung, etwa `email_from`, wurden dort nie gelesen und entfallen. Prüfen Sie danach Administrieren » Herald » Kanäle. Ein Wert aus `civicrm.settings.php` hat Vorrang vor dem gespeicherten und geht ebenfalls in den Kanal; entfernen Sie diese Zeilen danach, denn herald liest sie nicht mehr. Auf einer Site mit mehreren Domains bekommt jede Domain Kanäle aus ihren eigenen Einstellungen, und die Webhook-Kanäle von Regelaktionen und wartenden Meldungen gibt es in jeder Domain, die eine URL zum Senden hatte: die eigene URL der Zustellung oder sonst die Default-URL der Domain. Den Kanal eines Jobs gibt es nur in der Domain des Jobs. Webhook-Header, die kein JSON-Objekt sind, ließen schon bisher jeden Versand scheitern; ihr Kanal entsteht ohne sie und ausgeschaltet, und das CiviCRM-Log nennt ihn. Setzen Sie die Header im Kanalformular und schalten Sie ihn ein.
-
-Das Upgrade auf abonnierbare Themen macht aus jedem Abo-Typ ein gleichnamiges Thema, das Kontakte abonnieren können, in jeder Domain und mit der Bezeichnung des Typs. Das gilt für Ihre eigenen Typen, für jeden Typ, den ein Kontakt abonniert hat, und für jeden Typ, den eine Zustellung nennt; ein von herald mitgelieferter Typ, den niemand abonniert hat und nichts nennt, entfällt. Auch ein Typ, den Sie deaktiviert hatten, wird ein angebotenes Thema, damit Zustellungen an seine Abonnent:innen weiterlaufen; nehmen Sie den Haken „Kontakte dürfen dieses Thema abonnieren“ heraus, wenn Kontakte ihn nicht mehr sehen sollen. Ein bereits vorhandenes Thema dieses Namens behält seine Einstellungen und wird abonnierbar. Ein `subscription_type` an einer Zustellung, die nicht im Abonnent:innen-Modus war, wurde nie gelesen und entfällt. Jede Regelaktion, jeder geplante Job, jedes Thema und jede wartende Meldung, die einen Abo-Typ genannt hat, nennt stattdessen das Thema in `subscribers_of`; ein Thema, das an seine eigenen Abonnent:innen zustellt, braucht keinen Schlüssel. Der `subscription_type` von `default` wird dessen `subscribers_of`, das Themen im Abonnent:innen-Modus weiter erben. Ein angebotenes Thema erreicht seine eigenen Abonnent:innen; eines, das bisher die von `default` genannten erreichte, nennt sie deshalb im eigenen Eintrag. Die gespeicherten Abonnements bleiben unverändert. Das CiviCRM-Log zählt die angelegten Themen und die umgeschriebenen Zustellungen. Prüfen Sie danach Administrieren » Herald » Themen: Ein neues Thema hat keinen eigenen Eintrag und läuft über das Thema default.
-
-Das Upgrade auf mehrere Abos pro Kontakt überträgt die Benachrichtigungseinstellungen jedes Kontakts in die neuen Felder. Der gewählte Kanal wird mit dem Ziel aus dem Feld zum Typ dieses Kanals zu den „Nachrichten an Gruppen“ des Kontakts, damit Zustellungen an Gruppen ihn weiter auf demselben Weg erreichen. Mit Abonnements wird er außerdem zu einer Zeile in „Benachrichtigungs-Abos“, mit den Abonnements als Themen und dem Bezug. Ein Kontakt mit Abonnements, aber ohne Kanal hat bisher nichts erhalten und bekommt keins von beidem. Ziele in den Feldern anderer Kanaltypen wurden nie gelesen und werden nicht übernommen; das CiviCRM-Protokoll zählt sie pro Feld, ohne Werte. Hat eine Installation mit mehreren Domains einen Kanalnamen mit verschiedenen Typen, entscheidet der Typ der Domain mit der kleinsten ID, welches Feld übernommen wird. Danach entfallen die alte Feldgruppe „Benachrichtigungseinstellungen“ und ihre Tabelle. Auch das Profil „My notification preferences“ entfällt, samt Änderungen von Admins daran: Das Formular „Meine Benachrichtigungen“ unter `/civicrm/herald/my-notifications` ersetzt es, passen Sie also Links der Mitarbeitenden an. Die Kontaktübersicht zeigt „Nachrichten an Gruppen“ nicht mehr; beides steht im Tab „Benachrichtigungen“. Bis das Upgrade gelaufen ist, lesen Zustellungen die alten Einstellungen; zwischen dem Code-Update und dem Upgrade geht also keine Meldung verloren.
-
-Am Tag des Upgrades kann ein Tagesreport, der schon verschickt wurde, ein zweites Mal kommen, und Meldungen, die vor dem Upgrade gepuffert wurden, kommen in einer eigenen Nachricht, getrennt von den danach gepufferten.
-
-## Was die einzelnen Schritte tun
-
-### Die Regeln abschalten
-
-rules-disable.php sucht jede aktive Regel mit einem Trigger, einer Bedingung oder einer Aktion von herald. Es schreibt ihre IDs in die Datei herald_deploy_disabled_rules im privaten Verzeichnis von CiviCRM und schaltet diese Regeln dann ab. IDs, die ein früheres fehlgeschlagenes Deployment in der Datei hinterlassen hat, bleiben erhalten. Die Ausgabe lautet:
-
-```
-[herald deploy] disabled 4 herald rule(s) for the swap: 3,7,8,12 (marker now holds 4)
-```
-
-### Die Handler prüfen
-
-preflight-rules.php lädt die Handler-Klassen so, wie CiviRules es tut. Es prüft, ob jede Klasse existiert, sich ohne Argumente erzeugen lässt und von der richtigen Basisklasse von CiviRules erbt. Ein Trigger ohne eigene Klasse muss ein Post-Trigger sein.
-
-Es prüft die eigenen Handler von herald und jeden Handler, der an den abgeschalteten Regeln hängt: deren Trigger und alle ihre aktiven Bedingungen und Aktionen, auch solche anderer Extensions. Regeln, deren Trigger fehlt oder inaktiv ist, werden nur vermerkt, weil CiviRules sie nie auslöst. Ohne die Datei aus dem ersten Schritt prüft der Preflight nur die eigenen Handler von herald.
-
-Bei Erfolg gibt das Skript „[herald preflight] OK: N CiviRules handler(s) checked“ aus. Bei einem Fehler gibt es „[herald preflight] FAILED:“ aus und endet mit dem Exit-Code 1. Die Meldung nennt die Regel, die Art des Handlers, die Klasse und den Grund, gefolgt von dem Befehl, der die Regeln nach der Korrektur wieder einschaltet. Bis dahin bleiben die Regeln aus. Die möglichen Gründe sind:
-
-- class not found (autoload failed)
-- class failed to load, mit dem PHP-Fehler
-- not instantiable
-- does not extend the expected CiviRules class
-- constructor requires arguments
-- constructor threw an exception
-- trigger names no class and is not a post trigger
-
-### Die Regeln wieder einschalten
-
-rules-reenable.php schaltet die vermerkten Regeln wieder ein, entfernt die Datei und gibt „[herald deploy] re-enabled N herald rule(s)“ aus.
-
-### Andere Regeln prüfen
-
-note-foreign-rules.php läuft, sobald die herald-Regeln wieder an sind. Es ist der einzige Schritt, der die Klassen von Regeln ohne herald-Handler lädt, und meldet fehlerhafte Handler auf stderr, ohne fehlzuschlagen. Ein Handler einer anderen Extension, der an einer herald-Regel hängt, gehört nicht zu diesem Schritt: Ihn prüft schon der Preflight, und ist er defekt, bleiben die Regeln aus. Eine Klasse, die PHP beim Laden abstürzen lässt, etwa eine mit einer nicht implementierten abstrakten Methode, lässt dagegen diesen letzten Schritt fehlschlagen und markiert das Deployment als fehlgeschlagen. Die herald-Regeln sind dann bereits wieder an, und dieser Fehler schaltet sie nicht wieder ab.
+- **rules-disable.php** schaltet jede aktive Regel mit einem Trigger, einer Bedingung oder einer Aktion von herald ab und hält ihre IDs in `herald_deploy_disabled_rules` im privaten Verzeichnis von CiviCRM fest.
+- **preflight-rules.php** lädt die Handler von herald und alle Handler dieser Regeln, auch die anderer Extensions, so wie CiviRules es tut. Scheitert es, nennt es Regel, Klasse und Grund, und die Regeln bleiben aus. Es läuft nach den Upgrades, weil ein Upgrade Handler-Klassen umbenennen kann.
+- **rules-reenable.php** schaltet die festgehaltenen Regeln wieder ein. Es prüft den Preflight nicht; führen Sie es also nie nach einem fehlgeschlagenen aus.
+- **note-foreign-rules.php** meldet defekte Handler anderer Regeln auf stderr, ohne fehlzuschlagen. Nur eine Klasse, die PHP abstürzen lässt, bringt es zum Scheitern; die herald-Regeln bleiben dann an.
 
 ## Wenn etwas schiefgeht
 
-- Eine Klasse von herald, die sich überhaupt nicht laden lässt, bringt PHP spätestens im Preflight zum Absturz. Der Preflight endet dann mit einem Fehler, und die herald-Regeln bleiben aus. Bei kaltem Klassen-Cache kann schon ein früherer Schritt, der CiviCRM startet, auf den Absturz stoßen. `cv flush` zeigt die Klasse und die Datei.
-- Solange die Datei aus dem ersten Schritt existiert, zeigt der Systemstatus von CiviCRM die Warnung „Herald: Regeln durch einen Deploy abgeschaltet“. Sie listet die IDs der Regeln und den Befehl auf, der sie wieder einschaltet.
-- Das nächste erfolgreiche Deployment schaltet die Regeln aus einem fehlgeschlagenen Deployment wieder ein. Das gilt auch für eine Regel, die ein Admin in der Zwischenzeit absichtlich abgeschaltet hat.
-- Ein Release, das einen Handler ausmustert, stellt die Regeln auf dessen Nachfolger um, nicht aber die Warteschlange der verzögerten Aktionen von CiviRules. Eine vor dem Deployment eingereihte Aktion, die einen ausgemusterten Handler nennt, schlägt bei ihrer Ausführung fehl, und CiviRules protokolliert das. Führen Sie das Deployment aus, wenn keine verzögerte Aktion von herald wartet.
+- Solange Regeln aus sind, zeigt der Systemstatus „Herald: rules disabled by a deploy“ mit den Regel-IDs und dem Befehl, der sie wieder einschaltet. Auch das nächste erfolgreiche Deployment schaltet sie wieder ein, einschließlich einer Regel, die jemand zwischendurch absichtlich abgeschaltet hat.
+- Eine Klasse, die PHP abstürzen lässt, stoppt das Deployment spätestens im Preflight; `cv flush` nennt Klasse und Datei.
+- Ein Release, das einen Handler ablöst, stellt die Regeln auf den Nachfolger um, nicht aber die Warteschlange verzögerter CiviRules-Aktionen. Deployen Sie, wenn keine verzögerte herald-Aktion wartet.

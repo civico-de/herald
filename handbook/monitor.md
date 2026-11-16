@@ -137,17 +137,6 @@ The setting `herald_monitor_state` holds the last reported state of each key. he
 cv api4 Herald.monitorPreview
 ```
 
-## Upgrading from monitor checks of the herald hook
-
-Releases before the switch to System.check ran checks of their own hook under names such as `pulse.updates`. The upgrade step clears the monitor state and the snoozes, because the old names do not exist on the status page. It translates the names in `herald_monitor_expected` into extension keys by their prefix (`pulse.updates` becomes `pulse`). An unknown prefix is kept unchanged as a key; if it is no installed extension, the monitor reports it as missing, and you correct it.
-
-On the first run after the upgrade, every existing failure counts as new. On a site that has grown over the years, that can be a dozen long known warnings. Upgrade like this:
-
-1. Disable the job "Herald: Run check monitor".
-2. Upgrade herald together with the extensions that delivered checks, then the others.
-3. Run `Herald.monitorPreview` and mute known warnings on the status page or in herald only.
-4. Enable the job again.
-
 ## Guarantees
 
 - Each run takes a lock. A run that overlaps with another one skips instead of sending twice.
