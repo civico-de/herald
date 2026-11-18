@@ -1,13 +1,13 @@
-# The handbook/ pages: shown by the handbook extension inside CiviCRM and
+# The docs/handbook/ pages: shown by the handbook extension inside CiviCRM and
 # published as the documentation site.
 name: Docs
 
 on:
   push:
     branches: [main]
-    paths: ['handbook/**', 'info.xml', '.github/workflows/docs.yml']
+    paths: ['docs/handbook/**', 'info.xml', '.github/workflows/docs.yml']
   pull_request:
-    paths: ['handbook/**', 'info.xml', '.github/workflows/docs.yml']
+    paths: ['docs/handbook/**', 'info.xml', '.github/workflows/docs.yml']
   workflow_dispatch:
 
 permissions:

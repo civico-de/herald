@@ -1,7 +1,7 @@
 # herald
 
 Channel-pluggable notification and digest layer for CiviCRM, fired through
-CiviRules (optional, not in `<requires>`). User docs live in `handbook/`; keep
+CiviRules (optional, not in `<requires>`). User docs live in `docs/handbook/`; keep
 them in step with code changes.
 
 ## Contracts

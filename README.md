@@ -1,4 +1,4 @@
-![herald: CiviRules, system status and SearchKit digests go in, Telegram, email, webhook, ntfy and Pushover come out](handbook/images/cover.png)
+![herald: CiviRules, system status and SearchKit digests go in, Telegram, email, webhook, ntfy and Pushover come out](docs/handbook/images/cover.png)
 
 # herald
 

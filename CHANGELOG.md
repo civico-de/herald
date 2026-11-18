@@ -5,6 +5,10 @@ project uses Semantic Versioning.
 
 ## [Unreleased]
 
+### Changed
+
+- The manual lives in `docs/handbook/`. CiviCRM shows it with handbook 0.5.0 or newer.
+
 ## [1.0.2] - 2026-11-16
 
 ### Changed

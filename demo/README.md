@@ -52,6 +52,6 @@ Digests and rules are only created when missing, so edits to them stay.
 
 ## Handbook screenshots
 
-The screenshots in `handbook/images/` (English) and `handbook/images/de/`
+The screenshots in `docs/handbook/images/` (English) and `docs/handbook/images/de/`
 (German) are taken by a browser tour against the dev stack filled with this
 seed data. Retake them after a screen changes.
