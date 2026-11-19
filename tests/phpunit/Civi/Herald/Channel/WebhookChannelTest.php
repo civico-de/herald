@@ -297,7 +297,9 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     ]);
     $stack = HandlerStack::create($mock);
     $stack->push(\GuzzleHttp\Middleware::history($this->capturedRequests));
-    $channel = new WebhookChannel(new Client(['handler' => $stack]), static fn (string $host): array => ['93.184.216.34']);
+    $channel = new WebhookChannel(new Client(['handler' => $stack]), static fn (string $host): array => [
+      '93.184.216.34',
+    ]);
 
     try {
       $channel->send('x', ['webhook_url' => 'https://example.com/hook']);
@@ -351,12 +353,19 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     }
     $url = 'http://[::1]:' . parse_url('tcp://' . stream_socket_get_name($server, FALSE), PHP_URL_PORT) . '/';
     $ip = '';
-    (new Client())->requestAsync('GET', $url, WebhookPin::options($url, ['::1']) + [
-      'timeout' => 0.5,
-      'on_stats' => static function (\GuzzleHttp\TransferStats $stats) use (&$ip): void {
-        $ip = (string) ($stats->getHandlerStats()['primary_ip'] ?? '');
-      },
-    ])->wait(FALSE);
+    (new Client())
+      ->requestAsync(
+        'GET',
+        $url,
+        WebhookPin::options($url, ['::1'])
+        + [
+          'timeout' => 0.5,
+          'on_stats' => static function (\GuzzleHttp\TransferStats $stats) use (&$ip): void {
+            $ip = (string) ($stats->getHandlerStats()['primary_ip'] ?? '');
+          },
+        ],
+      )
+      ->wait(FALSE);
     $this->assertSame('::1', $ip);
     fclose($server);
   }
@@ -380,7 +389,11 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     $stack->push(static function (callable $handler) use (&$ip): callable {
       return static function ($request, array $options) use ($handler, &$ip) {
         if (isset($options['curl'][CURLOPT_RESOLVE])) {
-          $options['curl'][CURLOPT_RESOLVE] = str_replace('93.184.216.34', '127.0.0.2', $options['curl'][CURLOPT_RESOLVE]);
+          $options['curl'][CURLOPT_RESOLVE] = str_replace(
+            '93.184.216.34',
+            '127.0.0.2',
+            $options['curl'][CURLOPT_RESOLVE],
+          );
         }
         $options['timeout'] = 0.5;
         $options['on_stats'] = static function (\GuzzleHttp\TransferStats $stats) use (&$ip): void {
@@ -389,7 +402,9 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
         return $handler($request, $options);
       };
     });
-    $channel = new WebhookChannel(new Client(['handler' => $stack]), static fn (string $host): array => ['93.184.216.34']);
+    $channel = new WebhookChannel(new Client(['handler' => $stack]), static fn (string $host): array => [
+      '93.184.216.34',
+    ]);
 
     try {
       $channel->send('x', ['webhook_url' => $url]);
