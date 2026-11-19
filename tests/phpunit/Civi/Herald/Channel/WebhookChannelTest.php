@@ -251,6 +251,29 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     $this->assertSame([], $this->capturedRequests);
   }
 
+  public function testConnectionIsPinnedToTheValidatedAddress(): void {
+    // The guard validates the resolved address; the request must then connect to
+    // exactly that address, so a second DNS lookup at connect time cannot swing
+    // it to an internal host (rebinding).
+    $channel = new WebhookChannel(
+      $this->makeMockedClient(new Response(200, [], '')),
+      static fn (string $host): array => ['93.184.216.34'],
+    );
+    $channel->send('x', ['webhook_url' => 'https://example.com/hook']);
+
+    $options = $this->capturedRequests[0]['options'];
+    $this->assertSame(['example.com:443:93.184.216.34'], $options['curl'][CURLOPT_RESOLVE] ?? NULL);
+  }
+
+  public function testAllowlistedHostIsNotPinned(): void {
+    // In allowlist mode the admin vouches for the host (it may be internal), so
+    // the connection resolves normally and nothing is pinned.
+    \Civi::settings()->set('herald_webhook_allowed_hosts', ['example.com']);
+    $this->makeChannel(new Response(200, [], ''))->send('x', ['webhook_url' => 'https://example.com/hook']);
+
+    $this->assertArrayNotHasKey('curl', $this->capturedRequests[0]['options']);
+  }
+
   public function testGuardRejectsHostWithNoDnsAddresses(): void {
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/could not resolve webhook host/');

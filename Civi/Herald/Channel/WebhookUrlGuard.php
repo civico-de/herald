@@ -18,8 +18,11 @@ final class WebhookUrlGuard {
    * A non-empty allowed_hosts list locks delivery to those hosts instead.
    *
    * @param array{allowed_hosts?: array<int|string, mixed>, resolver?: null|callable(string): list<string>} $opts
+   * @return list<string>
+   *   The validated addresses, to pin the connection against DNS rebinding;
+   *   empty in allowlist mode, where the admin vouches for the host itself.
    */
-  public static function assert(string $url, array $opts = []): void {
+  public static function assert(string $url, array $opts = []): array {
     $parts = parse_url($url) ?: [];
     $scheme = strtolower($parts['scheme'] ?? '');
     $host = trim($parts['host'] ?? '', '[]');
@@ -37,7 +40,7 @@ final class WebhookUrlGuard {
       if (!self::listed(strtolower($host), $allowed)) {
         throw new \CRM_Core_Exception('herald: webhook host is not in herald_webhook_allowed_hosts.');
       }
-      return;
+      return [];
     }
 
     $ips = WebhookHost::addresses($host, $opts['resolver'] ?? NULL);
@@ -47,6 +50,7 @@ final class WebhookUrlGuard {
     if (array_filter($ips, BlockedAddress::is(...)) !== []) {
       throw new \CRM_Core_Exception('herald: webhook host resolves to a disallowed address.');
     }
+    return $ips;
   }
 
   /**

@@ -78,7 +78,7 @@ class WebhookChannel implements ChannelInterface {
       throw new \CRM_Core_Exception('herald: no webhook_url, neither on the delivery nor on the channel.');
     }
     $allowedHosts = \Civi::settings()->get('herald_webhook_allowed_hosts');
-    WebhookUrlGuard::assert($effectiveUrl, [
+    $pinned = WebhookUrlGuard::assert($effectiveUrl, [
       'allowed_hosts' => is_array($allowedHosts) ? $allowedHosts : [],
       'resolver' => $this->hostResolver,
     ]);
@@ -94,7 +94,7 @@ class WebhookChannel implements ChannelInterface {
       $payload['type'] === 'json'
         ? ['json' => $payload['data'], 'headers' => $headers]
         : ['body' => $payload['data'], 'headers' => $headers + ['Content-Type' => 'text/plain; charset=utf-8']]
-    ) + ['http_errors' => FALSE, 'timeout' => 10, 'allow_redirects' => FALSE];
+    ) + ['http_errors' => FALSE, 'timeout' => 10, 'allow_redirects' => FALSE] + self::pinResolution($effectiveUrl, $pinned);
 
     $client = $this->httpClient ?? new \GuzzleHttp\Client();
     try {
@@ -112,6 +112,27 @@ class WebhookChannel implements ChannelInterface {
         substr((string) $response->getBody(), 0, 500),
       ));
     }
+  }
+
+  /**
+   * Pin the connection to the addresses the guard validated, so a second DNS
+   * lookup at connect time cannot swing it to an internal host (rebinding).
+   * Empty when the guard returned no addresses (allowlist mode).
+   *
+   * @param list<string> $ips
+   * @return array{curl?: array<int, list<string>>}
+   */
+  private static function pinResolution(string $url, array $ips): array {
+    if ($ips === []) {
+      return [];
+    }
+    if (!extension_loaded('curl')) {
+      throw new \CRM_Core_Exception('herald: the curl extension is required to deliver webhooks safely (address pinning).');
+    }
+    $parts = parse_url($url) ?: [];
+    $host = trim(Cast::toString($parts['host'] ?? ''), '[]');
+    $port = (int) ($parts['port'] ?? (strtolower(Cast::toString($parts['scheme'] ?? '')) === 'https' ? 443 : 80));
+    return ['curl' => [CURLOPT_RESOLVE => [sprintf('%s:%d:%s', $host, $port, implode(',', $ips))]]];
   }
 
   /**
