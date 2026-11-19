@@ -274,6 +274,70 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     $this->assertArrayNotHasKey('curl', $this->capturedRequests[0]['options']);
   }
 
+  public function testARebindingHostIsPinnedToTheAnswerTheGuardChecked(): void {
+    // First answer public, every later one internal: the request must carry the checked answer.
+    $calls = 0;
+    $channel = new WebhookChannel(
+      $this->makeMockedClient(new Response(200, [], '')),
+      static function (string $host) use (&$calls): array {
+        return ++$calls === 1 ? ['93.184.216.34'] : ['127.0.0.1'];
+      },
+    );
+    $channel->send('x', ['webhook_url' => 'https://rebind.example:8443/hook']);
+
+    $options = $this->capturedRequests[0]['options'];
+    $this->assertSame(['rebind.example:8443:93.184.216.34'], $options['curl'][CURLOPT_RESOLVE] ?? NULL);
+    $this->assertSame(1, $calls);
+  }
+
+  public function testARedirectToAnInternalAddressIsNotFollowed(): void {
+    $mock = new MockHandler([
+      new Response(302, ['Location' => 'http://169.254.169.254/latest/meta-data/']),
+      new Response(200, [], ''),
+    ]);
+    $stack = HandlerStack::create($mock);
+    $stack->push(\GuzzleHttp\Middleware::history($this->capturedRequests));
+    $channel = new WebhookChannel(new Client(['handler' => $stack]), static fn (string $host): array => ['93.184.216.34']);
+
+    try {
+      $channel->send('x', ['webhook_url' => 'https://example.com/hook']);
+      $this->fail('Expected the redirect to fail the send.');
+    }
+    catch (\CRM_Core_Exception $e) {
+      $this->assertStringContainsString('webhook returned HTTP 302', $e->getMessage());
+    }
+    $this->assertSame(['https://example.com/hook'], array_map(
+      static fn (array $entry): string => (string) $entry['request']->getUri(),
+      $this->capturedRequests,
+    ));
+  }
+
+  public function testThePinOverridesConnectTimeDns(): void {
+    // Real curl over loopback only: system DNS sends localhost to 127.0.0.1/::1, the pin to 127.0.0.2.
+    $target = stream_socket_server('tcp://127.0.0.1:0');
+    $this->assertNotFalse($target);
+    $port = (int) parse_url('tcp://' . stream_socket_get_name($target, FALSE), PHP_URL_PORT);
+    $pinned = stream_socket_server("tcp://127.0.0.2:{$port}");
+    $this->assertNotFalse($pinned);
+    $url = "http://localhost:{$port}/";
+    $connectedTo = static function (array $extra) use ($url): string {
+      $ip = '';
+      // The listener never answers, so the request times out; only the connected address matters.
+      (new Client())->requestAsync('GET', $url, $extra + [
+        'timeout' => 0.5,
+        'on_stats' => static function (\GuzzleHttp\TransferStats $stats) use (&$ip): void {
+          $ip = (string) ($stats->getHandlerStats()['primary_ip'] ?? '');
+        },
+      ])->wait(FALSE);
+      return $ip;
+    };
+
+    $this->assertContains($connectedTo([]), ['127.0.0.1', '::1']);
+    $this->assertSame('127.0.0.2', $connectedTo(WebhookPin::options($url, ['127.0.0.2'])));
+    fclose($target);
+    fclose($pinned);
+  }
+
   public function testGuardRejectsHostWithNoDnsAddresses(): void {
     $this->expectException(\CRM_Core_Exception::class);
     $this->expectExceptionMessageMatches('/could not resolve webhook host/');
