@@ -149,6 +149,7 @@ herald prüft jede URL vor dem Senden:
 - Sie muss http oder https verwenden und darf weder Benutzername noch Passwort enthalten.
 - Standardmäßig darf sie nicht auf eine private, reservierte, link-lokale oder Cloud-Metadaten-Adresse auflösen.
 - Anfragen folgen keinen Weiterleitungen, geben Sie also die endgültige URL an.
+- Ohne Liste erlaubter Hosts verbinden sich Anfragen direkt mit der geprüften Adresse und umgehen jeden HTTP-Proxy; ein Server, der das Internet nur über einen Proxy erreicht, kann diese Webhooks daher nicht senden.
 
 Um die Zustellung auf bekannte Dienste zu beschränken, tragen Sie deren Hostnamen unter Administrieren » Herald » Erlaubte Webhook-Hosts ein, einen pro Zeile. Beim Speichern werden ungültige Hostnamen und alle Einträge mit `https://`, einem Pfad oder einem Port abgelehnt. Mit cv setzen Sie `herald_webhook_allowed_hosts`, zum Beispiel `["hooks.slack.com"]`. Subdomains eines eingetragenen Hosts sind ebenfalls erlaubt. Sobald die Liste Einträge enthält, erreicht herald nur noch diese Hosts, und sie dürfen auch auf interne Adressen auflösen.
 

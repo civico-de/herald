@@ -16,7 +16,7 @@ final class WebhookPin {
    * Empty when the guard returned no addresses (allowlist mode).
    *
    * @param list<string> $ips
-   * @return array{curl?: array<int, list<string>>}
+   * @return array{}|array{proxy: string, curl?: array<int, list<string>>}
    */
   public static function options(string $url, array $ips): array {
     if ($ips === []) {
@@ -29,8 +29,14 @@ final class WebhookPin {
     }
     $parts = parse_url($url) ?: [];
     $host = trim(Cast::toString($parts['host'] ?? ''), '[]');
+    // A proxy would resolve the host itself, so the pinned request bypasses any configured one.
+    $options = ['proxy' => ''];
+    // An IP literal needs no lookup, and curl rejects an IPv6 literal as a resolve host.
+    if (filter_var($host, FILTER_VALIDATE_IP) !== FALSE) {
+      return $options;
+    }
     $port = (int) ($parts['port'] ?? (strtolower(Cast::toString($parts['scheme'] ?? '')) === 'https' ? 443 : 80));
-    return ['curl' => [CURLOPT_RESOLVE => [sprintf('%s:%d:%s', $host, $port, implode(',', $ips))]]];
+    return $options + ['curl' => [CURLOPT_RESOLVE => [sprintf('%s:%d:%s', $host, $port, implode(',', $ips))]]];
   }
 
 }

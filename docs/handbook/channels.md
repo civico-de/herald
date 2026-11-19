@@ -149,6 +149,7 @@ herald checks every URL before it sends:
 - It must use http or https and contain no user name or password.
 - By default it must not resolve to a private, reserved, link-local or cloud metadata address.
 - Requests do not follow redirects, so give the final URL.
+- Without an allowed-hosts list, requests connect directly to the checked address and ignore any HTTP proxy, so a server that can reach the internet only through a proxy cannot send these webhooks.
 
 To lock delivery to known services, list their host names under Administer » Herald » Webhook allowed hosts, one per line. Saving rejects an invalid host name and any entry with `https://`, a path or a port. With cv, set `herald_webhook_allowed_hosts`, for example `["hooks.slack.com"]`. Subdomains of a listed host are allowed too. Once the list has entries, herald reaches only those hosts, and they may resolve to internal addresses.
 

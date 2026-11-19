@@ -312,30 +312,93 @@ class WebhookChannelTest extends TestCase implements HeadlessInterface, HookInte
     ));
   }
 
-  public function testThePinOverridesConnectTimeDns(): void {
-    // Real curl over loopback only: system DNS sends localhost to 127.0.0.1/::1, the pin to 127.0.0.2.
-    $target = stream_socket_server('tcp://127.0.0.1:0');
-    $this->assertNotFalse($target);
-    $port = (int) parse_url('tcp://' . stream_socket_get_name($target, FALSE), PHP_URL_PORT);
-    $pinned = stream_socket_server("tcp://127.0.0.2:{$port}");
-    $this->assertNotFalse($pinned);
-    $url = "http://localhost:{$port}/";
-    $connectedTo = static function (array $extra) use ($url): string {
-      $ip = '';
-      // The listener never answers, so the request times out; only the connected address matters.
-      (new Client())->requestAsync('GET', $url, $extra + [
-        'timeout' => 0.5,
-        'on_stats' => static function (\GuzzleHttp\TransferStats $stats) use (&$ip): void {
-          $ip = (string) ($stats->getHandlerStats()['primary_ip'] ?? '');
-        },
-      ])->wait(FALSE);
-      return $ip;
-    };
+  public function testSendConnectsToTheCheckedAddressNotTheConnectTimeAnswer(): void {
+    // System DNS sends localhost to 127.0.0.1 (the rebinding target); the checked address is 127.0.0.2.
+    [$target, $port] = $this->listen('127.0.0.1');
+    [$pinned] = $this->listen('127.0.0.2', $port);
 
-    $this->assertContains($connectedTo([]), ['127.0.0.1', '::1']);
-    $this->assertSame('127.0.0.2', $connectedTo(WebhookPin::options($url, ['127.0.0.2'])));
+    $this->assertSame('127.0.0.2', $this->connectedAddressOfSend("http://localhost:{$port}/hook"));
     fclose($target);
     fclose($pinned);
+  }
+
+  public function testSendBypassesAnEnvironmentProxy(): void {
+    [$pinned, $port] = $this->listen('127.0.0.2');
+    [$proxy, $proxyPort] = $this->listen('127.0.0.3');
+    putenv("http_proxy=http://127.0.0.3:{$proxyPort}");
+    putenv("HTTP_PROXY=http://127.0.0.3:{$proxyPort}");
+    try {
+      $this->assertSame('127.0.0.2', $this->connectedAddressOfSend("http://localhost:{$port}/hook"));
+      $read = [$proxy];
+      $write = NULL;
+      $except = NULL;
+      $this->assertSame(0, stream_select($read, $write, $except, 0), 'The proxy received a connection.');
+    }
+    finally {
+      putenv('http_proxy');
+      putenv('HTTP_PROXY');
+      fclose($pinned);
+      fclose($proxy);
+    }
+  }
+
+  public function testAnIpLiteralUrlConnectsWithoutAResolveEntry(): void {
+    $this->assertSame(['proxy' => ''], WebhookPin::options('http://[2001:4860:4860::8888]/', ['2001:4860:4860::8888']));
+
+    $server = @stream_socket_server('tcp://[::1]:0'); // @mago-expect lint:no-error-control-operator the host may lack IPv6; that skips the test.
+    if ($server === FALSE) {
+      $this->markTestSkipped('No IPv6 loopback.');
+    }
+    $url = 'http://[::1]:' . parse_url('tcp://' . stream_socket_get_name($server, FALSE), PHP_URL_PORT) . '/';
+    $ip = '';
+    (new Client())->requestAsync('GET', $url, WebhookPin::options($url, ['::1']) + [
+      'timeout' => 0.5,
+      'on_stats' => static function (\GuzzleHttp\TransferStats $stats) use (&$ip): void {
+        $ip = (string) ($stats->getHandlerStats()['primary_ip'] ?? '');
+      },
+    ])->wait(FALSE);
+    $this->assertSame('::1', $ip);
+    fclose($server);
+  }
+
+  /**
+   * @return array{resource, int}
+   */
+  private function listen(string $ip, int $port = 0): array {
+    $server = stream_socket_server("tcp://{$ip}:{$port}");
+    $this->assertNotFalse($server);
+    return [$server, (int) parse_url('tcp://' . stream_socket_get_name($server, FALSE), PHP_URL_PORT)];
+  }
+
+  /**
+   * Sends through real curl, loopback only: the checked public address is swapped for
+   * 127.0.0.2 so nothing leaves the host. Returns the address curl connected to.
+   */
+  private function connectedAddressOfSend(string $url): string {
+    $ip = '';
+    $stack = HandlerStack::create();
+    $stack->push(static function (callable $handler) use (&$ip): callable {
+      return static function ($request, array $options) use ($handler, &$ip) {
+        if (isset($options['curl'][CURLOPT_RESOLVE])) {
+          $options['curl'][CURLOPT_RESOLVE] = str_replace('93.184.216.34', '127.0.0.2', $options['curl'][CURLOPT_RESOLVE]);
+        }
+        $options['timeout'] = 0.5;
+        $options['on_stats'] = static function (\GuzzleHttp\TransferStats $stats) use (&$ip): void {
+          $ip = (string) ($stats->getHandlerStats()['primary_ip'] ?? '');
+        };
+        return $handler($request, $options);
+      };
+    });
+    $channel = new WebhookChannel(new Client(['handler' => $stack]), static fn (string $host): array => ['93.184.216.34']);
+
+    try {
+      $channel->send('x', ['webhook_url' => $url]);
+      $this->fail('The loopback listener never answers, so the send must time out.');
+    }
+    catch (\CRM_Core_Exception $e) {
+      $this->assertStringContainsString('webhook request failed', $e->getMessage());
+    }
+    return $ip;
   }
 
   public function testGuardRejectsHostWithNoDnsAddresses(): void {
