@@ -5,6 +5,10 @@ project uses Semantic Versioning.
 
 ## [Unreleased]
 
+### Added
+
+- The extension details in CiviCRM link the changelog.
+
 ## [1.0.3] - 2026-11-19
 
 ### Changed
