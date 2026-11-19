@@ -5,9 +5,18 @@ project uses Semantic Versioning.
 
 ## [Unreleased]
 
+## [1.0.3] - 2026-11-19
+
 ### Changed
 
 - The manual lives in `docs/handbook/`. CiviCRM shows it with handbook 0.5.0 or newer.
+- Webhook delivery requires PHP's curl extension.
+
+### Security
+
+- A webhook connects only to the addresses the URL check validated. A host whose DNS answer
+  changes between the check and the request (DNS rebinding) can no longer redirect it to an
+  internal address. Hosts in `herald_webhook_allowed_hosts` resolve normally.
 
 ## [1.0.2] - 2026-11-16
 
@@ -313,7 +322,8 @@ project uses Semantic Versioning.
 - `Herald.send` APIv4 action for other extensions.
 - Optional contribution source normalisation for digests and alerts.
 
-[Unreleased]: https://github.com/civico-de/herald/compare/v1.0.2...HEAD
+[Unreleased]: https://github.com/civico-de/herald/compare/v1.0.3...HEAD
+[1.0.3]: https://github.com/civico-de/herald/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/civico-de/herald/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/civico-de/herald/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/civico-de/herald/compare/v0.17.0...v1.0.0
