@@ -12,6 +12,7 @@
         "php": ">=8.2",
         "ext-bcmath": "*",
         "ext-ctype": "*",
+        "ext-curl": "*",
         "ext-filter": "*",
         "ext-intl": "*",
         "ext-mbstring": "*",

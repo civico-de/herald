@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "8115e35c4909cf0309b21c08295623ae",
+    "content-hash": "aecb13c4adf90ba1d8db17efd177e5b1",
     "packages": [
         {
             "name": "civico-de/stdlib",
@@ -1872,6 +1872,7 @@
         "php": ">=8.2",
         "ext-bcmath": "*",
         "ext-ctype": "*",
+        "ext-curl": "*",
         "ext-filter": "*",
         "ext-intl": "*",
         "ext-mbstring": "*"
