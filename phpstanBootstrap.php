@@ -3,14 +3,9 @@
 declare(strict_types = 1);
 
 /**
- * phpstan bootstrap: register CiviCRM's class loader so core symbols
- * (Civi, CRM_*, Civi\Api4\*) resolve, then the core component extensions
- * shipped under the core ext dir, then the classes of every extension this
- * one <requires> that is present under the ext dir. The repo's own classes
- * come from phpstan's paths; only their runtime-only civix DAO_Base alias and
- * core's APIv3 helpers and CiviMix\Schema library come from here. Runs inside the dev
- * container (civikitchen standalone layout); override CIVICRM_CORE_DIR and
- * CK_EXT_DIR if needed.
+ * phpstan bootstrap: core's class loader, the core component extensions and
+ * every <requires> extension under the ext dir. CIVICRM_CORE_DIR and
+ * CK_EXT_DIR override the standalone layout.
  */
 $coreDir = getenv('CIVICRM_CORE_DIR') ?: '/var/www/html/core';
 
@@ -52,10 +47,8 @@ $ckDaoBase = static function (string $class, string $ckDir): bool {
 spl_autoload_register(static fn (string $class): bool => $ckDaoBase($class, __DIR__));
 
 /**
- * Autoload one extension directory in the civix layout: CRM_* and api_* by
- * underscore, Civi\* PSR-4, plus its own vendor/. Its root goes on the include
- * path as civix's config hook puts it there, for classes that require their
- * bundled packages by a relative path.
+ * Autoload one extension directory in the civix layout plus its vendor/; its
+ * root goes on the include path, as civix's config hook puts it there.
  */
 $ckRegister = static function (string $ckDir) use ($ckDaoBase): void {
   set_include_path($ckDir . PATH_SEPARATOR . get_include_path());
@@ -80,12 +73,8 @@ $ckRegister = static function (string $ckDir) use ($ckDaoBase): void {
   });
 };
 
-// Core component extensions (civi_member, civi_contribute, …) ship with core
-// but live off its classloader path, so Civi\Api4\Membership and friends are
-// unknown classes without this. Registered by layout, not by a name list: a
-// package whose classes sit somewhere else (flexmailer's src/) is not covered
-// and stays a scanDirectories entry. Found by info.xml one or two levels deep:
-// afform keeps its extensions a level down (ext/afform/core).
+// Core component extensions live off core's classloader path. Found by info.xml
+// one or two levels deep (ext/afform/core); flexmailer's src/ stays a scanDirectories entry.
 libxml_use_internal_errors(use_errors: TRUE);
 $ckCoreKeys = [];
 foreach (array_merge(
@@ -102,12 +91,8 @@ foreach (array_merge(
   }
 }
 
-// Other required extensions live off core's classloader path. Each one mounted or
-// downloaded under the ext dir (named by its key, as the images do) gets the
-// civix layout autoloaded: CRM_* by underscore, Civi\* PSR-4, api_* by
-// underscore, plus its own vendor/. A required key with no directory is only
-// noted — analysis of code that never touches it is still complete, and code
-// that does gets phpstan's honest "unknown class".
+// Required extensions under the ext dir, named by key; a missing one is only
+// noted, and code using it gets phpstan's "unknown class".
 $ckExtDir = getenv('CK_EXT_DIR') ?: '/var/www/html/ext';
 $ckInfo = simplexml_load_file(__DIR__ . '/info.xml');
 foreach ($ckInfo === FALSE ? [] : $ckInfo->requires->ext ?? [] as $ckRequired) {

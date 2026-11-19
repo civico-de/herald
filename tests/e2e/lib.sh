@@ -3,15 +3,11 @@
 #
 #   . "$(dirname "$0")/lib.sh"        (from a subdirectory: "$(dirname "$0")/../lib.sh")
 #
-# Provides the env knobs, the PASS/FAIL bookkeeping (check/finish) and the
-# cv, shell, database, HTTP and maildev plumbing every suite shares. The
-# repository's own helpers go into tests/e2e/lib.local.sh, loaded last when it
-# exists. Inside the image (CK_IN_IMAGE=1, the GitLab jobs) the helpers run
+# Repository helpers go into tests/e2e/lib.local.sh. CK_IN_IMAGE=1 runs them
 # directly instead of through compose.
 
 CK_E2E_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# COMPOSE_DIR may point at a different stack (e.g. a sibling extension's
-# full dev stack when this repo's own .docker is a minimal CI-only one).
+# COMPOSE_DIR may point at a different stack, e.g. a sibling extension's.
 COMPOSE_DIR="${COMPOSE_DIR:-$CK_E2E_DIR/../../.docker}"
 # Evidence such as the bodies of hit(), next to the suite that wrote it; a
 # caller without a script file (bash -c) writes next to lib.sh.

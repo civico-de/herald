@@ -1,6 +1,4 @@
-# LF everywhere the tooling reads bytes: ckinit --check compares managed files
-# byte-for-byte against the template, so a CRLF checkout would read as
-# permanent drift. text=auto keeps genuine binaries untouched.
+# LF everywhere: ckinit --check compares managed files byte for byte.
 * text=auto
 *.php text eol=lf
 *.yml text eol=lf
@@ -11,9 +9,7 @@
 *.json text eol=lf
 *.md text eol=lf
 
-# Binary media goes through Git LFS, which keeps its history out of every
-# clone; ckconform's media-lfs check holds the repo to it. SVG is text and
-# stays in git.
+# Binary media goes through Git LFS (ckconform media-lfs); SVG is text.
 *.png filter=lfs diff=lfs merge=lfs -text
 *.jpg filter=lfs diff=lfs merge=lfs -text
 *.jpeg filter=lfs diff=lfs merge=lfs -text

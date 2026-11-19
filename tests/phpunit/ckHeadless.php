@@ -3,25 +3,10 @@
 declare(strict_types = 1);
 
 /**
- * ck_headless(): \Civi\Test::headless() with this extension's info.xml
- * <requires>, and theirs in turn, installed before the extension itself.
+ * \Civi\Test::headless() with the info.xml <requires> closure and then
+ * $optional installed before this extension; installMe() skips <requires>.
+ * The closure is resolved inside the step: before it, the schema is not rebuilt.
  *
- * Civi\Test's installMe() takes the key verbatim and leaves <requires>
- * uninstalled, so the next CIVICRM_UF=UnitTests boot dies in the class scan.
- * The closure is resolved inside the step, through CRM_Extension_Manager:
- * touching the extension system here runs BEFORE Civi\Test rebuilds the
- * headless schema and leaves caches behind that the rebuilt site no longer
- * matches. A dependency the site does not have is an install error, not a
- * silent skip.
- *
- * Civi\Test reuses the scratch database while the step signatures match, and
- * an install() step signs only the key; a no-op step signed with the
- * extension's install files rebuilds it when one of them changes.
- *
- * $optional names extensions the code integrates with but does not require;
- * they install after <requires>, before the extension itself.
- *
- * Template-managed (rewritten by ckinit --update); chain further steps:
  *   ck_headless()->sqlFile(__DIR__ . '/fixtures.sql')->apply();
  *   ck_headless('org.example.optional')->apply();
  */
@@ -63,13 +48,9 @@ function ck_forget_signature(): void {
 }
 
 /**
- * Each key after its own <requires>, transitively, one install() per
- * extension: the manager installs a list in one pass, and an extension whose
- * schema references a dependency's table then fails its own table lookup.
- * Installing an installed extension is a no-op.
- *
- * Each install replaces the extension system, so every call asks the current
- * one: mixins see an extension as being installed only through its manager.
+ * One install() per extension, each after its <requires>: in one pass, a
+ * schema referencing a dependency's table fails. Each install replaces the
+ * extension system, so every call asks the current singleton.
  *
  * @param list<string> $keys
  */
@@ -83,10 +64,8 @@ function ck_install_in_order(array $keys): void {
 
 /**
  * Before 6.20, CoreSchemaStep::getSig() drops the core foreign keys
- * (civicrm-core#36980); re-running its cached SQL once per process puts them
- * back. On 6.20 and later the keys stay, and re-adding them fails.
- * A database another core version built does not take this SQL, so it is
- * rebuilt instead. Drop when the supported floor carries that fix.
+ * (civicrm-core#36980); re-running its SQL once per process restores them.
+ * A database another core version built is rebuilt instead.
  */
 function ck_restore_core_foreign_keys(): void {
   static $restored = FALSE;
@@ -146,10 +125,8 @@ function ck_test_database_version(string $database): ?string {
 }
 
 /**
- * A content hash of the files that decide what install() produces: info.xml,
- * the main file, the upgrader class, every *.mgd.php, and schema/, xml/, sql/.
- * Dot directories, vendor/ and node_modules/ belong to other packages or tools.
- * Hashed once per process: setUpHeadless() runs before every test.
+ * Content hash of the files install() depends on: info.xml, the main file, the
+ * upgrader, *.mgd.php, schema/, xml/, sql/. Once per process.
  */
 function ck_install_signature(string $dir, SimpleXMLElement $info): string {
   /** @var array<string, string> $signatures */

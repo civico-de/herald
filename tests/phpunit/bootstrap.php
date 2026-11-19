@@ -4,24 +4,12 @@ ini_set('memory_limit', '2G');
 
 eval(cv('php:boot --level=classloader', 'phpcode'));
 
-// Half of the deprecation gate. phpunit.xml.dist has
-// convertDeprecationsToExceptions, but PHPUnit's error handler ignores errors
-// outside error_reporting() — and the CLI default masks E_DEPRECATED (22527).
-// CiviTestListener raises it to E_ALL only for its own tests, so plain unit
-// tests would swallow engine deprecations without this line.
+// PHPUnit ignores errors outside error_reporting(), and the CLI default masks
+// E_DEPRECATED, so without this plain unit tests swallow deprecations.
 error_reporting(E_ALL);
 
-// CRITICAL GUARD: the headless suite must run against a SEPARATE scratch
-// database. The DSN comes from cv's config (TEST_DB_DSN in ~/.cv.json —
-// provisioned by the civikitchen entrypoint for BOTH /root and /var/www):
-// the phpunit listener re-boots via `cv php:boot --level=full`, whose
-// $GLOBALS['_CV'] replaces anything set here. If the config is missing,
-// civicrm.settings.php silently falls back to the MAIN dev DB and
-// Civi\Test wipes all dev data — so fail loudly instead.
-// Decode the JSON and check the database NAME each DSN points at. A substring
-// match on the raw file is not enough: 'civicrm_test' also occurs in directory
-// paths, and a multi-site config can carry a TEST_DB_DSN for another site
-// while the site actually booted has none.
+// Without TEST_DB_DSN in ~/.cv.json, civicrm.settings.php falls back to the main
+// dev DB and Civi\Test wipes it. Check the database name of every DSN, not a substring.
 $ckTestDsns = [];
 $ckHome = getenv('HOME') ?: '';
 $ckRaw = $ckHome !== '' ? (string) @file_get_contents($ckHome . '/.cv.json') : '';
@@ -33,9 +21,7 @@ foreach ($ckSites as $ckSite) {
     $ckTestDsns[] = $ckDsn;
   }
 }
-// Every DSN present must name a scratch database, and there must be one. A
-// site whose TEST_DB_DSN points at the main DB is the exact accident this
-// guard exists to prevent.
+// There must be a DSN, and every one must name a *_test database.
 $ckBadDsn = NULL;
 foreach ($ckTestDsns as $ckDsn) {
   $ckDb = explode('?', ltrim((string) (parse_url($ckDsn, PHP_URL_PATH) ?: ''), '/'))[0];
@@ -56,11 +42,8 @@ if ($ckTestDsns === [] || $ckBadDsn !== NULL) {
   exit(1);
 }
 
-// Standalone quirk: SettingsManager::bootSettings() composes CIVICRM_DSN
-// from the CIVICRM_DB_* env vars BEFORE settings.php gets a chance to apply
-// TEST_DB_DSN — the env-composed (main!) DSN would win. Repoint the DB name
-// at the scratch DB for this whole test process (inherited by the
-// listener's `cv php:boot --level=full` subprocess too).
+// Standalone composes CIVICRM_DSN from CIVICRM_DB_* before settings.php applies
+// TEST_DB_DSN; repoint the name for this process and its cv subprocesses.
 putenv('CIVICRM_DB_NAME=civicrm_test');
 $_ENV['CIVICRM_DB_NAME'] = 'civicrm_test';
 
@@ -131,9 +114,7 @@ function cv(string $cmd, string $decode = 'json') {
   }
 }
 
-// Repo-specific test setup (extra constants, fixture loaders) goes in
-// bootstrap.local.php — THIS file is template-managed and rewritten wholesale
-// by ckinit --update.
+// Repo-specific setup goes in bootstrap.local.php; ckinit --update rewrites this file.
 if (file_exists(__DIR__ . '/bootstrap.local.php')) {
   require __DIR__ . '/bootstrap.local.php';
 }
