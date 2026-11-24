@@ -84,7 +84,7 @@ When `civicrm/contact/view/cd/edit` for a multi-record group fails validation, t
 
 ### Standalone tests can reach the main database
 
-On Standalone, `SettingsManager::bootSettings()` builds `CIVICRM_DSN` from the `CIVICRM_DB_*` environment variables before `settings.php` applies `TEST_DB_DSN`. The headless tests would then run against the main database. `tests/phpunit/bootstrap.php` sets `CIVICRM_DB_NAME=civicrm_test` for the whole test process. Status: not reported.
+On Standalone, `SettingsManager::bootSettings()` builds `CIVICRM_DSN` from the `CIVICRM_DB_*` environment variables before `settings.php` applies `TEST_DB_DSN`. The headless tests would then run against the main database. The civikitchen PHPUnit bootstrap sets `CIVICRM_DB_NAME=civicrm_test` for the whole test process. Status: not reported.
 
 ## Riverlea
 

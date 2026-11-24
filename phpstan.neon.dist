@@ -33,7 +33,6 @@ parameters:
 			# phpstan-tests.neon.dist analyses the suite in a second pass
 			- tests (?)
 		analyseAndScan:
-			- phpstanBootstrap.php
 			# loaded as scanFiles below
 			- phpstan-stubs
 			- vendor (?)
@@ -47,13 +46,13 @@ parameters:
 		# core's PEAR packages load through the include path, not the autoloader
 		- /var/www/html/core/packages/HTML/Common.php
 		- /var/www/html/core/packages/HTML/QuickForm/element.php
-	# phpstanBootstrap.php already autoloads core's own ext packages and
+	# The civikitchen phpstan bootstrap already autoloads core's own ext packages and
 	# every extension in info.xml <requires>. CiviRules is optional, so the
 	# dev profile fetches it and its classes are scanned from there.
 	scanDirectories:
 		- /var/www/html/ext/org.civicoop.civirules
 	bootstrapFiles:
-		- phpstanBootstrap.php
+		- /opt/civikitchen/toolbelt/phpstan-config/bootstrap.php
 	civikitchen:
 		# ck.sql.unknownTable checks `civicrm_`-prefixed table names in raw SQL
 		# against core's schema plus this repo's own (schema/, xml/schema/,
