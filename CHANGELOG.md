@@ -5,9 +5,21 @@ project uses Semantic Versioning.
 
 ## [Unreleased]
 
+## [1.0.4] - 2026-11-24
+
 ### Added
 
 - The extension details in CiviCRM link the changelog.
+
+### Changed
+
+- Webhooks to hosts outside `herald_webhook_allowed_hosts` connect directly to the checked
+  address and ignore any HTTP proxy. A server that reaches the internet only through a proxy
+  needs the webhook host in that list.
+
+### Fixed
+
+- Webhooks whose URL names an IPv6 address are delivered.
 
 ## [1.0.3] - 2026-11-19
 
@@ -326,7 +338,8 @@ project uses Semantic Versioning.
 - `Herald.send` APIv4 action for other extensions.
 - Optional contribution source normalisation for digests and alerts.
 
-[Unreleased]: https://github.com/civico-de/herald/compare/v1.0.3...HEAD
+[Unreleased]: https://github.com/civico-de/herald/compare/v1.0.4...HEAD
+[1.0.4]: https://github.com/civico-de/herald/compare/v1.0.3...v1.0.4
 [1.0.3]: https://github.com/civico-de/herald/compare/v1.0.2...v1.0.3
 [1.0.2]: https://github.com/civico-de/herald/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/civico-de/herald/compare/v1.0.0...v1.0.1
